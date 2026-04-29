@@ -290,6 +290,18 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       return null;
     };
 
+    function setFocused(el: HTMLElement | null) {
+      // Remove highlight from any previously focused command
+      document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
+        n.classList.remove("is-nav-focused");
+      });
+      if (el) {
+        el.classList.add("is-nav-focused");
+        el.focus({ preventScroll: true });
+        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    }
+
     function move(direction: Direction) {
       if (graph.size === 0) rebuildGraph();
       if (graph.size === 0) return;
@@ -297,7 +309,8 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       const focused = getFocused();
       if (!focused) {
         // Focus first node in graph (top-left)
-        graph.keys().next().value?.focus();
+        const first = graph.keys().next().value;
+        if (first) setFocused(first);
         return;
       }
 
@@ -305,10 +318,7 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       if (!node) return;
 
       const target = node[direction];
-      if (target) {
-        target.focus();
-        target.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
+      if (target) setFocused(target);
     }
 
     // Build on first use; rebuild on resize (layout may reflow)
@@ -316,6 +326,17 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
 
     const onResize = () => rebuildGraph();
     window.addEventListener("resize", onResize);
+
+    // Clean up highlight when focus leaves a command entirely
+    const onFocusOut = (e: FocusEvent) => {
+      const next = e.relatedTarget as HTMLElement | null;
+      if (!next || next.dataset.sheetCommand === undefined) {
+        document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
+          n.classList.remove("is-nav-focused");
+        });
+      }
+    };
+    document.addEventListener("focusout", onFocusOut);
 
     const onKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
@@ -334,6 +355,7 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("focusout", onFocusOut);
     };
   }, [modalOpen]);
 }
