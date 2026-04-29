@@ -49,11 +49,20 @@ body {
 }
 
 .sheet-content code {
-  border-radius: 0.35rem;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 0.1rem 0.3rem;
+  display: inline-block;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.09));
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 0.18rem 0.52rem;
+  line-height: 1.45;
   font-family: var(--font-jetbrains-mono), monospace;
-  color: #ffb703;
+  font-size: 0.98em;
+  font-weight: 600;
+  color: #f8c94a;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .sheet-content table {
