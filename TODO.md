@@ -8,7 +8,7 @@
 
 ## Code
 - [x] Extract the duplicated `ArrowGlyph` component from `sheet-code.tsx` and `sheet-shortcuts.tsx` into a shared component
-- [ ] Make the column count in `home-client.tsx` dynamic (currently hardcoded to `3`)
+- [x] Make the column count in `home-client.tsx` dynamic (currently hardcoded to `3`)
 
 ## Performance
 - [ ] Add `generateStaticParams` to the `[slug]` page for static pre-rendering

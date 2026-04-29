@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CheatSheetMeta } from "@/lib/cheatsheets";
+import { useColumnCount } from "@/hooks/use-column-count";
 
 type Props = {
   sheets: CheatSheetMeta[];
@@ -12,6 +13,7 @@ export function HomeClient({ sheets }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [gridRef, columns] = useColumnCount<HTMLElement>();
 
   const visibleCards = useMemo(() => {
     const normalized = query.toLowerCase().trim();
@@ -34,8 +36,6 @@ export function HomeClient({ sheets }: Props) {
       if (target?.tagName === "INPUT" && event.key !== "Escape") {
         return;
       }
-
-      const columns = 3;
 
       if (event.key === "/") {
         event.preventDefault();
@@ -75,7 +75,7 @@ export function HomeClient({ sheets }: Props) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [router, selectedIndex, visibleCards]);
+  }, [router, selectedIndex, visibleCards, columns]);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">
@@ -97,7 +97,7 @@ export function HomeClient({ sheets }: Props) {
           className="mt-8 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-mono text-sm outline-none ring-0 backdrop-blur placeholder:text-white/45 focus:border-[var(--accent)]"
         />
 
-        <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section ref={gridRef} className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleCards.map((sheet, index) => (
             <button
               key={sheet.slug}
