@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
+import { SheetCode } from "@/components/sheet-code";
 import { SheetCard, SheetGrid } from "@/components/sheet-grid";
 import { cheatSheetFrontmatterSchema, getCheatSheetSource } from "@/lib/cheatsheets";
 
@@ -29,6 +30,7 @@ export default async function CheatSheetPage({ params }: Props) {
     components: {
       SheetGrid,
       SheetCard,
+      code: SheetCode,
     },
   });
   const parsedFrontmatter = cheatSheetFrontmatterSchema.parse(frontmatter);
