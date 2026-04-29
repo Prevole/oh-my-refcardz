@@ -15,6 +15,7 @@
 
 ## UX
 - [ ] Create a custom `not-found.tsx` page for unknown slugs
+- [ ] Add a user-configurable keybinding system so shortcuts (navigate: hjkl/arrows, copy: y, example: i) can be remapped via a settings panel
 
 ## Quality
 - [ ] Write tests (none currently)

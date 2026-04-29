@@ -6,6 +6,7 @@ import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
 import { SheetCommand } from "@/components/sheet-command";
 import { SheetCode } from "@/components/sheet-code";
 import { SheetCard, SheetGrid } from "@/components/sheet-grid";
+import { SheetCommandsShell } from "@/components/sheet-commands-shell";
 import { cheatSheetFrontmatterSchema, getCheatSheetSource } from "@/lib/cheatsheets";
 
 type Props = {
@@ -51,7 +52,9 @@ export default async function CheatSheetPage({ params }: Props) {
         <p className="mt-2 max-w-2xl text-white/80">{parsedFrontmatter.summary}</p>
 
         <div className="sheet-content mt-8 max-w-none">
-          {content}
+          <SheetCommandsShell>
+            {content}
+          </SheetCommandsShell>
         </div>
       </main>
     </div>

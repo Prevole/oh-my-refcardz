@@ -221,6 +221,267 @@ body {
 
 .sheet-command {
   color: rgba(237, 242, 244, 0.95);
+  border-radius: 0.5rem;
+  outline: none;
+  transition: box-shadow 0.15s ease;
+}
+
+.sheet-command:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-2), 0 0 0 4px rgba(0, 209, 178, 0.2);
+}
+
+.sheet-command-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sheet-command-actions {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sheet-command-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(237, 242, 244, 0.6);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  border-radius: 0;
+  margin-left: -1px;
+}
+
+.sheet-command-action:first-child {
+  border-radius: 0.4rem 0 0 0.4rem;
+  margin-left: 0;
+}
+
+.sheet-command-action:last-child {
+  border-radius: 0 0.4rem 0.4rem 0;
+}
+
+.sheet-command-action:only-child {
+  border-radius: 0.4rem;
+  margin-left: 0;
+}
+
+.sheet-command:hover .sheet-command-actions,
+.sheet-command:focus-visible .sheet-command-actions {
+  opacity: 1;
+}
+
+.sheet-command-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(237, 242, 244, 0.6);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.sheet-command-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(237, 242, 244, 0.95);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.sheet-command-action--copied {
+  color: var(--accent-2);
+  border-color: rgba(0, 209, 178, 0.4);
+  background: rgba(0, 209, 178, 0.1);
+}
+
+/* ── Modals ─────────────────────────────────────────────── */
+
+.command-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(3, 6, 14, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.command-modal {
+  width: 100%;
+  max-width: 36rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(17, 32, 58, 0.98);
+  padding: 1.5rem;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  color: rgba(237, 242, 244, 0.92);
+}
+
+.command-modal-label {
+  margin: 0;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--accent-2);
+}
+
+.command-modal-title {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: rgba(237, 242, 244, 0.97);
+}
+
+.command-modal-section {
+  margin-top: 1.1rem;
+}
+
+.command-modal-section-label {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 244, 0.55);
+}
+
+.command-modal-example {
+  color: #ffd47f;
+}
+
+.command-modal-close {
+  margin-top: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.85rem;
+  color: rgba(237, 242, 244, 0.75);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.command-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(237, 242, 244, 0.95);
+}
+
+.command-modal-close kbd,
+.command-copy-submit kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.72rem;
+  color: rgba(237, 242, 244, 0.65);
+}
+
+/* ── Copy modal form ────────────────────────────────────── */
+
+.command-copy-form {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.command-copy-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.command-copy-label {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8ef6d8;
+}
+
+.command-copy-input {
+  width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 16, 28, 0.7);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.86rem;
+  color: rgba(237, 242, 244, 0.95);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.command-copy-input::placeholder {
+  color: rgba(237, 242, 244, 0.3);
+}
+
+.command-copy-input:focus {
+  border-color: rgba(0, 209, 178, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 209, 178, 0.15);
+}
+
+.command-copy-preview-wrap {
+  margin-top: 0.25rem;
+}
+
+.command-copy-preview {
+  word-break: break-all;
+}
+
+.command-copy-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.command-copy-actions .command-modal-close {
+  margin-top: 0;
+}
+
+.command-copy-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 209, 178, 0.4);
+  background: rgba(0, 209, 178, 0.12);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.command-copy-submit:hover {
+  background: rgba(0, 209, 178, 0.2);
+  border-color: rgba(0, 209, 178, 0.6);
 }
 
 .sheet-command-title {
@@ -244,7 +505,6 @@ body {
   font-weight: 500;
   color: #8ef6d8;
 }
-
 .sheet-command-description {
   margin: 0.45rem 0 0;
   font-family: var(--font-space-grotesk), sans-serif;

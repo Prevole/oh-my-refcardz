@@ -10,6 +10,10 @@ export function SheetShortcuts() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // Never hijack keys when focus is inside an editable element
+      const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+
       if (event.key === "?") {
         event.preventDefault();
         setHelpOpen((prev) => !prev);
@@ -22,6 +26,8 @@ export function SheetShortcuts() {
           setHelpOpen(false);
           return;
         }
+        // If a command modal is open, let it handle Escape itself
+        if (document.querySelector(".command-modal-overlay")) return;
         router.push("/");
       }
     };
@@ -93,6 +99,37 @@ export function SheetShortcuts() {
                   <td>Toggle help</td>
                   <td></td>
                   <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <h3 className="mt-5 text-xl font-semibold">Commands</h3>
+            <table className="legend-table mt-4">
+              <tbody>
+                <tr>
+                  <td>
+                    <span style={{ display: "inline-flex", gap: "0.3rem" }}>
+                      <span className="legend-keycap"><ArrowGlyph direction="up" className="legend-arrow" /></span>
+                      <span className="legend-keycap"><ArrowGlyph direction="down" className="legend-arrow" /></span>
+                      <span className="legend-keycap"><ArrowGlyph direction="left" className="legend-arrow" /></span>
+                      <span className="legend-keycap"><ArrowGlyph direction="right" className="legend-arrow" /></span>
+                    </span>
+                  </td>
+                  <td>Navigate commands</td>
+                  <td>
+                    <span style={{ display: "inline-flex", gap: "0.3rem" }}>
+                      <span className="legend-keycap">h</span>
+                      <span className="legend-keycap">j</span>
+                      <span className="legend-keycap">k</span>
+                      <span className="legend-keycap">l</span>
+                    </span>
+                  </td>
+                  <td>Navigate (Vim)</td>
+                </tr>
+                <tr>
+                  <td><span className="legend-keycap">y</span></td>
+                  <td>Copy command</td>
+                  <td><span className="legend-keycap">i</span></td>
+                  <td>Show example</td>
                 </tr>
               </tbody>
             </table>
