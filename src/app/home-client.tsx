@@ -2,36 +2,65 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetCategory } from "@/lib/yaml-cheatsheets";
 import { useColumnCount } from "@/hooks/use-column-count";
 import { Keycap } from "@/components/keycap";
 import { ArrowGlyph } from "@/components/arrow-glyph";
 
 type Props = {
-  sheets: CheatSheetMeta[];
+  categories: CheatSheetCategory[];
 };
 
-export function HomeClient({ sheets }: Props) {
+export function HomeClient({ categories }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [gridRef, columns] = useColumnCount<HTMLElement>();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
-  const visibleCards = useMemo(() => {
+  const visibleCategories = useMemo(() => {
     const normalized = query.toLowerCase().trim();
     if (!normalized) {
-      return sheets;
+      return categories;
     }
 
-    return sheets.filter((sheet) => {
-      return (
-        sheet.title.toLowerCase().includes(normalized) ||
-        sheet.summary.toLowerCase().includes(normalized) ||
-        sheet.slug.toLowerCase().includes(normalized)
-      );
+    return categories
+      .map((category) => ({
+        ...category,
+        sheets: category.sheets.filter((sheet) => {
+          return (
+            sheet.title.toLowerCase().includes(normalized) ||
+            sheet.summary.toLowerCase().includes(normalized) ||
+            sheet.slug.toLowerCase().includes(normalized) ||
+            category.title.toLowerCase().includes(normalized)
+          );
+        }),
+      }))
+      .filter((category) => category.sheets.length > 0);
+  }, [categories, query]);
+
+  const visibleCards = useMemo(() => {
+    return visibleCategories.flatMap((category) => category.sheets);
+  }, [visibleCategories]);
+
+  const selectedCard = visibleCards[selectedIndex] ?? null;
+
+  const cardIndexBySlug = useMemo(() => {
+    const map = new Map<string, number>();
+    visibleCards.forEach((card, index) => {
+      map.set(card.slug, index);
     });
-  }, [query, sheets]);
+    return map;
+  }, [visibleCards]);
+
+  const selectedCategory = useMemo(() => {
+    if (!selectedCard) {
+      return null;
+    }
+
+    return visibleCategories.find((category) => category.id === selectedCard.categoryId) ?? null;
+  }, [selectedCard, visibleCategories]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -51,9 +80,16 @@ export function HomeClient({ sheets }: Props) {
         document.getElementById("search")?.focus();
       }
 
+      if (event.key === "i") {
+        if (selectedCard) {
+          event.preventDefault();
+          setInfoOpen((prev) => !prev);
+        }
+      }
+
       if (event.key === "ArrowRight" || event.key === "l") {
         event.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, visibleCards.length - 1));
+        setSelectedIndex((prev) => Math.min(prev + 1, Math.max(visibleCards.length - 1, 0)));
       }
 
       if (event.key === "ArrowLeft" || event.key === "h") {
@@ -63,7 +99,7 @@ export function HomeClient({ sheets }: Props) {
 
       if (event.key === "ArrowDown" || event.key === "j") {
         event.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + columns, visibleCards.length - 1));
+        setSelectedIndex((prev) => Math.min(prev + columns, Math.max(visibleCards.length - 1, 0)));
       }
 
       if (event.key === "ArrowUp" || event.key === "k") {
@@ -72,15 +108,19 @@ export function HomeClient({ sheets }: Props) {
       }
 
       if (event.key === "Enter" || event.key === " ") {
-        if (visibleCards[selectedIndex]) {
+        if (selectedCard) {
           event.preventDefault();
-          router.push(`/cheatsheets/${visibleCards[selectedIndex].slug}`);
+          router.push(`/cheatsheets/${selectedCard.slug}`);
         }
       }
 
       if (event.key === "Escape") {
         if (helpOpen) {
           setHelpOpen(false);
+          return;
+        }
+        if (infoOpen) {
+          setInfoOpen(false);
           return;
         }
         setQuery("");
@@ -90,7 +130,7 @@ export function HomeClient({ sheets }: Props) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [router, selectedIndex, visibleCards, columns, helpOpen]);
+  }, [router, selectedIndex, visibleCards.length, columns, helpOpen, infoOpen, selectedCard]);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">
@@ -163,12 +203,36 @@ export function HomeClient({ sheets }: Props) {
                 <tr>
                   <td><span className="legend-keycap"><span className="small-caps">esc</span></span></td>
                   <td>Clear search</td>
+                  <td><span className="legend-keycap">i</span></td>
+                  <td>Toggle details</td>
+                </tr>
+                <tr>
                   <td><span className="legend-keycap">?</span></td>
                   <td>Toggle help</td>
+                  <td />
+                  <td />
                 </tr>
               </tbody>
             </table>
             <p className="mt-4 text-xs text-white/75">Press <span className="font-mono">?</span> to toggle, <span className="font-mono">Esc</span> to close.</p>
+          </div>
+        </div>
+      ) : null}
+
+      {infoOpen && selectedCard && selectedCategory ? (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#03060ecc] px-6" onClick={() => setInfoOpen(false)}>
+          <div className="relative w-full max-w-xl rounded-2xl border border-white/20 bg-[#11203ad9] p-6 text-sm text-white/90 shadow-2xl backdrop-blur" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="command-modal-dismiss" onClick={() => setInfoOpen(false)} aria-label="Close">✕</button>
+            <p className="font-mono text-xs tracking-[0.15em] text-white/70">CHEATSHEET DETAILS</p>
+            <h3 className="mt-2 text-2xl font-semibold" style={{ color: selectedCard.color }}>{selectedCard.title}</h3>
+            <p className="mt-1 font-mono text-xs uppercase tracking-[0.13em] text-white/70">{selectedCard.slug}</p>
+            <p className="mt-4 text-white/90">{selectedCard.summary}</p>
+            <div className="mt-5 rounded-xl border border-white/15 bg-white/5 p-4">
+              <p className="font-mono text-xs tracking-[0.1em] text-white/65">CATEGORY</p>
+              <p className="mt-1 text-base font-semibold text-white">{selectedCategory.title}</p>
+              {selectedCategory.description ? <p className="mt-2 text-sm text-white/80">{selectedCategory.description}</p> : null}
+            </div>
+            <p className="mt-4 text-xs text-white/75">Press <span className="font-mono">i</span> or <span className="font-mono">Esc</span> to close.</p>
           </div>
         </div>
       ) : null}
@@ -188,6 +252,8 @@ export function HomeClient({ sheets }: Props) {
           <Keycap>/</Keycap>
           <span>, clear with</span>
           <Keycap><span className="small-caps">esc</span></Keycap>
+          <span>, details with</span>
+          <Keycap>i</Keycap>
           <span>.</span>
         </p>
         <input
@@ -201,24 +267,39 @@ export function HomeClient({ sheets }: Props) {
           className="mt-8 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-mono text-sm outline-none ring-0 backdrop-blur placeholder:text-white/45 focus:border-[var(--accent)]"
         />
 
-        <section ref={gridRef} className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {visibleCards.map((sheet, index) => (
-            <button
-              key={sheet.slug}
-              onClick={() => router.push(`/cheatsheets/${sheet.slug}`)}
-              className={`rounded-2xl border p-5 text-left transition duration-150 ${
-                selectedIndex === index
-                  ? "scale-[1.01] border-transparent bg-white/18 shadow-[0_0_0_1px_var(--accent)]"
-                  : "border-white/15 bg-white/8 hover:border-white/25 hover:bg-white/12"
-              }`}
-            >
-              <p className="font-mono text-xs uppercase tracking-[0.15em]" style={{ color: sheet.color }}>
-                {sheet.slug}
-              </p>
-              <h2 className="mt-2 text-xl font-semibold">{sheet.title}</h2>
-              <p className="mt-2 text-sm text-white/80">{sheet.summary}</p>
-            </button>
-          ))}
+        <section ref={gridRef} className="mt-8 space-y-8">
+          {visibleCategories.map((category) => {
+            return (
+              <div key={category.id}>
+                <h2 className="text-lg font-semibold text-white">{category.title}</h2>
+                {category.description ? <p className="mt-1 text-sm text-white/70">{category.description}</p> : null}
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {category.sheets.map((sheet) => {
+                    const index = cardIndexBySlug.get(sheet.slug) ?? -1;
+                    return (
+                      <button
+                        key={sheet.slug}
+                        onClick={() => router.push(`/cheatsheets/${sheet.slug}`)}
+                        className={`aspect-square rounded-2xl border p-5 text-left transition duration-150 ${
+                          selectedIndex === index
+                            ? "scale-[1.01] border-transparent bg-white/18 shadow-[0_0_0_1px_var(--accent)]"
+                            : "border-white/15 bg-white/8 hover:border-white/25 hover:bg-white/12"
+                        }`}
+                      >
+                        <div className="flex h-full flex-col justify-between">
+                          <p className="font-mono text-xs uppercase tracking-[0.15em]" style={{ color: sheet.color }}>
+                            {sheet.slug}
+                          </p>
+                          <h3 className="text-2xl font-semibold leading-tight">{sheet.title}</h3>
+                          <p className="text-xs text-white/60">Press i for details</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </section>
         {visibleCards.length === 0 ? (
           <p className="mt-6 text-sm text-white/70">No match. Press Esc to clear your query.</p>
