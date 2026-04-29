@@ -26,3 +26,57 @@ body {
   background: color-mix(in srgb, var(--accent) 65%, black);
   color: #0a0f1a;
 }
+
+.sheet-content h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.sheet-content ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.sheet-content li {
+  margin: 0.35rem 0;
+}
+
+.sheet-content p,
+.sheet-content li {
+  color: rgba(237, 242, 244, 0.9);
+}
+
+.sheet-content code {
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-jetbrains-mono), monospace;
+  color: #ffb703;
+}
+
+.sheet-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sheet-content thead {
+  display: none;
+}
+
+.sheet-content tbody td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.55rem 0.5rem;
+  vertical-align: top;
+}
+
+.sheet-content tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sheet-content tbody td:first-child {
+  width: 40%;
+  font-family: var(--font-jetbrains-mono), monospace;
+  color: #ffb703;
+}

@@ -1,62 +1,54 @@
-"use client";
-
 import Link from "next/link";
-import { notFound, useRouter } from "next/navigation";
-import { use, useEffect } from "react";
-import { getCheatSheetBySlug } from "@/lib/cheatsheets";
+import { notFound } from "next/navigation";
+import { compileMDX } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
+import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
+import { SheetCard, SheetGrid } from "@/components/sheet-grid";
+import { cheatSheetFrontmatterSchema, getCheatSheetSource } from "@/lib/cheatsheets";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export default function CheatSheetPage({ params }: Props) {
-  const router = useRouter();
-  const resolved = use(params);
-  const sheet = getCheatSheetBySlug(resolved.slug);
+export default async function CheatSheetPage({ params }: Props) {
+  const { slug } = await params;
+  const source = await getCheatSheetSource(slug);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        router.push("/");
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [router]);
-
-  if (!sheet) {
+  if (!source) {
     notFound();
   }
 
+  const { content, frontmatter } = await compileMDX<Record<string, unknown>>({
+    source,
+    options: {
+      parseFrontmatter: true,
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+      },
+    },
+    components: {
+      SheetGrid,
+      SheetCard,
+    },
+  });
+  const parsedFrontmatter = cheatSheetFrontmatterSchema.parse(frontmatter);
+
   return (
     <div className="relative min-h-screen overflow-hidden px-6 py-10 md:px-12">
+      <SheetShortcuts />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
-      <main className="relative z-10 mx-auto max-w-6xl">
+      <main className="relative z-10 mx-auto max-w-7xl">
         <Link href="/" className="font-mono text-xs text-white/75 transition hover:text-white">
           {"<- Back to grid (Esc)"}
         </Link>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">{sheet.title}</h1>
-        <p className="mt-2 max-w-2xl text-white/80">{sheet.summary}</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight" style={{ color: parsedFrontmatter.color }}>
+          {parsedFrontmatter.title}
+        </h1>
+        <p className="mt-2 max-w-2xl text-white/80">{parsedFrontmatter.summary}</p>
 
-        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {sheet.sections.map((section) => (
-            <article key={section.title} className="rounded-2xl border border-white/15 bg-white/8 p-5 backdrop-blur">
-              <h2 className="text-lg font-semibold" style={{ color: sheet.color }}>
-                {section.title}
-              </h2>
-              <ul className="mt-4 space-y-3">
-                {section.items.map((item) => (
-                  <li key={item.keys}>
-                    <p className="font-mono text-sm text-[var(--accent)]">{item.keys}</p>
-                    <p className="text-sm text-white/80">{item.description}</p>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </section>
+        <div className="sheet-content mt-8 max-w-none">
+          {content}
+        </div>
       </main>
     </div>
   );

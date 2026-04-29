@@ -1,0 +1,32 @@
+---
+title: TypeScript
+summary: Practical type system tools for app code.
+color: "#9381ff"
+---
+
+<SheetGrid>
+  <SheetCard title="Core Types">
+    |  |  |
+    | --- | --- |
+    | `type` | Compose aliases, unions, and mapped types. |
+    | `interface` | Describe object contracts. |
+    | `keyof` | Create a union of object keys. |
+    | `typeof` | Derive a type from runtime value. |
+  </SheetCard>
+  <SheetCard title="Utility Types">
+    |  |  |
+    | --- | --- |
+    | `Partial<T>` | Make all fields optional. |
+    | `Required<T>` | Make all fields required. |
+    | `Pick<T, K>` | Select a subset of keys. |
+    | `Omit<T, K>` | Exclude keys from a type. |
+  </SheetCard>
+  <SheetCard title="Narrowing">
+    |  |  |
+    | --- | --- |
+    | `in` | Narrow union by property presence. |
+    | `instanceof` | Narrow by class. |
+    | tagged unions | Branch safely with discriminant field. |
+    | `never` checks | Enforce exhaustive switches. |
+  </SheetCard>
+</SheetGrid>

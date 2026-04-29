@@ -1,0 +1,32 @@
+---
+title: Git
+summary: Core commands for status, branching, and review.
+color: "#ff9f1c"
+---
+
+<SheetGrid>
+  <SheetCard title="Status and Diff">
+    |  |  |
+    | --- | --- |
+    | `git status` | Inspect working tree and branch state. |
+    | `git diff` | Review unstaged changes. |
+    | `git diff --staged` | Review staged changes. |
+    | `git log --oneline --graph` | Compact visual history. |
+  </SheetCard>
+  <SheetCard title="Branching">
+    |  |  |
+    | --- | --- |
+    | `git switch -c <name>` | Create and switch to branch. |
+    | `git switch <name>` | Switch to existing branch. |
+    | `git branch -d <name>` | Delete merged branch. |
+    | `git fetch --prune` | Update remotes and clean stale refs. |
+  </SheetCard>
+  <SheetCard title="Commit Flow">
+    |  |  |
+    | --- | --- |
+    | `git add -p` | Stage by hunk. |
+    | `git commit -m "message"` | Commit staged changes. |
+    | `git restore --staged <file>` | Unstage file. |
+    | `git show <sha>` | Inspect one commit in detail. |
+  </SheetCard>
+</SheetGrid>
