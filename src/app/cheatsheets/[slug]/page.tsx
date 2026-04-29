@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
@@ -44,7 +45,7 @@ export default async function CheatSheetPage({ params }: Props) {
     <div className="relative min-h-screen overflow-hidden px-6 py-10 md:px-12">
       <SheetShortcuts />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
-      <main className="relative z-10 mx-auto max-w-7xl">
+      <main className="relative z-10 mx-auto max-w-7xl" style={{ "--sheet-accent": parsedFrontmatter.color } as React.CSSProperties}>
         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs text-white/75">
           <Link href="/" className="transition hover:text-white">{"<- Back to grid"}</Link>
           <span>with</span>
