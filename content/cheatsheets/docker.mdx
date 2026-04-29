@@ -6,27 +6,27 @@ color: "#4cc9f0"
 
 <SheetGrid>
   <SheetCard title="Containers">
-    |  |  |
-    | --- | --- |
-    | `docker ps` | List running containers. |
-    | `docker ps -a` | List all containers. |
-    | `docker logs -f <id>` | Follow logs. |
-    | `docker exec -it <id> sh` | Open shell in container. |
+    |  |
+    | --- |
+    | <SheetCommand title="List running containers" command="docker ps" description="Quick health check of active containers." /> |
+    | <SheetCommand title="List all containers" command="docker ps -a" description="Includes stopped containers for debugging." /> |
+    | <SheetCommand title="Follow container logs" command="docker logs -f <id>" description="Stream logs in real time." /> |
+    | <SheetCommand title="Open shell in container" command="docker exec -it <id> sh" description="Inspect files and runtime state." /> |
   </SheetCard>
   <SheetCard title="Images">
-    |  |  |
-    | --- | --- |
-    | `docker build -t app .` | Build from Dockerfile. |
-    | `docker images` | List local images. |
-    | `docker rmi <image>` | Remove image. |
-    | `docker image prune` | Clean dangling images. |
+    |  |
+    | --- |
+    | <SheetCommand title="Build image" command="docker build -t app ." description="Create an image from current Dockerfile." /> |
+    | <SheetCommand title="List local images" command="docker images" description="Review tags and sizes before cleanup." /> |
+    | <SheetCommand title="Remove image" command="docker rmi <image>" description="Delete an image by name or ID." /> |
+    | <SheetCommand title="Prune dangling images" command="docker image prune" description="Clean untagged image layers." /> |
   </SheetCard>
   <SheetCard title="Compose">
-    |  |  |
-    | --- | --- |
-    | `docker compose up -d` | Start services in background. |
-    | `docker compose down` | Stop and remove services. |
-    | `docker compose logs -f` | Follow service logs. |
-    | `docker compose exec <service> sh` | Shell into a service. |
+    |  |
+    | --- |
+    | <SheetCommand title="Start services" command="docker compose up -d" description="Launch full stack in detached mode." /> |
+    | <SheetCommand title="Stop and remove services" command="docker compose down" description="Tear down network and containers." /> |
+    | <SheetCommand title="Follow service logs" command="docker compose logs -f" description="Watch logs across services." /> |
+    | <SheetCommand title="Open service shell" command="docker compose exec <service> sh" description="Run commands inside one service." /> |
   </SheetCard>
 </SheetGrid>

@@ -6,27 +6,27 @@ color: "#ff9f1c"
 
 <SheetGrid>
   <SheetCard title="Status and Diff">
-    |  |  |
-    | --- | --- |
-    | `git status` | Inspect working tree and branch state. |
-    | `git diff` | Review unstaged changes. |
-    | `git diff --staged` | Review staged changes. |
-    | `git log --oneline --graph` | Compact visual history. |
+    |  |
+    | --- |
+    | <SheetCommand title="Inspect working tree" command="git status" description="See branch info, staged files, and unstaged changes." /> |
+    | <SheetCommand title="Review unstaged changes" command="git diff" description="Check edits before staging." /> |
+    | <SheetCommand title="Review staged changes" command="git diff --staged" description="Verify exactly what will be committed." /> |
+    | <SheetCommand title="Browse compact history" command="git log --oneline --graph" description="Visual overview of recent commits and branches." /> |
   </SheetCard>
   <SheetCard title="Branching">
-    |  |  |
-    | --- | --- |
-    | `git switch -c <name>` | Create and switch to branch. |
-    | `git switch <name>` | Switch to existing branch. |
-    | `git branch -d <name>` | Delete merged branch. |
-    | `git fetch --prune` | Update remotes and clean stale refs. |
+    |  |
+    | --- |
+    | <SheetCommand title="Create and switch branch" command="git switch -c <name>" description="Start work in a dedicated branch." /> |
+    | <SheetCommand title="Switch branch" command="git switch <name>" description="Move to an existing local branch." /> |
+    | <SheetCommand title="Delete merged branch" command="git branch -d <name>" description="Clean up local branches after merge." /> |
+    | <SheetCommand title="Update remotes and prune" command="git fetch --prune" description="Refresh remote state and remove stale refs." /> |
   </SheetCard>
   <SheetCard title="Commit Flow">
-    |  |  |
-    | --- | --- |
-    | `git add -p` | Stage by hunk. |
-    | `git commit -m "message"` | Commit staged changes. |
-    | `git restore --staged <file>` | Unstage file. |
-    | `git show <sha>` | Inspect one commit in detail. |
+    |  |
+    | --- |
+    | <SheetCommand title="Stage by hunk" command="git add -p" description="Selectively stage only relevant changes." /> |
+    | <SheetCommand title="Commit staged changes" command={'git commit -m "message"'} description="Create a commit with an explicit message." /> |
+    | <SheetCommand title="Unstage file" command="git restore --staged <file>" description="Remove a file from the staging area." /> |
+    | <SheetCommand title="Inspect one commit" command="git show <sha>" description="Display diff, metadata, and message for a commit." /> |
   </SheetCard>
 </SheetGrid>

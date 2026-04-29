@@ -211,3 +211,42 @@ body {
   font-family: var(--font-jetbrains-mono), monospace;
   color: #ffb703;
 }
+
+.sheet-content tbody td:first-child:last-child {
+  width: auto;
+  font-family: var(--font-space-grotesk), sans-serif;
+  color: rgba(237, 242, 244, 0.95);
+}
+
+.sheet-command {
+  color: rgba(237, 242, 244, 0.95);
+}
+
+.sheet-command-title {
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 244, 0.78);
+}
+
+.sheet-terminal {
+  margin: 0.35rem 0 0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(10, 16, 28, 0.86), rgba(7, 12, 22, 0.92));
+  padding: 0.35rem 0.55rem;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #8ef6d8;
+}
+
+.sheet-command-description {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.92rem;
+  color: rgba(237, 242, 244, 0.88);
+}
