@@ -333,6 +333,7 @@ body {
 }
 
 .command-modal {
+  position: relative;
   width: 100%;
   max-width: 36rem;
   border-radius: 1.5rem;
@@ -341,6 +342,29 @@ body {
   padding: 1.5rem;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
   color: rgba(237, 242, 244, 0.92);
+}
+
+.command-modal-dismiss {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(237, 242, 244, 0.4);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.command-modal-dismiss:hover {
+  color: rgba(237, 242, 244, 0.9);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .command-modal-label {

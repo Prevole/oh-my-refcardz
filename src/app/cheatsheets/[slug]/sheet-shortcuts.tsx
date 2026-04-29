@@ -47,8 +47,9 @@ export function SheetShortcuts() {
       </button>
 
       {helpOpen ? (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#03060ecc] px-6">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-[#11203ad9] p-6 text-sm text-white/90 shadow-2xl backdrop-blur">
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#03060ecc] px-6" onClick={() => setHelpOpen(false)}>
+          <div className="relative w-full max-w-2xl rounded-2xl border border-white/20 bg-[#11203ad9] p-6 text-sm text-white/90 shadow-2xl backdrop-blur" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="command-modal-dismiss" onClick={() => setHelpOpen(false)} aria-label="Close">✕</button>
             <p className="font-mono text-xs tracking-[0.15em] text-white/70">KEYBOARD SHORTCUTS</p>
             <h3 className="mt-2 text-xl font-semibold">Symbol legend</h3>
             <table className="legend-table mt-4">

@@ -73,6 +73,7 @@ export function CommandCopyModal({ title, command, placeholders, onClose }: Comm
       aria-label={`Copy command: ${title}`}
     >
       <div className="command-modal" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="command-modal-dismiss" onClick={onClose} aria-label="Close">✕</button>
         <p className="command-modal-label">COPY WITH PLACEHOLDERS</p>
         <h3 className="command-modal-title">{title}</h3>
 

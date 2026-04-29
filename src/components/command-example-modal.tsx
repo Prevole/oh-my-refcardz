@@ -42,6 +42,7 @@ export function CommandExampleModal({ title, command, example, onClose }: Comman
         className="command-modal"
         onClick={(e) => e.stopPropagation()}
       >
+        <button type="button" className="command-modal-dismiss" onClick={onClose} aria-label="Close">✕</button>
         <p className="command-modal-label">EXAMPLE</p>
         <h3 className="command-modal-title">{title}</h3>
 
