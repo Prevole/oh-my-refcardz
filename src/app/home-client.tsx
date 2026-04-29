@@ -71,9 +71,11 @@ export function HomeClient({ sheets }: Props) {
         setSelectedIndex((prev) => Math.max(prev - columns, 0));
       }
 
-      if (event.key === "Enter" && visibleCards[selectedIndex]) {
-        event.preventDefault();
-        router.push(`/cheatsheets/${visibleCards[selectedIndex].slug}`);
+      if (event.key === "Enter" || event.key === " ") {
+        if (visibleCards[selectedIndex]) {
+          event.preventDefault();
+          router.push(`/cheatsheets/${visibleCards[selectedIndex].slug}`);
+        }
       }
 
       if (event.key === "Escape") {
@@ -146,7 +148,13 @@ export function HomeClient({ sheets }: Props) {
                   <td>Move up</td>
                 </tr>
                 <tr>
-                  <td><span className="legend-keycap">↩</span></td>
+                  <td>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="legend-keycap">↩</span>
+                      <span className="text-xs text-white/40">or</span>
+                      <span className="legend-keycap">␣</span>
+                    </span>
+                  </td>
                   <td>Open sheet</td>
                   <td><span className="legend-keycap">/</span></td>
                   <td>Focus search</td>
@@ -173,6 +181,8 @@ export function HomeClient({ sheets }: Props) {
           <span className="keycap"><ArrowGlyph direction="left" className="keycap-arrow" /><span className="text-white/30 font-normal">|</span><ArrowGlyph direction="up" className="keycap-arrow" /><span className="text-white/30 font-normal">|</span><ArrowGlyph direction="down" className="keycap-arrow" /><span className="text-white/30 font-normal">|</span><ArrowGlyph direction="right" className="keycap-arrow" /></span>
           <span>, open with</span>
           <Keycap>↩</Keycap>
+          <span>or</span>
+          <Keycap>␣</Keycap>
           <span>, search with</span>
           <Keycap>/</Keycap>
           <span>, clear with</span>

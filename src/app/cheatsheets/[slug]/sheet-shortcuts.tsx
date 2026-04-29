@@ -6,20 +6,20 @@ import { ArrowGlyph } from "@/components/arrow-glyph";
 
 export function SheetShortcuts() {
   const router = useRouter();
-  const [legendOpen, setLegendOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "?") {
         event.preventDefault();
-        setLegendOpen((prev) => !prev);
+        setHelpOpen((prev) => !prev);
         return;
       }
 
-      if (event.key === "Escape") {
+      if (event.key === "Escape" || event.key === "Backspace") {
         event.preventDefault();
-        if (legendOpen) {
-          setLegendOpen(false);
+        if (helpOpen) {
+          setHelpOpen(false);
           return;
         }
         router.push("/");
@@ -28,23 +28,23 @@ export function SheetShortcuts() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [legendOpen, router]);
+  }, [helpOpen, router]);
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setLegendOpen(true)}
+        onClick={() => setHelpOpen(true)}
         className="fixed right-5 top-5 z-20 rounded-full border border-white/25 bg-white/10 px-3 py-1 font-mono text-xs text-white/85 backdrop-blur transition hover:border-white/35 hover:bg-white/15"
       >
-        ? Legend
+        ? Help
       </button>
 
-      {legendOpen ? (
+      {helpOpen ? (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#03060ecc] px-6">
           <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-[#11203ad9] p-6 text-sm text-white/90 shadow-2xl backdrop-blur">
-            <p className="font-mono text-xs tracking-[0.15em] text-white/70">KEY LEGEND</p>
-            <h3 className="mt-2 text-xl font-semibold">Symbol shortcuts</h3>
+            <p className="font-mono text-xs tracking-[0.15em] text-white/70">KEYBOARD SHORTCUTS</p>
+            <h3 className="mt-2 text-xl font-semibold">Symbol legend</h3>
             <table className="legend-table mt-4">
               <tbody>
                 <tr>
@@ -76,6 +76,23 @@ export function SheetShortcuts() {
                   <td>Arrow down</td>
                   <td><span className="legend-keycap"><ArrowGlyph direction="right" className="legend-arrow" /></span></td>
                   <td>Arrow right</td>
+                </tr>
+              </tbody>
+            </table>
+            <h3 className="mt-5 text-xl font-semibold">Navigation</h3>
+            <table className="legend-table mt-4">
+              <tbody>
+                <tr>
+                  <td><span className="legend-keycap"><span className="small-caps">esc</span></span></td>
+                  <td>Back to grid</td>
+                  <td><span className="legend-keycap">⌫</span></td>
+                  <td>Back to grid</td>
+                </tr>
+                <tr>
+                  <td><span className="legend-keycap">?</span></td>
+                  <td>Toggle help</td>
+                  <td></td>
+                  <td></td>
                 </tr>
               </tbody>
             </table>
