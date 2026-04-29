@@ -1,0 +1,302 @@
+title: LazyVim
+summary: Navigation, panes, search, and LSP for daily flow.
+color: "#00d1b2"
+
+sections:
+  - title: Navigation
+    cards:
+      - title: Movement
+        items:
+          - type: shortcut
+            keys:
+              - "h|j|k|l"
+            description: Move left / down / up / right
+
+          - type: shortcut
+            keys:
+              - "w|b"
+            description: Jump to next / previous word
+
+          - type: shortcut
+            keys:
+              - "0|$"
+            description: Go to start / end of line
+
+          - type: shortcut
+            keys:
+              - "gg|G"
+            description: Go to top / bottom of file
+
+          - type: shortcut
+            keys:
+              - "Ctrl + d|u"
+            description: Scroll half page down / up
+
+          - type: shortcut
+            keys:
+              - "%"
+            description: Jump to matching bracket
+
+      - title: Panes and buffers
+        items:
+          - type: shortcut
+            keys:
+              - "Ctrl + h|j|k|l"
+            description: Move between panes
+
+          - type: shortcut
+            keys:
+              - "<leader>bd"
+            description: Delete current buffer
+
+          - type: shortcut
+            keys:
+              - "<leader>fb"
+            description: Open buffers list
+
+          - type: shortcut
+            keys:
+              - "] b|[ b"
+            description: Next / previous buffer
+
+          - type: shortcut
+            keys:
+              - "<leader>-"
+            description: Split pane horizontally
+
+          - type: shortcut
+            keys:
+              - "<leader>|"
+            description: Split pane vertically
+
+      - title: macOS terminal
+        items:
+          - type: shortcut
+            keys:
+              - "⌥ + ←|→"
+            description: Jump by word in terminal input
+
+          - type: shortcut
+            keys:
+              - "⌘ + ←|→"
+            description: Jump to start / end of line in terminal input
+
+          - type: shortcut
+            keys:
+              - "⌘ + c"
+            description: Copy selected terminal text
+
+          - type: shortcut
+            keys:
+              - "⌘ + v"
+            description: Paste into terminal
+
+          - type: shortcut
+            keys:
+              - "⌘ + k"
+            description: Clear terminal viewport (Ghostty)
+
+          - type: shortcut
+            keys:
+              - "⌥ + click"
+            description: Move cursor quickly in shell line editor
+
+  - title: Editing
+    cards:
+      - title: Operators
+        items:
+          - type: shortcut
+            keys:
+              - "d w|d d"
+            description: Delete word / line
+
+          - type: shortcut
+            keys:
+              - "c w|c c"
+            description: Change word / line
+
+          - type: shortcut
+            keys:
+              - "y w|y y"
+            description: Yank word / line
+
+          - type: shortcut
+            keys:
+              - "p|P"
+            description: Paste after / before cursor
+
+          - type: shortcut
+            keys:
+              - "u|Ctrl + r"
+            description: Undo / redo
+
+          - type: shortcut
+            keys:
+              - "."
+            description: Repeat last change
+
+      - title: Insert mode
+        items:
+          - type: shortcut
+            keys:
+              - "i|a"
+            description: Insert before / after cursor
+
+          - type: shortcut
+            keys:
+              - "I|A"
+            description: Insert at start / end of line
+
+          - type: shortcut
+            keys:
+              - "o|O"
+            description: Open new line below / above
+
+          - type: shortcut
+            keys:
+              - "⎋"
+            description: Return to normal mode
+
+      - title: Visual mode
+        items:
+          - type: shortcut
+            keys:
+              - "v"
+            description: Enter visual (character) mode
+
+          - type: shortcut
+            keys:
+              - "V"
+            description: Enter visual line mode
+
+          - type: shortcut
+            keys:
+              - "Ctrl + v"
+            description: Enter visual block mode
+
+          - type: shortcut
+            keys:
+              - "> |<"
+            description: Indent / dedent selection
+
+          - type: shortcut
+            keys:
+              - "g c"
+            description: Toggle comment on selection
+
+  - title: Search and Explorer
+    cards:
+      - title: File search
+        items:
+          - type: shortcut
+            keys:
+              - "<leader>ff"
+            description: Find files
+
+          - type: shortcut
+            keys:
+              - "<leader>fg"
+            description: Search text in project (grep)
+
+          - type: shortcut
+            keys:
+              - "<leader>fr"
+            description: Open recent files
+
+          - type: shortcut
+            keys:
+              - "<leader>fb"
+            description: Open buffers list
+
+          - type: shortcut
+            keys:
+              - "<leader>/"
+            description: Search in current buffer
+
+      - title: Explorer
+        items:
+          - type: shortcut
+            keys:
+              - "<leader>e"
+            description: Toggle Neo-tree
+
+          - type: shortcut
+            keys:
+              - "a"
+            description: Create file or directory in Neo-tree
+
+          - type: shortcut
+            keys:
+              - "d"
+            description: Delete file in Neo-tree
+
+          - type: shortcut
+            keys:
+              - "r"
+            description: Rename file in Neo-tree
+
+          - type: shortcut
+            keys:
+              - "y|x|p"
+            description: Copy / cut / paste in Neo-tree
+
+  - title: LSP and Code
+    cards:
+      - title: Code actions
+        items:
+          - type: shortcut
+            keys:
+              - "gd"
+            description: Go to definition
+
+          - type: shortcut
+            keys:
+              - "gr"
+            description: Find references
+
+          - type: shortcut
+            keys:
+              - "gi"
+            description: Go to implementation
+
+          - type: shortcut
+            keys:
+              - "K"
+            description: Show hover documentation
+
+          - type: shortcut
+            keys:
+              - "<leader>ca"
+            description: Open code actions
+
+          - type: shortcut
+            keys:
+              - "<leader>rn"
+            description: Rename symbol
+
+      - title: Diagnostics
+        items:
+          - type: shortcut
+            keys:
+              - "<leader>cd"
+            description: Show line diagnostics
+
+          - type: shortcut
+            keys:
+              - "] d|[ d"
+            description: Next / previous diagnostic
+
+          - type: shortcut
+            keys:
+              - "] e|[ e"
+            description: Next / previous error
+
+          - type: shortcut
+            keys:
+              - "<leader>xx"
+            description: Open diagnostics list (Trouble)
+
+          - type: shortcut
+            keys:
+              - "<leader>xw"
+            description: Open workspace diagnostics (Trouble)

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CheatSheetMeta } from "@/lib/cheatsheets";
+import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
 import { useColumnCount } from "@/hooks/use-column-count";
 import { Keycap } from "@/components/keycap";
 import { ArrowGlyph } from "@/components/arrow-glyph";
