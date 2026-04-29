@@ -62,7 +62,7 @@ export function SheetShortcuts() {
                 <tr>
                   <td><span className="legend-keycap">↩</span></td>
                   <td>Enter</td>
-                  <td><span className="legend-keycap">⎋</span></td>
+                  <td><span className="legend-keycap"><span className="small-caps">esc</span></span></td>
                   <td>Escape</td>
                 </tr>
                 <tr>

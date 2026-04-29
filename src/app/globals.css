@@ -133,7 +133,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.7rem;
+  width: 2.35rem;
   height: 2.35rem;
   border-radius: 0.55rem;
   border: 1px solid rgba(255, 255, 255, 0.28);
@@ -168,7 +168,8 @@ body {
 
 .legend-table td:nth-child(1),
 .legend-table td:nth-child(3) {
-  width: 18%;
+  width: auto;
+  white-space: nowrap;
 }
 
 .legend-table td:nth-child(2),
@@ -249,4 +250,41 @@ body {
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 0.92rem;
   color: rgba(237, 242, 244, 0.88);
+}
+
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.45rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #f8c94a;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+
+.keycap-arrow {
+  width: 1em;
+  height: 1em;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.small-caps {
+  font-variant: small-caps;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
 }
