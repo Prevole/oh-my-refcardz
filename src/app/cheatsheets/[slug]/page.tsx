@@ -8,6 +8,8 @@ import { SheetCode } from "@/components/sheet-code";
 import { SheetCard, SheetGrid } from "@/components/sheet-grid";
 import { SheetCommandsShell } from "@/components/sheet-commands-shell";
 import { cheatSheetFrontmatterSchema, getCheatSheetSource } from "@/lib/cheatsheets";
+import { ArrowGlyph } from "@/components/arrow-glyph";
+import { Keycap } from "@/components/keycap";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -43,9 +45,22 @@ export default async function CheatSheetPage({ params }: Props) {
       <SheetShortcuts />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
       <main className="relative z-10 mx-auto max-w-7xl">
-        <Link href="/" className="font-mono text-xs text-white/75 transition hover:text-white">
-          {"<- Back to grid (Esc)"}
-        </Link>
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs text-white/75">
+          <Link href="/" className="transition hover:text-white">{"<- Back to grid"}</Link>
+          <span>with</span>
+          <Keycap><span className="small-caps">esc</span></Keycap>
+          <span>or</span>
+          <Keycap>⌫</Keycap>
+          <span>, navigate with</span>
+          <Keycap>h<span className="text-white/30 font-normal">|</span>j<span className="text-white/30 font-normal">|</span>k<span className="text-white/30 font-normal">|</span>l</Keycap>
+          <span>or</span>
+          <span className="keycap"><ArrowGlyph direction="left" className="keycap-arrow" /><span className="text-white/30 font-normal">|</span><ArrowGlyph direction="up" className="keycap-arrow" /><span className="text-white/30 font-normal">|</span><ArrowGlyph direction="down" className="keycap-arrow" /><span className="text-white/30 font-normal">|</span><ArrowGlyph direction="right" className="keycap-arrow" /></span>
+          <span>, copy with</span>
+          <Keycap>y</Keycap>
+          <span>, example with</span>
+          <Keycap>i</Keycap>
+          <span>.</span>
+        </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight" style={{ color: parsedFrontmatter.color }}>
           {parsedFrontmatter.title}
         </h1>
