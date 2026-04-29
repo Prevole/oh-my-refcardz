@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import type { CheatSheetCategory } from "@/lib/yaml-cheatsheets";
-import { useColumnCount } from "@/hooks/use-column-count";
 import { Keycap } from "@/components/keycap";
 import { ArrowGlyph } from "@/components/arrow-glyph";
 
@@ -15,9 +14,27 @@ export function HomeClient({ categories }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [gridRef, columns] = useColumnCount<HTMLElement>();
+  const [columns, setColumns] = useState(3);
   const [helpOpen, setHelpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+
+  useEffect(() => {
+    const computeColumns = () => {
+      if (window.innerWidth < 640) {
+        setColumns(1);
+        return;
+      }
+      if (window.innerWidth < 1024) {
+        setColumns(2);
+        return;
+      }
+      setColumns(3);
+    };
+
+    computeColumns();
+    window.addEventListener("resize", computeColumns);
+    return () => window.removeEventListener("resize", computeColumns);
+  }, []);
 
   const visibleCategories = useMemo(() => {
     const normalized = query.toLowerCase().trim();
@@ -267,35 +284,48 @@ export function HomeClient({ categories }: Props) {
           className="mt-8 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-mono text-sm outline-none ring-0 backdrop-blur placeholder:text-white/45 focus:border-[var(--accent)]"
         />
 
-        <section ref={gridRef} className="mt-8 space-y-8">
+        <section className="mt-8 space-y-8">
           {visibleCategories.map((category) => {
+            const rows = Array.from({ length: Math.ceil(category.sheets.length / columns) }, (_, rowIndex) => {
+              const start = rowIndex * columns;
+              return category.sheets.slice(start, start + columns);
+            });
+
             return (
               <div key={category.id}>
                 <h2 className="text-lg font-semibold text-white">{category.title}</h2>
                 {category.description ? <p className="mt-1 text-sm text-white/70">{category.description}</p> : null}
-                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {category.sheets.map((sheet) => {
-                    const index = cardIndexBySlug.get(sheet.slug) ?? -1;
-                    return (
-                      <button
-                        key={sheet.slug}
-                        onClick={() => router.push(`/cheatsheets/${sheet.slug}`)}
-                        className={`aspect-square rounded-2xl border p-5 text-left transition duration-150 ${
-                          selectedIndex === index
-                            ? "scale-[1.01] border-transparent bg-white/18 shadow-[0_0_0_1px_var(--accent)]"
-                            : "border-white/15 bg-white/8 hover:border-white/25 hover:bg-white/12"
-                        }`}
-                      >
-                        <div className="flex h-full flex-col justify-between">
-                          <p className="font-mono text-xs uppercase tracking-[0.15em]" style={{ color: sheet.color }}>
-                            {sheet.slug}
-                          </p>
-                          <h3 className="text-2xl font-semibold leading-tight">{sheet.title}</h3>
-                          <p className="text-xs text-white/60">Press i for details</p>
-                        </div>
-                      </button>
-                    );
-                  })}
+                <div className="home-hex-board mt-4" style={{ "--hex-columns": String(columns) } as CSSProperties}>
+                  {rows.map((row, rowIndex) => (
+                    <div key={`${category.id}-row-${rowIndex}`} className="home-hex-row" data-row-odd={rowIndex % 2 === 1 && columns > 1}>
+                      {row.map((sheet, rowItemIndex) => {
+                        const index = cardIndexBySlug.get(sheet.slug) ?? -1;
+                        const isSelected = selectedIndex === index;
+                        return (
+                        <button
+                          key={sheet.slug}
+                          onClick={() => router.push(`/cheatsheets/${sheet.slug}`)}
+                          data-selected={isSelected}
+                          data-lowered={columns > 1 && rowItemIndex % 2 === 1}
+                          className="home-hex-card text-left"
+                          style={{ "--hex-border-color": sheet.color } as CSSProperties}
+                        >
+                          <svg className="home-hex-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                            <path
+                              className="home-hex-shape-path"
+                              d="M30 7 L70 7 Q75 7 77.4 11.3 L94.2 42.5 Q99 50 94.2 57.5 L77.4 88.7 Q75 93 70 93 L30 93 Q25 93 22.6 88.7 L5.8 57.5 Q1 50 5.8 42.5 L22.6 11.3 Q25 7 30 7 Z"
+                            />
+                          </svg>
+                          <div className="home-hex-card-inner flex h-full items-center justify-center text-center">
+                              <h3 className="text-[1.3rem] font-semibold leading-tight" style={{ color: sheet.color }}>
+                                {sheet.title}
+                              </h3>
+                          </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
