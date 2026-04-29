@@ -4,7 +4,7 @@
 - [ ] Add new cheat sheets (only 4 so far: Docker, Git, LazyVim, TypeScript)
 
 ## Documentation
-- [ ] Rewrite the README (currently the default Next.js boilerplate)
+- [x] Rewrite the README (currently the default Next.js boilerplate)
 
 ## Code
 - [x] Extract the duplicated `ArrowGlyph` component from `sheet-code.tsx` and `sheet-shortcuts.tsx` into a shared component

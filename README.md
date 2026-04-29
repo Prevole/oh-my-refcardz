@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Oh My Refcardz
 
-## Getting Started
+Keyboard-first developer cheat sheets. Browse a grid of reference cards, navigate with `hjkl` or arrow keys, search instantly, and open any sheet — all without touching the mouse.
 
-First, run the development server:
+## Features
+
+- Vim-style keyboard navigation (`hjkl` / arrows, `Enter`, `Esc`, `/` to search)
+- MDX-powered cheat sheets with rich key combo rendering
+- Responsive grid that adapts navigation to the current column layout
+- Dark theme with a polished glassmorphism UI
+
+## Available cheat sheets
+
+| Slug | Title |
+|---|---|
+| `docker` | Docker |
+| `git` | Git |
+| `lazyvim` | LazyVim |
+| `typescript` | TypeScript |
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Adding a cheat sheet
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a new `.mdx` file in `content/cheatsheets/`:
 
-## Learn More
+```mdx
+---
+title: My Tool
+summary: One-line description shown on the card.
+color: "#6c8ebf"
+---
 
-To learn more about Next.js, take a look at the following resources:
+<SheetGrid>
+  <SheetCard title="Section title">
+    |  |
+    | --- |
+    | <SheetCommand title="Do something" command="mytool run" description="What it does." /> |
+  </SheetCard>
+</SheetGrid>
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Validate the frontmatter:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run validate:cheatsheets
+```
 
-## Deploy on Vercel
+The new card appears automatically on the home page.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### MDX components
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Component | Purpose |
+|---|---|
+| `<SheetGrid>` | Wraps all cards in a responsive grid |
+| `<SheetCard title="">` | A named section block |
+| `<SheetCommand title="" command="" description="">` | A single command entry |
+| `<SheetCode>` | Inline key combo — renders `⌘ + K`, arrows, and single keys as styled glyphs |
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router)
+- [React 19](https://react.dev)
+- [TypeScript 5](https://www.typescriptlang.org)
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [MDX](https://mdxjs.com) via `next-mdx-remote`
+- [Zod v4](https://zod.dev) for frontmatter validation
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Build for production |
+| `npm run lint` | Run ESLint |
+| `npm run validate:cheatsheets` | Validate all cheat sheet frontmatter against the Zod schema |
