@@ -1,6 +1,7 @@
 title: Tar
 summary: Archive command placeholders to stress home arrangement.
 color: "#43aa8b"
+icon: tar
 
 sections:
   - title: Archives

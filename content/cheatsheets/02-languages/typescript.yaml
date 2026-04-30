@@ -1,6 +1,7 @@
 title: TypeScript
 summary: Practical type system tools for app code.
 color: "#9381ff"
+icon: typescript
 
 sections:
   - title: Type Basics

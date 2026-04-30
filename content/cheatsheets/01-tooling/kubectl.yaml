@@ -1,6 +1,7 @@
 title: Kubectl
 summary: Dummy cluster commands to fill the tooling category.
 color: "#4895ef"
+icon: kubernetes
 
 sections:
   - title: Cluster Peek

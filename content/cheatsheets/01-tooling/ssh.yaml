@@ -1,6 +1,7 @@
 title: SSH
 summary: Fake remote access references for visual testing only.
 color: "#90be6d"
+icon: ssh
 
 sections:
   - title: Connect

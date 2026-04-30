@@ -1,6 +1,7 @@
 title: Curl
 summary: Placeholder HTTP snippets to increase tile count.
 color: "#ffb703"
+icon: curl
 
 sections:
   - title: Requests

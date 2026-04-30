@@ -1,6 +1,7 @@
 title: FD
 summary: Placeholder file search commands for demo density.
 color: "#e9c46a"
+icon: fd
 
 sections:
   - title: Search files

@@ -1,6 +1,7 @@
 title: JavaScript
 summary: Everyday syntax and runtime patterns for modern app code.
 color: "#f7df1e"
+icon: javascript
 
 sections:
   - title: Core Syntax

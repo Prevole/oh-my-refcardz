@@ -1,6 +1,7 @@
 title: Git
 summary: Core commands for status, branching, and review.
 color: "#ff9f1c"
+icon: git
 
 sections:
   - title: Inspect and Review

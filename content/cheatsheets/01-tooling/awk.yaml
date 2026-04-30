@@ -1,6 +1,7 @@
 title: Awk
 summary: Tiny fake text-processing snippets to pad tile count.
 color: "#ff99c8"
+icon: awk
 
 sections:
   - title: Text processing

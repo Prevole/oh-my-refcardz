@@ -1,6 +1,7 @@
 title: Htop
 summary: Lightweight fake monitor commands for layout load testing.
 color: "#7bd389"
+icon: htop
 
 sections:
   - title: Monitoring

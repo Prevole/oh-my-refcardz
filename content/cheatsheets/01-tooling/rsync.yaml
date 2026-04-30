@@ -1,6 +1,7 @@
 title: Rsync
 summary: Fake sync examples for bigger tooling card set.
 color: "#f3722c"
+icon: rsync
 
 sections:
   - title: Sync

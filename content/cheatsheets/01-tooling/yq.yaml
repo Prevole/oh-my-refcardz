@@ -1,6 +1,7 @@
 title: YQ
 summary: Placeholder YAML query snippets for interface testing.
 color: "#ffd166"
+icon: yq
 
 sections:
   - title: YAML parsing

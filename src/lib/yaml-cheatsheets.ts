@@ -9,6 +9,7 @@ export type CheatSheetMeta = {
   summary: string;
   color: string;
   categoryId: string;
+  icon?: string;
 };
 
 export type CheatSheetCategory = {
@@ -52,6 +53,7 @@ export const yamlCheatSheetSchema = z.object({
   title: z.string().min(1),
   summary: z.string().min(1),
   color: z.string().regex(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+  icon: z.string().optional(),
   sections: z.array(sectionSchema),
 });
 
@@ -228,6 +230,7 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
         title: parsed.data.title,
         summary: parsed.data.summary,
         color: parsed.data.color,
+        icon: parsed.data.icon,
         categoryId: file.categoryPath ?? "__root__",
       };
     })

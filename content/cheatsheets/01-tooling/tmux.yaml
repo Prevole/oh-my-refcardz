@@ -1,6 +1,7 @@
 title: Tmux
 summary: Fake shortcuts and commands to stress the home layout.
 color: "#8ecae6"
+icon: tmux
 
 sections:
   - title: Session Basics

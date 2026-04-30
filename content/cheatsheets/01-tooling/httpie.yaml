@@ -1,6 +1,7 @@
 title: HTTPie
 summary: Synthetic API command examples for category scaling.
 color: "#118ab2"
+icon: httpie
 
 sections:
   - title: Requests

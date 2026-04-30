@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CheatSheetCategory } from "@/lib/yaml-cheatsheets";
 import { Keycap } from "@/components/keycap";
 import { ArrowGlyph } from "@/components/arrow-glyph";
+import { TechIcon } from "@/components/tech-icon";
 
 type Props = {
   categories: CheatSheetCategory[];
@@ -567,6 +568,7 @@ export function HomeClient({ categories }: Props) {
                           }}
                           onMouseEnter={() => setSelectedIndex(index)}
                           data-selected={isSelected}
+                          data-has-icon={!!sheet.icon}
                           className="home-hex-card text-left"
                           style={{ "--hex-border-color": sheet.color } as CSSProperties}
                         >
@@ -576,10 +578,23 @@ export function HomeClient({ categories }: Props) {
                               d="M30 7 L70 7 Q75 7 77.4 11.3 L94.2 42.5 Q99 50 94.2 57.5 L77.4 88.7 Q75 93 70 93 L30 93 Q25 93 22.6 88.7 L5.8 57.5 Q1 50 5.8 42.5 L22.6 11.3 Q25 7 30 7 Z"
                             />
                           </svg>
-                          <div className="home-hex-card-inner flex h-full items-center justify-center text-center">
-                            <h3 className="text-[1.3rem] font-semibold leading-tight" style={{ color: sheet.color }}>
-                              {sheet.title}
-                            </h3>
+                          <div className={`home-hex-card-inner ${sheet.icon ? "has-icon" : ""}`}>
+                            {sheet.icon ? (
+                              <>
+                                <div className="home-hex-half home-hex-half-icon">
+                                  <TechIcon icon={sheet.icon} color={sheet.color} className="home-hex-icon" />
+                                </div>
+                                <div className="home-hex-half home-hex-half-title">
+                                  <h3 className="home-hex-title" style={{ color: sheet.color }}>
+                                    {sheet.title}
+                                  </h3>
+                                </div>
+                              </>
+                            ) : (
+                              <h3 className="home-hex-title home-hex-title-centered" style={{ color: sheet.color }}>
+                                {sheet.title}
+                              </h3>
+                            )}
                           </div>
                         </button>
                       </div>

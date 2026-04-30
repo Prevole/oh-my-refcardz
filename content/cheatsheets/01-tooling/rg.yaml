@@ -1,6 +1,7 @@
 title: Ripgrep
 summary: Quick fake search commands for dense home rendering.
 color: "#e76f51"
+icon: rg
 
 sections:
   - title: Search

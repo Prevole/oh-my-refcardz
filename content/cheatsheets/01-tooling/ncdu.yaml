@@ -1,6 +1,7 @@
 title: NCDU
 summary: Fake disk usage commands for extra tiles.
 color: "#06d6a0"
+icon: ncdu
 
 sections:
   - title: Disk

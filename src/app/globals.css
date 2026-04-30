@@ -301,6 +301,66 @@ body {
   position: relative;
   z-index: 1;
   padding: 0.7rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-hex-card-inner.has-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.home-hex-half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.home-hex-half-icon {
+  align-items: flex-end;
+  padding-bottom: 0.25rem;
+}
+
+.home-hex-half-title {
+  align-items: flex-start;
+  padding-top: 1rem;
+}
+
+.home-hex-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+}
+
+.home-hex-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.home-hex-title {
+  font-size: clamp(0.75rem, 2.5vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.15;
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-align: center;
+}
+
+.home-hex-title-centered {
+  font-size: clamp(0.9rem, 3vw, 1.3rem);
+  -webkit-line-clamp: 3;
 }
 
 .home-hex-board {
@@ -314,6 +374,10 @@ body {
 
 @media (max-width: 640px) {
   .home-hex-board { padding-bottom: 0.6rem; }
+  .home-hex-icon {
+    width: 2rem;
+    height: 2rem;
+  }
 }
 
 .sheet-content table {

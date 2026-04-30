@@ -1,6 +1,7 @@
 title: LazyVim
 summary: Navigation, panes, search, and LSP for daily flow.
 color: "#00d1b2"
+icon: vim
 
 sections:
   - title: Navigation

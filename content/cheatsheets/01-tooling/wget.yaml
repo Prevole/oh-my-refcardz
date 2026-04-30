@@ -1,6 +1,7 @@
 title: Wget
 summary: Dummy download commands for visual-only list expansion.
 color: "#ff6b6b"
+icon: wget
 
 sections:
   - title: Downloads

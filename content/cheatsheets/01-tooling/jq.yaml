@@ -1,6 +1,7 @@
 title: JQ
 summary: Fake JSON snippets to increase tile volume in tooling.
 color: "#9b5de5"
+icon: jq
 
 sections:
   - title: Filters
