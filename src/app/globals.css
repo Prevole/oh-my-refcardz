@@ -253,12 +253,20 @@ body {
 }
 
 .home-hex-card {
-  width: 10.5rem;
-  height: 10.5rem;
+  width: calc(var(--hex-cell-size) * var(--hex-card-ratio));
+  height: calc(var(--hex-cell-size) * var(--hex-card-ratio));
   position: relative;
   border: none;
   background: transparent;
   transition: filter 0.15s ease;
+}
+
+.home-hex-cell {
+  width: var(--hex-cell-size);
+  height: var(--hex-cell-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .home-hex-card:hover {
@@ -296,51 +304,16 @@ body {
 }
 
 .home-hex-board {
-  --hex-columns: 3;
-  --hex-tight-overlap-x: -2.2rem;
-  --hex-row-overlap: -4.3rem;
-  --hex-lowered-offset: 5.25rem;
-  --hex-row-indent: 4.125rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding-bottom: 1.4rem;
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  padding-bottom: 1rem;
 }
 
-.home-hex-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-}
-
-.home-hex-row .home-hex-card + .home-hex-card {
-  margin-left: var(--hex-tight-overlap-x);
-}
-
-.home-hex-row + .home-hex-row {
-  margin-top: var(--hex-row-overlap);
-}
-
-.home-hex-row[data-row-odd="true"] {
-  margin-left: var(--hex-row-indent);
-}
-
-.home-hex-card[data-lowered="true"] {
-  margin-top: var(--hex-lowered-offset);
-}
+.home-hex-cell-abs { position: absolute; }
 
 @media (max-width: 640px) {
-  .home-hex-card {
-    width: 8.7rem;
-    height: 8.7rem;
-  }
-
-  .home-hex-board {
-    --hex-tight-overlap-x: -1.82rem;
-    --hex-row-overlap: -3.55rem;
-    --hex-lowered-offset: 4.35rem;
-    --hex-row-indent: 3.375rem;
-  }
+  .home-hex-board { padding-bottom: 0.6rem; }
 }
 
 .sheet-content table {

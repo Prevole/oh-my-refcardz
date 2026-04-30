@@ -1,0 +1,17 @@
+title: FD
+summary: Placeholder file search commands for demo density.
+color: "#e9c46a"
+
+sections:
+  - title: Search files
+    cards:
+      - title: Basics
+        items:
+          - type: command
+            title: Find by name
+            command: fd config
+            description: Search file names quickly.
+          - type: command
+            title: Filter extension
+            command: fd -e ts
+            description: Show TypeScript files.

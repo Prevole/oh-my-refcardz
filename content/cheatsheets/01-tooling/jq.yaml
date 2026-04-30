@@ -1,0 +1,17 @@
+title: JQ
+summary: Fake JSON snippets to increase tile volume in tooling.
+color: "#9b5de5"
+
+sections:
+  - title: Filters
+    cards:
+      - title: Quick transforms
+        items:
+          - type: command
+            title: Pretty print JSON
+            command: jq . payload.json
+            description: Format JSON output.
+          - type: command
+            title: Select field
+            command: jq .name payload.json
+            description: Extract top-level key.

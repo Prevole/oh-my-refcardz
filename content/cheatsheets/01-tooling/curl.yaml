@@ -1,0 +1,21 @@
+title: Curl
+summary: Placeholder HTTP snippets to increase tile count.
+color: "#ffb703"
+
+sections:
+  - title: Requests
+    cards:
+      - title: HTTP Basics
+        items:
+          - type: command
+            title: Basic GET request
+            command: curl https://example.com
+            description: Fetch a public endpoint.
+          - type: command
+            title: JSON POST request
+            command: "curl -X POST -H 'Content-Type: application/json' -d '{\"ok\":true}' https://example.com/api"
+            description: Send a JSON payload.
+          - type: shortcut
+            keys:
+              - "-i"
+            description: Include response headers.

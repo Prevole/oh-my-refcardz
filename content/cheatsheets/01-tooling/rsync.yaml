@@ -1,0 +1,17 @@
+title: Rsync
+summary: Fake sync examples for bigger tooling card set.
+color: "#f3722c"
+
+sections:
+  - title: Sync
+    cards:
+      - title: Common patterns
+        items:
+          - type: command
+            title: Mirror folder
+            command: rsync -av src/ backup/
+            description: Copy files with metadata.
+          - type: command
+            title: Dry run
+            command: rsync -av --dry-run src/ backup/
+            description: Preview changes without writing.

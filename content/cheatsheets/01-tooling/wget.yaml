@@ -1,0 +1,17 @@
+title: Wget
+summary: Dummy download commands for visual-only list expansion.
+color: "#ff6b6b"
+
+sections:
+  - title: Downloads
+    cards:
+      - title: Basic fetch
+        items:
+          - type: command
+            title: Download file
+            command: wget https://example.com/file.zip
+            description: Save remote file locally.
+          - type: command
+            title: Continue download
+            command: wget -c https://example.com/file.zip
+            description: Resume partial download.

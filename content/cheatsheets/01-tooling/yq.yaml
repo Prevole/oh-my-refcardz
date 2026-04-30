@@ -1,0 +1,17 @@
+title: YQ
+summary: Placeholder YAML query snippets for interface testing.
+color: "#ffd166"
+
+sections:
+  - title: YAML parsing
+    cards:
+      - title: Basic read
+        items:
+          - type: command
+            title: Print key
+            command: yq .version app.yaml
+            description: Read a scalar from YAML.
+          - type: command
+            title: Update field
+            command: yq -i '.enabled = true' app.yaml
+            description: In-place YAML edit.

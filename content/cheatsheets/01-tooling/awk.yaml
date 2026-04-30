@@ -1,0 +1,17 @@
+title: Awk
+summary: Tiny fake text-processing snippets to pad tile count.
+color: "#ff99c8"
+
+sections:
+  - title: Text processing
+    cards:
+      - title: Quick extracts
+        items:
+          - type: command
+            title: Print first column
+            command: awk '{print $1}' data.txt
+            description: Show first field per line.
+          - type: command
+            title: Filter by value
+            command: awk '$3 > 10 {print $0}' data.txt
+            description: Print lines matching condition.

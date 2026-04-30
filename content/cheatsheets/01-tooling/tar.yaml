@@ -1,0 +1,17 @@
+title: Tar
+summary: Archive command placeholders to stress home arrangement.
+color: "#43aa8b"
+
+sections:
+  - title: Archives
+    cards:
+      - title: Pack and unpack
+        items:
+          - type: command
+            title: Create archive
+            command: tar -czf bundle.tar.gz project/
+            description: Compress a directory.
+          - type: command
+            title: Extract archive
+            command: tar -xzf bundle.tar.gz
+            description: Unpack compressed archive.

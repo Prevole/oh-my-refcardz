@@ -11,32 +11,94 @@ type Props = {
 };
 
 const SELECTED_SHEET_STORAGE_KEY = "home:selected-sheet-slug";
+const HEX_CARD_RATIO = 14 / 15;
+const HEX_SHAPE_HEIGHT_RATIO = 86 / 100;
+const HEX_VERTICAL_GAP_RATIO = 0.5;
+
+function getHexMetrics(hexWidth: number) {
+  const hexCardWidth = hexWidth * HEX_CARD_RATIO;
+  const hexCardHeight = hexWidth * HEX_CARD_RATIO;
+  const hexShapeHeight = hexCardHeight * HEX_SHAPE_HEIGHT_RATIO;
+  const hexGap = hexWidth - hexCardWidth;
+  const cardInset = hexGap / 2;
+  const horizontalStep = hexCardWidth * 1.5 + hexGap;
+
+  return {
+    hexCardWidth,
+    hexCardHeight,
+    hexShapeHeight,
+    cardInset,
+    horizontalStep,
+    oddRowOffset: horizontalStep / 2,
+    verticalStep: hexShapeHeight / 2 + hexGap * HEX_VERTICAL_GAP_RATIO,
+  };
+}
+
+function getHexRowWidth(columnCount: number, hexWidth: number) {
+  const { cardInset, hexCardWidth, horizontalStep } = getHexMetrics(hexWidth);
+  return cardInset + hexCardWidth + Math.max(0, columnCount - 1) * horizontalStep;
+}
+
+function getHexBoardDimensions(rows: CheatSheetCategory["sheets"][], hexWidth: number) {
+  const { oddRowOffset, verticalStep } = getHexMetrics(hexWidth);
+
+  const width = rows.reduce((maxWidth, row, rowIndex) => {
+    const rowWidth = getHexRowWidth(row.length, hexWidth) + (rowIndex % 2 === 1 ? oddRowOffset : 0);
+    return Math.max(maxWidth, rowWidth);
+  }, 0);
+
+  const height = rows.length > 0 ? (rows.length - 1) * verticalStep + hexWidth : hexWidth;
+
+  return { width, height };
+}
+
+function getMaxColumnsForWidth(width: number, hexWidth: number) {
+  let maxColumns = 1;
+
+  while (getHexRowWidth(maxColumns + 1, hexWidth) <= width) {
+    maxColumns += 1;
+  }
+
+  return maxColumns;
+}
 
 export function HomeClient({ categories }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [columns, setColumns] = useState(3);
+  const [columns, setColumns] = useState(1);
+  const [hexCellSize, setHexCellSize] = useState(168);
   const [helpOpen, setHelpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const hasRestoredSelectionRef = useRef(false);
+  const boardMeasureRef = useRef<HTMLDivElement | null>(null);
+  const hexBoardStyle = {
+    "--hex-cell-size": `${hexCellSize}px`,
+    "--hex-card-ratio": HEX_CARD_RATIO,
+  } as CSSProperties;
 
   useEffect(() => {
-    const computeColumns = () => {
-      if (window.innerWidth < 640) {
-        setColumns(1);
-        return;
-      }
-      if (window.innerWidth < 1024) {
-        setColumns(2);
-        return;
-      }
-      setColumns(3);
+    const node = boardMeasureRef.current;
+    if (!node) {
+      return;
+    }
+
+    const computeColumns = (width: number) => {
+      const hexWidth = width <= 640 ? 139 : 168;
+      const maxColumns = getMaxColumnsForWidth(width, hexWidth);
+      setHexCellSize(hexWidth);
+      setColumns(maxColumns);
     };
 
-    computeColumns();
-    window.addEventListener("resize", computeColumns);
-    return () => window.removeEventListener("resize", computeColumns);
+    computeColumns(node.clientWidth);
+    const observer = new ResizeObserver((entries) => {
+      const nextWidth = entries[0]?.contentRect.width;
+      if (nextWidth) {
+        computeColumns(nextWidth);
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
   }, []);
 
   const visibleCategories = useMemo(() => {
@@ -318,30 +380,51 @@ export function HomeClient({ categories }: Props) {
           className="mt-8 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-mono text-sm outline-none ring-0 backdrop-blur placeholder:text-white/45 focus:border-[var(--accent)]"
         />
 
-        <section className="mt-8 space-y-8">
+        <section className="mt-8 space-y-8" ref={boardMeasureRef} style={hexBoardStyle}>
           {visibleCategories.map((category) => {
-            const rows = Array.from({ length: Math.ceil(category.sheets.length / columns) }, (_, rowIndex) => {
-              const start = rowIndex * columns;
-              return category.sheets.slice(start, start + columns);
+            const evenCount = Math.max(1, columns);
+            const oddCount = Math.max(1, columns - 1);
+            const rows: CheatSheetCategory["sheets"][] = [];
+            let cursor = 0;
+            let rowIndex = 0;
+
+            while (cursor < category.sheets.length) {
+              const targetCount = rowIndex % 2 === 0 ? evenCount : oddCount;
+              const count = Math.min(targetCount, category.sheets.length - cursor);
+              rows.push(category.sheets.slice(cursor, cursor + count));
+              cursor += count;
+              rowIndex += 1;
+            }
+
+            const hexCellWidth = hexCellSize;
+            const { horizontalStep, oddRowOffset, verticalStep } = getHexMetrics(hexCellWidth);
+
+            const positionedSheets = rows.flatMap((row, currentRowIndex) => {
+              return row.map((sheet, colIndex) => {
+                return {
+                  sheet,
+                  left: colIndex * horizontalStep + (currentRowIndex % 2 === 1 ? oddRowOffset : 0),
+                  top: currentRowIndex * verticalStep,
+                };
+              });
             });
+
+            const boardDimensions = getHexBoardDimensions(rows, hexCellWidth);
 
             return (
               <div key={category.id}>
                 <h2 className="text-lg font-semibold text-white">{category.title}</h2>
                 {category.description ? <p className="mt-1 text-sm text-white/70">{category.description}</p> : null}
-                <div className="home-hex-board mt-4" style={{ "--hex-columns": String(columns) } as CSSProperties}>
-                  {rows.map((row, rowIndex) => (
-                    <div key={`${category.id}-row-${rowIndex}`} className="home-hex-row" data-row-odd={rowIndex % 2 === 1 && columns > 1}>
-                      {row.map((sheet, rowItemIndex) => {
-                        const index = cardIndexBySlug.get(sheet.slug) ?? -1;
-                        const isSelected = selectedIndex === index;
-                        return (
-                          <button
-                            key={sheet.slug}
-                            onClick={() => openSheet(sheet.slug)}
-                            data-selected={isSelected}
-                            data-lowered={columns > 1 && rowItemIndex % 2 === 1}
-                            className="home-hex-card text-left"
+                <div className="home-hex-board mt-4 mx-auto" style={{ width: `${boardDimensions.width}px`, maxWidth: "100%", height: `${boardDimensions.height}px` }}>
+                  {positionedSheets.map(({ sheet, left, top }) => {
+                    const index = cardIndexBySlug.get(sheet.slug) ?? -1;
+                    const isSelected = selectedIndex === index;
+                    return (
+                      <div key={sheet.slug} className="home-hex-cell home-hex-cell-abs" style={{ left: `${left}px`, top: `${top}px` }}>
+                        <button
+                          onClick={() => openSheet(sheet.slug)}
+                          data-selected={isSelected}
+                          className="home-hex-card text-left"
                           style={{ "--hex-border-color": sheet.color } as CSSProperties}
                         >
                           <svg className="home-hex-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -351,15 +434,14 @@ export function HomeClient({ categories }: Props) {
                             />
                           </svg>
                           <div className="home-hex-card-inner flex h-full items-center justify-center text-center">
-                              <h3 className="text-[1.3rem] font-semibold leading-tight" style={{ color: sheet.color }}>
-                                {sheet.title}
-                              </h3>
+                            <h3 className="text-[1.3rem] font-semibold leading-tight" style={{ color: sheet.color }}>
+                              {sheet.title}
+                            </h3>
                           </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ))}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
