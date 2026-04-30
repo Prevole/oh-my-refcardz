@@ -556,7 +556,16 @@ export function HomeClient({ categories }: Props) {
                     return (
                       <div key={sheet.slug} className="home-hex-cell home-hex-cell-abs" style={{ left: `${left}px`, top: `${top}px` }}>
                         <button
-                          onClick={() => openSheet(sheet.slug)}
+                          onClick={(event) => {
+                            if (event.shiftKey) {
+                              event.preventDefault();
+                              setSelectedIndex(index);
+                              setInfoOpen(true);
+                            } else {
+                              openSheet(sheet.slug);
+                            }
+                          }}
+                          onMouseEnter={() => setSelectedIndex(index)}
                           data-selected={isSelected}
                           className="home-hex-card text-left"
                           style={{ "--hex-border-color": sheet.color } as CSSProperties}
