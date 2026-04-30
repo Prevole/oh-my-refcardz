@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import type { CheatSheetCategory } from "@/lib/yaml-cheatsheets";
 import { Keycap } from "@/components/keycap";
@@ -10,6 +10,8 @@ type Props = {
   categories: CheatSheetCategory[];
 };
 
+const SELECTED_SHEET_STORAGE_KEY = "home:selected-sheet-slug";
+
 export function HomeClient({ categories }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -17,6 +19,7 @@ export function HomeClient({ categories }: Props) {
   const [columns, setColumns] = useState(3);
   const [helpOpen, setHelpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const hasRestoredSelectionRef = useRef(false);
 
   useEffect(() => {
     const computeColumns = () => {
@@ -80,6 +83,37 @@ export function HomeClient({ categories }: Props) {
   }, [selectedCard, visibleCategories]);
 
   useEffect(() => {
+    if (hasRestoredSelectionRef.current || visibleCards.length === 0) {
+      return;
+    }
+
+    const savedSlug = window.sessionStorage.getItem(SELECTED_SHEET_STORAGE_KEY);
+    if (!savedSlug) {
+      hasRestoredSelectionRef.current = true;
+      return;
+    }
+
+    const savedIndex = visibleCards.findIndex((card) => card.slug === savedSlug);
+    if (savedIndex >= 0) {
+      window.setTimeout(() => setSelectedIndex(savedIndex), 0);
+    }
+
+    hasRestoredSelectionRef.current = true;
+  }, [visibleCards]);
+
+  useEffect(() => {
+    if (!selectedCard) {
+      return;
+    }
+    window.sessionStorage.setItem(SELECTED_SHEET_STORAGE_KEY, selectedCard.slug);
+  }, [selectedCard]);
+
+  const openSheet = useCallback((slug: string) => {
+    window.sessionStorage.setItem(SELECTED_SHEET_STORAGE_KEY, slug);
+    router.push(`/cheatsheets/${slug}`);
+  }, [router]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target?.tagName === "INPUT" && event.key !== "Escape") {
@@ -127,7 +161,7 @@ export function HomeClient({ categories }: Props) {
       if (event.key === "Enter" || event.key === " ") {
         if (selectedCard) {
           event.preventDefault();
-          router.push(`/cheatsheets/${selectedCard.slug}`);
+          openSheet(selectedCard.slug);
         }
       }
 
@@ -147,7 +181,7 @@ export function HomeClient({ categories }: Props) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [router, selectedIndex, visibleCards.length, columns, helpOpen, infoOpen, selectedCard]);
+  }, [selectedIndex, visibleCards.length, columns, helpOpen, infoOpen, selectedCard, openSheet]);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">
@@ -302,12 +336,12 @@ export function HomeClient({ categories }: Props) {
                         const index = cardIndexBySlug.get(sheet.slug) ?? -1;
                         const isSelected = selectedIndex === index;
                         return (
-                        <button
-                          key={sheet.slug}
-                          onClick={() => router.push(`/cheatsheets/${sheet.slug}`)}
-                          data-selected={isSelected}
-                          data-lowered={columns > 1 && rowItemIndex % 2 === 1}
-                          className="home-hex-card text-left"
+                          <button
+                            key={sheet.slug}
+                            onClick={() => openSheet(sheet.slug)}
+                            data-selected={isSelected}
+                            data-lowered={columns > 1 && rowItemIndex % 2 === 1}
+                            className="home-hex-card text-left"
                           style={{ "--hex-border-color": sheet.color } as CSSProperties}
                         >
                           <svg className="home-hex-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
