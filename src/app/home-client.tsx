@@ -10,6 +10,13 @@ type Props = {
   categories: CheatSheetCategory[];
 };
 
+type HexRows = CheatSheetCategory["sheets"][];
+
+type NavigationCard = {
+  rowIndex: number;
+  colIndex: number;
+};
+
 const SELECTED_SHEET_STORAGE_KEY = "home:selected-sheet-slug";
 const HEX_CARD_RATIO = 14 / 15;
 const HEX_SHAPE_HEIGHT_RATIO = 86 / 100;
@@ -32,6 +39,81 @@ function getHexMetrics(hexWidth: number) {
     oddRowOffset: horizontalStep / 2,
     verticalStep: hexShapeHeight / 2 + hexGap * HEX_VERTICAL_GAP_RATIO,
   };
+}
+
+function buildHexRows(sheets: CheatSheetCategory["sheets"], columns: number) {
+  const evenCount = Math.max(1, columns);
+  const oddCount = Math.max(1, columns - 1);
+  const rows: HexRows = [];
+
+  if (sheets.length > 1 && sheets.length <= evenCount) {
+    const firstRowCount = Math.min(evenCount, Math.ceil(sheets.length / 2));
+    return [sheets.slice(0, firstRowCount), sheets.slice(firstRowCount)].filter((row) => row.length > 0);
+  }
+
+  let cursor = 0;
+  let rowIndex = 0;
+
+  while (cursor < sheets.length) {
+    const targetCount = rowIndex % 2 === 0 ? evenCount : oddCount;
+    const count = Math.min(targetCount, sheets.length - cursor);
+    rows.push(sheets.slice(cursor, cursor + count));
+    cursor += count;
+    rowIndex += 1;
+  }
+
+  return rows;
+}
+
+function getVerticalTarget(rows: HexRows, rowParityByIndex: number[], rowIndex: number, colIndex: number, direction: "up" | "down") {
+  const rowStep = direction === "down" ? 1 : -1;
+  const currentParity = rowParityByIndex[rowIndex];
+
+  for (let nextRowIndex = rowIndex + rowStep; nextRowIndex >= 0 && nextRowIndex < rows.length; nextRowIndex += rowStep) {
+    const nextRow = rows[nextRowIndex];
+    if (nextRow.length === 0 || rowParityByIndex[nextRowIndex] !== currentParity) {
+      continue;
+    }
+
+    return nextRow[colIndex] ?? nextRow[0] ?? null;
+  }
+
+  return null;
+}
+
+function getHorizontalTarget(rows: HexRows, isOddRow: boolean, rowIndex: number, colIndex: number, direction: "left" | "right") {
+  const targetCol = direction === "right"
+    ? isOddRow ? colIndex + 1 : colIndex
+    : isOddRow ? colIndex : colIndex - 1;
+
+  const preferredRowIndex = isOddRow ? rowIndex - 1 : rowIndex + 1;
+  const fallbackRowIndex = isOddRow ? rowIndex + 1 : rowIndex - 1;
+  const currentRow = rows[rowIndex];
+  const sameRowCol = direction === "right" ? colIndex + 1 : colIndex - 1;
+
+  for (const nextRowIndex of [preferredRowIndex]) {
+    const nextRow = rows[nextRowIndex];
+    if (!nextRow || targetCol < 0 || targetCol >= nextRow.length) {
+      continue;
+    }
+
+    return nextRow[targetCol] ?? null;
+  }
+
+  if (sameRowCol >= 0 && sameRowCol < currentRow.length) {
+    return currentRow[sameRowCol] ?? null;
+  }
+
+  for (const nextRowIndex of [fallbackRowIndex]) {
+    const nextRow = rows[nextRowIndex];
+    if (!nextRow || targetCol < 0 || targetCol >= nextRow.length) {
+      continue;
+    }
+
+    return nextRow[targetCol] ?? null;
+  }
+
+  return null;
 }
 
 function getHexRowWidth(columnCount: number, hexWidth: number) {
@@ -122,9 +204,24 @@ export function HomeClient({ categories }: Props) {
       .filter((category) => category.sheets.length > 0);
   }, [categories, query]);
 
+  const categoryLayouts = useMemo(() => {
+    return visibleCategories.map((category) => ({
+      category,
+      rows: buildHexRows(category.sheets, columns),
+    }));
+  }, [visibleCategories, columns]);
+
+  const navigationRows = useMemo(() => {
+    return categoryLayouts.flatMap(({ rows }) => rows);
+  }, [categoryLayouts]);
+
+  const navigationRowParityByIndex = useMemo(() => {
+    return categoryLayouts.flatMap(({ rows }) => rows.map((_, rowIndex) => rowIndex % 2));
+  }, [categoryLayouts]);
+
   const visibleCards = useMemo(() => {
-    return visibleCategories.flatMap((category) => category.sheets);
-  }, [visibleCategories]);
+    return categoryLayouts.flatMap(({ category }) => category.sheets);
+  }, [categoryLayouts]);
 
   const selectedCard = visibleCards[selectedIndex] ?? null;
 
@@ -135,6 +232,23 @@ export function HomeClient({ categories }: Props) {
     });
     return map;
   }, [visibleCards]);
+
+  const navigationBySlug = useMemo(() => {
+    const map = new Map<string, NavigationCard>();
+    let rowOffset = 0;
+
+    categoryLayouts.forEach(({ rows }) => {
+      rows.forEach((row, rowIndex) => {
+        row.forEach((sheet, colIndex) => {
+          map.set(sheet.slug, { rowIndex: rowOffset + rowIndex, colIndex });
+        });
+      });
+
+      rowOffset += rows.length;
+    });
+
+    return map;
+  }, [categoryLayouts]);
 
   const selectedCategory = useMemo(() => {
     if (!selectedCard) {
@@ -175,6 +289,36 @@ export function HomeClient({ categories }: Props) {
     router.push(`/cheatsheets/${slug}`);
   }, [router]);
 
+  const moveSelection = useCallback((direction: "left" | "right" | "up" | "down") => {
+    if (!selectedCard) {
+      return;
+    }
+
+    const current = navigationBySlug.get(selectedCard.slug);
+    if (!current) {
+      return;
+    }
+
+    if (navigationRows.length === 0) {
+      return;
+    }
+
+    const isOddRow = navigationRowParityByIndex[current.rowIndex] === 1;
+
+    const target = direction === "left" || direction === "right"
+      ? getHorizontalTarget(navigationRows, isOddRow, current.rowIndex, current.colIndex, direction)
+      : getVerticalTarget(navigationRows, navigationRowParityByIndex, current.rowIndex, current.colIndex, direction);
+
+    if (!target) {
+      return;
+    }
+
+    const nextIndex = cardIndexBySlug.get(target.slug);
+    if (nextIndex !== undefined) {
+      setSelectedIndex(nextIndex);
+    }
+  }, [cardIndexBySlug, navigationBySlug, navigationRowParityByIndex, navigationRows, selectedCard]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -202,22 +346,22 @@ export function HomeClient({ categories }: Props) {
 
       if (event.key === "ArrowRight" || event.key === "l") {
         event.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, Math.max(visibleCards.length - 1, 0)));
+        moveSelection("right");
       }
 
       if (event.key === "ArrowLeft" || event.key === "h") {
         event.preventDefault();
-        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+        moveSelection("left");
       }
 
       if (event.key === "ArrowDown" || event.key === "j") {
         event.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + columns, Math.max(visibleCards.length - 1, 0)));
+        moveSelection("down");
       }
 
       if (event.key === "ArrowUp" || event.key === "k") {
         event.preventDefault();
-        setSelectedIndex((prev) => Math.max(prev - columns, 0));
+        moveSelection("up");
       }
 
       if (event.key === "Enter" || event.key === " ") {
@@ -243,7 +387,7 @@ export function HomeClient({ categories }: Props) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedIndex, visibleCards.length, columns, helpOpen, infoOpen, selectedCard, openSheet]);
+  }, [helpOpen, infoOpen, moveSelection, openSheet, selectedCard]);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">
@@ -381,21 +525,7 @@ export function HomeClient({ categories }: Props) {
         />
 
         <section className="mt-8 space-y-8" ref={boardMeasureRef} style={hexBoardStyle}>
-          {visibleCategories.map((category) => {
-            const evenCount = Math.max(1, columns);
-            const oddCount = Math.max(1, columns - 1);
-            const rows: CheatSheetCategory["sheets"][] = [];
-            let cursor = 0;
-            let rowIndex = 0;
-
-            while (cursor < category.sheets.length) {
-              const targetCount = rowIndex % 2 === 0 ? evenCount : oddCount;
-              const count = Math.min(targetCount, category.sheets.length - cursor);
-              rows.push(category.sheets.slice(cursor, cursor + count));
-              cursor += count;
-              rowIndex += 1;
-            }
-
+          {categoryLayouts.map(({ category, rows }, categoryIndex) => {
             const hexCellWidth = hexCellSize;
             const { horizontalStep, oddRowOffset, verticalStep } = getHexMetrics(hexCellWidth);
 
@@ -413,9 +543,13 @@ export function HomeClient({ categories }: Props) {
 
             return (
               <div key={category.id}>
-                <h2 className="text-lg font-semibold text-white">{category.title}</h2>
-                {category.description ? <p className="mt-1 text-sm text-white/70">{category.description}</p> : null}
-                <div className="home-hex-board mt-4 mx-auto" style={{ width: `${boardDimensions.width}px`, maxWidth: "100%", height: `${boardDimensions.height}px` }}>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[0.7rem] tracking-[0.18em] text-white/45">{String(categoryIndex + 1).padStart(2, "0")}</span>
+                  <h2 className="text-lg font-semibold tracking-[0.01em] text-white/95">{category.title}</h2>
+                  <div className="h-px flex-1 bg-white/10" />
+                </div>
+                {category.description ? <p className="mt-2 text-sm text-white/70">{category.description}</p> : null}
+                <div className="home-hex-board mt-4" style={{ width: `${boardDimensions.width}px`, maxWidth: "100%", height: `${boardDimensions.height}px` }}>
                   {positionedSheets.map(({ sheet, left, top }) => {
                     const index = cardIndexBySlug.get(sheet.slug) ?? -1;
                     const isSelected = selectedIndex === index;

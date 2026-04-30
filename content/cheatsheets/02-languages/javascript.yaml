@@ -1,0 +1,188 @@
+title: JavaScript
+summary: Everyday syntax and runtime patterns for modern app code.
+color: "#f7df1e"
+
+sections:
+  - title: Core Syntax
+    cards:
+      - title: Declarations and values
+        items:
+          - type: shortcut
+            keys:
+              - const
+            description: Bind an immutable variable reference
+
+          - type: shortcut
+            keys:
+              - let
+            description: Reassign a block-scoped variable
+
+          - type: shortcut
+            keys:
+              - "??"
+            description: Fallback only for null or undefined
+
+          - type: shortcut
+            keys:
+              - "?."
+            description: Access nested values safely
+
+          - type: shortcut
+            keys:
+              - "..."
+            description: Spread or gather values in arrays, objects, and params
+
+      - title: Functions
+        items:
+          - type: shortcut
+            keys:
+              - "=>"
+            description: Declare an arrow function
+
+          - type: shortcut
+            keys:
+              - "async"
+            description: Mark a function as promise-based
+
+          - type: shortcut
+            keys:
+              - await
+            description: Pause until a promise settles
+
+          - type: shortcut
+            keys:
+              - "return"
+            description: Exit a function with a value
+
+  - title: Arrays and Objects
+    cards:
+      - title: Array transforms
+        items:
+          - type: command
+            title: Map items
+            command: array.map((item) => transform(item))
+            description: Build a new array from each element.
+
+          - type: command
+            title: Filter items
+            command: array.filter((item) => predicate(item))
+            description: Keep only matching elements.
+
+          - type: command
+            title: Find first match
+            command: array.find((item) => predicate(item))
+            description: Return the first matching element or undefined.
+
+          - type: command
+            title: Reduce to one value
+            command: array.reduce((acc, item) => next(acc, item), initialValue)
+            description: Accumulate a single result from a list.
+
+      - title: Object patterns
+        items:
+          - type: shortcut
+            keys:
+              - "{ ...obj }"
+            description: Clone or extend an object shallowly
+
+          - type: shortcut
+            keys:
+              - "{ a, b } = obj"
+            description: Extract object fields with destructuring
+
+          - type: shortcut
+            keys:
+              - "[first, ...rest]"
+            description: Destructure arrays into named values
+
+          - type: shortcut
+            keys:
+              - Object.entries
+            description: Iterate through key-value pairs
+
+  - title: Control Flow
+    cards:
+      - title: Branching
+        items:
+          - type: shortcut
+            keys:
+              - if
+            description: Run code conditionally
+
+          - type: shortcut
+            keys:
+              - "condition ? a : b"
+            description: Choose between two expressions inline
+
+          - type: shortcut
+            keys:
+              - switch
+            description: Branch on one value across multiple cases
+
+          - type: shortcut
+            keys:
+              - try/catch
+            description: Handle synchronous errors or rejected awaits
+
+      - title: Loops
+        items:
+          - type: shortcut
+            keys:
+              - for...of
+            description: Iterate over iterable values
+
+          - type: shortcut
+            keys:
+              - for...in
+            description: Iterate over enumerable object keys
+
+          - type: shortcut
+            keys:
+              - break
+            description: Exit the current loop early
+
+          - type: shortcut
+            keys:
+              - continue
+            description: Skip to the next loop iteration
+
+  - title: Async and Modules
+    cards:
+      - title: Promises
+        items:
+          - type: command
+            title: Wait for many tasks
+            command: await Promise.all(promises)
+            description: Run independent async work concurrently.
+
+          - type: command
+            title: Handle one chain
+            command: promise.then(onSuccess).catch(onError)
+            description: Compose promise handlers without async syntax.
+
+          - type: command
+            title: Always run cleanup
+            command: promise.finally(cleanup)
+            description: Run cleanup whether success or failure happens.
+
+      - title: Modules
+        items:
+          - type: shortcut
+            keys:
+              - "export function"
+            description: Export a named function from a module
+
+          - type: shortcut
+            keys:
+              - "export default"
+            description: Export the main module value
+
+          - type: shortcut
+            keys:
+              - "import { x } from './mod'"
+            description: Import named exports from another module
+
+          - type: shortcut
+            keys:
+              - "import x from './mod'"
+            description: Import a default export
