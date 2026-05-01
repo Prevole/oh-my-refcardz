@@ -44,6 +44,21 @@ export function HomeClient({ categories }: Props) {
   const hasRestoredSelectionRef = useRef(false);
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
 
+  // Gradient test controls
+  const [gradientCorners, setGradientCorners] = useState<"left" | "right" | "both">("both");
+  const [gradientDirection, setGradientDirection] = useState<"tl-br" | "tr-bl" | "l-r">("tl-br");
+
+  const getGradientCoords = () => {
+    switch (gradientDirection) {
+      case "tl-br":
+        return { x1: "0%", y1: "0%", x2: "100%", y2: "100%" };
+      case "tr-bl":
+        return { x1: "100%", y1: "0%", x2: "0%", y2: "100%" };
+      case "l-r":
+        return { x1: "0%", y1: "50%", x2: "100%", y2: "50%" };
+    }
+  };
+
   const hexBoardStyle = {
     "--hex-cell-size": `${hexCellSize}px`,
     "--hex-card-ratio": HEX_CARD_RATIO,
@@ -325,6 +340,52 @@ export function HomeClient({ categories }: Props) {
           <span>.</span>
         </p>
 
+        {/* Gradient Test Controls */}
+        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-lg border border-white/20 bg-white/5 p-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-white/70">Coins:</span>
+            <button
+              onClick={() => setGradientCorners("left")}
+              className={`rounded px-3 py-1 text-sm ${gradientCorners === "left" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
+            >
+              Left
+            </button>
+            <button
+              onClick={() => setGradientCorners("right")}
+              className={`rounded px-3 py-1 text-sm ${gradientCorners === "right" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
+            >
+              Right
+            </button>
+            <button
+              onClick={() => setGradientCorners("both")}
+              className={`rounded px-3 py-1 text-sm ${gradientCorners === "both" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
+            >
+              Both
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-white/70">Direction:</span>
+            <button
+              onClick={() => setGradientDirection("tl-br")}
+              className={`rounded px-3 py-1 text-sm ${gradientDirection === "tl-br" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
+            >
+              ↘ TL
+            </button>
+            <button
+              onClick={() => setGradientDirection("tr-bl")}
+              className={`rounded px-3 py-1 text-sm ${gradientDirection === "tr-bl" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
+            >
+              ↙ TR
+            </button>
+            <button
+              onClick={() => setGradientDirection("l-r")}
+              className={`rounded px-3 py-1 text-sm ${gradientDirection === "l-r" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
+            >
+              → LR
+            </button>
+          </div>
+        </div>
+
         <input
           id="search"
           value={query}
@@ -394,9 +455,39 @@ export function HomeClient({ categories }: Props) {
                             aria-hidden="true"
                             focusable="false"
                           >
+                            <defs>
+                              <linearGradient
+                                id={`hex-grad-${sheet.slug}`}
+                                {...getGradientCoords()}
+                              >
+                                {gradientCorners === "left" && (
+                                  <>
+                                    <stop offset="0%" stopColor="transparent" />
+                                    <stop offset="45%" stopColor={sheet.color} />
+                                    <stop offset="100%" stopColor={sheet.color} />
+                                  </>
+                                )}
+                                {gradientCorners === "right" && (
+                                  <>
+                                    <stop offset="0%" stopColor={sheet.color} />
+                                    <stop offset="55%" stopColor={sheet.color} />
+                                    <stop offset="100%" stopColor="transparent" />
+                                  </>
+                                )}
+                                {gradientCorners === "both" && (
+                                  <>
+                                    <stop offset="0%" stopColor="transparent" />
+                                    <stop offset="40%" stopColor={sheet.color} />
+                                    <stop offset="60%" stopColor={sheet.color} />
+                                    <stop offset="100%" stopColor="transparent" />
+                                  </>
+                                )}
+                              </linearGradient>
+                            </defs>
                             <path
                               className="home-hex-shape-path"
                               d="M30 7 L70 7 Q75 7 77.4 11.3 L94.2 42.5 Q99 50 94.2 57.5 L77.4 88.7 Q75 93 70 93 L30 93 Q25 93 22.6 88.7 L5.8 57.5 Q1 50 5.8 42.5 L22.6 11.3 Q25 7 30 7 Z"
+                              style={{ stroke: `url(#hex-grad-${sheet.slug})` }}
                             />
                           </svg>
                           <div className={`home-hex-card-inner ${sheet.icon ? "has-icon" : ""}`}>
