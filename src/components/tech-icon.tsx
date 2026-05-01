@@ -11,32 +11,87 @@ type Props = {
 
 const DEFAULT_ICON = "/icons/default.svg";
 
+// Module-level cache to avoid repeated fetches across renders and instances
+const svgCache = new Map<string, string>();
+const pendingFetches = new Map<string, Promise<string | null>>();
+
+function getIconPath(icon: string): string {
+  return icon.startsWith("/") ? icon : `/icons/${icon}.svg`;
+}
+
+function getCachedSvg(iconPath: string): string | null {
+  return svgCache.get(iconPath) ?? null;
+}
+
+async function fetchSvg(path: string): Promise<string | null> {
+  // Return cached result if available
+  if (svgCache.has(path)) {
+    return svgCache.get(path)!;
+  }
+
+  // Return pending fetch if one is already in progress
+  if (pendingFetches.has(path)) {
+    return pendingFetches.get(path)!;
+  }
+
+  // Start new fetch and track it
+  const fetchPromise = (async () => {
+    try {
+      const response = await fetch(path);
+      if (!response.ok) {
+        return null;
+      }
+      const svg = await response.text();
+      const cleaned = svg.replace(/<\?xml[^>]*\?>/g, "").trim();
+      svgCache.set(path, cleaned);
+      return cleaned;
+    } catch {
+      return null;
+    } finally {
+      pendingFetches.delete(path);
+    }
+  })();
+
+  pendingFetches.set(path, fetchPromise);
+  return fetchPromise;
+}
+
 export function TechIcon({ icon, color, className = "", style }: Props) {
-  const [svgContent, setSvgContent] = useState<string | null>(null);
+  const iconPath = getIconPath(icon);
+  const [svgContent, setSvgContent] = useState<string | null>(() => getCachedSvg(iconPath));
 
   useEffect(() => {
-    const iconPath = icon.startsWith("/") ? icon : `/icons/${icon}.svg`;
+    const currentIconPath = getIconPath(icon);
 
-    const loadIcon = async (path: string, fallback = true): Promise<void> => {
-      try {
-        const response = await fetch(path);
-        if (!response.ok) {
-          throw new Error(`Failed to load icon: ${path}`);
-        }
-        const svg = await response.text();
-        const cleaned = svg.replace(/<\?xml[^>]*\?>/g, "").trim();
-        setSvgContent(cleaned);
-      } catch {
-        if (fallback && path !== DEFAULT_ICON) {
-          await loadIcon(DEFAULT_ICON, false);
-        } else {
-          setSvgContent(null);
+    // Already have content for this icon
+    const cached = getCachedSvg(currentIconPath);
+    if (cached && svgContent === cached) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadIcon = async () => {
+      const svg = await fetchSvg(currentIconPath);
+      if (cancelled) return;
+
+      if (svg) {
+        setSvgContent(svg);
+      } else if (currentIconPath !== DEFAULT_ICON) {
+        // Fallback to default icon
+        const fallbackSvg = await fetchSvg(DEFAULT_ICON);
+        if (!cancelled && fallbackSvg) {
+          setSvgContent(fallbackSvg);
         }
       }
     };
 
-    loadIcon(iconPath);
-  }, [icon]);
+    loadIcon();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [icon, svgContent]);
 
   if (!svgContent) {
     return null;
