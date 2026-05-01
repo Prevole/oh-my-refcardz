@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-export type ColorMode = "hexa" | "grid" | "normal";
+export type ColorMode = "hexa" | "grid" | "category" | "normal";
 export type BorderStyle = "full" | "left" | "right" | "both";
 export type GradientDirection = "tl-br" | "tr-bl" | "l-r";
 
@@ -38,8 +38,8 @@ const DEFAULT_SETTINGS: UISettings = {
   },
 };
 
-const COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "normal"];
-const RANDOM_COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "normal"];
+const COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "category", "normal"];
+const RANDOM_COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "category", "normal"];
 const BORDER_OPTIONS: BorderStyle[] = ["full", "left", "right", "both"];
 const DIRECTION_OPTIONS: GradientDirection[] = ["tl-br", "tr-bl", "l-r"];
 

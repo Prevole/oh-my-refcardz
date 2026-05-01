@@ -20,6 +20,7 @@ type Props = {
 const COLOR_MODE_OPTIONS: { value: ColorMode; label: string }[] = [
   { value: "hexa", label: "Hexa" },
   { value: "grid", label: "Grid" },
+  { value: "category", label: "Category" },
   { value: "normal", label: "Normal" },
 ];
 

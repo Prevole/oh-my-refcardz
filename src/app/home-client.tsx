@@ -193,7 +193,7 @@ export function HomeClient({ categories }: Props) {
     return colorMap;
   }, [categoryLayouts, uiSettings.modern.colorMode]);
 
-  // Calculate accent color for selected card (hexa: colorTo, grid: interpolated color)
+  // Calculate accent color for selected card (hexa: colorTo, grid: interpolated color, category: colorFrom)
   const selectedAccentColor = useMemo(() => {
     if (!selectedCard) return null;
 
@@ -205,6 +205,10 @@ export function HomeClient({ categories }: Props) {
       const nav = navigationBySlug.get(selectedCard.slug);
       if (!nav) return null;
       return getSecondaryColorForColumn(nav.visualColIndex);
+    }
+
+    if (uiSettings.modern.colorMode === "category") {
+      return selectedCard.colorFrom;
     }
 
     return null;
@@ -438,6 +442,7 @@ export function HomeClient({ categories }: Props) {
                     const gridColor = sheetGridColors.get(sheet.slug);
                     const isHexaMode = uiSettings.modern.colorMode === "hexa";
                     const isGridMode = uiSettings.modern.colorMode === "grid";
+                    const isCategoryMode = uiSettings.modern.colorMode === "category";
 
                     // Determine colors based on mode
                     let primaryColor: string;
@@ -454,6 +459,11 @@ export function HomeClient({ categories }: Props) {
                       primaryColor = sheet.colorFrom;
                       secondaryColor = hexaColorTo;
                       titleColor = sheet.colorFrom; // Will use gradient CSS
+                    } else if (isCategoryMode) {
+                      // Category mode: single color per category
+                      primaryColor = sheet.colorFrom;
+                      secondaryColor = sheet.colorFrom;
+                      titleColor = sheet.colorFrom;
                     } else {
                       // Normal mode: sheet's own color
                       primaryColor = sheet.color;
