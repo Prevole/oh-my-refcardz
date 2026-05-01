@@ -16,7 +16,6 @@ type Props = {
   onSetDirection: (direction: GradientDirection) => void;
   onToggleAccordion: (section: keyof AccordionState) => void;
   onResetModern: () => void;
-  onResetAll: () => void;
 };
 
 const COLOR_MODE_OPTIONS: { value: ColorMode; label: string }[] = [
@@ -27,10 +26,10 @@ const COLOR_MODE_OPTIONS: { value: ColorMode; label: string }[] = [
 ];
 
 const BORDER_OPTIONS: { value: BorderStyle; label: string }[] = [
-  { value: "full", label: "F" },
-  { value: "left", label: "L" },
-  { value: "right", label: "R" },
-  { value: "both", label: "LR" },
+  { value: "full", label: "Full" },
+  { value: "left", label: "Left" },
+  { value: "right", label: "Right" },
+  { value: "both", label: "Both sides" },
 ];
 
 const ArrowTLBR = () => (
@@ -51,12 +50,12 @@ const ArrowLR = () => (
   </svg>
 );
 
-type DirectionOption = { value: GradientDirection; icon: React.ReactNode };
+type DirectionOption = { value: GradientDirection; icon: React.ReactNode; label: string };
 
 const DIRECTION_OPTIONS: DirectionOption[] = [
-  { value: "tl-br", icon: <ArrowTLBR /> },
-  { value: "tr-bl", icon: <ArrowTRBL /> },
-  { value: "l-r", icon: <ArrowLR /> },
+  { value: "tl-br", icon: <ArrowTLBR />, label: "Top Left" },
+  { value: "tr-bl", icon: <ArrowTRBL />, label: "Top Right" },
+  { value: "l-r", icon: <ArrowLR />, label: "Left" },
 ];
 
 export function SettingsPanel({
@@ -69,7 +68,6 @@ export function SettingsPanel({
   onSetDirection,
   onToggleAccordion,
   onResetModern,
-  onResetAll,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
@@ -220,16 +218,16 @@ export function SettingsPanel({
                 </div>
               </div>
 
-              {/* Border, Orientation & Reset */}
+              {/* Border Style */}
               <div className="settings-grid">
-                <div className="settings-grid-item">
-                  <span className="settings-label">Border:</span>
-                  <div className="settings-button-group">
+                <div className="settings-grid-item settings-grid-item-full">
+                  <span className="settings-label">Border style:</span>
+                  <div className="settings-button-group settings-button-group-full">
                     {BORDER_OPTIONS.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => onSetBorder(option.value)}
-                        className={`settings-group-btn settings-group-btn-square ${settings.modern.border === option.value ? "settings-group-btn-active" : ""}`}
+                        className={`settings-group-btn settings-group-btn-flex ${settings.modern.border === option.value ? "settings-group-btn-active" : ""}`}
                       >
                         {option.label}
                       </button>
@@ -237,31 +235,32 @@ export function SettingsPanel({
                   </div>
                 </div>
 
-                <div className={`settings-grid-item ${!showDirectionOptions ? "settings-grid-item-disabled" : ""}`}>
-                  <span className="settings-label">Orientation:</span>
-                  <div className="settings-button-group">
+              </div>
+
+              {/* Orientation */}
+              <div className="settings-grid">
+                <div className={`settings-grid-item settings-grid-item-full ${!showDirectionOptions ? "settings-grid-item-disabled" : ""}`}>
+                  <span className="settings-label">Orientation from:</span>
+                  <div className="settings-button-group settings-button-group-full">
                     {DIRECTION_OPTIONS.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => showDirectionOptions && onSetDirection(option.value)}
                         disabled={!showDirectionOptions}
-                        className={`settings-group-btn settings-group-btn-square ${settings.modern.direction === option.value && showDirectionOptions ? "settings-group-btn-active" : ""}`}
+                        className={`settings-group-btn settings-group-btn-flex settings-group-btn-with-icon ${settings.modern.direction === option.value && showDirectionOptions ? "settings-group-btn-active" : ""}`}
                       >
-                        {option.icon}
+                        <span className="settings-group-btn-icon" aria-hidden="true">{option.icon}</span>
+                        <span>{option.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
+              </div>
 
-                <div className="settings-grid-item">
-                  <span className="settings-label">Reset:</span>
-                  <button onClick={onResetModern} className="settings-reset-button settings-reset-small">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                      <path d="M3 3v5h5" />
-                    </svg>
-                  </button>
-                </div>
+              <div className="settings-section-reset">
+                <button className="keybinding-reset-all-btn" onClick={onResetModern}>
+                  Reset UI settings
+                </button>
               </div>
             </div>
           </AccordionItem>
@@ -274,13 +273,6 @@ export function SettingsPanel({
           >
             <KeybindingEditor />
           </AccordionItem>
-        </div>
-
-        {/* Footer */}
-        <div className="settings-panel-footer">
-          <button onClick={onResetAll} className="settings-reset-button settings-reset-all">
-            Reset All to Defaults
-          </button>
         </div>
       </div>
     </div>

@@ -29,7 +29,6 @@ export function SheetShortcuts() {
     setDirection,
     toggleAccordion,
     resetModern,
-    resetAll,
   } = useUISettings();
 
   // Keybindings
@@ -88,7 +87,6 @@ export function SheetShortcuts() {
         onSetDirection={setDirection}
         onToggleAccordion={toggleAccordion}
         onResetModern={resetModern}
-        onResetAll={resetAll}
       />
     </>
   );

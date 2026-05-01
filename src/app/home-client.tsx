@@ -69,7 +69,6 @@ export function HomeClient({ categories }: Props) {
     setDirection,
     toggleAccordion,
     resetModern,
-    resetAll,
   } = useUISettings();
 
   // Keybindings
@@ -644,7 +643,6 @@ export function HomeClient({ categories }: Props) {
         onSetDirection={setDirection}
         onToggleAccordion={toggleAccordion}
         onResetModern={resetModern}
-        onResetAll={resetAll}
       />
     </div>
   );

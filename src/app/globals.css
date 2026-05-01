@@ -1062,12 +1062,6 @@ body {
   padding: 0;
 }
 
-.settings-panel-footer {
-  padding: 1.25rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-}
-
 /* ========================================
    Accordion
    ======================================== */
@@ -1273,6 +1267,7 @@ body {
 }
 
 .settings-group-btn {
+  min-height: 2.5rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.05);
@@ -1289,9 +1284,32 @@ body {
   flex: 1;
 }
 
+.settings-group-btn-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.settings-group-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-group-btn-icon svg {
+  display: block;
+}
+
+.settings-group-btn-with-icon span:last-child {
+  line-height: 1;
+}
+
 .settings-group-btn-square {
   width: 2.2rem;
-  height: 2.2rem;
+  height: 2.5rem;
   padding: 0;
   display: flex;
   align-items: center;
@@ -1372,50 +1390,16 @@ body {
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Reset Buttons */
-.settings-reset-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.85rem;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.settings-reset-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: white;
-}
-
-.settings-reset-small {
-  width: 2.2rem;
-  height: 2.2rem;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.settings-reset-all {
-  width: 100%;
-  padding: 0.65rem 1rem;
-  border-color: rgba(239, 68, 68, 0.4);
-  color: rgba(239, 68, 68, 0.85);
-}
-
-.settings-reset-all:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.6);
-  color: rgb(239, 68, 68);
-}
-
 .settings-placeholder {
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.5);
   font-style: italic;
+}
+
+.settings-section-reset {
+  margin-top: 1.25rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ========================================
