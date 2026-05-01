@@ -57,6 +57,10 @@ function ComboDisplay({ combo }: { combo: KeyCombo }) {
   return <KeycapDisplay display={display} />;
 }
 
+function isWideCombo(combo: KeyCombo): boolean {
+  return getComboDisplay(combo).length > 1;
+}
+
 function ConflictNotice({
   conflict,
   onDismiss,
@@ -181,7 +185,7 @@ function ActionRow({
         {action.combos.map((combo, index) => (
           <div key={index} className="keybinding-combo-wrapper">
             <button
-              className={`keybinding-combo-btn ${index === 0 ? "keybinding-combo-primary" : ""}`}
+              className={`keybinding-combo-btn ${isWideCombo(combo) ? "keybinding-combo-btn-wide" : ""} ${index === 0 ? "keybinding-combo-primary" : ""}`}
               onClick={(e) => handleComboClick(e, index)}
               disabled={isRecording}
               aria-label={`Edit keybinding ${index + 1} for ${action.label}${index === 0 ? " (primary)" : ""}`}
