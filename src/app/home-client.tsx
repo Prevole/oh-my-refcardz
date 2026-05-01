@@ -337,7 +337,7 @@ export function HomeClient({ categories }: Props) {
         />
 
         <section className="mt-8 space-y-8" ref={boardMeasureRef} style={hexBoardStyle}>
-          {categoryLayouts.map(({ category, rows }, categoryIndex) => {
+          {categoryLayouts.map(({ category, rows }) => {
             const positionedSheets = getPositionedItems(rows, hexCellSize);
             const boardDimensions = getHexBoardDimensions(rows, hexCellSize);
 
@@ -345,7 +345,7 @@ export function HomeClient({ categories }: Props) {
               <div key={category.id}>
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[0.7rem] tracking-[0.18em] text-white/45">
-                    {String(categoryIndex + 1).padStart(2, "0")}
+                    {String(category.order).padStart(2, "0")}
                   </span>
                   <h2 className="text-lg font-semibold tracking-[0.01em] text-white/95">
                     {category.title}

@@ -16,6 +16,7 @@ export type CheatSheetCategory = {
   id: string;
   title: string;
   description: string;
+  order: number;
   sheets: CheatSheetMeta[];
 };
 
@@ -272,10 +273,11 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     return a.fallbackName.localeCompare(b.fallbackName);
   });
 
-  return categories.map(({ id, title, description, sheets: categorySheets }) => ({
+  return categories.map(({ id, title, description, order, sheets: categorySheets }) => ({
     id,
     title,
     description,
+    order,
     sheets: categorySheets,
   }));
 }
