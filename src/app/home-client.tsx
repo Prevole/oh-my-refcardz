@@ -23,6 +23,10 @@ import { ArrowGlyph } from "@/components/arrow-glyph";
 import { TechIcon } from "@/components/tech-icon";
 import { HomeHelpModal } from "@/components/home-help-modal";
 import { HomeInfoModal } from "@/components/home-info-modal";
+import { SettingsButton } from "@/components/settings-button";
+import { SettingsPanel } from "@/components/settings-panel";
+import { UISettingsModal } from "@/components/ui-settings-modal";
+import { useUISettings } from "@/hooks/use-ui-settings";
 
 type Props = {
   categories: CheatSheetCategory[];
@@ -41,15 +45,23 @@ export function HomeClient({ categories }: Props) {
   const [hexCellSize, setHexCellSize] = useState(HEX_CELL_SIZE_DESKTOP);
   const [helpOpen, setHelpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const [uiSettingsOpen, setUISettingsOpen] = useState(false);
   const hasRestoredSelectionRef = useRef(false);
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
 
-  // Gradient test controls
-  const [gradientCorners, setGradientCorners] = useState<"left" | "right" | "both">("both");
-  const [gradientDirection, setGradientDirection] = useState<"tl-br" | "tr-bl" | "l-r">("tl-br");
+  // UI Settings
+  const {
+    settings: uiSettings,
+    isLoaded: uiSettingsLoaded,
+    setMode,
+    toggleRandom,
+    setBorder,
+    setDirection,
+  } = useUISettings();
 
   const getGradientCoords = () => {
-    switch (gradientDirection) {
+    switch (uiSettings.modern.direction) {
       case "tl-br":
         return { x1: "0%", y1: "0%", x2: "100%", y2: "100%" };
       case "tr-bl":
@@ -340,52 +352,6 @@ export function HomeClient({ categories }: Props) {
           <span>.</span>
         </p>
 
-        {/* Gradient Test Controls */}
-        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-lg border border-white/20 bg-white/5 p-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-white/70">Coins:</span>
-            <button
-              onClick={() => setGradientCorners("left")}
-              className={`rounded px-3 py-1 text-sm ${gradientCorners === "left" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
-            >
-              Left
-            </button>
-            <button
-              onClick={() => setGradientCorners("right")}
-              className={`rounded px-3 py-1 text-sm ${gradientCorners === "right" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
-            >
-              Right
-            </button>
-            <button
-              onClick={() => setGradientCorners("both")}
-              className={`rounded px-3 py-1 text-sm ${gradientCorners === "both" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
-            >
-              Both
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-white/70">Direction:</span>
-            <button
-              onClick={() => setGradientDirection("tl-br")}
-              className={`rounded px-3 py-1 text-sm ${gradientDirection === "tl-br" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
-            >
-              ↘ TL
-            </button>
-            <button
-              onClick={() => setGradientDirection("tr-bl")}
-              className={`rounded px-3 py-1 text-sm ${gradientDirection === "tr-bl" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
-            >
-              ↙ TR
-            </button>
-            <button
-              onClick={() => setGradientDirection("l-r")}
-              className={`rounded px-3 py-1 text-sm ${gradientDirection === "l-r" ? "bg-[var(--accent)] text-black" : "bg-white/10 text-white/70"}`}
-            >
-              → LR
-            </button>
-          </div>
-        </div>
-
         <input
           id="search"
           value={query}
@@ -460,21 +426,27 @@ export function HomeClient({ categories }: Props) {
                                 id={`hex-grad-${sheet.slug}`}
                                 {...getGradientCoords()}
                               >
-                                {gradientCorners === "left" && (
+                                {uiSettings.modern.border === "full" && (
+                                  <>
+                                    <stop offset="0%" stopColor={sheet.color} />
+                                    <stop offset="100%" stopColor={sheet.color} />
+                                  </>
+                                )}
+                                {uiSettings.modern.border === "left" && (
                                   <>
                                     <stop offset="0%" stopColor="transparent" />
                                     <stop offset="45%" stopColor={sheet.color} />
                                     <stop offset="100%" stopColor={sheet.color} />
                                   </>
                                 )}
-                                {gradientCorners === "right" && (
+                                {uiSettings.modern.border === "right" && (
                                   <>
                                     <stop offset="0%" stopColor={sheet.color} />
                                     <stop offset="55%" stopColor={sheet.color} />
                                     <stop offset="100%" stopColor="transparent" />
                                   </>
                                 )}
-                                {gradientCorners === "both" && (
+                                {uiSettings.modern.border === "both" && (
                                   <>
                                     <stop offset="0%" stopColor="transparent" />
                                     <stop offset="40%" stopColor={sheet.color} />
@@ -529,6 +501,27 @@ export function HomeClient({ categories }: Props) {
           <p className="mt-6 text-sm text-white/70">No match. Press Esc to clear your query.</p>
         ) : null}
       </main>
+
+      {/* Settings Button */}
+      <SettingsButton onClick={() => setSettingsPanelOpen(true)} />
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={settingsPanelOpen}
+        onClose={() => setSettingsPanelOpen(false)}
+        onOpenUI={() => setUISettingsOpen(true)}
+      />
+
+      {/* UI Settings Modal */}
+      <UISettingsModal
+        isOpen={uiSettingsOpen}
+        onClose={() => setUISettingsOpen(false)}
+        settings={uiSettings}
+        onSetMode={setMode}
+        onToggleRandom={toggleRandom}
+        onSetBorder={setBorder}
+        onSetDirection={setDirection}
+      />
     </div>
   );
 }
