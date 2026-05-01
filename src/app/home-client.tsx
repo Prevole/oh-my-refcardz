@@ -21,15 +21,16 @@ import {
 } from "@/lib/hex-layout";
 import { getSecondaryColorForColumn } from "@/lib/color-palette";
 import { interpolateHSL, getGridInterpolationFactor } from "@/lib/color-utils";
-import { Keycap } from "@/components/keycap";
-import { ArrowGlyph } from "@/components/arrow-glyph";
+import { ACTION_IDS } from "@/lib/keybindings";
 import { TechIcon } from "@/components/tech-icon";
 import { HomeHelpModal } from "@/components/home-help-modal";
 import { HomeInfoModal } from "@/components/home-info-modal";
 import { HelpButton } from "@/components/help-button";
 import { SettingsButton } from "@/components/settings-button";
 import { SettingsPanel } from "@/components/settings-panel";
+import { HomeInlineHelp } from "@/components/inline-help";
 import { useUISettings } from "@/hooks/use-ui-settings";
+import { useKeybindings } from "@/hooks/use-keybindings";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 
 type Props = {
@@ -70,6 +71,9 @@ export function HomeClient({ categories }: Props) {
     resetModern,
     resetAll,
   } = useUISettings();
+
+  // Keybindings
+  const { matchesAction } = useKeybindings();
 
   const getGradientCoords = () => {
     switch (uiSettings.modern.direction) {
@@ -321,68 +325,79 @@ export function HomeClient({ categories }: Props) {
   const handleGlobalKeyDown = useCallback(
     (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target?.tagName === "INPUT" && event.key !== "Escape") return;
+      const isInInput = target?.tagName === "INPUT";
 
-      if (event.key === "?") {
+      // Global actions (work even in input, except for clear search)
+      if (matchesAction(event, ACTION_IDS.TOGGLE_HELP)) {
         event.preventDefault();
         setHelpOpen(true);
         return;
       }
 
-      if (event.key === ",") {
+      if (matchesAction(event, ACTION_IDS.TOGGLE_SETTINGS)) {
         event.preventDefault();
         setSettingsPanelOpen(true);
         return;
       }
 
-      if (event.key === "/") {
+      // Home-specific actions (don't trigger when in input)
+      if (isInInput) {
+        // Only clear search works in input
+        if (matchesAction(event, ACTION_IDS.CLEAR_SEARCH)) {
+          setQuery("");
+          target.blur();
+        }
+        return;
+      }
+
+      if (matchesAction(event, ACTION_IDS.FOCUS_SEARCH)) {
         event.preventDefault();
         document.getElementById("search")?.focus();
         return;
       }
 
-      if (event.key === "i" && selectedCard) {
+      if (matchesAction(event, ACTION_IDS.TOGGLE_INFO) && selectedCard) {
         event.preventDefault();
         setInfoOpen(true);
         return;
       }
 
-      if (event.key === "ArrowRight" || event.key === "l") {
+      if (matchesAction(event, ACTION_IDS.MOVE_RIGHT)) {
         event.preventDefault();
         moveSelection("right");
         return;
       }
 
-      if (event.key === "ArrowLeft" || event.key === "h") {
+      if (matchesAction(event, ACTION_IDS.MOVE_LEFT)) {
         event.preventDefault();
         moveSelection("left");
         return;
       }
 
-      if (event.key === "ArrowDown" || event.key === "j") {
+      if (matchesAction(event, ACTION_IDS.MOVE_DOWN)) {
         event.preventDefault();
         moveSelection("down");
         return;
       }
 
-      if (event.key === "ArrowUp" || event.key === "k") {
+      if (matchesAction(event, ACTION_IDS.MOVE_UP)) {
         event.preventDefault();
         moveSelection("up");
         return;
       }
 
-      if ((event.key === "Enter" || event.key === " ") && selectedCard) {
+      if (matchesAction(event, ACTION_IDS.OPEN_SHEET) && selectedCard) {
         event.preventDefault();
         openSheet(selectedCard.slug);
         return;
       }
 
-      if (event.key === "Escape") {
+      if (matchesAction(event, ACTION_IDS.CLEAR_SEARCH)) {
         setQuery("");
-        (target as HTMLElement)?.blur?.();
+        target?.blur?.();
       }
     },
-    [moveSelection, openSheet, selectedCard]
+    [matchesAction, moveSelection, openSheet, selectedCard]
   );
 
   useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);
@@ -399,37 +414,7 @@ export function HomeClient({ categories }: Props) {
         <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-5xl">
           Keyboard-first cheat sheets
         </h1>
-        <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-white/75 md:text-base">
-          <span>Navigate with</span>
-          <Keycap>
-            h<span className="font-normal text-white/30">|</span>j
-            <span className="font-normal text-white/30">|</span>k
-            <span className="font-normal text-white/30">|</span>l
-          </Keycap>
-          <span>or</span>
-          <span className="keycap">
-            <ArrowGlyph direction="left" className="keycap-arrow" />
-            <span className="font-normal text-white/30">|</span>
-            <ArrowGlyph direction="up" className="keycap-arrow" />
-            <span className="font-normal text-white/30">|</span>
-            <ArrowGlyph direction="down" className="keycap-arrow" />
-            <span className="font-normal text-white/30">|</span>
-            <ArrowGlyph direction="right" className="keycap-arrow" />
-          </span>
-          <span>, open with</span>
-          <Keycap>↩</Keycap>
-          <span>or</span>
-          <Keycap>␣</Keycap>
-          <span>, search with</span>
-          <Keycap>/</Keycap>
-          <span>, clear with</span>
-          <Keycap>
-            <span className="small-caps">esc</span>
-          </Keycap>
-          <span>, help with</span>
-          <Keycap>?</Keycap>
-          <span>.</span>
-        </p>
+        <HomeInlineHelp />
 
         <input
           id="search"

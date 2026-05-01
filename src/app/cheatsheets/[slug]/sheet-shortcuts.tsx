@@ -7,7 +7,9 @@ import { HelpButton } from "@/components/help-button";
 import { SettingsButton } from "@/components/settings-button";
 import { SettingsPanel } from "@/components/settings-panel";
 import { useUISettings } from "@/hooks/use-ui-settings";
+import { useKeybindings } from "@/hooks/use-keybindings";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { ACTION_IDS } from "@/lib/keybindings";
 
 export function SheetShortcuts() {
   const router = useRouter();
@@ -30,6 +32,9 @@ export function SheetShortcuts() {
     resetAll,
   } = useUISettings();
 
+  // Keybindings
+  const { matchesAction } = useKeybindings();
+
   // Global keyboard shortcuts for sheet page (only active when no panel is open)
   const handleGlobalKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -37,26 +42,26 @@ export function SheetShortcuts() {
       const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      if (event.key === "?") {
+      if (matchesAction(event, ACTION_IDS.TOGGLE_HELP)) {
         event.preventDefault();
         setHelpOpen(true);
         return;
       }
 
-      if (event.key === ",") {
+      if (matchesAction(event, ACTION_IDS.TOGGLE_SETTINGS)) {
         event.preventDefault();
         setSettingsPanelOpen(true);
         return;
       }
 
-      if (event.key === "Escape" || event.key === "Backspace") {
+      if (matchesAction(event, ACTION_IDS.BACK_TO_HOME)) {
         event.preventDefault();
         // If a command modal is open, let it handle Escape itself
         if (document.querySelector(".command-modal-overlay")) return;
         router.push("/");
       }
     },
-    [router]
+    [matchesAction, router]
   );
 
   useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);

@@ -2,8 +2,9 @@
 
 import { useCallback } from "react";
 import { Modal } from "@/components/modal";
-import { ArrowGlyph } from "@/components/arrow-glyph";
+import { HelpRow } from "@/components/keybinding-display";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { ACTION_IDS } from "@/lib/keybindings";
 
 type Props = {
   open: boolean;
@@ -35,58 +36,15 @@ export function HomeHelpModal({ open, onClose }: Props) {
       <table className="legend-table mt-3">
         <tbody>
           <tr>
-            <td>
-              <span className="inline-flex items-center gap-1">
-                <span className="legend-keycap">h</span>
-                <span className="text-xs text-white/40">or</span>
-                <span className="legend-keycap">
-                  <ArrowGlyph direction="left" className="legend-arrow" />
-                </span>
-              </span>
-            </td>
-            <td>Move left</td>
-            <td>
-              <span className="inline-flex items-center gap-1">
-                <span className="legend-keycap">l</span>
-                <span className="text-xs text-white/40">or</span>
-                <span className="legend-keycap">
-                  <ArrowGlyph direction="right" className="legend-arrow" />
-                </span>
-              </span>
-            </td>
-            <td>Move right</td>
+            <HelpRow actionId={ACTION_IDS.MOVE_LEFT} />
+            <HelpRow actionId={ACTION_IDS.MOVE_RIGHT} />
           </tr>
           <tr>
-            <td>
-              <span className="inline-flex items-center gap-1">
-                <span className="legend-keycap">j</span>
-                <span className="text-xs text-white/40">or</span>
-                <span className="legend-keycap">
-                  <ArrowGlyph direction="down" className="legend-arrow" />
-                </span>
-              </span>
-            </td>
-            <td>Move down</td>
-            <td>
-              <span className="inline-flex items-center gap-1">
-                <span className="legend-keycap">k</span>
-                <span className="text-xs text-white/40">or</span>
-                <span className="legend-keycap">
-                  <ArrowGlyph direction="up" className="legend-arrow" />
-                </span>
-              </span>
-            </td>
-            <td>Move up</td>
+            <HelpRow actionId={ACTION_IDS.MOVE_DOWN} />
+            <HelpRow actionId={ACTION_IDS.MOVE_UP} />
           </tr>
           <tr>
-            <td>
-              <span className="inline-flex items-center gap-1">
-                <span className="legend-keycap">↩</span>
-                <span className="text-xs text-white/40">or</span>
-                <span className="legend-keycap">␣</span>
-              </span>
-            </td>
-            <td>Open sheet</td>
+            <HelpRow actionId={ACTION_IDS.OPEN_SHEET} />
             <td />
             <td />
           </tr>
@@ -98,16 +56,8 @@ export function HomeHelpModal({ open, onClose }: Props) {
       <table className="legend-table mt-3">
         <tbody>
           <tr>
-            <td>
-              <span className="legend-keycap">/</span>
-            </td>
-            <td>Focus search</td>
-            <td>
-              <span className="legend-keycap">
-                <span className="small-caps">esc</span>
-              </span>
-            </td>
-            <td>Clear search</td>
+            <HelpRow actionId={ACTION_IDS.FOCUS_SEARCH} />
+            <HelpRow actionId={ACTION_IDS.CLEAR_SEARCH} />
           </tr>
         </tbody>
       </table>
@@ -117,20 +67,11 @@ export function HomeHelpModal({ open, onClose }: Props) {
       <table className="legend-table mt-3">
         <tbody>
           <tr>
-            <td>
-              <span className="legend-keycap">i</span>
-            </td>
-            <td>Toggle details</td>
-            <td>
-              <span className="legend-keycap">?</span>
-            </td>
-            <td>Toggle help</td>
+            <HelpRow actionId={ACTION_IDS.TOGGLE_INFO} />
+            <HelpRow actionId={ACTION_IDS.TOGGLE_HELP} />
           </tr>
           <tr>
-            <td>
-              <span className="legend-keycap">,</span>
-            </td>
-            <td>Toggle settings</td>
+            <HelpRow actionId={ACTION_IDS.TOGGLE_SETTINGS} />
             <td />
             <td />
           </tr>

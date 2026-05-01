@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import type { ColorMode, BorderStyle, GradientDirection, UISettings, AccordionState } from "@/hooks/use-ui-settings";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { AccordionItem } from "./accordion";
+import { KeybindingEditor } from "./keybinding-editor";
 
 type Props = {
   isOpen: boolean;
@@ -270,12 +271,8 @@ export function SettingsPanel({
             title="Keybindings"
             isOpen={settings.accordion.keybindings}
             onToggle={() => onToggleAccordion("keybindings")}
-            disabled
-            badge="Soon"
           >
-            <div className="settings-section">
-              <p className="settings-placeholder">Keybindings configuration coming soon.</p>
-            </div>
+            <KeybindingEditor />
           </AccordionItem>
         </div>
 

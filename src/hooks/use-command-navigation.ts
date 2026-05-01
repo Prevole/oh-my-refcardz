@@ -2,6 +2,8 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import { useKeyboardContext } from "./use-keyboard-context";
+import { useKeybindings } from "./use-keybindings";
+import { ACTION_IDS } from "@/lib/keybindings";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -275,6 +277,7 @@ type UseCommandNavigationOptions = {
 
 export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions) {
   const { isScopeActive } = useKeyboardContext();
+  const { matchesAction } = useKeybindings();
   const graphRef = useRef<NavGraph>(new Map());
 
   const rebuildGraph = useCallback(() => {
@@ -347,11 +350,18 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (modalOpen) return;
 
-      switch (e.key) {
-        case "ArrowUp":    case "k": e.preventDefault(); move("up");    break;
-        case "ArrowDown":  case "j": e.preventDefault(); move("down");  break;
-        case "ArrowLeft":  case "h": e.preventDefault(); move("left");  break;
-        case "ArrowRight": case "l": e.preventDefault(); move("right"); break;
+      if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
+        e.preventDefault();
+        move("up");
+      } else if (matchesAction(e, ACTION_IDS.MOVE_DOWN)) {
+        e.preventDefault();
+        move("down");
+      } else if (matchesAction(e, ACTION_IDS.MOVE_LEFT)) {
+        e.preventDefault();
+        move("left");
+      } else if (matchesAction(e, ACTION_IDS.MOVE_RIGHT)) {
+        e.preventDefault();
+        move("right");
       }
     };
 
@@ -361,5 +371,5 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       window.removeEventListener("resize", onResize);
       document.removeEventListener("focusout", onFocusOut);
     };
-  }, [modalOpen, isScopeActive, rebuildGraph]);
+  }, [modalOpen, isScopeActive, matchesAction, rebuildGraph]);
 }

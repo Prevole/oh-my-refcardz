@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { KeyboardContextProvider } from "@/hooks/use-keyboard-context";
+import { KeybindingsProvider } from "@/hooks/use-keybindings";
 import { UISettingsProvider } from "@/hooks/use-ui-settings";
 
 type Props = {
@@ -11,7 +12,9 @@ type Props = {
 export function Providers({ children }: Props) {
   return (
     <UISettingsProvider>
-      <KeyboardContextProvider>{children}</KeyboardContextProvider>
+      <KeybindingsProvider>
+        <KeyboardContextProvider>{children}</KeyboardContextProvider>
+      </KeybindingsProvider>
     </UISettingsProvider>
   );
 }

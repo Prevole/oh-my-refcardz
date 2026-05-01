@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import { CommandExampleModal } from "@/components/command-example-modal";
 import { CommandCopyModal } from "@/components/command-copy-modal";
+import { useKeybindings } from "@/hooks/use-keybindings";
+import { ACTION_IDS } from "@/lib/keybindings";
 
 type SheetCommandProps = {
   title: string;
@@ -80,6 +82,7 @@ export function SheetCommand({ title, command, description, example }: SheetComm
   const [showCopy, setShowCopy] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { matchesAction } = useKeybindings();
 
   const placeholders = parsePlaceholders(command);
   const hasPlaceholders = placeholders.length > 0;
@@ -125,11 +128,11 @@ export function SheetCommand({ title, command, description, example }: SheetComm
         onClick={handleClick}
         onKeyDown={(e) => {
           // These keys are handled locally when focused; navigation keys are global
-          if (e.key === "y") {
+          if (matchesAction(e.nativeEvent, ACTION_IDS.COPY_COMMAND)) {
             e.preventDefault();
             handleCopyAction();
           }
-          if (e.key === "i" && example) {
+          if (matchesAction(e.nativeEvent, ACTION_IDS.SHOW_EXAMPLE) && example) {
             e.preventDefault();
             setShowExample(true);
           }
