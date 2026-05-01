@@ -4,12 +4,6 @@
 
 - [ ] Add new cheat sheets (currently 21 across 2 categories)
 
-## Testing
-
-- [ ] Write unit tests for hex layout functions (`buildHexRows`, `getHexMetrics`, etc.)
-- [ ] Write unit tests for navigation logic (`getVerticalTarget`, `getHorizontalTarget`)
-- [ ] Add integration tests for keyboard navigation
-
 ## UX
 
 - [ ] Add a user-configurable keybinding system so shortcuts (navigate: hjkl/arrows, copy: y, example: i) can be remapped via a settings panel

@@ -1,22 +1,14 @@
 # Oh My Refcardz
 
-Keyboard-first developer cheat sheets. Browse a grid of reference cards, navigate with `hjkl` or arrow keys, search instantly, and open any sheet — all without touching the mouse.
+Keyboard-first developer cheat sheets. Browse a honeycomb grid of reference cards, navigate with `hjkl` or arrow keys, search instantly, and open any sheet — all without touching the mouse.
 
 ## Features
 
 - Vim-style keyboard navigation (`hjkl` / arrows, `Enter`, `Esc`, `/` to search)
-- MDX-powered cheat sheets with rich key combo rendering
-- Responsive grid that adapts navigation to the current column layout
+- YAML-powered cheat sheets with rich key combo rendering
+- Honeycomb grid layout that adapts navigation to the current viewport
 - Dark theme with a polished glassmorphism UI
-
-## Available cheat sheets
-
-| Slug | Title |
-|---|---|
-| `docker` | Docker |
-| `git` | Git |
-| `lazyvim` | LazyVim |
-| `typescript` | TypeScript |
+- 21 cheat sheets across 2 categories (Tooling, Languages)
 
 ## Getting started
 
@@ -29,25 +21,32 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Adding a cheat sheet
 
-1. Create a new `.mdx` file in `content/cheatsheets/`:
+1. Create a new `.yaml` file in `content/cheatsheets/<category>/`:
 
-```mdx
----
+```yaml
 title: My Tool
 summary: One-line description shown on the card.
 color: "#6c8ebf"
----
+icon: mytool  # optional, matches /public/icons/mytool.svg
 
-<SheetGrid>
-  <SheetCard title="Section title">
-    |  |
-    | --- |
-    | <SheetCommand title="Do something" command="mytool run" description="What it does." /> |
-  </SheetCard>
-</SheetGrid>
+sections:
+  - title: Section title
+    cards:
+      - title: Card title
+        items:
+          - type: command
+            title: Do something
+            command: mytool run
+            description: What it does.
+            examples:  # optional
+              - mytool run --verbose
+
+          - type: shortcut
+            keys: ["Ctrl", "C"]
+            description: Copy to clipboard
 ```
 
-2. Validate the frontmatter:
+2. Validate the schema:
 
 ```bash
 npm run validate:cheatsheets
@@ -55,29 +54,62 @@ npm run validate:cheatsheets
 
 The new card appears automatically on the home page.
 
-### MDX components
+### Category metadata
 
-| Component | Purpose |
-|---|---|
-| `<SheetGrid>` | Wraps all cards in a responsive grid |
-| `<SheetCard title="">` | A named section block |
-| `<SheetCommand title="" command="" description="">` | A single command entry |
-| `<SheetCode>` | Inline key combo — renders `⌘ + K`, arrows, and single keys as styled glyphs |
+Each category folder can have a `meta.yaml` file:
+
+```yaml
+title: Tooling
+description: CLI tools and utilities for developers.
+```
+
+Folders are sorted by numeric prefix (e.g., `01-tooling/`, `02-languages/`).
+
+## Keyboard shortcuts
+
+### Home page
+
+| Key | Action |
+|-----|--------|
+| `h` / `←` | Move left |
+| `l` / `→` | Move right |
+| `j` / `↓` | Move down |
+| `k` / `↑` | Move up |
+| `Enter` / `Space` | Open sheet |
+| `/` | Focus search |
+| `Esc` | Clear search |
+| `i` | Toggle details |
+| `?` | Toggle help |
+
+### Cheat sheet page
+
+| Key | Action |
+|-----|--------|
+| `h` / `←` | Move left |
+| `l` / `→` | Move right |
+| `j` / `↓` | Move down |
+| `k` / `↑` | Move up |
+| `y` | Copy command |
+| `i` | Show example |
+| `Esc` / `Backspace` | Back to grid |
 
 ## Tech stack
 
-- [Next.js 16](https://nextjs.org) (App Router)
+- [Next.js 16](https://nextjs.org) (App Router, Turbopack)
 - [React 19](https://react.dev)
 - [TypeScript 5](https://www.typescriptlang.org)
 - [Tailwind CSS v4](https://tailwindcss.com)
-- [MDX](https://mdxjs.com) via `next-mdx-remote`
-- [Zod v4](https://zod.dev) for frontmatter validation
+- [Zod v4](https://zod.dev) for schema validation
+- [Vitest](https://vitest.dev) for unit testing
 
 ## Scripts
 
 | Command | Description |
-|---|---|
+|---------|-------------|
 | `npm run dev` | Start the development server |
 | `npm run build` | Build for production |
 | `npm run lint` | Run ESLint |
-| `npm run validate:cheatsheets` | Validate all cheat sheet frontmatter against the Zod schema |
+| `npm run test` | Run unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run validate:cheatsheets` | Validate all cheat sheets against the Zod schema |
