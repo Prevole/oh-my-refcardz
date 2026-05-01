@@ -57,7 +57,7 @@ export const yamlCheatSheetSchema = z.object({
   sections: z.array(sectionSchema),
 });
 
-const categoryMetaSchema = z.object({
+export const categoryMetaSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
 });

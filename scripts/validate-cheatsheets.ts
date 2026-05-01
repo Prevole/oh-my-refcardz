@@ -1,13 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
-import { yamlCheatSheetSchema } from "../src/lib/yaml-cheatsheets";
-import { z } from "zod";
-
-const categoryMetaSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-});
+import { yamlCheatSheetSchema, categoryMetaSchema } from "../src/lib/yaml-cheatsheets";
 
 const CATEGORY_META_FILES = new Set(["meta.yaml", "_meta.yaml"]);
 

@@ -4,13 +4,20 @@ import { notFound } from "next/navigation";
 import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
 import { SheetCommandsShell } from "@/components/sheet-commands-shell";
 import { YamlSheetRenderer } from "@/components/yaml-sheet-renderer";
-import { getYamlCheatSheet } from "@/lib/yaml-cheatsheets";
+import { getAllCheatSheetsMeta, getYamlCheatSheet } from "@/lib/yaml-cheatsheets";
 import { ArrowGlyph } from "@/components/arrow-glyph";
 import { Keycap } from "@/components/keycap";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateStaticParams() {
+  const categories = await getAllCheatSheetsMeta();
+  return categories.flatMap((category) =>
+    category.sheets.map((sheet) => ({ slug: sheet.slug }))
+  );
+}
 
 export default async function CheatSheetPage({ params }: Props) {
   const { slug } = await params;
