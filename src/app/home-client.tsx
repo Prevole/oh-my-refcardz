@@ -481,16 +481,21 @@ export function HomeClient({ categories }: Props) {
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#03060ecc] px-6" onClick={() => setInfoOpen(false)}>
           <div className="relative w-full max-w-xl rounded-2xl border border-white/20 bg-[#11203ad9] p-6 text-sm text-white/90 shadow-2xl backdrop-blur" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="command-modal-dismiss" onClick={() => setInfoOpen(false)} aria-label="Close">✕</button>
-            <p className="font-mono text-xs tracking-[0.15em] text-white/70">CHEATSHEET DETAILS</p>
-            <h3 className="mt-2 text-2xl font-semibold" style={{ color: selectedCard.color }}>{selectedCard.title}</h3>
-            <p className="mt-1 font-mono text-xs uppercase tracking-[0.13em] text-white/70">{selectedCard.slug}</p>
-            <p className="mt-4 text-white/90">{selectedCard.summary}</p>
-            <div className="mt-5 rounded-xl border border-white/15 bg-white/5 p-4">
-              <p className="font-mono text-xs tracking-[0.1em] text-white/65">CATEGORY</p>
-              <p className="mt-1 text-base font-semibold text-white">{selectedCategory.title}</p>
-              {selectedCategory.description ? <p className="mt-2 text-sm text-white/80">{selectedCategory.description}</p> : null}
+            <div className="flex items-stretch gap-4 max-sm:flex-col max-sm:gap-4">
+              {selectedCard.icon ? (
+                <div className="flex w-20 shrink-0 items-center justify-center max-sm:w-full max-sm:justify-start">
+                  <div className="sheet-details-icon p-2">
+                    <TechIcon icon={selectedCard.icon} color={selectedCard.color} className="h-16 w-16" />
+                  </div>
+                </div>
+              ) : null}
+              {selectedCard.icon ? <div className="sheet-details-divider max-sm:hidden" aria-hidden="true" /> : null}
+              <div className="min-w-0 flex-1">
+                <h3 className="min-w-0 text-2xl font-semibold md:text-[2rem]" style={{ color: selectedCard.color }}>{selectedCard.title}</h3>
+                <p className="mt-4 text-base leading-7 text-white/90 md:text-lg">{selectedCard.summary}</p>
+              </div>
             </div>
-            <p className="mt-4 text-xs text-white/75">Press <span className="font-mono">i</span> or <span className="font-mono">Esc</span> to close.</p>
+            <p className="mt-4 text-right text-xs text-white/75">Press <span className="font-mono">i</span> or <span className="font-mono">Esc</span> to close.</p>
           </div>
         </div>
       ) : null}
