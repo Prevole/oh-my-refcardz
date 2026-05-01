@@ -20,7 +20,7 @@ export function AccordionItem({
   children,
 }: AccordionItemProps) {
   return (
-    <div className={`accordion-item ${disabled ? "accordion-item-disabled" : ""}`}>
+    <div className={`accordion-item ${isOpen ? "accordion-item-open" : ""} ${disabled ? "accordion-item-disabled" : ""}`}>
       <button
         className="accordion-header"
         onClick={onToggle}

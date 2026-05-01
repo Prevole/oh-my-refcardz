@@ -1066,7 +1066,19 @@ body {
    Accordion
    ======================================== */
 .accordion-item {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0;
+  overflow: hidden;
+}
+
+.accordion-item:first-child {
+  margin-top: 0;
+}
+
+.accordion-item:last-child {
+  margin-bottom: 0;
+}
+
+.accordion-item-open {
 }
 
 .accordion-item-disabled {
@@ -1080,17 +1092,21 @@ body {
   width: 100%;
   padding: 1rem 1.5rem;
   border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(20, 31, 51, 0.96);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 0.95rem;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .accordion-header:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(24, 37, 61, 0.98);
+}
+
+.accordion-item-open .accordion-header {
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .accordion-header:disabled {
@@ -1098,7 +1114,7 @@ body {
 }
 
 .accordion-chevron {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.42);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -1109,6 +1125,8 @@ body {
 
 .accordion-title {
   flex: 1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .accordion-badge {
@@ -1137,10 +1155,12 @@ body {
 .accordion-content-inner {
   overflow: hidden;
   padding: 0 1.5rem;
+  background: rgba(31, 44, 68, 0.94);
+  border-top: none;
 }
 
 .accordion-content-open .accordion-content-inner {
-  padding-top: 0.75rem;
+  padding-top: 0.9rem;
   padding-bottom: 1.25rem;
 }
 
