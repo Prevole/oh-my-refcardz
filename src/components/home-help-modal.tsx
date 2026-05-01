@@ -34,6 +34,12 @@ export function HomeHelpModal({ open, onClose }: Props) {
       {/* Navigation */}
       <h3 className="mt-4 text-xl font-semibold">Navigation</h3>
       <table className="legend-table mt-3">
+        <colgroup>
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
         <tbody>
           <tr>
             <HelpRow actionId={ACTION_IDS.MOVE_LEFT} />
@@ -54,6 +60,12 @@ export function HomeHelpModal({ open, onClose }: Props) {
       {/* Search */}
       <h3 className="mt-6 text-xl font-semibold">Search</h3>
       <table className="legend-table mt-3">
+        <colgroup>
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
         <tbody>
           <tr>
             <HelpRow actionId={ACTION_IDS.FOCUS_SEARCH} />
@@ -65,6 +77,12 @@ export function HomeHelpModal({ open, onClose }: Props) {
       {/* Misc */}
       <h3 className="mt-6 text-xl font-semibold">Misc</h3>
       <table className="legend-table mt-3">
+        <colgroup>
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
         <tbody>
           <tr>
             <HelpRow actionId={ACTION_IDS.TOGGLE_INFO} />
