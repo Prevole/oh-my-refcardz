@@ -22,3 +22,4 @@ export const HEX_CELL_SIZE_DESKTOP = 168;
 
 // Session storage keys
 export const SELECTED_SHEET_STORAGE_KEY = "home:selected-sheet-slug";
+export const SELECTED_SHEET_ACCENT_KEY = "home:selected-sheet-accent";

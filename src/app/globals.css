@@ -98,6 +98,39 @@ body {
   font-weight: 600;
 }
 
+/* Sheet header (title + icon) */
+.sheet-header-title {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--sheet-accent, var(--accent));
+}
+
+.sheet-header-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--sheet-accent, var(--accent));
+}
+
+.sheet-header-icon svg,
+.sheet-header-icon svg path,
+.sheet-header-icon svg circle,
+.sheet-header-icon svg rect,
+.sheet-header-icon svg polygon,
+.sheet-header-icon svg ellipse {
+  fill: currentColor;
+}
+
+@media (min-width: 768px) {
+  .sheet-header-title {
+    font-size: 2.5rem;
+  }
+  .sheet-header-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+
 .sheet-content ul {
   margin: 0;
   padding-left: 1rem;

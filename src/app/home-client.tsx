@@ -9,6 +9,7 @@ import {
   HEX_CELL_SIZE_MOBILE,
   HEX_MOBILE_BREAKPOINT,
   SELECTED_SHEET_STORAGE_KEY,
+  SELECTED_SHEET_ACCENT_KEY,
 } from "@/lib/constants";
 import {
   buildHexRows,
@@ -220,6 +221,29 @@ export function HomeClient({ categories }: Props) {
     return null;
   }, [selectedCard, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
 
+  // Helper to calculate accent color for any slug
+  const getAccentColorForSlug = useCallback((slug: string): string | null => {
+    const card = visibleCards.find((c) => c.slug === slug);
+    if (!card) return null;
+
+    if (uiSettings.modern.colorMode === "grid") {
+      return sheetGridColors.get(slug) ?? null;
+    }
+
+    if (uiSettings.modern.colorMode === "hexa") {
+      const nav = navigationBySlug.get(slug);
+      if (!nav) return null;
+      return getSecondaryColorForColumn(nav.visualColIndex);
+    }
+
+    if (uiSettings.modern.colorMode === "category") {
+      return card.colorFrom;
+    }
+
+    // Normal mode: use sheet's own color
+    return card.color;
+  }, [visibleCards, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
+
   // Restore selection from session storage
   useEffect(() => {
     if (hasRestoredSelectionRef.current || visibleCards.length === 0) return;
@@ -247,9 +271,14 @@ export function HomeClient({ categories }: Props) {
   const openSheet = useCallback(
     (slug: string) => {
       window.sessionStorage.setItem(SELECTED_SHEET_STORAGE_KEY, slug);
+      // Store the calculated accent color for the sheet page to use
+      const accentColor = getAccentColorForSlug(slug);
+      if (accentColor) {
+        window.sessionStorage.setItem(SELECTED_SHEET_ACCENT_KEY, accentColor);
+      }
       router.push(`/cheatsheets/${slug}`);
     },
-    [router]
+    [router, getAccentColorForSlug]
   );
 
   const moveSelection = useCallback(

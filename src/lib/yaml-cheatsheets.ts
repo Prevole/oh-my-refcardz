@@ -79,6 +79,12 @@ export type CheatSheetCard = z.infer<typeof cardSchema>;
 export type CheatSheetSection = z.infer<typeof sectionSchema>;
 export type YamlCheatSheet = z.infer<typeof yamlCheatSheetSchema>;
 
+/** Extended YamlCheatSheet with category color information */
+export type YamlCheatSheetWithMeta = YamlCheatSheet & {
+  colorFrom: string;
+  categoryId: string;
+};
+
 // ---------------------------------------------------------------------------
 // FS reader
 // ---------------------------------------------------------------------------
@@ -214,6 +220,44 @@ export async function getYamlCheatSheet(slug: string): Promise<YamlCheatSheet | 
   }
 
   return parsed.data;
+}
+
+export async function getYamlCheatSheetWithMeta(slug: string): Promise<YamlCheatSheetWithMeta | null> {
+  const files = await listSheetFiles(contentDirectory);
+  assertUniqueSlugs(files);
+  const candidate = files.find((file) => file.slug === slug);
+
+  if (!candidate) {
+    return null;
+  }
+
+  let raw: string;
+  try {
+    raw = await fs.readFile(candidate.filePath, "utf8");
+  } catch {
+    return null;
+  }
+
+  const parsed = yamlCheatSheetSchema.safeParse(load(raw));
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid YAML cheatsheet ${slug}.yaml: ${parsed.error.issues
+        .map((issue) => `${issue.path.join(".") || "root"} — ${issue.message}`)
+        .join(", ")}`
+    );
+  }
+
+  // Calculate category color based on folder order
+  const categoryId = candidate.categoryPath ?? "__root__";
+  const folderName = categoryId === "__root__" ? null : categoryId;
+  const parsedFolder = folderName ? parseFolderName(folderName) : { order: -1, id: "general" };
+  const categoryColor = getCategoryPrimaryColor(parsedFolder.order);
+
+  return {
+    ...parsed.data,
+    colorFrom: categoryColor,
+    categoryId,
+  };
 }
 
 export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {

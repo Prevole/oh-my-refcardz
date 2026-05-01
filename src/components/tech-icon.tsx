@@ -4,7 +4,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 
 type Props = {
   icon: string;
-  color: string;
+  color?: string;
   className?: string;
   style?: CSSProperties;
 };
@@ -100,7 +100,7 @@ export function TechIcon({ icon, color, className = "", style }: Props) {
   return (
     <div
       className={`tech-icon ${className}`}
-      style={{ color, ...style }}
+      style={color ? { color, ...style } : style}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG is loaded from trusted local files
       dangerouslySetInnerHTML={{ __html: svgContent }}
     />
