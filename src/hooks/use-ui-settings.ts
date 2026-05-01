@@ -12,9 +12,15 @@ export interface ModernSettings {
   direction: GradientDirection;
 }
 
+export interface AccordionState {
+  ui: boolean;
+  keybindings: boolean;
+}
+
 export interface UISettings {
   mode: UIMode;
   modern: ModernSettings;
+  accordion: AccordionState;
 }
 
 const STORAGE_KEY = "oh-my-refcardz:ui-settings";
@@ -25,6 +31,10 @@ const DEFAULT_SETTINGS: UISettings = {
     random: false,
     border: "both",
     direction: "l-r",
+  },
+  accordion: {
+    ui: true,
+    keybindings: false,
   },
 };
 
@@ -46,14 +56,21 @@ function loadSettings(): UISettings {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as UISettings;
+      // Merge with defaults to handle missing fields
+      const merged = {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        modern: { ...DEFAULT_SETTINGS.modern, ...parsed.modern },
+        accordion: { ...DEFAULT_SETTINGS.accordion, ...parsed.accordion },
+      };
       // If random is enabled, randomize the settings on load
-      if (parsed.modern?.random) {
+      if (merged.modern?.random) {
         return {
-          ...parsed,
+          ...merged,
           modern: getRandomModernSettings(),
         };
       }
-      return parsed;
+      return merged;
     }
   } catch {
     // Ignore parse errors
@@ -123,6 +140,24 @@ export function useUISettings() {
     setModernSettings({ direction, random: false });
   }, [setModernSettings]);
 
+  const toggleAccordion = useCallback((section: keyof AccordionState) => {
+    setSettings({
+      ...settings,
+      accordion: {
+        ...settings.accordion,
+        [section]: !settings.accordion[section],
+      },
+    });
+  }, [settings, setSettings]);
+
+  const resetModern = useCallback(() => {
+    setSettings({ ...settings, modern: DEFAULT_SETTINGS.modern });
+  }, [settings, setSettings]);
+
+  const resetAll = useCallback(() => {
+    setSettings(DEFAULT_SETTINGS);
+  }, [setSettings]);
+
   return {
     settings,
     isLoaded,
@@ -131,5 +166,8 @@ export function useUISettings() {
     toggleRandom,
     setBorder,
     setDirection,
+    toggleAccordion,
+    resetModern,
+    resetAll,
   };
 }

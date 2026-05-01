@@ -90,8 +90,10 @@ export function HomeHelpModal({ open, onClose }: Props) {
               <span className="legend-keycap">?</span>
             </td>
             <td>Toggle help</td>
-            <td />
-            <td />
+            <td>
+              <span className="legend-keycap">,</span>
+            </td>
+            <td>Toggle settings</td>
           </tr>
         </tbody>
       </table>

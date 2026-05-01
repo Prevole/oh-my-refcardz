@@ -23,9 +23,9 @@ import { ArrowGlyph } from "@/components/arrow-glyph";
 import { TechIcon } from "@/components/tech-icon";
 import { HomeHelpModal } from "@/components/home-help-modal";
 import { HomeInfoModal } from "@/components/home-info-modal";
+import { HelpButton } from "@/components/help-button";
 import { SettingsButton } from "@/components/settings-button";
 import { SettingsPanel } from "@/components/settings-panel";
-import { UISettingsModal } from "@/components/ui-settings-modal";
 import { useUISettings } from "@/hooks/use-ui-settings";
 
 type Props = {
@@ -46,7 +46,6 @@ export function HomeClient({ categories }: Props) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
-  const [uiSettingsOpen, setUISettingsOpen] = useState(false);
   const hasRestoredSelectionRef = useRef(false);
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,6 +57,9 @@ export function HomeClient({ categories }: Props) {
     toggleRandom,
     setBorder,
     setDirection,
+    toggleAccordion,
+    resetModern,
+    resetAll,
   } = useUISettings();
 
   const getGradientCoords = () => {
@@ -247,6 +249,12 @@ export function HomeClient({ categories }: Props) {
         return;
       }
 
+      if (event.key === ",") {
+        event.preventDefault();
+        setSettingsPanelOpen((prev) => !prev);
+        return;
+      }
+
       if (event.key === "/") {
         event.preventDefault();
         document.getElementById("search")?.focus();
@@ -304,14 +312,6 @@ export function HomeClient({ categories }: Props) {
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
 
-      <button
-        type="button"
-        onClick={() => setHelpOpen(true)}
-        className="fixed right-5 top-5 z-20 rounded-full border border-white/25 bg-white/10 px-3 py-1 font-mono text-xs text-white/85 backdrop-blur transition hover:border-white/35 hover:bg-white/15"
-      >
-        ? Help
-      </button>
-
       <HomeHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
       <HomeInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} sheet={selectedCard} />
 
@@ -347,8 +347,8 @@ export function HomeClient({ categories }: Props) {
           <Keycap>
             <span className="small-caps">esc</span>
           </Keycap>
-          <span>, details with</span>
-          <Keycap>i</Keycap>
+          <span>, help with</span>
+          <Keycap>?</Keycap>
           <span>.</span>
         </p>
 
@@ -502,6 +502,9 @@ export function HomeClient({ categories }: Props) {
         ) : null}
       </main>
 
+      {/* Help Button */}
+      <HelpButton onClick={() => setHelpOpen(true)} />
+
       {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsPanelOpen(true)} />
 
@@ -509,18 +512,14 @@ export function HomeClient({ categories }: Props) {
       <SettingsPanel
         isOpen={settingsPanelOpen}
         onClose={() => setSettingsPanelOpen(false)}
-        onOpenUI={() => setUISettingsOpen(true)}
-      />
-
-      {/* UI Settings Modal */}
-      <UISettingsModal
-        isOpen={uiSettingsOpen}
-        onClose={() => setUISettingsOpen(false)}
         settings={uiSettings}
         onSetMode={setMode}
         onToggleRandom={toggleRandom}
         onSetBorder={setBorder}
         onSetDirection={setDirection}
+        onToggleAccordion={toggleAccordion}
+        onResetModern={resetModern}
+        onResetAll={resetAll}
       />
     </div>
   );
