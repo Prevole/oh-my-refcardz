@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CommandExampleModal } from "@/components/command-example-modal";
-import { CommandCopyModal } from "@/components/command-copy-modal";
+import { CommandExampleModal } from "@/components/sheets/command-example-modal";
+import { CommandCopyModal } from "@/components/sheets/command-copy-modal";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
-import styles from "./sheet-command.module.css";
+import sheetCommandStyles from "./sheet-commands.module.css";
 
 type SheetCommandProps = {
   title: string;
@@ -122,7 +122,7 @@ export function SheetCommand({ title, command, description, example }: SheetComm
     <>
       <div
         ref={ref}
-        className={styles.command}
+        className={sheetCommandStyles.command}
         tabIndex={0}
         data-sheet-command
         data-nav-focused="false"
@@ -140,13 +140,13 @@ export function SheetCommand({ title, command, description, example }: SheetComm
           }
         }}
       >
-        <div className={styles.header}>
-          <p className={styles.title}>{title}</p>
-          <div className={styles.actions} data-sheet-command-actions>
+        <div className={sheetCommandStyles.commandHeader}>
+          <p className={sheetCommandStyles.commandTitle}>{title}</p>
+          <div className={sheetCommandStyles.commandActions} data-sheet-command-actions>
             {example ? (
               <button
                 type="button"
-                className={styles.actionButton}
+                className={sheetCommandStyles.commandActionButton}
                 aria-label={`Show example for ${title}`}
                 title="Show example (i)"
                 onClick={() => setShowExample(true)}
@@ -156,7 +156,7 @@ export function SheetCommand({ title, command, description, example }: SheetComm
             ) : null}
             <button
               type="button"
-              className={`${styles.actionButton} ${copied ? styles.actionButtonCopied : ""}`}
+              className={`${sheetCommandStyles.commandActionButton} ${copied ? sheetCommandStyles.commandActionButtonCopied : ""}`}
               aria-label={`Copy command: ${title}`}
               title={hasPlaceholders ? "Fill and copy (y)" : "Copy (y)"}
               onClick={handleCopyAction}
@@ -165,8 +165,8 @@ export function SheetCommand({ title, command, description, example }: SheetComm
             </button>
           </div>
         </div>
-        {command ? <p className={styles.terminal}>$ {command}</p> : null}
-        {description ? <p className={styles.description}>{description}</p> : null}
+        {command ? <p className={sheetCommandStyles.commandTerminal}>$ {command}</p> : null}
+        {description ? <p className={sheetCommandStyles.commandDescription}>{description}</p> : null}
       </div>
 
       {showExample && example ? (

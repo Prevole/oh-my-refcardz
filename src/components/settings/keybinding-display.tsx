@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ArrowGlyph } from "@/components/arrow-glyph";
+import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import {
   type ActionId,
@@ -10,7 +10,7 @@ import {
   isArrowKey,
   getArrowDirection,
 } from "@/lib/keybindings";
-import styles from "./keybinding-display.module.css";
+import keybindingStyles from "./keybinding-display.module.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KeycapDisplay - Renders a single keycap with proper styling
@@ -24,8 +24,8 @@ type KeycapDisplayProps = {
 };
 
 function KeycapDisplayInner({ display, variant = "inline" }: KeycapDisplayProps) {
-  const className = variant === "legend" ? styles.legendKeycap : styles.keycap;
-  const arrowClassName = variant === "legend" ? styles.legendArrow : styles.keycapArrow;
+  const className = variant === "legend" ? keybindingStyles.legendKeycap : keybindingStyles.keycap;
+  const arrowClassName = variant === "legend" ? keybindingStyles.legendArrow : keybindingStyles.keycapArrow;
 
   if (isArrowKey(display)) {
     const direction = getArrowDirection(display);

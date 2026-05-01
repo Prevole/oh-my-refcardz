@@ -2,12 +2,12 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
 import { SheetAccentProvider } from "@/app/cheatsheets/[slug]/sheet-accent-provider";
-import { SheetCommandsShell } from "@/components/sheet-commands-shell";
-import { YamlSheetRenderer } from "@/components/yaml-sheet-renderer";
-import { TechIcon } from "@/components/tech-icon";
-import { SheetInlineHelp } from "@/components/inline-help";
+import { SheetCommandsShell } from "@/components/sheets/sheet-commands-shell";
+import { YamlSheetRenderer } from "@/components/sheets/sheet-renderer";
+import { TechIcon } from "@/components/ui/tech-icon";
+import { SheetInlineHelp } from "@/components/help/inline-keybinding-help";
 import { getAllCheatSheetsMeta, getYamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
-import sheetStyles from "@/components/sheet-rendering.module.css";
+import cheatsheetStyles from "@/components/sheets/cheatsheet-rendering.module.css";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -39,16 +39,16 @@ export default async function CheatSheetPage({ params }: Props) {
             {sheet.icon ? (
               <TechIcon
                 icon={sheet.icon}
-                className={sheetStyles.headerIcon}
+                className={cheatsheetStyles.headerIcon}
               />
             ) : null}
-            <h1 className={sheetStyles.headerTitle}>
+            <h1 className={cheatsheetStyles.headerTitle}>
               {sheet.title}
             </h1>
           </div>
           <p className="mt-2 max-w-2xl text-white/80">{sheet.summary}</p>
 
-          <div className={`${sheetStyles.content} mt-8 max-w-none`}>
+          <div className={`${cheatsheetStyles.content} mt-8 max-w-none`}>
             <SheetCommandsShell>
               <YamlSheetRenderer sheet={sheet} />
             </SheetCommandsShell>

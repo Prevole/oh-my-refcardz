@@ -1,4 +1,118 @@
-.overlay {
+.command {
+  color: rgba(237, 242, 244, 0.95);
+  border-radius: 0.5rem;
+  outline: none;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  padding: 0.35rem 0.5rem;
+  margin: 0 -0.5rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.command:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.command[data-nav-focused="true"] {
+  background: rgba(0, 209, 178, 0.15);
+  border-left-color: var(--accent-2);
+}
+
+.command[data-nav-focused="true"]:hover {
+  background: rgba(0, 209, 178, 0.2);
+}
+
+.commandHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.commandActions {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.command:hover .commandActions,
+.command:focus-visible .commandActions {
+  opacity: 1;
+}
+
+.commandActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(237, 242, 244, 0.6);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  border-radius: 0;
+  margin-left: -1px;
+}
+
+.commandActionButton:first-child {
+  border-radius: 0.4rem 0 0 0.4rem;
+  margin-left: 0;
+}
+
+.commandActionButton:last-child {
+  border-radius: 0 0.4rem 0.4rem 0;
+}
+
+.commandActionButton:only-child {
+  border-radius: 0.4rem;
+  margin-left: 0;
+}
+
+.commandActionButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(237, 242, 244, 0.95);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.commandActionButtonCopied {
+  color: var(--accent-2);
+  border-color: rgba(0, 209, 178, 0.4);
+  background: rgba(0, 209, 178, 0.1);
+}
+
+.commandTitle {
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 244, 0.78);
+}
+
+.commandTerminal {
+  margin: 0.35rem 0 0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(10, 16, 28, 0.86), rgba(7, 12, 22, 0.92));
+  padding: 0.35rem 0.55rem;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #8ef6d8;
+}
+
+.commandDescription {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.92rem;
+  color: rgba(237, 242, 244, 0.88);
+}
+
+.modalOverlay {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -22,7 +136,7 @@
   color: rgba(237, 242, 244, 0.92);
 }
 
-.label {
+.modalLabel {
   margin: 0;
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.7rem;
@@ -31,7 +145,7 @@
   color: var(--accent-2);
 }
 
-.title {
+.modalTitle {
   margin: 0.35rem 0 0;
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 1.15rem;
@@ -39,11 +153,11 @@
   color: rgba(237, 242, 244, 0.97);
 }
 
-.section {
+.modalSection {
   margin-top: 1.1rem;
 }
 
-.sectionLabel {
+.modalSectionLabel {
   margin: 0 0 0.35rem;
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 0.72rem;
@@ -53,11 +167,11 @@
   color: rgba(237, 242, 244, 0.55);
 }
 
-.example {
+.modalExample {
   color: #ffd47f;
 }
 
-.closeButton {
+.modalCloseButton {
   margin-top: 1.25rem;
   display: inline-flex;
   align-items: center;
@@ -73,13 +187,13 @@
   transition: background 0.12s ease, color 0.12s ease;
 }
 
-.closeButton:hover {
+.modalCloseButton:hover {
   background: rgba(255, 255, 255, 0.12);
   color: rgba(237, 242, 244, 0.95);
 }
 
-.closeButton kbd,
-.submitButton kbd {
+.modalCloseButton kbd,
+.modalSubmitButton kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -92,27 +206,27 @@
   color: rgba(237, 242, 244, 0.65);
 }
 
-.form {
+.modalForm {
   margin-top: 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.field {
+.modalField {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
 
-.fieldLabel {
+.modalFieldLabel {
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.8rem;
   font-weight: 600;
   color: #8ef6d8;
 }
 
-.input {
+.modalInput {
   width: 100%;
   padding: 0.4rem 0.65rem;
   border-radius: 0.5rem;
@@ -125,24 +239,24 @@
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
-.input::placeholder {
+.modalInput::placeholder {
   color: rgba(237, 242, 244, 0.3);
 }
 
-.input:focus {
+.modalInput:focus {
   border-color: rgba(0, 209, 178, 0.5);
   box-shadow: 0 0 0 2px rgba(0, 209, 178, 0.15);
 }
 
-.previewWrap {
+.modalPreviewWrap {
   margin-top: 0.25rem;
 }
 
-.preview {
+.modalPreview {
   word-break: break-all;
 }
 
-.actions {
+.modalActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -150,11 +264,11 @@
   margin-top: 0.25rem;
 }
 
-.actions .closeButton {
+.modalActions .modalCloseButton {
   margin-top: 0;
 }
 
-.submitButton {
+.modalSubmitButton {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -170,12 +284,12 @@
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
-.submitButton:hover {
+.modalSubmitButton:hover {
   background: rgba(0, 209, 178, 0.2);
   border-color: rgba(0, 209, 178, 0.6);
 }
 
-.terminal {
+.modalTerminal {
   margin: 0.35rem 0 0;
   border-radius: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.16);

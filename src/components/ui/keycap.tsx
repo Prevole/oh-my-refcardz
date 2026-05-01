@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowGlyph } from "./arrow-glyph";
-import styles from "./keybinding-display.module.css";
+import keybindingStyles from "@/components/settings/keybinding-display.module.css";
 
 type Props = {
   children: ReactNode;
@@ -15,13 +15,13 @@ export function Keycap({ children }: Props) {
     children === "←" || children === "↑" || children === "↓" || children === "→";
 
   return (
-    <span className={styles.keycap}>
+    <span className={keybindingStyles.keycap}>
       {isArrow && typeof children === "string" ? (
         <ArrowGlyph
           direction={
             children === "←" ? "left" : children === "→" ? "right" : children === "↑" ? "up" : "down"
           }
-          className={styles.keycapArrow}
+          className={keybindingStyles.keycapArrow}
         />
       ) : (
         children

@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Modal } from "@/components/modal";
-import { ArrowGlyph } from "@/components/arrow-glyph";
-import { HelpRow } from "@/components/keybinding-display";
+import { Modal } from "@/components/ui/modal";
+import { ArrowGlyph } from "@/components/ui/arrow-glyph";
+import { HelpRow } from "@/components/settings/keybinding-display";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS } from "@/lib/keybindings";
-import helpModalStyles from "./help-modal.module.css";
-import keybindingDisplayStyles from "./keybinding-display.module.css";
+import helpStyles from "./help-modal.module.css";
+import keybindingStyles from "@/components/settings/keybinding-display.module.css";
 
 type Props = {
   open: boolean;
@@ -39,16 +39,16 @@ export function SheetHelpModal({ open, onClose }: Props) {
       </p>
 
       {/* Tabs */}
-      <div className={helpModalStyles.tabs}>
+      <div className={helpStyles.tabs}>
         <button
-          className={helpModalStyles.tab}
+          className={helpStyles.tab}
           data-active={activeTab === "shortcuts"}
           onClick={() => setActiveTab("shortcuts")}
         >
           App Shortcuts
         </button>
         <button
-          className={helpModalStyles.tab}
+          className={helpStyles.tab}
           data-active={activeTab === "legend"}
           onClick={() => setActiveTab("legend")}
         >
@@ -57,10 +57,10 @@ export function SheetHelpModal({ open, onClose }: Props) {
       </div>
 
       {/* Tab: App Shortcuts */}
-      <div className={helpModalStyles.tabContent} data-active={activeTab === "shortcuts"}>
+      <div className={helpStyles.tabContent} data-active={activeTab === "shortcuts"}>
         {/* Navigation */}
         <h3 className="mt-4 text-xl font-semibold">Navigation</h3>
-        <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
+        <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
             <col />
             <col />
@@ -78,7 +78,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
 
         {/* Commands */}
         <h3 className="mt-6 text-xl font-semibold">Commands</h3>
-        <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
+        <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
             <col />
             <col />
@@ -103,7 +103,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
 
         {/* Misc */}
         <h3 className="mt-6 text-xl font-semibold">Misc</h3>
-        <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
+        <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
             <col />
             <col />
@@ -120,11 +120,11 @@ export function SheetHelpModal({ open, onClose }: Props) {
       </div>
 
       {/* Tab: Symbol Legend */}
-      <div className={helpModalStyles.tabContent} data-active={activeTab === "legend"}>
+      <div className={helpStyles.tabContent} data-active={activeTab === "legend"}>
         <p className="mt-4 text-sm text-white/70">
           Symbols used in cheatsheet keybindings:
         </p>
-        <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
+        <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
             <col />
             <col />
@@ -133,33 +133,33 @@ export function SheetHelpModal({ open, onClose }: Props) {
           </colgroup>
           <tbody>
             <tr>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}>⌘</span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}>⌘</span></td>
               <td>Command</td>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}>⌥</span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}>⌥</span></td>
               <td>Option</td>
             </tr>
             <tr>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}>^</span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}>^</span></td>
               <td>Control</td>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}>⇧</span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}>⇧</span></td>
               <td>Shift</td>
             </tr>
             <tr>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}>↩</span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}>↩</span></td>
               <td>Enter</td>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}><span className="small-caps">esc</span></span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}><span className="small-caps">esc</span></span></td>
               <td>Escape</td>
             </tr>
             <tr>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}><ArrowGlyph direction="left" className={keybindingDisplayStyles.legendArrow} /></span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}><ArrowGlyph direction="left" className={keybindingStyles.legendArrow} /></span></td>
               <td>Arrow left</td>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}><ArrowGlyph direction="up" className={keybindingDisplayStyles.legendArrow} /></span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}><ArrowGlyph direction="up" className={keybindingStyles.legendArrow} /></span></td>
               <td>Arrow up</td>
             </tr>
             <tr>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}><ArrowGlyph direction="down" className={keybindingDisplayStyles.legendArrow} /></span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}><ArrowGlyph direction="down" className={keybindingStyles.legendArrow} /></span></td>
               <td>Arrow down</td>
-              <td><span className={keybindingDisplayStyles.legendKeycapSheet}><ArrowGlyph direction="right" className={keybindingDisplayStyles.legendArrow} /></span></td>
+              <td><span className={keybindingStyles.legendKeycapSheet}><ArrowGlyph direction="right" className={keybindingStyles.legendArrow} /></span></td>
               <td>Arrow right</td>
             </tr>
           </tbody>

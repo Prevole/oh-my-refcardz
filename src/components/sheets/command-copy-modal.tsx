@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRegisterModalOpen } from "@/components/sheet-commands-shell";
-import commandModalStyles from "./command-modal.module.css";
-import modalStyles from "./modal.module.css";
+import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
+import sheetCommandStyles from "./sheet-commands.module.css";
+import dialogStyles from "@/components/ui/modal.module.css";
 
 type CommandCopyModalProps = {
   title: string;
@@ -68,29 +68,29 @@ export function CommandCopyModal({ title, command, placeholders, onClose }: Comm
 
   return createPortal(
     <div
-      className={commandModalStyles.overlay}
+      className={sheetCommandStyles.modalOverlay}
       data-command-modal-overlay
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`Copy command: ${title}`}
     >
-      <div className={commandModalStyles.modal} onClick={(e) => e.stopPropagation()}>
-        <button type="button" className={modalStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
-        <p className={commandModalStyles.label}>COPY WITH PLACEHOLDERS</p>
-        <h3 className={commandModalStyles.title}>{title}</h3>
+      <div className={sheetCommandStyles.modal} onClick={(e) => e.stopPropagation()}>
+        <button type="button" className={dialogStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
+        <p className={sheetCommandStyles.modalLabel}>COPY WITH PLACEHOLDERS</p>
+        <h3 className={sheetCommandStyles.modalTitle}>{title}</h3>
 
-        <form onSubmit={handleSubmit} className={commandModalStyles.form}>
+        <form onSubmit={handleSubmit} className={sheetCommandStyles.modalForm}>
           {placeholders.map((placeholder, index) => (
-            <div key={placeholder} className={commandModalStyles.field}>
-              <label className={commandModalStyles.fieldLabel} htmlFor={`placeholder-${placeholder}`}>
+            <div key={placeholder} className={sheetCommandStyles.modalField}>
+              <label className={sheetCommandStyles.modalFieldLabel} htmlFor={`placeholder-${placeholder}`}>
                 {`<${placeholder}>`}
               </label>
               <input
                 ref={index === 0 ? firstInputRef : undefined}
                 id={`placeholder-${placeholder}`}
                 type="text"
-                className={commandModalStyles.input}
+                className={sheetCommandStyles.modalInput}
                 placeholder={placeholder}
                 value={values[placeholder]}
                 onChange={(e) => setValues((prev) => ({ ...prev, [placeholder]: e.target.value }))}
@@ -102,16 +102,16 @@ export function CommandCopyModal({ title, command, placeholders, onClose }: Comm
             </div>
           ))}
 
-          <div className={commandModalStyles.previewWrap}>
-            <p className={commandModalStyles.sectionLabel}>Preview</p>
-            <p className={`${commandModalStyles.terminal} ${commandModalStyles.preview}`}>{preview}</p>
+          <div className={sheetCommandStyles.modalPreviewWrap}>
+            <p className={sheetCommandStyles.modalSectionLabel}>Preview</p>
+            <p className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalPreview}`}>{preview}</p>
           </div>
 
-          <div className={commandModalStyles.actions}>
-            <button type="button" className={commandModalStyles.closeButton} onClick={onClose}>
+          <div className={sheetCommandStyles.modalActions}>
+            <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
               Cancel <kbd>Esc</kbd>
             </button>
-            <button type="submit" className={commandModalStyles.submitButton}>
+            <button type="submit" className={sheetCommandStyles.modalSubmitButton}>
               {copied ? "Copied!" : "Copy"}
               {!copied && <kbd>↩</kbd>}
             </button>

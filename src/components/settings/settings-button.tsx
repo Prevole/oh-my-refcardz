@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "./floating-action-button.module.css";
+import floatingActionStyles from "./floating-action-button.module.css";
 
 type Props = {
   onClick: () => void;
@@ -10,7 +10,7 @@ export function SettingsButton({ onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`${styles.button} ${styles.settings}`}
+      className={`${floatingActionStyles.button} ${floatingActionStyles.settings}`}
       aria-label="Settings"
       title="Settings"
     >

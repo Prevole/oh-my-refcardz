@@ -2,10 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { SheetHelpModal } from "@/components/sheet-help-modal";
-import { HelpButton } from "@/components/help-button";
-import { SettingsButton } from "@/components/settings-button";
-import { SettingsPanel } from "@/components/settings-panel";
+import { SheetHelpModal } from "@/components/help/sheet-help-modal";
+import { HelpButton } from "@/components/help/help-button";
+import { SettingsButton } from "@/components/settings/settings-button";
+import { SettingsPanel } from "@/components/settings/settings-panel";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";

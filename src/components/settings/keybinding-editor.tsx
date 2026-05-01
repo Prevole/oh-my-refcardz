@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { ArrowGlyph } from "@/components/arrow-glyph";
+import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { useKeybindings, type KeybindingConflict } from "@/hooks/use-keybindings";
 import {
   type KeybindingContext,

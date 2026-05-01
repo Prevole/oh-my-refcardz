@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ActionKeybinding } from "@/components/keybinding-display";
+import { ActionKeybinding } from "@/components/settings/keybinding-display";
 import { ACTION_IDS } from "@/lib/keybindings";
 
 // ─────────────────────────────────────────────────────────────────────────────

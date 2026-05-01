@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "./floating-action-button.module.css";
+import floatingActionStyles from "@/components/settings/floating-action-button.module.css";
 
 type Props = {
   onClick: () => void;
@@ -10,7 +10,7 @@ export function HelpButton({ onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`${styles.button} ${styles.help}`}
+      className={`${floatingActionStyles.button} ${floatingActionStyles.help}`}
       aria-label="Help"
       title="Help (?)"
     >

@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useRegisterModalOpen } from "@/components/sheet-commands-shell";
-import commandModalStyles from "./command-modal.module.css";
-import modalStyles from "./modal.module.css";
+import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
+import sheetCommandStyles from "./sheet-commands.module.css";
+import dialogStyles from "@/components/ui/modal.module.css";
 
 type CommandExampleModalProps = {
   title: string;
@@ -34,7 +34,7 @@ export function CommandExampleModal({ title, command, example, onClose }: Comman
 
   return createPortal(
     <div
-      className={commandModalStyles.overlay}
+      className={sheetCommandStyles.modalOverlay}
       data-command-modal-overlay
       onClick={onClose}
       role="dialog"
@@ -42,24 +42,24 @@ export function CommandExampleModal({ title, command, example, onClose }: Comman
       aria-label={`Example for: ${title}`}
     >
       <div
-        className={commandModalStyles.modal}
+        className={sheetCommandStyles.modal}
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" className={modalStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
-        <p className={commandModalStyles.label}>EXAMPLE</p>
-        <h3 className={commandModalStyles.title}>{title}</h3>
+        <button type="button" className={dialogStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
+        <p className={sheetCommandStyles.modalLabel}>EXAMPLE</p>
+        <h3 className={sheetCommandStyles.modalTitle}>{title}</h3>
 
-        <div className={commandModalStyles.section}>
-          <p className={commandModalStyles.sectionLabel}>Command</p>
-          <p className={commandModalStyles.terminal}>{command}</p>
+        <div className={sheetCommandStyles.modalSection}>
+          <p className={sheetCommandStyles.modalSectionLabel}>Command</p>
+          <p className={sheetCommandStyles.modalTerminal}>{command}</p>
         </div>
 
-        <div className={commandModalStyles.section}>
-          <p className={commandModalStyles.sectionLabel}>Example</p>
-          <p className={`${commandModalStyles.terminal} ${commandModalStyles.example}`}>{example}</p>
+        <div className={sheetCommandStyles.modalSection}>
+          <p className={sheetCommandStyles.modalSectionLabel}>Example</p>
+          <p className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalExample}`}>{example}</p>
         </div>
 
-        <button type="button" className={commandModalStyles.closeButton} onClick={onClose}>
+        <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
           Close <kbd>Esc</kbd>
         </button>
       </div>

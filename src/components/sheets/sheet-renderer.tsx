@@ -1,8 +1,8 @@
-import { SheetGrid, SheetCard } from "@/components/sheet-grid";
-import { SheetCommand } from "@/components/sheet-command";
-import { SheetShortcut } from "@/components/sheet-shortcut";
+import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
+import { SheetCommand } from "@/components/sheets/sheet-command";
+import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
 import type { YamlCheatSheet, CheatSheetItem } from "@/lib/yaml-cheatsheets";
-import styles from "./sheet-rendering.module.css";
+import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 type Props = {
   sheet: YamlCheatSheet;
@@ -13,13 +13,13 @@ export function YamlSheetRenderer({ sheet }: Props) {
     <>
       {sheet.sections.map((section) => (
         <div key={section.title}>
-          <h2 className={styles.sectionTitle}>{section.title}</h2>
+          <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
           <SheetGrid>
             {section.cards.map((card) => (
               <SheetCard key={card.title} title={card.title}>
                 {card.items.map((item, index) => (
                   <div key={index}>
-                    {index > 0 && <hr className={styles.itemDivider} />}
+                    {index > 0 && <hr className={cheatsheetStyles.itemDivider} />}
                     <SheetItem item={item} />
                   </div>
                 ))}

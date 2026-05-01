@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Keycap } from "@/components/keycap";
+import { Keycap } from "@/components/ui/keycap";
 
 export default function NotFound() {
   const router = useRouter();
