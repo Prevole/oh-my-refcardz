@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
+import { useKeyboardContext } from "./use-keyboard-context";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -273,16 +274,17 @@ type UseCommandNavigationOptions = {
 };
 
 export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions) {
+  const { isScopeActive } = useKeyboardContext();
+  const graphRef = useRef<NavGraph>(new Map());
+
+  const rebuildGraph = useCallback(() => {
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-sheet-command]")
+    );
+    graphRef.current = buildGraph(nodes);
+  }, []);
+
   useEffect(() => {
-    let graph: NavGraph = new Map();
-
-    function rebuildGraph() {
-      const nodes = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-sheet-command]")
-      );
-      graph = buildGraph(nodes);
-    }
-
     const getFocused = (): HTMLElement | null => {
       const active = document.activeElement as HTMLElement | null;
       if (active?.dataset.sheetCommand !== undefined) return active;
@@ -302,18 +304,18 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     }
 
     function move(direction: Direction) {
-      if (graph.size === 0) rebuildGraph();
-      if (graph.size === 0) return;
+      if (graphRef.current.size === 0) rebuildGraph();
+      if (graphRef.current.size === 0) return;
 
       const focused = getFocused();
       if (!focused) {
         // Focus first node in graph (top-left)
-        const first = graph.keys().next().value;
+        const first = graphRef.current.keys().next().value;
         if (first) setFocused(first);
         return;
       }
 
-      const node = graph.get(focused);
+      const node = graphRef.current.get(focused);
       if (!node) return;
 
       const target = node[direction];
@@ -338,6 +340,9 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     document.addEventListener("focusout", onFocusOut);
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // Only handle keys when global scope is active (no panels/modals open)
+      if (!isScopeActive("global")) return;
+
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (modalOpen) return;
@@ -356,5 +361,5 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       window.removeEventListener("resize", onResize);
       document.removeEventListener("focusout", onFocusOut);
     };
-  }, [modalOpen]);
+  }, [modalOpen, isScopeActive, rebuildGraph]);
 }

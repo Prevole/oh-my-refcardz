@@ -1,7 +1,10 @@
+"use client";
+
+import { useCallback, type CSSProperties } from "react";
 import { Modal } from "@/components/modal";
 import { TechIcon } from "@/components/tech-icon";
 import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
-import type { CSSProperties } from "react";
+import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 
 type Props = {
   open: boolean;
@@ -11,6 +14,19 @@ type Props = {
 };
 
 export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
+  // Handle Escape key to close modal (only when info scope is active)
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape" || event.key === "i") {
+        event.preventDefault();
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  useScopedKeyboardHandler("info", handleKeyDown, [handleKeyDown]);
+
   if (!sheet) return null;
 
   // Use accent color when provided (hexa mode: gradient, grid mode: solid interpolated color)

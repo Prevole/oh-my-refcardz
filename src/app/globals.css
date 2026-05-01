@@ -1042,6 +1042,7 @@ body {
 }
 
 .accordion-content-open .accordion-content-inner {
+  padding-top: 0.75rem;
   padding-bottom: 1.25rem;
 }
 

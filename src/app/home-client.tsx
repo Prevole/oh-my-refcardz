@@ -29,6 +29,7 @@ import { HelpButton } from "@/components/help-button";
 import { SettingsButton } from "@/components/settings-button";
 import { SettingsPanel } from "@/components/settings-panel";
 import { useUISettings } from "@/hooks/use-ui-settings";
+import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 
 type Props = {
   categories: CheatSheetCategory[];
@@ -51,6 +52,11 @@ export function HomeClient({ categories }: Props) {
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
   const hasRestoredSelectionRef = useRef(false);
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
+
+  // Keyboard context scopes - panels push their scope when open
+  useKeyboardScope("settings", settingsPanelOpen);
+  useKeyboardScope("help", helpOpen);
+  useKeyboardScope("info", infoOpen);
 
   // UI Settings
   const {
@@ -282,76 +288,75 @@ export function HomeClient({ categories }: Props) {
     [cardIndexBySlug, navigationBySlug, navigationRowParityByIndex, navigationRows, selectedCard]
   );
 
-  // Keyboard navigation
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
+  // Global keyboard shortcuts (only active when no panel is open)
+  const handleGlobalKeyDown = useCallback(
+    (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (target?.tagName === "INPUT" && event.key !== "Escape") return;
 
       if (event.key === "?") {
         event.preventDefault();
-        setHelpOpen((prev) => !prev);
+        setHelpOpen(true);
         return;
       }
 
       if (event.key === ",") {
         event.preventDefault();
-        setSettingsPanelOpen((prev) => !prev);
+        setSettingsPanelOpen(true);
         return;
       }
 
       if (event.key === "/") {
         event.preventDefault();
         document.getElementById("search")?.focus();
+        return;
       }
 
       if (event.key === "i" && selectedCard) {
         event.preventDefault();
-        setInfoOpen((prev) => !prev);
+        setInfoOpen(true);
+        return;
       }
 
       if (event.key === "ArrowRight" || event.key === "l") {
         event.preventDefault();
         moveSelection("right");
+        return;
       }
 
       if (event.key === "ArrowLeft" || event.key === "h") {
         event.preventDefault();
         moveSelection("left");
+        return;
       }
 
       if (event.key === "ArrowDown" || event.key === "j") {
         event.preventDefault();
         moveSelection("down");
+        return;
       }
 
       if (event.key === "ArrowUp" || event.key === "k") {
         event.preventDefault();
         moveSelection("up");
+        return;
       }
 
       if ((event.key === "Enter" || event.key === " ") && selectedCard) {
         event.preventDefault();
         openSheet(selectedCard.slug);
+        return;
       }
 
       if (event.key === "Escape") {
-        if (helpOpen) {
-          setHelpOpen(false);
-          return;
-        }
-        if (infoOpen) {
-          setInfoOpen(false);
-          return;
-        }
         setQuery("");
         (target as HTMLElement)?.blur?.();
       }
-    };
+    },
+    [moveSelection, openSheet, selectedCard]
+  );
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [helpOpen, infoOpen, moveSelection, openSheet, selectedCard]);
+  useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">

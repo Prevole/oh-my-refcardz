@@ -1,5 +1,9 @@
+"use client";
+
+import { useCallback } from "react";
 import { Modal } from "@/components/modal";
 import { ArrowGlyph } from "@/components/arrow-glyph";
+import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 
 type Props = {
   open: boolean;
@@ -7,6 +11,19 @@ type Props = {
 };
 
 export function HomeHelpModal({ open, onClose }: Props) {
+  // Handle Escape key to close modal (only when help scope is active)
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape" || event.key === "?") {
+        event.preventDefault();
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  useScopedKeyboardHandler("help", handleKeyDown, [handleKeyDown]);
+
   return (
     <Modal open={open} onClose={onClose} className="max-w-2xl">
       <p className="font-mono text-xs tracking-[0.15em] text-white/70">

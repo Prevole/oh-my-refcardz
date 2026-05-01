@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { ColorMode, BorderStyle, GradientDirection, UISettings, AccordionState } from "@/hooks/use-ui-settings";
+import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { AccordionItem } from "./accordion";
 
 type Props = {
@@ -70,20 +71,77 @@ export function SettingsPanel({
   onResetAll,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
 
-  // Close on Escape
+  // Handle Escape key to close panel (only when settings scope is active)
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  useScopedKeyboardHandler("settings", handleKeyDown, [handleKeyDown]);
+
+  // Focus trap and focus management
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    // Store currently focused element to restore later
+    previousActiveElement.current = document.activeElement as HTMLElement;
+
+    // Focus the first focusable element in the panel
+    const focusableElements = panel.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    if (firstElement) {
+      // Small delay to ensure the panel is rendered
+      requestAnimationFrame(() => firstElement.focus());
+    }
+
+    // Handle Tab key for focus trap
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        // Shift+Tab: if on first element, wrap to last
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else {
+        // Tab: if on last element, wrap to first
+        if (document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+    document.addEventListener("keydown", handleTabKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleTabKey);
+      // Restore focus when panel closes
+      previousActiveElement.current?.focus();
+    };
+  }, [isOpen]);
 
   // Close on click outside
   useEffect(() => {
