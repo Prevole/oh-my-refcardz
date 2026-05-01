@@ -5,6 +5,7 @@ import { CommandExampleModal } from "@/components/command-example-modal";
 import { CommandCopyModal } from "@/components/command-copy-modal";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
+import styles from "./sheet-command.module.css";
 
 type SheetCommandProps = {
   title: string;
@@ -105,14 +106,14 @@ export function SheetCommand({ title, command, description, example }: SheetComm
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     // Don't steal clicks intended for the action buttons
-    if ((e.target as HTMLElement).closest(".sheet-command-actions")) return;
+    if ((e.target as HTMLElement).closest("[data-sheet-command-actions]")) return;
     const el = ref.current;
     if (!el) return;
     // Remove highlight from all commands, then set on this one
     document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
-      n.classList.remove("is-nav-focused");
+      n.dataset.navFocused = "false";
     });
-    el.classList.add("is-nav-focused");
+    el.dataset.navFocused = "true";
     el.focus({ preventScroll: true });
   }
 
@@ -121,9 +122,10 @@ export function SheetCommand({ title, command, description, example }: SheetComm
     <>
       <div
         ref={ref}
-        className="sheet-command"
+        className={styles.command}
         tabIndex={0}
         data-sheet-command
+        data-nav-focused="false"
         aria-label={title}
         onClick={handleClick}
         onKeyDown={(e) => {
@@ -138,13 +140,13 @@ export function SheetCommand({ title, command, description, example }: SheetComm
           }
         }}
       >
-        <div className="sheet-command-header">
-          <p className="sheet-command-title">{title}</p>
-          <div className="sheet-command-actions">
+        <div className={styles.header}>
+          <p className={styles.title}>{title}</p>
+          <div className={styles.actions} data-sheet-command-actions>
             {example ? (
               <button
                 type="button"
-                className="sheet-command-action"
+                className={styles.actionButton}
                 aria-label={`Show example for ${title}`}
                 title="Show example (i)"
                 onClick={() => setShowExample(true)}
@@ -154,7 +156,7 @@ export function SheetCommand({ title, command, description, example }: SheetComm
             ) : null}
             <button
               type="button"
-              className={`sheet-command-action${copied ? " sheet-command-action--copied" : ""}`}
+              className={`${styles.actionButton} ${copied ? styles.actionButtonCopied : ""}`}
               aria-label={`Copy command: ${title}`}
               title={hasPlaceholders ? "Fill and copy (y)" : "Copy (y)"}
               onClick={handleCopyAction}
@@ -163,8 +165,8 @@ export function SheetCommand({ title, command, description, example }: SheetComm
             </button>
           </div>
         </div>
-        {command ? <p className="sheet-terminal">$ {command}</p> : null}
-        {description ? <p className="sheet-command-description">{description}</p> : null}
+        {command ? <p className={styles.terminal}>$ {command}</p> : null}
+        {description ? <p className={styles.description}>{description}</p> : null}
       </div>
 
       {showExample && example ? (

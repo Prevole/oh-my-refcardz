@@ -7,6 +7,7 @@ import { YamlSheetRenderer } from "@/components/yaml-sheet-renderer";
 import { TechIcon } from "@/components/tech-icon";
 import { SheetInlineHelp } from "@/components/inline-help";
 import { getAllCheatSheetsMeta, getYamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
+import sheetStyles from "@/components/sheet-rendering.module.css";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -38,16 +39,16 @@ export default async function CheatSheetPage({ params }: Props) {
             {sheet.icon ? (
               <TechIcon
                 icon={sheet.icon}
-                className="sheet-header-icon"
+                className={sheetStyles.headerIcon}
               />
             ) : null}
-            <h1 className="sheet-header-title">
+            <h1 className={sheetStyles.headerTitle}>
               {sheet.title}
             </h1>
           </div>
           <p className="mt-2 max-w-2xl text-white/80">{sheet.summary}</p>
 
-          <div className="sheet-content mt-8 max-w-none">
+          <div className={`${sheetStyles.content} mt-8 max-w-none`}>
             <SheetCommandsShell>
               <YamlSheetRenderer sheet={sheet} />
             </SheetCommandsShell>

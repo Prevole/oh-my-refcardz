@@ -32,6 +32,7 @@ import { HomeInlineHelp } from "@/components/inline-help";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import styles from "./home-client.module.css";
 
 type Props = {
   categories: CheatSheetCategory[];
@@ -446,7 +447,7 @@ export function HomeClient({ categories }: Props) {
                   <p className="mt-2 text-sm text-white/70">{category.description}</p>
                 ) : null}
                 <div
-                  className="home-hex-board mt-4"
+                  className={`${styles.hexBoard} mt-4`}
                   style={{
                     width: `${boardDimensions.width}px`,
                     maxWidth: "100%",
@@ -494,7 +495,7 @@ export function HomeClient({ categories }: Props) {
                     return (
                       <div
                         key={sheet.slug}
-                        className="home-hex-cell home-hex-cell-abs"
+                        className={`${styles.hexCell} ${styles.hexCellAbs}`}
                         style={{ left: `${left}px`, top: `${top}px` }}
                       >
                         <button
@@ -510,7 +511,7 @@ export function HomeClient({ categories }: Props) {
                           onMouseEnter={() => setSelectedIndex(index)}
                           data-selected={isSelected}
                           data-has-icon={!!sheet.icon}
-                          className="home-hex-card text-left"
+                          className={`${styles.hexCard} text-left`}
                           style={{
                             "--hex-border-color": sheet.color,
                             "--hex-color-from": sheet.colorFrom,
@@ -518,7 +519,7 @@ export function HomeClient({ categories }: Props) {
                           } as CSSProperties}
                         >
                           <svg
-                            className="home-hex-shape"
+                            className={styles.hexShape}
                             viewBox="0 0 100 100"
                             aria-hidden="true"
                             focusable="false"
@@ -559,25 +560,25 @@ export function HomeClient({ categories }: Props) {
                               </linearGradient>
                             </defs>
                             <path
-                              className="home-hex-shape-path"
+                              className={styles.hexShapePath}
                               d="M30 7 L70 7 Q75 7 77.4 11.3 L94.2 42.5 Q99 50 94.2 57.5 L77.4 88.7 Q75 93 70 93 L30 93 Q25 93 22.6 88.7 L5.8 57.5 Q1 50 5.8 42.5 L22.6 11.3 Q25 7 30 7 Z"
                               style={{ stroke: `url(#hex-grad-${sheet.slug})` }}
                             />
                           </svg>
-                          <div className={`home-hex-card-inner ${sheet.icon ? "has-icon" : ""}`}>
+                          <div className={`${styles.hexCardInner} ${sheet.icon ? styles.hasIcon : ""}`}>
                             {sheet.icon ? (
                               <>
-                                <div className="home-hex-half home-hex-half-icon">
+                                <div className={`${styles.hexHalf} ${styles.hexHalfIcon}`}>
                                   <TechIcon
                                     icon={sheet.icon}
                                     color={primaryColor}
-                                    className="home-hex-icon"
+                                    className={styles.hexIcon}
                                   />
                                 </div>
-                                <div className="home-hex-half home-hex-half-title">
+                                <div className={`${styles.hexHalf} ${styles.hexHalfTitle}`}>
                                   {useGradientTitle ? (
                                     <h3
-                                      className="home-hex-title home-hex-title-gradient"
+                                      className={`${styles.hexTitle} ${styles.hexTitleGradient}`}
                                       style={{
                                         "--gradient-from": sheet.colorFrom,
                                         "--gradient-to": hexaColorTo,
@@ -586,7 +587,7 @@ export function HomeClient({ categories }: Props) {
                                       {sheet.title}
                                     </h3>
                                   ) : (
-                                    <h3 className="home-hex-title" style={{ color: titleColor }}>
+                                    <h3 className={styles.hexTitle} style={{ color: titleColor }}>
                                       {sheet.title}
                                     </h3>
                                   )}
@@ -594,7 +595,7 @@ export function HomeClient({ categories }: Props) {
                               </>
                             ) : useGradientTitle ? (
                               <h3
-                                className="home-hex-title home-hex-title-centered home-hex-title-gradient"
+                                className={`${styles.hexTitle} ${styles.hexTitleCentered} ${styles.hexTitleGradient}`}
                                 style={{
                                   "--gradient-from": sheet.colorFrom,
                                   "--gradient-to": hexaColorTo,
@@ -604,7 +605,7 @@ export function HomeClient({ categories }: Props) {
                               </h3>
                             ) : (
                               <h3
-                                className="home-hex-title home-hex-title-centered"
+                                className={`${styles.hexTitle} ${styles.hexTitleCentered}`}
                                 style={{ color: titleColor }}
                               >
                                 {sheet.title}

@@ -10,6 +10,7 @@ import {
   isArrowKey,
   getArrowDirection,
 } from "@/lib/keybindings";
+import styles from "./keybinding-display.module.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KeycapDisplay - Renders a single keycap with proper styling
@@ -23,8 +24,8 @@ type KeycapDisplayProps = {
 };
 
 function KeycapDisplayInner({ display, variant = "inline" }: KeycapDisplayProps) {
-  const className = variant === "legend" ? "legend-keycap" : "keycap";
-  const arrowClassName = variant === "legend" ? "legend-arrow" : "keycap-arrow";
+  const className = variant === "legend" ? styles.legendKeycap : styles.keycap;
+  const arrowClassName = variant === "legend" ? styles.legendArrow : styles.keycapArrow;
 
   if (isArrowKey(display)) {
     const direction = getArrowDirection(display);

@@ -5,6 +5,7 @@ import type { ColorMode, BorderStyle, GradientDirection, UISettings, AccordionSt
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { AccordionItem } from "./accordion";
 import { KeybindingEditor } from "./keybinding-editor";
+import styles from "./settings-panel.module.css";
 
 type Props = {
   isOpen: boolean;
@@ -167,12 +168,12 @@ export function SettingsPanel({
   const showDirectionOptions = settings.modern.border !== "full";
 
   return (
-    <div className="settings-panel-overlay">
-      <div ref={panelRef} className="settings-panel">
+    <div className={styles.overlay}>
+      <div ref={panelRef} className={styles.panel}>
         {/* Header */}
-        <div className="settings-panel-header">
-          <h2 className="settings-panel-title">Settings</h2>
-          <button onClick={onClose} className="settings-panel-close" aria-label="Close">
+        <div className={styles.header}>
+          <h2 className={styles.title}>Settings</h2>
+          <button onClick={onClose} className={styles.close} aria-label="Close">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
@@ -180,36 +181,36 @@ export function SettingsPanel({
         </div>
 
         {/* Accordion Content */}
-        <div className="settings-panel-content">
+        <div className={styles.content}>
           {/* UI Section */}
           <AccordionItem
             title="UI"
             isOpen={settings.accordion.ui}
             onToggle={() => onToggleAccordion("ui")}
           >
-            <div className="settings-section">
+            <div className={styles.section}>
               {/* Random Toggle */}
-              <div className="settings-row">
-                <label className="settings-toggle">
+              <div className={styles.row}>
+                <label className={styles.toggle}>
                   <input
                     type="checkbox"
                     checked={settings.modern.random}
                     onChange={onToggleRandom}
                   />
-                  <span className="settings-toggle-label">Random on refresh</span>
+                  <span className={styles.toggleLabel}>Random on refresh</span>
                 </label>
               </div>
 
               {/* Color Mode */}
-              <div className="settings-grid">
-                <div className="settings-grid-item settings-grid-item-full">
-                  <span className="settings-label">Color mode:</span>
-                  <div className="settings-button-group settings-button-group-full">
+              <div className={styles.grid}>
+                <div className={`${styles.gridItem} ${styles.gridItemFull}`}>
+                  <span className={styles.label}>Color mode:</span>
+                  <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
                     {COLOR_MODE_OPTIONS.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => onSetColorMode(option.value)}
-                        className={`settings-group-btn settings-group-btn-flex ${settings.modern.colorMode === option.value ? "settings-group-btn-active" : ""}`}
+                        className={`${styles.groupButton} ${styles.groupButtonFlex} ${settings.modern.colorMode === option.value ? styles.groupButtonActive : ""}`}
                       >
                         {option.label}
                       </button>
@@ -219,15 +220,15 @@ export function SettingsPanel({
               </div>
 
               {/* Border Style */}
-              <div className="settings-grid">
-                <div className="settings-grid-item settings-grid-item-full">
-                  <span className="settings-label">Border style:</span>
-                  <div className="settings-button-group settings-button-group-full">
+              <div className={styles.grid}>
+                <div className={`${styles.gridItem} ${styles.gridItemFull}`}>
+                  <span className={styles.label}>Border style:</span>
+                  <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
                     {BORDER_OPTIONS.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => onSetBorder(option.value)}
-                        className={`settings-group-btn settings-group-btn-flex ${settings.modern.border === option.value ? "settings-group-btn-active" : ""}`}
+                        className={`${styles.groupButton} ${styles.groupButtonFlex} ${settings.modern.border === option.value ? styles.groupButtonActive : ""}`}
                       >
                         {option.label}
                       </button>
@@ -238,18 +239,18 @@ export function SettingsPanel({
               </div>
 
               {/* Orientation */}
-              <div className="settings-grid">
-                <div className={`settings-grid-item settings-grid-item-full ${!showDirectionOptions ? "settings-grid-item-disabled" : ""}`}>
-                  <span className="settings-label">Orientation from:</span>
-                  <div className="settings-button-group settings-button-group-full">
+              <div className={styles.grid}>
+                <div className={`${styles.gridItem} ${styles.gridItemFull} ${!showDirectionOptions ? styles.gridItemDisabled : ""}`}>
+                  <span className={styles.label}>Orientation from:</span>
+                  <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
                     {DIRECTION_OPTIONS.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => showDirectionOptions && onSetDirection(option.value)}
                         disabled={!showDirectionOptions}
-                        className={`settings-group-btn settings-group-btn-flex settings-group-btn-with-icon ${settings.modern.direction === option.value && showDirectionOptions ? "settings-group-btn-active" : ""}`}
+                        className={`${styles.groupButton} ${styles.groupButtonFlex} ${styles.groupButtonWithIcon} ${settings.modern.direction === option.value && showDirectionOptions ? styles.groupButtonActive : ""}`}
                       >
-                        <span className="settings-group-btn-icon" aria-hidden="true">{option.icon}</span>
+                        <span className={styles.groupButtonIcon} aria-hidden="true">{option.icon}</span>
                         <span>{option.label}</span>
                       </button>
                     ))}
@@ -257,8 +258,8 @@ export function SettingsPanel({
                 </div>
               </div>
 
-              <div className="settings-section-reset">
-                <button className="keybinding-reset-all-btn" onClick={onResetModern}>
+              <div className={styles.sectionReset}>
+                <button className={styles.resetButton} onClick={onResetModern}>
                   Reset UI settings
                 </button>
               </div>

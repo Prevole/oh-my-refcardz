@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
+import styles from "./accordion.module.css";
 
 type AccordionItemProps = {
   title: string;
@@ -20,15 +21,15 @@ export function AccordionItem({
   children,
 }: AccordionItemProps) {
   return (
-    <div className={`accordion-item ${isOpen ? "accordion-item-open" : ""} ${disabled ? "accordion-item-disabled" : ""}`}>
+    <div className={`${styles.item} ${isOpen ? styles.itemOpen : ""} ${disabled ? styles.itemDisabled : ""}`}>
       <button
-        className="accordion-header"
+        className={styles.header}
         onClick={onToggle}
         disabled={disabled}
         aria-expanded={isOpen}
       >
         <svg
-          className={`accordion-chevron ${isOpen ? "accordion-chevron-open" : ""}`}
+          className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ""}`}
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -40,14 +41,14 @@ export function AccordionItem({
         >
           <path d="M9 18l6-6-6-6" />
         </svg>
-        <span className="accordion-title">{title}</span>
-        {badge && <span className="accordion-badge">{badge}</span>}
+        <span className={styles.title}>{title}</span>
+        {badge && <span className={styles.badge}>{badge}</span>}
       </button>
       <div
-        className={`accordion-content ${isOpen ? "accordion-content-open" : ""}`}
+        className={`${styles.content} ${isOpen ? styles.contentOpen : ""}`}
         aria-hidden={!isOpen}
       >
-        <div className="accordion-content-inner">{children}</div>
+        <div className={styles.contentInner}>{children}</div>
       </div>
     </div>
   );

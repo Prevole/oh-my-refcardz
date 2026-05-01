@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRegisterModalOpen } from "@/components/sheet-commands-shell";
+import commandModalStyles from "./command-modal.module.css";
+import modalStyles from "./modal.module.css";
 
 type CommandExampleModalProps = {
   title: string;
@@ -32,31 +34,32 @@ export function CommandExampleModal({ title, command, example, onClose }: Comman
 
   return createPortal(
     <div
-      className="command-modal-overlay"
+      className={commandModalStyles.overlay}
+      data-command-modal-overlay
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`Example for: ${title}`}
     >
       <div
-        className="command-modal"
+        className={commandModalStyles.modal}
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" className="command-modal-dismiss" onClick={onClose} aria-label="Close">✕</button>
-        <p className="command-modal-label">EXAMPLE</p>
-        <h3 className="command-modal-title">{title}</h3>
+        <button type="button" className={modalStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
+        <p className={commandModalStyles.label}>EXAMPLE</p>
+        <h3 className={commandModalStyles.title}>{title}</h3>
 
-        <div className="command-modal-section">
-          <p className="command-modal-section-label">Command</p>
-          <p className="sheet-terminal">{command}</p>
+        <div className={commandModalStyles.section}>
+          <p className={commandModalStyles.sectionLabel}>Command</p>
+          <p className={commandModalStyles.terminal}>{command}</p>
         </div>
 
-        <div className="command-modal-section">
-          <p className="command-modal-section-label">Example</p>
-          <p className="sheet-terminal command-modal-example">{example}</p>
+        <div className={commandModalStyles.section}>
+          <p className={commandModalStyles.sectionLabel}>Example</p>
+          <p className={`${commandModalStyles.terminal} ${commandModalStyles.example}`}>{example}</p>
         </div>
 
-        <button type="button" className="command-modal-close" onClick={onClose}>
+        <button type="button" className={commandModalStyles.closeButton} onClick={onClose}>
           Close <kbd>Esc</kbd>
         </button>
       </div>

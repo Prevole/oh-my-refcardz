@@ -1,0 +1,48 @@
+.tabs {
+  display: flex;
+  margin-bottom: 1.25rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: -1px;
+}
+
+.tab:first-child {
+  border-radius: 0.375rem 0 0 0.375rem;
+  margin-left: 0;
+}
+
+.tab:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.tab:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.tabActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: black;
+  font-weight: 600;
+}
+
+.tabActive:hover:not(:disabled) {
+  background: var(--accent);
+  color: black;
+}
+
+.tabDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -1,4 +1,5 @@
 import { ArrowGlyph } from "@/components/arrow-glyph";
+import styles from "./sheet-rendering.module.css";
 
 type Props = {
   keys: string[];
@@ -14,13 +15,13 @@ type Props = {
  */
 export function SheetShortcut({ keys, description }: Props) {
   return (
-    <div className="sheet-shortcut">
-      <div className="sheet-shortcut-keys">
+    <div className={styles.shortcut}>
+      <div className={styles.shortcutKeys}>
         {keys.map((keyCombo, index) => (
           <KeyCombo key={`${keyCombo}-${index}`} combo={keyCombo} />
         ))}
       </div>
-      <p className="sheet-shortcut-description">{description}</p>
+      <p className={styles.shortcutDescription}>{description}</p>
     </div>
   );
 }
@@ -29,11 +30,11 @@ function KeyCombo({ combo }: { combo: string }) {
   if (combo.includes(" + ")) {
     const parts = combo.split(" + ");
     return (
-      <code className="sheet-code-combo">
+      <code className={styles.codeCombo}>
         {parts.map((part, index) => (
-          <span key={`${part}-${index}`} className="sheet-code-part-wrap">
+          <span key={`${part}-${index}`} className={styles.codePartWrap}>
             <KeyPart part={part} />
-            {index < parts.length - 1 ? <span className="sheet-code-sep">+</span> : null}
+            {index < parts.length - 1 ? <span className={styles.codeSep}>+</span> : null}
           </span>
         ))}
       </code>
@@ -43,11 +44,11 @@ function KeyCombo({ combo }: { combo: string }) {
   if (combo.includes("|")) {
     const parts = combo.split("|");
     return (
-      <code className="sheet-code-combo">
+      <code className={styles.codeCombo}>
         {parts.map((part, index) => (
-          <span key={`${part}-${index}`} className="sheet-code-part-wrap">
+          <span key={`${part}-${index}`} className={styles.codePartWrap}>
             <KeyPart part={part.trim()} />
-            {index < parts.length - 1 ? <span className="sheet-code-sep">|</span> : null}
+            {index < parts.length - 1 ? <span className={styles.codeSep}>|</span> : null}
           </span>
         ))}
       </code>
@@ -55,8 +56,8 @@ function KeyCombo({ combo }: { combo: string }) {
   }
 
   return (
-    <code className="sheet-code-combo">
-      <span className="sheet-code-part-wrap">
+    <code className={styles.codeCombo}>
+      <span className={styles.codePartWrap}>
         <KeyPart part={combo} />
       </span>
     </code>
@@ -69,14 +70,14 @@ function KeyPart({ part }: { part: string }) {
 
   if (hasArrow) {
     return (
-      <span className={`sheet-code-part${isSingle ? " sheet-code-single" : ""}`}>
+      <span className={`${styles.codePart} ${isSingle ? styles.codeSingle : ""}`}>
         {renderWithArrows(part)}
       </span>
     );
   }
 
   return (
-    <span className={`sheet-code-part${isSingle ? " sheet-code-single" : ""}`}>{part}</span>
+    <span className={`${styles.codePart} ${isSingle ? styles.codeSingle : ""}`}>{part}</span>
   );
 }
 
@@ -87,10 +88,10 @@ function isSingleKey(value: string): boolean {
 function renderWithArrows(value: string) {
   return value.split("").map((char, index) => {
     if (char === " ") return " ";
-    if (char === "←") return <ArrowGlyph key={`left-${index}`} direction="left" className="sheet-inline-arrow" />;
-    if (char === "↑") return <ArrowGlyph key={`up-${index}`} direction="up" className="sheet-inline-arrow" />;
-    if (char === "↓") return <ArrowGlyph key={`down-${index}`} direction="down" className="sheet-inline-arrow" />;
-    if (char === "→") return <ArrowGlyph key={`right-${index}`} direction="right" className="sheet-inline-arrow" />;
+    if (char === "←") return <ArrowGlyph key={`left-${index}`} direction="left" className={styles.inlineArrow} />;
+    if (char === "↑") return <ArrowGlyph key={`up-${index}`} direction="up" className={styles.inlineArrow} />;
+    if (char === "↓") return <ArrowGlyph key={`down-${index}`} direction="down" className={styles.inlineArrow} />;
+    if (char === "→") return <ArrowGlyph key={`right-${index}`} direction="right" className={styles.inlineArrow} />;
     return <span key={`char-${index}`}>{char}</span>;
   });
 }

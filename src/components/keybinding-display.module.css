@@ -1,0 +1,119 @@
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.45rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #f8c94a;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+}
+
+.keycapArrow {
+  width: 1em;
+  height: 1em;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.legendKeycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.09));
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 0;
+  line-height: 1.45;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 1.08em;
+  font-weight: 600;
+  color: #f8c94a;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.legendKeycapSheet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.22), rgba(139, 92, 246, 0.12));
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(167, 139, 250, 0.15);
+  padding: 0;
+  line-height: 1.45;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 1.08em;
+  font-weight: 600;
+  color: #c4b5fd;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.legendTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.legendTable col:nth-child(1),
+.legendTable col:nth-child(3) {
+  width: 18%;
+}
+
+.legendTable col:nth-child(2),
+.legendTable col:nth-child(4) {
+  width: 32%;
+}
+
+.legendTable td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0.6rem 0.4rem;
+  vertical-align: middle;
+  font-size: 0.98rem;
+}
+
+.legendTable tr:last-child td {
+  border-bottom: none;
+}
+
+.legendTable td:nth-child(1),
+.legendTable td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.legendTable td:nth-child(2),
+.legendTable td:nth-child(4) {
+  color: rgba(237, 242, 244, 0.92);
+}
+
+.legendArrow {
+  width: 1.2rem;
+  height: 1.2rem;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

@@ -56,7 +56,7 @@ export function SheetShortcuts() {
       if (matchesAction(event, ACTION_IDS.BACK_TO_HOME)) {
         event.preventDefault();
         // If a command modal is open, let it handle Escape itself
-        if (document.querySelector(".command-modal-overlay")) return;
+        if (document.querySelector("[data-command-modal-overlay]")) return;
         router.push("/");
       }
     },

@@ -1,0 +1,89 @@
+.item {
+  margin: 0;
+  overflow: hidden;
+}
+
+.itemOpen {
+}
+
+.itemDisabled {
+  opacity: 0.5;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: rgba(20, 31, 51, 0.96);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.header:hover:not(:disabled) {
+  background: rgba(24, 37, 61, 0.98);
+}
+
+.itemOpen .header {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.header:disabled {
+  cursor: not-allowed;
+}
+
+.chevron {
+  color: rgba(255, 255, 255, 0.42);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.title {
+  flex: 1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.badge {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: rgba(248, 201, 74, 0.15);
+  border-radius: 0.25rem;
+}
+
+.content {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.25s ease, opacity 0.2s ease;
+}
+
+.contentOpen {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.contentInner {
+  overflow: hidden;
+  padding: 0 1.5rem;
+  background: rgba(31, 44, 68, 0.94);
+}
+
+.contentOpen .contentInner {
+  padding-top: 0.9rem;
+  padding-bottom: 1.25rem;
+}

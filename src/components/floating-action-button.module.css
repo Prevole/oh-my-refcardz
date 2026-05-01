@@ -1,0 +1,34 @@
+.button {
+  position: fixed;
+  top: 1.5rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(17, 31, 53, 0.9);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.help {
+  left: 1.5rem;
+}
+
+.settings {
+  right: 1.5rem;
+}
+
+.settings:hover {
+  transform: rotate(45deg);
+}

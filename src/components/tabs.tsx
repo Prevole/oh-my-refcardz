@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./tabs.module.css";
+
 type Tab = {
   id: string;
   label: string;
@@ -14,11 +16,11 @@ type TabsProps = {
 
 export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
   return (
-    <div className="settings-tabs">
+    <div className={styles.tabs}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          className={`settings-tab ${activeTab === tab.id ? "settings-tab-active" : ""} ${tab.disabled ? "settings-tab-disabled" : ""}`}
+          className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ""} ${tab.disabled ? styles.tabDisabled : ""}`}
           onClick={() => !tab.disabled && onChange(tab.id)}
           disabled={tab.disabled}
         >

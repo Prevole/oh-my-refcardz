@@ -5,6 +5,7 @@ import { Modal } from "@/components/modal";
 import { TechIcon } from "@/components/tech-icon";
 import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import styles from "./home-info-modal.module.css";
 
 type Props = {
   open: boolean;
@@ -46,7 +47,7 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
       <div className="flex items-stretch gap-4 max-sm:flex-col max-sm:gap-4">
         {sheet.icon ? (
           <div className="flex w-20 shrink-0 items-center justify-center max-sm:w-full max-sm:justify-start">
-            <div className="sheet-details-icon p-2">
+            <div className={`${styles.detailsIcon} p-2`}>
               <TechIcon
                 icon={sheet.icon}
                 color={iconColor}
@@ -57,7 +58,7 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
         ) : null}
         {sheet.icon ? (
           <div
-            className="sheet-details-divider max-sm:hidden"
+            className={`${styles.detailsDivider} max-sm:hidden`}
             aria-hidden="true"
           />
         ) : null}

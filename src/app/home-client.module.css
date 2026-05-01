@@ -1,0 +1,139 @@
+.hexCard {
+  width: calc(var(--hex-cell-size) * var(--hex-card-ratio));
+  height: calc(var(--hex-cell-size) * var(--hex-card-ratio));
+  position: relative;
+  border: none;
+  background: transparent;
+  transition: filter 0.15s ease;
+}
+
+.hexCell {
+  width: var(--hex-cell-size);
+  height: var(--hex-cell-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hexCard:hover {
+  filter: brightness(1.06);
+}
+
+.hexCard[data-selected="true"] {
+  filter: brightness(1.12);
+}
+
+.hexShape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hexShapePath {
+  fill: rgba(17, 31, 53, 0.95);
+  stroke: var(--hex-border-color, rgba(255, 255, 255, 0.6));
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.hexCard[data-selected="true"] .hexShapePath {
+  fill: rgba(30, 50, 82, 0.95);
+  stroke: color-mix(in srgb, var(--hex-border-color, var(--accent)) 82%, white);
+}
+
+.hexCardInner {
+  position: relative;
+  z-index: 1;
+  padding: 0.7rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hasIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.hexHalf {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.hexHalfIcon {
+  align-items: flex-end;
+  padding-bottom: 0.25rem;
+}
+
+.hexHalfTitle {
+  align-items: flex-start;
+  padding-top: 1rem;
+}
+
+.hexIcon {
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+}
+
+.hexIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hexTitle {
+  font-size: clamp(0.75rem, 2.5vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.15;
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-align: center;
+}
+
+.hexTitleCentered {
+  font-size: clamp(0.9rem, 3vw, 1.3rem);
+  -webkit-line-clamp: 3;
+}
+
+.hexTitleGradient {
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hexBoard {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  padding-bottom: 1rem;
+}
+
+.hexCellAbs {
+  position: absolute;
+}
+
+@media (max-width: 640px) {
+  .hexBoard {
+    padding-bottom: 0.6rem;
+  }
+
+  .hexIcon {
+    width: 2rem;
+    height: 2rem;
+  }
+}

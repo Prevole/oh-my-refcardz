@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import styles from "./modal.module.css";
 
 type Props = {
   open: boolean;
@@ -82,7 +83,7 @@ export function Modal({ open, onClose, children, className = "" }: Props) {
       >
         <button
           type="button"
-          className="command-modal-dismiss"
+          className={styles.dismiss}
           onClick={onClose}
           aria-label="Close"
         >

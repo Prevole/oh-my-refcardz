@@ -1,0 +1,188 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(3, 6, 14, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 36rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(17, 32, 58, 0.98);
+  padding: 1.5rem;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  color: rgba(237, 242, 244, 0.92);
+}
+
+.label {
+  margin: 0;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--accent-2);
+}
+
+.title {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: rgba(237, 242, 244, 0.97);
+}
+
+.section {
+  margin-top: 1.1rem;
+}
+
+.sectionLabel {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 244, 0.55);
+}
+
+.example {
+  color: #ffd47f;
+}
+
+.closeButton {
+  margin-top: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.85rem;
+  color: rgba(237, 242, 244, 0.75);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(237, 242, 244, 0.95);
+}
+
+.closeButton kbd,
+.submitButton kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.72rem;
+  color: rgba(237, 242, 244, 0.65);
+}
+
+.form {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fieldLabel {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8ef6d8;
+}
+
+.input {
+  width: 100%;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 16, 28, 0.7);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.86rem;
+  color: rgba(237, 242, 244, 0.95);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.input::placeholder {
+  color: rgba(237, 242, 244, 0.3);
+}
+
+.input:focus {
+  border-color: rgba(0, 209, 178, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 209, 178, 0.15);
+}
+
+.previewWrap {
+  margin-top: 0.25rem;
+}
+
+.preview {
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.actions .closeButton {
+  margin-top: 0;
+}
+
+.submitButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 209, 178, 0.4);
+  background: rgba(0, 209, 178, 0.12);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.submitButton:hover {
+  background: rgba(0, 209, 178, 0.2);
+  border-color: rgba(0, 209, 178, 0.6);
+}
+
+.terminal {
+  margin: 0.35rem 0 0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(10, 16, 28, 0.86), rgba(7, 12, 22, 0.92));
+  padding: 0.35rem 0.55rem;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #8ef6d8;
+}

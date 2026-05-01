@@ -5,6 +5,7 @@ import { Modal } from "@/components/modal";
 import { HelpRow } from "@/components/keybinding-display";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS } from "@/lib/keybindings";
+import keybindingDisplayStyles from "./keybinding-display.module.css";
 
 type Props = {
   open: boolean;
@@ -33,7 +34,7 @@ export function HomeHelpModal({ open, onClose }: Props) {
 
       {/* Navigation */}
       <h3 className="mt-4 text-xl font-semibold">Navigation</h3>
-      <table className="legend-table mt-3">
+      <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
         <colgroup>
           <col />
           <col />
@@ -59,7 +60,7 @@ export function HomeHelpModal({ open, onClose }: Props) {
 
       {/* Search */}
       <h3 className="mt-6 text-xl font-semibold">Search</h3>
-      <table className="legend-table mt-3">
+      <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
         <colgroup>
           <col />
           <col />
@@ -76,7 +77,7 @@ export function HomeHelpModal({ open, onClose }: Props) {
 
       {/* Misc */}
       <h3 className="mt-6 text-xl font-semibold">Misc</h3>
-      <table className="legend-table mt-3">
+      <table className={`${keybindingDisplayStyles.legendTable} mt-3`}>
         <colgroup>
           <col />
           <col />

@@ -13,6 +13,7 @@ import {
   getArrowDirection,
   DEFAULT_KEYBINDINGS,
 } from "@/lib/keybindings";
+import styles from "./keybinding-editor.module.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -33,8 +34,8 @@ function KeycapDisplay({ display }: { display: string }) {
     const direction = getArrowDirection(display);
     if (direction) {
       return (
-        <span className="keybinding-keycap">
-          <ArrowGlyph direction={direction} className="keybinding-arrow" />
+        <span className={styles.keycap}>
+          <ArrowGlyph direction={direction} className={styles.arrow} />
         </span>
       );
     }
@@ -43,13 +44,13 @@ function KeycapDisplay({ display }: { display: string }) {
   // Check for small-caps display (esc)
   if (display === "esc") {
     return (
-      <span className="keybinding-keycap">
+      <span className={styles.keycap}>
         <span className="small-caps">{display}</span>
       </span>
     );
   }
 
-  return <span className="keybinding-keycap">{display}</span>;
+  return <span className={styles.keycap}>{display}</span>;
 }
 
 function ComboDisplay({ combo }: { combo: KeyCombo }) {
@@ -69,13 +70,13 @@ function ConflictNotice({
   onDismiss: () => void;
 }) {
   return (
-    <div className="keybinding-conflict">
-      <span className="keybinding-conflict-icon">⚠</span>
-      <span className="keybinding-conflict-text">
+    <div className={styles.conflict}>
+      <span className={styles.conflictIcon}>⚠</span>
+      <span className={styles.conflictText}>
         Replaced binding from &ldquo;{conflict.existingAction.label}&rdquo;
       </span>
       <button
-        className="keybinding-conflict-dismiss"
+        className={styles.conflictDismiss}
         onClick={onDismiss}
         aria-label="Dismiss"
       >
@@ -130,11 +131,11 @@ function RecordingOverlay({
   }, [onCancel, onKeyDown]);
 
   return (
-    <div ref={overlayRef} className="keybinding-recording-overlay">
-      <div className="keybinding-recording-content">
-        <p className="keybinding-recording-title">Press a key combination</p>
-        <p className="keybinding-recording-hint">
-          Press <span className="keybinding-recording-key">Esc</span> to cancel
+    <div ref={overlayRef} className={styles.recordingOverlay}>
+      <div className={styles.recordingContent}>
+        <p className={styles.recordingTitle}>Press a key combination</p>
+        <p className={styles.recordingHint}>
+          Press <span className={styles.recordingKey}>Esc</span> to cancel
         </p>
       </div>
     </div>
@@ -179,13 +180,13 @@ function ActionRow({
   };
 
   return (
-    <div className={`keybinding-row ${isRecording ? "keybinding-row-recording" : ""}`}>
-      <div className="keybinding-label">{action.label}</div>
-      <div className="keybinding-combos">
+    <div className={`${styles.row} ${isRecording ? styles.rowRecording : ""}`}>
+      <div className={styles.label}>{action.label}</div>
+      <div className={styles.combos}>
         {action.combos.map((combo, index) => (
-          <div key={index} className="keybinding-combo-wrapper">
+          <div key={index} className={styles.comboWrapper}>
             <button
-              className={`keybinding-combo-btn ${isWideCombo(combo) ? "keybinding-combo-btn-wide" : ""} ${index === 0 ? "keybinding-combo-primary" : ""}`}
+              className={`${styles.comboButton} ${isWideCombo(combo) ? styles.comboButtonWide : ""} ${index === 0 ? styles.comboPrimary : ""}`}
               onClick={(e) => handleComboClick(e, index)}
               disabled={isRecording}
               aria-label={`Edit keybinding ${index + 1} for ${action.label}${index === 0 ? " (primary)" : ""}`}
@@ -195,7 +196,7 @@ function ActionRow({
             </button>
             {action.combos.length > 1 && (
               <button
-                className="keybinding-combo-remove"
+                className={styles.comboRemove}
                 onClick={() => onRemoveCombo(index)}
                 disabled={isRecording}
                 aria-label={`Remove keybinding ${index + 1}`}
@@ -207,7 +208,7 @@ function ActionRow({
         ))}
         {action.combos.length < 3 && (
           <button
-            className="keybinding-add-btn"
+            className={styles.addButton}
             onClick={() => onStartRecording(null)}
             disabled={isRecording}
             aria-label={`Add alternative keybinding for ${action.label}`}
@@ -216,10 +217,10 @@ function ActionRow({
           </button>
         )}
       </div>
-      <div className="keybinding-actions">
+      <div className={styles.actions}>
         {isModified && (
           <button
-            className="keybinding-reset-btn"
+            className={styles.resetButton}
             onClick={onResetAction}
             disabled={isRecording}
             aria-label={`Reset ${action.label} to default`}
@@ -274,9 +275,9 @@ function ContextSection({
   onResetAction: (actionId: string) => void;
 }) {
   return (
-    <div className="keybinding-context">
-      <h4 className="keybinding-context-title">{CONTEXT_LABELS[context]}</h4>
-      <div className="keybinding-list">
+    <div className={styles.context}>
+      <h4 className={styles.contextTitle}>{CONTEXT_LABELS[context]}</h4>
+      <div className={styles.list}>
         {actions.map((action) => (
           <ActionRow
             key={action.id}
@@ -384,7 +385,7 @@ export function KeybindingEditor() {
   const contexts: KeybindingContext[] = ["global", "home", "sheet", "sheet-commands"];
 
   return (
-    <div className="keybinding-editor">
+    <div className={styles.editor}>
       {lastConflict && (
         <ConflictNotice
           conflict={lastConflict}
@@ -411,8 +412,8 @@ export function KeybindingEditor() {
         />
       ))}
 
-      <div className="keybinding-footer">
-        <button className="keybinding-reset-all-btn" onClick={handleResetAll}>
+      <div className={styles.footer}>
+        <button className={styles.resetAllButton} onClick={handleResetAll}>
           Reset all keybindings
         </button>
       </div>

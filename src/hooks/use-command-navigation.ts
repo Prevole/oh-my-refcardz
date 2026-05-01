@@ -297,10 +297,10 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     function setFocused(el: HTMLElement | null) {
       // Remove highlight from any previously focused command
       document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
-        n.classList.remove("is-nav-focused");
+        n.dataset.navFocused = "false";
       });
       if (el) {
-        el.classList.add("is-nav-focused");
+        el.dataset.navFocused = "true";
         el.focus({ preventScroll: true });
         el.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
@@ -336,7 +336,7 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       const next = e.relatedTarget as HTMLElement | null;
       if (!next || next.dataset.sheetCommand === undefined) {
         document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
-          n.classList.remove("is-nav-focused");
+          n.dataset.navFocused = "false";
         });
       }
     };
