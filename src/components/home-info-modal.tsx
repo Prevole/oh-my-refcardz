@@ -7,21 +7,23 @@ type Props = {
   open: boolean;
   onClose: () => void;
   sheet: CheatSheetMeta | null;
-  colorTo: string | null;
+  accentColor: string | null;
 };
 
-export function HomeInfoModal({ open, onClose, sheet, colorTo }: Props) {
+export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
   if (!sheet) return null;
 
-  // Use gradient style when colorTo is provided (hex-gradient mode)
-  const titleStyle: CSSProperties = colorTo
+  // Use accent color when provided (hexa mode: gradient, grid mode: solid interpolated color)
+  const titleStyle: CSSProperties = accentColor
     ? {
-        background: `linear-gradient(135deg, ${sheet.colorFrom}, ${colorTo})`,
+        background: `linear-gradient(135deg, ${sheet.colorFrom}, ${accentColor})`,
         WebkitBackgroundClip: "text",
         WebkitTextFillColor: "transparent",
         backgroundClip: "text",
       }
     : { color: sheet.color };
+
+  const iconColor = accentColor ?? sheet.color;
 
   return (
     <Modal open={open} onClose={onClose} className="max-w-xl">
@@ -31,7 +33,7 @@ export function HomeInfoModal({ open, onClose, sheet, colorTo }: Props) {
             <div className="sheet-details-icon p-2">
               <TechIcon
                 icon={sheet.icon}
-                color={colorTo ? sheet.colorFrom : sheet.color}
+                color={iconColor}
                 className="h-16 w-16"
               />
             </div>

@@ -19,6 +19,7 @@ import {
   getVerticalTarget,
 } from "@/lib/hex-layout";
 import { getSecondaryColorForColumn } from "@/lib/color-palette";
+import { interpolateHSL, getGridInterpolationFactor } from "@/lib/color-utils";
 import { Keycap } from "@/components/keycap";
 import { ArrowGlyph } from "@/components/arrow-glyph";
 import { TechIcon } from "@/components/tech-icon";
@@ -171,13 +172,43 @@ export function HomeClient({ categories }: Props) {
     return map;
   }, [categoryLayouts]);
 
-  // Calculate colorTo for selected card based on its visual column (for hexa mode)
-  const selectedColorTo = useMemo(() => {
-    if (!selectedCard || uiSettings.modern.colorMode !== "hexa") return null;
-    const nav = navigationBySlug.get(selectedCard.slug);
-    if (!nav) return null;
-    return getSecondaryColorForColumn(nav.visualColIndex);
-  }, [selectedCard, navigationBySlug, uiSettings.modern.colorMode]);
+  // Calculate interpolated colors for grid mode
+  const sheetGridColors = useMemo(() => {
+    if (uiSettings.modern.colorMode !== "grid") return new Map<string, string>();
+
+    const colorMap = new Map<string, string>();
+    categoryLayouts.forEach(({ category, rows }) => {
+      const maxRow = rows.length - 1;
+      const maxCol = Math.max(0, ...rows.map((row) => row.length - 1));
+
+      rows.forEach((row, rowIndex) => {
+        row.forEach((sheet, colIndex) => {
+          const t = getGridInterpolationFactor(rowIndex, colIndex, maxRow, maxCol);
+          const color = interpolateHSL(category.colorFrom, category.colorTo, t);
+          colorMap.set(sheet.slug, color);
+        });
+      });
+    });
+
+    return colorMap;
+  }, [categoryLayouts, uiSettings.modern.colorMode]);
+
+  // Calculate accent color for selected card (hexa: colorTo, grid: interpolated color)
+  const selectedAccentColor = useMemo(() => {
+    if (!selectedCard) return null;
+
+    if (uiSettings.modern.colorMode === "grid") {
+      return sheetGridColors.get(selectedCard.slug) ?? null;
+    }
+
+    if (uiSettings.modern.colorMode === "hexa") {
+      const nav = navigationBySlug.get(selectedCard.slug);
+      if (!nav) return null;
+      return getSecondaryColorForColumn(nav.visualColIndex);
+    }
+
+    return null;
+  }, [selectedCard, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
 
   // Restore selection from session storage
   useEffect(() => {
@@ -323,7 +354,7 @@ export function HomeClient({ categories }: Props) {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
 
       <HomeHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <HomeInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} sheet={selectedCard} colorTo={selectedColorTo} />
+      <HomeInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} sheet={selectedCard} accentColor={selectedAccentColor} />
 
       <main className="z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col">
         <p className="font-mono text-xs tracking-[0.2em] text-white/70">OH MY REFCARDZ</p>
@@ -403,11 +434,35 @@ export function HomeClient({ categories }: Props) {
                   {positionedSheets.map(({ item: sheet, left, top, visualColIndex }) => {
                     const index = cardIndexBySlug.get(sheet.slug) ?? -1;
                     const isSelected = selectedIndex === index;
-                    const colorTo = getSecondaryColorForColumn(visualColIndex);
+                    const hexaColorTo = getSecondaryColorForColumn(visualColIndex);
+                    const gridColor = sheetGridColors.get(sheet.slug);
                     const isHexaMode = uiSettings.modern.colorMode === "hexa";
-                    // For hexa mode, use colorFrom/colorTo; for normal mode, use sheet.color
-                    const primaryColor = isHexaMode ? sheet.colorFrom : sheet.color;
-                    const secondaryColor = isHexaMode ? colorTo : sheet.color;
+                    const isGridMode = uiSettings.modern.colorMode === "grid";
+
+                    // Determine colors based on mode
+                    let primaryColor: string;
+                    let secondaryColor: string;
+                    let titleColor: string;
+
+                    if (isGridMode && gridColor) {
+                      // Grid mode: single interpolated color
+                      primaryColor = gridColor;
+                      secondaryColor = gridColor;
+                      titleColor = gridColor;
+                    } else if (isHexaMode) {
+                      // Hexa mode: gradient from category color to column color
+                      primaryColor = sheet.colorFrom;
+                      secondaryColor = hexaColorTo;
+                      titleColor = sheet.colorFrom; // Will use gradient CSS
+                    } else {
+                      // Normal mode: sheet's own color
+                      primaryColor = sheet.color;
+                      secondaryColor = sheet.color;
+                      titleColor = sheet.color;
+                    }
+
+                    const useGradientTitle = isHexaMode;
+
                     return (
                       <div
                         key={sheet.slug}
@@ -431,7 +486,7 @@ export function HomeClient({ categories }: Props) {
                           style={{
                             "--hex-border-color": sheet.color,
                             "--hex-color-from": sheet.colorFrom,
-                            "--hex-color-to": colorTo,
+                            "--hex-color-to": hexaColorTo,
                           } as CSSProperties}
                         >
                           <svg
@@ -492,29 +547,29 @@ export function HomeClient({ categories }: Props) {
                                   />
                                 </div>
                                 <div className="home-hex-half home-hex-half-title">
-                                  {isHexaMode ? (
+                                  {useGradientTitle ? (
                                     <h3
                                       className="home-hex-title home-hex-title-gradient"
                                       style={{
                                         "--gradient-from": sheet.colorFrom,
-                                        "--gradient-to": colorTo,
+                                        "--gradient-to": hexaColorTo,
                                       } as CSSProperties}
                                     >
                                       {sheet.title}
                                     </h3>
                                   ) : (
-                                    <h3 className="home-hex-title" style={{ color: sheet.color }}>
+                                    <h3 className="home-hex-title" style={{ color: titleColor }}>
                                       {sheet.title}
                                     </h3>
                                   )}
                                 </div>
                               </>
-                            ) : isHexaMode ? (
+                            ) : useGradientTitle ? (
                               <h3
                                 className="home-hex-title home-hex-title-centered home-hex-title-gradient"
                                 style={{
                                   "--gradient-from": sheet.colorFrom,
-                                  "--gradient-to": colorTo,
+                                  "--gradient-to": hexaColorTo,
                                 } as CSSProperties}
                               >
                                 {sheet.title}
@@ -522,7 +577,7 @@ export function HomeClient({ categories }: Props) {
                             ) : (
                               <h3
                                 className="home-hex-title home-hex-title-centered"
-                                style={{ color: sheet.color }}
+                                style={{ color: titleColor }}
                               >
                                 {sheet.title}
                               </h3>

@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS: UISettings = {
 };
 
 const COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "normal"];
-const RANDOM_COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "normal"]; // Exclude "grid" (not yet implemented)
+const RANDOM_COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "normal"];
 const BORDER_OPTIONS: BorderStyle[] = ["full", "left", "right", "both"];
 const DIRECTION_OPTIONS: GradientDirection[] = ["tl-br", "tr-bl", "l-r"];
 

@@ -151,8 +151,7 @@ export function SettingsPanel({
                       <button
                         key={option.value}
                         onClick={() => onSetColorMode(option.value)}
-                        disabled={option.value === "grid"}
-                        className={`settings-group-btn settings-group-btn-flex ${settings.modern.colorMode === option.value ? "settings-group-btn-active" : ""} ${option.value === "grid" ? "settings-group-btn-disabled" : ""}`}
+                        className={`settings-group-btn settings-group-btn-flex ${settings.modern.colorMode === option.value ? "settings-group-btn-active" : ""}`}
                       >
                         {option.label}
                       </button>

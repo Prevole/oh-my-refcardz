@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
 import { z } from "zod";
-import { getCategoryPrimaryColor } from "./color-palette";
+import { getCategoryPrimaryColor, getCategoryGradientPair } from "./color-palette";
 
 export type CheatSheetMeta = {
   slug: string;
@@ -20,6 +20,8 @@ export type CheatSheetCategory = {
   description: string;
   order: number;
   color: string;
+  colorFrom: string;
+  colorTo: string;
   sheets: CheatSheetMeta[];
 };
 
@@ -280,9 +282,10 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     return a.fallbackName.localeCompare(b.fallbackName);
   });
 
-  // Now assign colorFrom based on category order
+  // Now assign colors based on category order
   return categories.map(({ id, title, description, order, sheetsRaw: categorySheets }) => {
     const categoryColor = getCategoryPrimaryColor(order);
+    const gradientPair = getCategoryGradientPair(order);
     const sheets: CheatSheetMeta[] = categorySheets.map((sheet) => ({
       slug: sheet.slug,
       title: sheet.title,
@@ -299,6 +302,8 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
       description,
       order,
       color: categoryColor,
+      colorFrom: gradientPair.from,
+      colorTo: gradientPair.to,
       sheets,
     };
   });
