@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { UIMode, BorderStyle, GradientDirection, UISettings, AccordionState } from "@/hooks/use-ui-settings";
+import type { ColorMode, BorderStyle, GradientDirection, UISettings, AccordionState } from "@/hooks/use-ui-settings";
 import { AccordionItem } from "./accordion";
-import { Tabs } from "./tabs";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   settings: UISettings;
-  onSetMode: (mode: UIMode) => void;
+  onSetColorMode: (colorMode: ColorMode) => void;
   onToggleRandom: () => void;
   onSetBorder: (border: BorderStyle) => void;
   onSetDirection: (direction: GradientDirection) => void;
@@ -18,10 +17,10 @@ type Props = {
   onResetAll: () => void;
 };
 
-const MODE_TABS = [
-  { id: "hex-gradient", label: "Hex", disabled: true },
-  { id: "grid-gradient", label: "Grid", disabled: true },
-  { id: "modern", label: "Modern", disabled: false },
+const COLOR_MODE_OPTIONS: { value: ColorMode; label: string }[] = [
+  { value: "hexa", label: "Hexa" },
+  { value: "grid", label: "Grid" },
+  { value: "normal", label: "Normal" },
 ];
 
 const BORDER_OPTIONS: { value: BorderStyle; label: string }[] = [
@@ -61,7 +60,7 @@ export function SettingsPanel({
   isOpen,
   onClose,
   settings,
-  onSetMode,
+  onSetColorMode,
   onToggleRandom,
   onSetBorder,
   onSetDirection,
@@ -130,77 +129,82 @@ export function SettingsPanel({
             isOpen={settings.accordion.ui}
             onToggle={() => onToggleAccordion("ui")}
           >
-            {/* Mode Tabs */}
             <div className="settings-section">
-              <Tabs
-                tabs={MODE_TABS}
-                activeTab={settings.mode}
-                onChange={(id) => onSetMode(id as UIMode)}
-              />
-            </div>
+              {/* Random Toggle */}
+              <div className="settings-row">
+                <label className="settings-toggle">
+                  <input
+                    type="checkbox"
+                    checked={settings.modern.random}
+                    onChange={onToggleRandom}
+                  />
+                  <span className="settings-toggle-label">Random on refresh</span>
+                </label>
+              </div>
 
-            {/* Modern Configuration */}
-            {settings.mode === "modern" && (
-              <div className="settings-section">
-                <h4 className="settings-section-title">Modern Configuration</h4>
-
-                {/* Random Toggle */}
-                <div className="settings-row">
-                  <label className="settings-toggle">
-                    <input
-                      type="checkbox"
-                      checked={settings.modern.random}
-                      onChange={onToggleRandom}
-                    />
-                    <span className="settings-toggle-label">Random on refresh</span>
-                  </label>
-                </div>
-
-                {/* Border, Orientation & Reset */}
-                <div className="settings-grid">
-                  <div className="settings-grid-item">
-                    <span className="settings-label">Border:</span>
-                    <div className="settings-button-group">
-                      {BORDER_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => onSetBorder(option.value)}
-                          className={`settings-group-btn settings-group-btn-square ${settings.modern.border === option.value ? "settings-group-btn-active" : ""}`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={`settings-grid-item ${!showDirectionOptions ? "settings-grid-item-disabled" : ""}`}>
-                    <span className="settings-label">Orientation:</span>
-                    <div className="settings-button-group">
-                      {DIRECTION_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => showDirectionOptions && onSetDirection(option.value)}
-                          disabled={!showDirectionOptions}
-                          className={`settings-group-btn settings-group-btn-square ${settings.modern.direction === option.value && showDirectionOptions ? "settings-group-btn-active" : ""}`}
-                        >
-                          {option.icon}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="settings-grid-item">
-                    <span className="settings-label">Reset:</span>
-                    <button onClick={onResetModern} className="settings-reset-button settings-reset-small">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                        <path d="M3 3v5h5" />
-                      </svg>
-                    </button>
+              {/* Color Mode */}
+              <div className="settings-grid">
+                <div className="settings-grid-item settings-grid-item-full">
+                  <span className="settings-label">Color mode:</span>
+                  <div className="settings-button-group settings-button-group-full">
+                    {COLOR_MODE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => onSetColorMode(option.value)}
+                        disabled={option.value === "grid"}
+                        className={`settings-group-btn settings-group-btn-flex ${settings.modern.colorMode === option.value ? "settings-group-btn-active" : ""} ${option.value === "grid" ? "settings-group-btn-disabled" : ""}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Border, Orientation & Reset */}
+              <div className="settings-grid">
+                <div className="settings-grid-item">
+                  <span className="settings-label">Border:</span>
+                  <div className="settings-button-group">
+                    {BORDER_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => onSetBorder(option.value)}
+                        className={`settings-group-btn settings-group-btn-square ${settings.modern.border === option.value ? "settings-group-btn-active" : ""}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={`settings-grid-item ${!showDirectionOptions ? "settings-grid-item-disabled" : ""}`}>
+                  <span className="settings-label">Orientation:</span>
+                  <div className="settings-button-group">
+                    {DIRECTION_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => showDirectionOptions && onSetDirection(option.value)}
+                        disabled={!showDirectionOptions}
+                        className={`settings-group-btn settings-group-btn-square ${settings.modern.direction === option.value && showDirectionOptions ? "settings-group-btn-active" : ""}`}
+                      >
+                        {option.icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="settings-grid-item">
+                  <span className="settings-label">Reset:</span>
+                  <button onClick={onResetModern} className="settings-reset-button settings-reset-small">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </AccordionItem>
 
           {/* Keybindings Section */}

@@ -1,15 +1,27 @@
 import { Modal } from "@/components/modal";
 import { TechIcon } from "@/components/tech-icon";
 import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
+import type { CSSProperties } from "react";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   sheet: CheatSheetMeta | null;
+  colorTo: string | null;
 };
 
-export function HomeInfoModal({ open, onClose, sheet }: Props) {
+export function HomeInfoModal({ open, onClose, sheet, colorTo }: Props) {
   if (!sheet) return null;
+
+  // Use gradient style when colorTo is provided (hex-gradient mode)
+  const titleStyle: CSSProperties = colorTo
+    ? {
+        background: `linear-gradient(135deg, ${sheet.colorFrom}, ${colorTo})`,
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+      }
+    : { color: sheet.color };
 
   return (
     <Modal open={open} onClose={onClose} className="max-w-xl">
@@ -19,7 +31,7 @@ export function HomeInfoModal({ open, onClose, sheet }: Props) {
             <div className="sheet-details-icon p-2">
               <TechIcon
                 icon={sheet.icon}
-                color={sheet.color}
+                color={colorTo ? sheet.colorFrom : sheet.color}
                 className="h-16 w-16"
               />
             </div>
@@ -34,7 +46,7 @@ export function HomeInfoModal({ open, onClose, sheet }: Props) {
         <div className="min-w-0 flex-1">
           <h3
             className="min-w-0 text-2xl font-semibold md:text-[2rem]"
-            style={{ color: sheet.color }}
+            style={titleStyle}
           >
             {sheet.title}
           </h3>

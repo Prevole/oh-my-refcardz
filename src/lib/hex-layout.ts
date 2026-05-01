@@ -122,11 +122,13 @@ export function getMaxColumnsForWidth(width: number, hexWidth: number): number {
 
 /**
  * Calculate position for each item in the hex grid.
+ * Returns colIndex (position in row) and visualColIndex (interleaved position for color assignment).
+ * visualColIndex uses interleaving: even rows get 0, 2, 4... and odd rows get 1, 3, 5...
  */
 export function getPositionedItems<T>(
   rows: HexRows<T>,
   hexWidth: number
-): Array<{ item: T; left: number; top: number }> {
+): Array<{ item: T; left: number; top: number; colIndex: number; visualColIndex: number }> {
   const { horizontalStep, oddRowOffset, verticalStep } = getHexMetrics(hexWidth);
 
   return rows.flatMap((row, rowIndex) =>
@@ -134,6 +136,8 @@ export function getPositionedItems<T>(
       item,
       left: colIndex * horizontalStep + (rowIndex % 2 === 1 ? oddRowOffset : 0),
       top: rowIndex * verticalStep,
+      colIndex,
+      visualColIndex: colIndex * 2 + (rowIndex % 2),
     }))
   );
 }

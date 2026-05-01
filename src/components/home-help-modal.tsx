@@ -12,8 +12,10 @@ export function HomeHelpModal({ open, onClose }: Props) {
       <p className="font-mono text-xs tracking-[0.15em] text-white/70">
         KEYBOARD SHORTCUTS
       </p>
-      <h3 className="mt-2 text-xl font-semibold">Navigation</h3>
-      <table className="legend-table mt-4">
+
+      {/* Navigation */}
+      <h3 className="mt-4 text-xl font-semibold">Navigation</h3>
+      <table className="legend-table mt-3">
         <tbody>
           <tr>
             <td>
@@ -68,36 +70,57 @@ export function HomeHelpModal({ open, onClose }: Props) {
               </span>
             </td>
             <td>Open sheet</td>
+            <td />
+            <td />
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Search */}
+      <h3 className="mt-6 text-xl font-semibold">Search</h3>
+      <table className="legend-table mt-3">
+        <tbody>
+          <tr>
             <td>
               <span className="legend-keycap">/</span>
             </td>
             <td>Focus search</td>
-          </tr>
-          <tr>
             <td>
               <span className="legend-keycap">
                 <span className="small-caps">esc</span>
               </span>
             </td>
             <td>Clear search</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Misc */}
+      <h3 className="mt-6 text-xl font-semibold">Misc</h3>
+      <table className="legend-table mt-3">
+        <tbody>
+          <tr>
             <td>
               <span className="legend-keycap">i</span>
             </td>
             <td>Toggle details</td>
-          </tr>
-          <tr>
             <td>
               <span className="legend-keycap">?</span>
             </td>
             <td>Toggle help</td>
+          </tr>
+          <tr>
             <td>
               <span className="legend-keycap">,</span>
             </td>
             <td>Toggle settings</td>
+            <td />
+            <td />
           </tr>
         </tbody>
       </table>
-      <p className="mt-4 text-xs text-white/75">
+
+      <p className="mt-6 text-xs text-white/75">
         Press <span className="font-mono">?</span> to toggle,{" "}
         <span className="font-mono">Esc</span> to close.
       </p>

@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-export type UIMode = "hex-gradient" | "grid-gradient" | "modern";
+export type ColorMode = "hexa" | "grid" | "normal";
 export type BorderStyle = "full" | "left" | "right" | "both";
 export type GradientDirection = "tl-br" | "tr-bl" | "l-r";
 
 export interface ModernSettings {
   random: boolean;
+  colorMode: ColorMode;
   border: BorderStyle;
   direction: GradientDirection;
 }
@@ -18,7 +19,6 @@ export interface AccordionState {
 }
 
 export interface UISettings {
-  mode: UIMode;
   modern: ModernSettings;
   accordion: AccordionState;
 }
@@ -26,9 +26,9 @@ export interface UISettings {
 const STORAGE_KEY = "oh-my-refcardz:ui-settings";
 
 const DEFAULT_SETTINGS: UISettings = {
-  mode: "modern",
   modern: {
     random: false,
+    colorMode: "normal",
     border: "both",
     direction: "l-r",
   },
@@ -38,13 +38,16 @@ const DEFAULT_SETTINGS: UISettings = {
   },
 };
 
+const COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "grid", "normal"];
+const RANDOM_COLOR_MODE_OPTIONS: ColorMode[] = ["hexa", "normal"]; // Exclude "grid" (not yet implemented)
 const BORDER_OPTIONS: BorderStyle[] = ["full", "left", "right", "both"];
 const DIRECTION_OPTIONS: GradientDirection[] = ["tl-br", "tr-bl", "l-r"];
 
 function getRandomModernSettings(): ModernSettings {
+  const colorMode = RANDOM_COLOR_MODE_OPTIONS[Math.floor(Math.random() * RANDOM_COLOR_MODE_OPTIONS.length)];
   const border = BORDER_OPTIONS[Math.floor(Math.random() * BORDER_OPTIONS.length)];
   const direction = DIRECTION_OPTIONS[Math.floor(Math.random() * DIRECTION_OPTIONS.length)];
-  return { random: true, border, direction };
+  return { random: true, colorMode, border, direction };
 }
 
 function loadSettings(): UISettings {
@@ -107,30 +110,28 @@ export function useUISettings() {
     saveSettings(newSettings);
   }, []);
 
-  const setMode = useCallback((mode: UIMode) => {
-    setSettings({ ...settings, mode });
-  }, [settings, setSettings]);
-
   const setModernSettings = useCallback((modern: Partial<ModernSettings>) => {
-    const newModern = { ...settings.modern, ...modern };
-    setSettings({ ...settings, modern: newModern });
-  }, [settings, setSettings]);
+    setSettingsState((prev) => {
+      const newSettings = { ...prev, modern: { ...prev.modern, ...modern } };
+      saveSettings(newSettings);
+      return newSettings;
+    });
+  }, []);
 
   const toggleRandom = useCallback(() => {
-    const newRandom = !settings.modern.random;
-    if (newRandom) {
-      // When enabling random, immediately randomize
-      setSettings({
-        ...settings,
-        modern: getRandomModernSettings(),
-      });
-    } else {
-      setSettings({
-        ...settings,
-        modern: { ...settings.modern, random: false },
-      });
-    }
-  }, [settings, setSettings]);
+    setSettingsState((prev) => {
+      const newRandom = !prev.modern.random;
+      const newSettings = newRandom
+        ? { ...prev, modern: getRandomModernSettings() }
+        : { ...prev, modern: { ...prev.modern, random: false } };
+      saveSettings(newSettings);
+      return newSettings;
+    });
+  }, []);
+
+  const setColorMode = useCallback((colorMode: ColorMode) => {
+    setModernSettings({ colorMode, random: false });
+  }, [setModernSettings]);
 
   const setBorder = useCallback((border: BorderStyle) => {
     setModernSettings({ border, random: false });
@@ -161,8 +162,7 @@ export function useUISettings() {
   return {
     settings,
     isLoaded,
-    setMode,
-    setModernSettings,
+    setColorMode,
     toggleRandom,
     setBorder,
     setDirection,

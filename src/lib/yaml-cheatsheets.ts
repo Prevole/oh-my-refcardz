@@ -2,12 +2,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
 import { z } from "zod";
+import { getCategoryPrimaryColor } from "./color-palette";
 
 export type CheatSheetMeta = {
   slug: string;
   title: string;
   summary: string;
   color: string;
+  colorFrom: string;
   categoryId: string;
   icon?: string;
 };
@@ -17,6 +19,7 @@ export type CheatSheetCategory = {
   title: string;
   description: string;
   order: number;
+  color: string;
   sheets: CheatSheetMeta[];
 };
 
@@ -215,7 +218,8 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
   const files = await listSheetFiles(contentDirectory);
   assertUniqueSlugs(files);
 
-  const sheets = await Promise.all(
+  // First pass: read all sheets without category colors (we need category order first)
+  const sheetsRaw = await Promise.all(
     files.map(async (file) => {
       const raw = await fs.readFile(file.filePath, "utf8");
       const parsed = yamlCheatSheetSchema.safeParse(load(raw));
@@ -237,8 +241,9 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     })
   );
 
-  const grouped = new Map<string, CheatSheetMeta[]>();
-  for (const sheet of sheets) {
+  // Group by category
+  const grouped = new Map<string, typeof sheetsRaw>();
+  for (const sheet of sheetsRaw) {
     const group = grouped.get(sheet.categoryId);
     if (group) {
       group.push(sheet);
@@ -247,8 +252,10 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     }
   }
 
+  // Build categories with metadata and compute order
   const categories = await Promise.all(
     Array.from(grouped.entries()).map(async ([categoryId, categorySheets]) => {
+      // Sort sheets alphabetically by title
       categorySheets.sort((a, b) => a.title.localeCompare(b.title));
       const folderName = categoryId === "__root__" ? null : categoryId;
       const parsedFolder = folderName ? parseFolderName(folderName) : { order: -1, id: "general" };
@@ -260,24 +267,39 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
         description: meta.description,
         order: parsedFolder.order,
         fallbackName: parsedFolder.id,
-        sheets: categorySheets,
+        sheetsRaw: categorySheets,
       };
     })
   );
 
+  // Sort categories by order
   categories.sort((a, b) => {
     if (a.order !== b.order) {
       return a.order - b.order;
     }
-
     return a.fallbackName.localeCompare(b.fallbackName);
   });
 
-  return categories.map(({ id, title, description, order, sheets: categorySheets }) => ({
-    id,
-    title,
-    description,
-    order,
-    sheets: categorySheets,
-  }));
+  // Now assign colorFrom based on category order
+  return categories.map(({ id, title, description, order, sheetsRaw: categorySheets }) => {
+    const categoryColor = getCategoryPrimaryColor(order);
+    const sheets: CheatSheetMeta[] = categorySheets.map((sheet) => ({
+      slug: sheet.slug,
+      title: sheet.title,
+      summary: sheet.summary,
+      color: sheet.color,
+      colorFrom: categoryColor,
+      categoryId: sheet.categoryId,
+      icon: sheet.icon,
+    }));
+
+    return {
+      id,
+      title,
+      description,
+      order,
+      color: categoryColor,
+      sheets,
+    };
+  });
 }

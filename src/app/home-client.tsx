@@ -18,6 +18,7 @@ import {
   getPositionedItems,
   getVerticalTarget,
 } from "@/lib/hex-layout";
+import { getSecondaryColorForColumn } from "@/lib/color-palette";
 import { Keycap } from "@/components/keycap";
 import { ArrowGlyph } from "@/components/arrow-glyph";
 import { TechIcon } from "@/components/tech-icon";
@@ -35,6 +36,7 @@ type Props = {
 type NavigationCard = {
   rowIndex: number;
   colIndex: number;
+  visualColIndex: number;
 };
 
 export function HomeClient({ categories }: Props) {
@@ -52,8 +54,7 @@ export function HomeClient({ categories }: Props) {
   // UI Settings
   const {
     settings: uiSettings,
-    isLoaded: uiSettingsLoaded,
-    setMode,
+    setColorMode,
     toggleRandom,
     setBorder,
     setDirection,
@@ -160,7 +161,8 @@ export function HomeClient({ categories }: Props) {
     categoryLayouts.forEach(({ rows }) => {
       rows.forEach((row, rowIndex) => {
         row.forEach((sheet, colIndex) => {
-          map.set(sheet.slug, { rowIndex: rowOffset + rowIndex, colIndex });
+          const visualColIndex = colIndex * 2 + (rowIndex % 2);
+          map.set(sheet.slug, { rowIndex: rowOffset + rowIndex, colIndex, visualColIndex });
         });
       });
       rowOffset += rows.length;
@@ -168,6 +170,14 @@ export function HomeClient({ categories }: Props) {
 
     return map;
   }, [categoryLayouts]);
+
+  // Calculate colorTo for selected card based on its visual column (for hexa mode)
+  const selectedColorTo = useMemo(() => {
+    if (!selectedCard || uiSettings.modern.colorMode !== "hexa") return null;
+    const nav = navigationBySlug.get(selectedCard.slug);
+    if (!nav) return null;
+    return getSecondaryColorForColumn(nav.visualColIndex);
+  }, [selectedCard, navigationBySlug, uiSettings.modern.colorMode]);
 
   // Restore selection from session storage
   useEffect(() => {
@@ -313,7 +323,7 @@ export function HomeClient({ categories }: Props) {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
 
       <HomeHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <HomeInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} sheet={selectedCard} />
+      <HomeInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} sheet={selectedCard} colorTo={selectedColorTo} />
 
       <main className="z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col">
         <p className="font-mono text-xs tracking-[0.2em] text-white/70">OH MY REFCARDZ</p>
@@ -390,9 +400,14 @@ export function HomeClient({ categories }: Props) {
                     height: `${boardDimensions.height}px`,
                   }}
                 >
-                  {positionedSheets.map(({ item: sheet, left, top }) => {
+                  {positionedSheets.map(({ item: sheet, left, top, visualColIndex }) => {
                     const index = cardIndexBySlug.get(sheet.slug) ?? -1;
                     const isSelected = selectedIndex === index;
+                    const colorTo = getSecondaryColorForColumn(visualColIndex);
+                    const isHexaMode = uiSettings.modern.colorMode === "hexa";
+                    // For hexa mode, use colorFrom/colorTo; for normal mode, use sheet.color
+                    const primaryColor = isHexaMode ? sheet.colorFrom : sheet.color;
+                    const secondaryColor = isHexaMode ? colorTo : sheet.color;
                     return (
                       <div
                         key={sheet.slug}
@@ -413,7 +428,11 @@ export function HomeClient({ categories }: Props) {
                           data-selected={isSelected}
                           data-has-icon={!!sheet.icon}
                           className="home-hex-card text-left"
-                          style={{ "--hex-border-color": sheet.color } as CSSProperties}
+                          style={{
+                            "--hex-border-color": sheet.color,
+                            "--hex-color-from": sheet.colorFrom,
+                            "--hex-color-to": colorTo,
+                          } as CSSProperties}
                         >
                           <svg
                             className="home-hex-shape"
@@ -428,29 +447,29 @@ export function HomeClient({ categories }: Props) {
                               >
                                 {uiSettings.modern.border === "full" && (
                                   <>
-                                    <stop offset="0%" stopColor={sheet.color} />
-                                    <stop offset="100%" stopColor={sheet.color} />
+                                    <stop offset="0%" stopColor={primaryColor} />
+                                    <stop offset="100%" stopColor={secondaryColor} />
                                   </>
                                 )}
                                 {uiSettings.modern.border === "left" && (
                                   <>
                                     <stop offset="0%" stopColor="transparent" />
-                                    <stop offset="45%" stopColor={sheet.color} />
-                                    <stop offset="100%" stopColor={sheet.color} />
+                                    <stop offset="45%" stopColor={primaryColor} />
+                                    <stop offset="100%" stopColor={secondaryColor} />
                                   </>
                                 )}
                                 {uiSettings.modern.border === "right" && (
                                   <>
-                                    <stop offset="0%" stopColor={sheet.color} />
-                                    <stop offset="55%" stopColor={sheet.color} />
+                                    <stop offset="0%" stopColor={primaryColor} />
+                                    <stop offset="55%" stopColor={secondaryColor} />
                                     <stop offset="100%" stopColor="transparent" />
                                   </>
                                 )}
                                 {uiSettings.modern.border === "both" && (
                                   <>
                                     <stop offset="0%" stopColor="transparent" />
-                                    <stop offset="40%" stopColor={sheet.color} />
-                                    <stop offset="60%" stopColor={sheet.color} />
+                                    <stop offset="40%" stopColor={primaryColor} />
+                                    <stop offset="60%" stopColor={secondaryColor} />
                                     <stop offset="100%" stopColor="transparent" />
                                   </>
                                 )}
@@ -468,16 +487,38 @@ export function HomeClient({ categories }: Props) {
                                 <div className="home-hex-half home-hex-half-icon">
                                   <TechIcon
                                     icon={sheet.icon}
-                                    color={sheet.color}
+                                    color={primaryColor}
                                     className="home-hex-icon"
                                   />
                                 </div>
                                 <div className="home-hex-half home-hex-half-title">
-                                  <h3 className="home-hex-title" style={{ color: sheet.color }}>
-                                    {sheet.title}
-                                  </h3>
+                                  {isHexaMode ? (
+                                    <h3
+                                      className="home-hex-title home-hex-title-gradient"
+                                      style={{
+                                        "--gradient-from": sheet.colorFrom,
+                                        "--gradient-to": colorTo,
+                                      } as CSSProperties}
+                                    >
+                                      {sheet.title}
+                                    </h3>
+                                  ) : (
+                                    <h3 className="home-hex-title" style={{ color: sheet.color }}>
+                                      {sheet.title}
+                                    </h3>
+                                  )}
                                 </div>
                               </>
+                            ) : isHexaMode ? (
+                              <h3
+                                className="home-hex-title home-hex-title-centered home-hex-title-gradient"
+                                style={{
+                                  "--gradient-from": sheet.colorFrom,
+                                  "--gradient-to": colorTo,
+                                } as CSSProperties}
+                              >
+                                {sheet.title}
+                              </h3>
                             ) : (
                               <h3
                                 className="home-hex-title home-hex-title-centered"
@@ -513,7 +554,7 @@ export function HomeClient({ categories }: Props) {
         isOpen={settingsPanelOpen}
         onClose={() => setSettingsPanelOpen(false)}
         settings={uiSettings}
-        onSetMode={setMode}
+        onSetColorMode={setColorMode}
         onToggleRandom={toggleRandom}
         onSetBorder={setBorder}
         onSetDirection={setDirection}

@@ -363,6 +363,13 @@ body {
   -webkit-line-clamp: 3;
 }
 
+.home-hex-title-gradient {
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .home-hex-board {
   position: relative;
   width: 100%;
@@ -1129,6 +1136,11 @@ body {
 .settings-grid {
   display: flex;
   gap: 1.5rem;
+  width: 100%;
+}
+
+.settings-grid + .settings-grid {
+  margin-top: 1rem;
 }
 
 .settings-grid-item {
@@ -1142,9 +1154,17 @@ body {
   pointer-events: none;
 }
 
+.settings-grid-item-full {
+  flex: 1;
+}
+
 .settings-button-group {
   display: flex;
   flex-wrap: wrap;
+}
+
+.settings-button-group-full {
+  width: 100%;
 }
 
 .settings-group-btn {
@@ -1158,6 +1178,10 @@ body {
   cursor: pointer;
   transition: all 0.15s ease;
   margin-left: -1px;
+}
+
+.settings-group-btn-flex {
+  flex: 1;
 }
 
 .settings-group-btn-square {
