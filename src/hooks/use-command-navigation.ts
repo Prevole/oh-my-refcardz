@@ -49,7 +49,7 @@ function computeCardGridPositions(
   const rowBuckets = cluster(ys, threshold);
 
   const result = new Map<HTMLElement, GridPos>();
-  rects.forEach(({ el, r }, i) => {
+  rects.forEach(({ el, r }) => {
     const cx = r.left + r.width / 2;
     const top = r.top;
     result.set(el, {
@@ -233,7 +233,6 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
       let rightEl: HTMLElement | null = null;
       {
         const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
-        const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
 
         // 1. Try same gridRow, columns to the right — skip empty cells
         for (let gc = gridCol + 1; gc <= maxCol; gc++) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { CommandExampleModal } from "@/components/command-example-modal";
 import { CommandCopyModal } from "@/components/command-copy-modal";
 
