@@ -13,7 +13,11 @@ export function YamlSheetRenderer({ sheet }: Props) {
   return (
     <>
       {sheet.sections.map((section, index) => (
-        <div key={section.title} id={buildSectionAnchorId("sheet-section", section.title, index)}>
+        <section
+          key={section.title}
+          id={buildSectionAnchorId("sheet-section", section.title, index)}
+          className={cheatsheetStyles.section}
+        >
           <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
           <SheetGrid>
             {section.cards.map((card) => (
@@ -27,7 +31,7 @@ export function YamlSheetRenderer({ sheet }: Props) {
               </SheetCard>
             ))}
           </SheetGrid>
-        </div>
+        </section>
       ))}
     </>
   );

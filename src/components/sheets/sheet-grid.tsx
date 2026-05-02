@@ -1,8 +1,13 @@
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 export function SheetGrid({ children }: { children: ReactNode }) {
-  return <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</section>;
+  const cardCount = Children.count(children);
+
+  const gridColumnsClass =
+    cardCount <= 1 ? "grid-cols-1" : cardCount === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
+
+  return <section className={`grid gap-4 ${gridColumnsClass}`}>{children}</section>;
 }
 
 type SheetCardProps = {
