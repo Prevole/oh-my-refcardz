@@ -33,7 +33,7 @@ function KeyCombo({ combo }: { combo: string }) {
       <code className={cheatsheetStyles.codeCombo}>
         {parts.map((part, index) => (
           <span key={`${part}-${index}`} className={cheatsheetStyles.codePartWrap}>
-            <KeyPart part={part} />
+            <KeySequence value={part} />
             {index < parts.length - 1 ? <span className={cheatsheetStyles.codeSep}>+</span> : null}
           </span>
         ))}
@@ -47,7 +47,7 @@ function KeyCombo({ combo }: { combo: string }) {
       <code className={cheatsheetStyles.codeCombo}>
         {parts.map((part, index) => (
           <span key={`${part}-${index}`} className={cheatsheetStyles.codePartWrap}>
-            <KeyPart part={part.trim()} />
+            <KeySequence value={part.trim()} />
             {index < parts.length - 1 ? <span className={cheatsheetStyles.codeSep}>|</span> : null}
           </span>
         ))}
@@ -58,9 +58,25 @@ function KeyCombo({ combo }: { combo: string }) {
   return (
     <code className={cheatsheetStyles.codeCombo}>
       <span className={cheatsheetStyles.codePartWrap}>
-        <KeyPart part={combo} />
+        <KeySequence value={combo} />
       </span>
     </code>
+  );
+}
+
+function KeySequence({ value }: { value: string }) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length <= 1) {
+    return <KeyPart part={value.trim()} />;
+  }
+
+  return (
+    <span className={cheatsheetStyles.codeSequence}>
+      {parts.map((part, index) => (
+        <KeyPart key={`${part}-${index}`} part={part} />
+      ))}
+    </span>
   );
 }
 

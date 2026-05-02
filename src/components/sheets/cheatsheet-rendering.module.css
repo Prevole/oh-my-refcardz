@@ -129,7 +129,7 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
-.codeCombo {
+.content code.codeCombo {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -137,6 +137,12 @@
   background: transparent;
   box-shadow: none;
   padding: 0;
+}
+
+.codeSequence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .codePartWrap {
