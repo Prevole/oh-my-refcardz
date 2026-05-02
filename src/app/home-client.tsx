@@ -28,6 +28,8 @@ import { HomeInfoModal } from "@/components/home/home-info-modal";
 import { HelpButton } from "@/components/help/help-button";
 import { SettingsButton } from "@/components/settings/settings-button";
 import { SettingsPanel } from "@/components/settings/settings-panel";
+import { SectionNavigation } from "@/components/navigation/section-navigation";
+import { buildSectionAnchorId } from "@/lib/section-navigation";
 import { HomeInlineHelp } from "@/components/help/inline-keybinding-help";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useKeybindings } from "@/hooks/use-keybindings";
@@ -153,6 +155,14 @@ export function HomeClient({ categories }: Props) {
   // Flatten all visible cards
   const visibleCards = useMemo(() => {
     return categoryLayouts.flatMap(({ category }) => category.sheets);
+  }, [categoryLayouts]);
+
+  const categoryNavigationItems = useMemo(() => {
+    return categoryLayouts.map(({ category }, index) => ({
+      id: buildSectionAnchorId("home-category", category.title, index),
+      label: category.title,
+      color: category.color,
+    }));
   }, [categoryLayouts]);
 
   const selectedCard = visibleCards[selectedIndex] ?? null;
@@ -428,12 +438,12 @@ export function HomeClient({ categories }: Props) {
         />
 
         <section className="mt-8 space-y-8" ref={boardMeasureRef} style={hexBoardStyle}>
-          {categoryLayouts.map(({ category, rows }) => {
+          {categoryLayouts.map(({ category, rows }, categoryIndex) => {
             const positionedSheets = getPositionedItems(rows, hexCellSize);
             const boardDimensions = getHexBoardDimensions(rows, hexCellSize);
 
             return (
-              <div key={category.id}>
+              <div key={category.id} id={buildSectionAnchorId("home-category", category.title, categoryIndex)}>
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[0.7rem] tracking-[0.18em] text-white/45">
                     {String(category.order).padStart(2, "0")}
@@ -632,6 +642,8 @@ export function HomeClient({ categories }: Props) {
 
       {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsPanelOpen(true)} />
+
+      <SectionNavigation items={categoryNavigationItems} ariaLabel="Category navigation" />
 
       {/* Settings Panel */}
       <SettingsPanel

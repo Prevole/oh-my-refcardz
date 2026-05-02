@@ -1,6 +1,7 @@
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { SheetCommand } from "@/components/sheets/sheet-command";
 import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
+import { buildSectionAnchorId } from "@/lib/section-navigation";
 import type { YamlCheatSheet, CheatSheetItem } from "@/lib/yaml-cheatsheets";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
@@ -11,8 +12,8 @@ type Props = {
 export function YamlSheetRenderer({ sheet }: Props) {
   return (
     <>
-      {sheet.sections.map((section) => (
-        <div key={section.title}>
+      {sheet.sections.map((section, index) => (
+        <div key={section.title} id={buildSectionAnchorId("sheet-section", section.title, index)}>
           <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
           <SheetGrid>
             {section.cards.map((card) => (

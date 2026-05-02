@@ -9,6 +9,10 @@
   --accent-2: #00d1b2;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

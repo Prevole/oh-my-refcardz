@@ -2,6 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
 import { SheetAccentProvider } from "@/app/cheatsheets/[slug]/sheet-accent-provider";
+import { SheetSectionNavigation } from "@/app/cheatsheets/[slug]/sheet-section-navigation";
 import { SheetCommandsShell } from "@/components/sheets/sheet-commands-shell";
 import { YamlSheetRenderer } from "@/components/sheets/sheet-renderer";
 import { TechIcon } from "@/components/ui/tech-icon";
@@ -54,6 +55,7 @@ export default async function CheatSheetPage({ params }: Props) {
             </SheetCommandsShell>
           </div>
         </main>
+        <SheetSectionNavigation sections={sheet.sections} sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom} />
       </SheetAccentProvider>
     </div>
   );
