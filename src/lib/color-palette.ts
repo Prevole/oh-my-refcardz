@@ -98,6 +98,10 @@ export function getSheetGradient(categoryOrder: number, columnIndex: number): Sh
  * Used by "grid" color mode.
  */
 export function getCategoryGradientPair(order: number): SheetGradient {
+  if (!Number.isFinite(order)) {
+    return CATEGORY_GRADIENT_PAIRS[CATEGORY_GRADIENT_PAIRS.length - 1];
+  }
+
   const length = CATEGORY_GRADIENT_PAIRS.length;
   const index = ((order - 1) % length + length) % length;
   return CATEGORY_GRADIENT_PAIRS[index];
