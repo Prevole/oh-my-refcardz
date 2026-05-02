@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { buildSectionAnchorId } from "@/lib/section-navigation";
 import styles from "./section-navigation.module.css";
 
 type SectionNavigationItem = {

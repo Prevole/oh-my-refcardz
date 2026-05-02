@@ -25,6 +25,8 @@ type RecordingState = {
   comboIndex: number | null; // null = adding new combo
 } | null;
 
+const SEQUENCE_TIMEOUT_MS = 800;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,6 +61,7 @@ function ComboDisplay({ combo }: { combo: KeyCombo }) {
 }
 
 function isWideCombo(combo: KeyCombo): boolean {
+  if (combo.next) return true;
   return getComboDisplay(combo).length > 1;
 }
 
@@ -89,9 +92,11 @@ function ConflictNotice({
 function RecordingOverlay({
   onCancel,
   onKeyDown,
+  pendingCombo,
 }: {
   onCancel: () => void;
   onKeyDown: (combo: KeyCombo) => void;
+  pendingCombo: KeyCombo | null;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +138,12 @@ function RecordingOverlay({
   return (
     <div ref={overlayRef} className={styles.recordingOverlay}>
       <div className={styles.recordingContent}>
-        <p className={styles.recordingTitle}>Press a key combination</p>
+        <p className={styles.recordingTitle}>
+          {pendingCombo ? "Press a second key for sequence" : "Press a key combination"}
+        </p>
+        <p className={styles.recordingHint}>
+          {pendingCombo ? `Waiting ${Math.round(SEQUENCE_TIMEOUT_MS / 1000)}s before saving single key` : "You can type two keys in a row (example: g then g)"}
+        </p>
         <p className={styles.recordingHint}>
           Press <span className={styles.recordingKey}>Esc</span> to cancel
         </p>
@@ -312,6 +322,15 @@ export function KeybindingEditor() {
 
   const [recording, setRecording] = useState<RecordingState>(null);
   const [lastConflict, setLastConflict] = useState<KeybindingConflict | null>(null);
+  const [pendingFirstCombo, setPendingFirstCombo] = useState<KeyCombo | null>(null);
+  const sequenceTimerRef = useRef<number | null>(null);
+
+  const clearSequenceTimer = useCallback(() => {
+    if (sequenceTimerRef.current !== null) {
+      window.clearTimeout(sequenceTimerRef.current);
+      sequenceTimerRef.current = null;
+    }
+  }, []);
 
   const handleStartRecording = useCallback(
     (context: KeybindingContext, actionId: string, comboIndex: number | null) => {
@@ -322,37 +341,53 @@ export function KeybindingEditor() {
   );
 
   const handleStopRecording = useCallback(() => {
+    clearSequenceTimer();
+    setPendingFirstCombo(null);
     setRecording(null);
-  }, []);
+  }, [clearSequenceTimer]);
+
+  const saveCombo = useCallback((combo: KeyCombo) => {
+    if (!recording) return;
+
+    const { context, actionId, comboIndex } = recording;
+    let conflict: KeybindingConflict | null = null;
+
+    if (comboIndex === null) {
+      conflict = addCombo(context, actionId, combo);
+    } else {
+      const action = config[context].find((a) => a.id === actionId);
+      if (action) {
+        const newCombos = [...action.combos];
+        newCombos[comboIndex] = combo;
+        conflict = setActionCombos(context, actionId, newCombos);
+      }
+    }
+
+    if (conflict) {
+      setLastConflict(conflict);
+    }
+
+    clearSequenceTimer();
+    setPendingFirstCombo(null);
+    setRecording(null);
+  }, [recording, config, addCombo, setActionCombos, clearSequenceTimer]);
 
   const handleRecordKey = useCallback(
     (combo: KeyCombo) => {
       if (!recording) return;
 
-      const { context, actionId, comboIndex } = recording;
-
-      let conflict: KeybindingConflict | null = null;
-
-      if (comboIndex === null) {
-        // Adding new combo
-        conflict = addCombo(context, actionId, combo);
-      } else {
-        // Replacing existing combo
-        const action = config[context].find((a) => a.id === actionId);
-        if (action) {
-          const newCombos = [...action.combos];
-          newCombos[comboIndex] = combo;
-          conflict = setActionCombos(context, actionId, newCombos);
-        }
+      if (!pendingFirstCombo) {
+        setPendingFirstCombo(combo);
+        clearSequenceTimer();
+        sequenceTimerRef.current = window.setTimeout(() => {
+          saveCombo(combo);
+        }, SEQUENCE_TIMEOUT_MS);
+        return;
       }
 
-      if (conflict) {
-        setLastConflict(conflict);
-      }
-
-      setRecording(null);
+      saveCombo({ ...pendingFirstCombo, next: combo });
     },
-    [recording, config, addCombo, setActionCombos]
+    [recording, pendingFirstCombo, saveCombo, clearSequenceTimer]
   );
 
   const handleSetPrimary = useCallback(
@@ -422,6 +457,7 @@ export function KeybindingEditor() {
         <RecordingOverlay
           onCancel={handleStopRecording}
           onKeyDown={handleRecordKey}
+          pendingCombo={pendingFirstCombo}
         />
       )}
     </div>

@@ -52,6 +52,10 @@ export function HomeHelpModal({ open, onClose }: Props) {
           </tr>
           <tr>
             <HelpRow actionId={ACTION_IDS.OPEN_SHEET} />
+            <HelpRow actionId={ACTION_IDS.GO_TOP} />
+          </tr>
+          <tr>
+            <HelpRow actionId={ACTION_IDS.GO_BOTTOM} />
             <td />
             <td />
           </tr>

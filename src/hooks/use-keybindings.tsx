@@ -6,6 +6,7 @@ import {
   useCallback,
   useSyncExternalStore,
   useMemo,
+  useRef,
   type ReactNode,
 } from "react";
 import {
@@ -167,7 +168,10 @@ function findConflict(
 function combosEqual(a: KeyCombo, b: KeyCombo): boolean {
   if (a.key !== b.key) return false;
   if (a.modifiers.length !== b.modifiers.length) return false;
-  return a.modifiers.every((m) => b.modifiers.includes(m));
+  if (!a.modifiers.every((m) => b.modifiers.includes(m))) return false;
+  if (!a.next && !b.next) return true;
+  if (!a.next || !b.next) return false;
+  return combosEqual(a.next, b.next);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -186,6 +190,9 @@ interface KeybindingsContextValue {
 
   /** Check if an event matches an action */
   matchesAction: (event: KeyboardEvent, actionId: ActionId) => boolean;
+
+  /** Resolve one matching action from a prioritized list */
+  resolveAction: (event: KeyboardEvent, actionIds: ActionId[]) => ActionId | null;
 
   /** Update combos for an action */
   setActionCombos: (
@@ -237,6 +244,11 @@ const KeybindingsContext = createContext<KeybindingsContextValue | null>(null);
 
 export function KeybindingsProvider({ children }: { children: ReactNode }) {
   const config = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const pendingSequenceRef = useRef<
+    Array<{ actionId: ActionId; next: KeyCombo; expiresAt: number }>
+  >([]);
+
+  const SEQUENCE_TIMEOUT_MS = 800;
 
   const getActionsForContext = useCallback(
     (context: KeybindingContext): KeybindingAction[] => {
@@ -254,6 +266,58 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       return null;
     },
     [config]
+  );
+
+  const resolveActionFn = useCallback(
+    (event: KeyboardEvent, actionIds: ActionId[]): ActionId | null => {
+      const now = Date.now();
+      const pending = pendingSequenceRef.current.filter((entry) => entry.expiresAt >= now);
+
+      if (pending.length > 0) {
+        const pendingActionIds = new Set(pending.map((entry) => entry.actionId));
+        const hasRelevantPending = actionIds.some((actionId) => pendingActionIds.has(actionId));
+
+        if (!hasRelevantPending) {
+          pendingSequenceRef.current = pending;
+          return null;
+        }
+
+        for (const actionId of actionIds) {
+          const candidate = pending.find((entry) => entry.actionId === actionId);
+          if (candidate && matchesAction(event, { id: actionId, label: "", combos: [candidate.next] })) {
+            pendingSequenceRef.current = [];
+            return actionId;
+          }
+        }
+
+        pendingSequenceRef.current = [];
+      }
+
+      const nextPending: Array<{ actionId: ActionId; next: KeyCombo; expiresAt: number }> = [];
+
+      for (const actionId of actionIds) {
+        const action = getAction(actionId);
+        if (!action) continue;
+
+        for (const binding of action.combos) {
+          if (!binding.next) {
+            if (matchesAction(event, { ...action, combos: [binding] })) {
+              return actionId;
+            }
+            continue;
+          }
+
+          const firstStep: KeyCombo = { key: binding.key, modifiers: binding.modifiers };
+          if (matchesAction(event, { ...action, combos: [firstStep] })) {
+            nextPending.push({ actionId, next: binding.next, expiresAt: now + SEQUENCE_TIMEOUT_MS });
+          }
+        }
+      }
+
+      pendingSequenceRef.current = nextPending;
+      return null;
+    },
+    [getAction]
   );
 
   const matchesActionFn = useCallback(
@@ -433,6 +497,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       getActionsForContext,
       getAction,
       matchesAction: matchesActionFn,
+      resolveAction: resolveActionFn,
       setActionCombos,
       addCombo,
       removeCombo,
@@ -446,6 +511,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       getActionsForContext,
       getAction,
       matchesActionFn,
+      resolveActionFn,
       setActionCombos,
       addCombo,
       removeCombo,

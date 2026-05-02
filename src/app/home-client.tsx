@@ -75,7 +75,7 @@ export function HomeClient({ categories }: Props) {
   } = useUISettings();
 
   // Keybindings
-  const { matchesAction } = useKeybindings();
+  const { resolveAction } = useKeybindings();
 
   const getGradientCoords = () => {
     switch (uiSettings.modern.direction) {
@@ -337,14 +337,29 @@ export function HomeClient({ categories }: Props) {
       const target = event.target as HTMLElement;
       const isInInput = target?.tagName === "INPUT";
 
+      const matchedAction = resolveAction(event, [
+        ACTION_IDS.TOGGLE_HELP,
+        ACTION_IDS.TOGGLE_SETTINGS,
+        ACTION_IDS.CLEAR_SEARCH,
+        ACTION_IDS.FOCUS_SEARCH,
+        ACTION_IDS.TOGGLE_INFO,
+        ACTION_IDS.GO_TOP,
+        ACTION_IDS.GO_BOTTOM,
+        ACTION_IDS.MOVE_RIGHT,
+        ACTION_IDS.MOVE_LEFT,
+        ACTION_IDS.MOVE_DOWN,
+        ACTION_IDS.MOVE_UP,
+        ACTION_IDS.OPEN_SHEET,
+      ]);
+
       // Global actions (work even in input, except for clear search)
-      if (matchesAction(event, ACTION_IDS.TOGGLE_HELP)) {
+      if (matchedAction === ACTION_IDS.TOGGLE_HELP) {
         event.preventDefault();
         setHelpOpen(true);
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.TOGGLE_SETTINGS)) {
+      if (matchedAction === ACTION_IDS.TOGGLE_SETTINGS) {
         event.preventDefault();
         setSettingsPanelOpen(true);
         return;
@@ -353,61 +368,73 @@ export function HomeClient({ categories }: Props) {
       // Home-specific actions (don't trigger when in input)
       if (isInInput) {
         // Only clear search works in input
-        if (matchesAction(event, ACTION_IDS.CLEAR_SEARCH)) {
+        if (matchedAction === ACTION_IDS.CLEAR_SEARCH) {
           setQuery("");
           target.blur();
         }
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.FOCUS_SEARCH)) {
+      if (matchedAction === ACTION_IDS.FOCUS_SEARCH) {
         event.preventDefault();
         document.getElementById("search")?.focus();
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.TOGGLE_INFO) && selectedCard) {
+      if (matchedAction === ACTION_IDS.TOGGLE_INFO && selectedCard) {
         event.preventDefault();
         setInfoOpen(true);
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.MOVE_RIGHT)) {
+      if (matchedAction === ACTION_IDS.GO_TOP) {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      if (matchedAction === ACTION_IDS.GO_BOTTOM) {
+        event.preventDefault();
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+        return;
+      }
+
+      if (matchedAction === ACTION_IDS.MOVE_RIGHT) {
         event.preventDefault();
         moveSelection("right");
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.MOVE_LEFT)) {
+      if (matchedAction === ACTION_IDS.MOVE_LEFT) {
         event.preventDefault();
         moveSelection("left");
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.MOVE_DOWN)) {
+      if (matchedAction === ACTION_IDS.MOVE_DOWN) {
         event.preventDefault();
         moveSelection("down");
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.MOVE_UP)) {
+      if (matchedAction === ACTION_IDS.MOVE_UP) {
         event.preventDefault();
         moveSelection("up");
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.OPEN_SHEET) && selectedCard) {
+      if (matchedAction === ACTION_IDS.OPEN_SHEET && selectedCard) {
         event.preventDefault();
         openSheet(selectedCard.slug);
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.CLEAR_SEARCH)) {
+      if (matchedAction === ACTION_IDS.CLEAR_SEARCH) {
         setQuery("");
         target?.blur?.();
       }
     },
-    [matchesAction, moveSelection, openSheet, selectedCard]
+    [resolveAction, moveSelection, openSheet, selectedCard]
   );
 
   useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);

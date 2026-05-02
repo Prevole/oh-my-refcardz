@@ -27,7 +27,7 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 65%, black);
+  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 65%, black);
   color: #0a0f1a;
 }
 

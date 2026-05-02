@@ -32,7 +32,7 @@ export function SheetShortcuts() {
   } = useUISettings();
 
   // Keybindings
-  const { matchesAction } = useKeybindings();
+  const { resolveAction } = useKeybindings();
 
   // Global keyboard shortcuts for sheet page (only active when no panel is open)
   const handleGlobalKeyDown = useCallback(
@@ -41,26 +41,46 @@ export function SheetShortcuts() {
       const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      if (matchesAction(event, ACTION_IDS.TOGGLE_HELP)) {
+      const matchedAction = resolveAction(event, [
+        ACTION_IDS.TOGGLE_HELP,
+        ACTION_IDS.TOGGLE_SETTINGS,
+        ACTION_IDS.BACK_TO_HOME,
+        ACTION_IDS.GO_TOP,
+        ACTION_IDS.GO_BOTTOM,
+      ]);
+
+      if (matchedAction === ACTION_IDS.TOGGLE_HELP) {
         event.preventDefault();
         setHelpOpen(true);
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.TOGGLE_SETTINGS)) {
+      if (matchedAction === ACTION_IDS.TOGGLE_SETTINGS) {
         event.preventDefault();
         setSettingsPanelOpen(true);
         return;
       }
 
-      if (matchesAction(event, ACTION_IDS.BACK_TO_HOME)) {
+      if (matchedAction === ACTION_IDS.GO_TOP) {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      if (matchedAction === ACTION_IDS.GO_BOTTOM) {
+        event.preventDefault();
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+        return;
+      }
+
+      if (matchedAction === ACTION_IDS.BACK_TO_HOME) {
         event.preventDefault();
         // If a command modal is open, let it handle Escape itself
         if (document.querySelector("[data-command-modal-overlay]")) return;
         router.push("/");
       }
     },
-    [matchesAction, router]
+    [resolveAction, router]
   );
 
   useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);

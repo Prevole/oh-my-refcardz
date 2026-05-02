@@ -70,6 +70,10 @@ export function SheetHelpModal({ open, onClose }: Props) {
           <tbody>
             <tr>
               <HelpRow actionId={ACTION_IDS.BACK_TO_HOME} />
+              <HelpRow actionId={ACTION_IDS.GO_TOP} />
+            </tr>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.GO_BOTTOM} />
               <td />
               <td />
             </tr>

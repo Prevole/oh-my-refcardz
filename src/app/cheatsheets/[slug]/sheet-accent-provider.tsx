@@ -66,6 +66,7 @@ export function SheetAccentProvider({ sheetColor, sheetColorFrom, children }: Pr
   }, [settings.modern.colorMode, sheetColor, sheetColorFrom, sessionAccentColor]);
 
   const style: CSSProperties = {
+    "--accent": accentColor,
     "--sheet-accent": accentColor,
   } as CSSProperties;
 

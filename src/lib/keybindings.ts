@@ -22,6 +22,8 @@ export interface KeyCombo {
   key: string;
   /** Modifier keys required */
   modifiers: Modifier[];
+  /** Optional second key for sequence shortcuts (e.g., g then g) */
+  next?: KeyCombo;
 }
 
 /**
@@ -72,13 +74,14 @@ export const ACTION_IDS = {
   MOVE_RIGHT: "global.move-right",
   MOVE_UP: "global.move-up",
   MOVE_DOWN: "global.move-down",
+  GO_TOP: "global.go-top",
+  GO_BOTTOM: "global.go-bottom",
 
   // Home page actions
   FOCUS_SEARCH: "home.focus-search",
   CLEAR_SEARCH: "home.clear-search",
   TOGGLE_INFO: "home.toggle-info",
   OPEN_SHEET: "home.open-sheet",
-
   // Sheet page actions
   BACK_TO_HOME: "sheet.back-to-home",
 
@@ -105,6 +108,10 @@ export function key(k: string): KeyCombo {
  */
 export function combo(k: string, ...modifiers: Modifier[]): KeyCombo {
   return { key: k, modifiers };
+}
+
+export function sequence(first: KeyCombo, second: KeyCombo): KeyCombo {
+  return { ...first, next: second };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -142,6 +149,16 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.MOVE_DOWN,
       label: "Move down",
       combos: [key("ArrowDown"), key("j")],
+    },
+    {
+      id: ACTION_IDS.GO_TOP,
+      label: "Go to top",
+      combos: [sequence(key("g"), key("g"))],
+    },
+    {
+      id: ACTION_IDS.GO_BOTTOM,
+      label: "Go to bottom",
+      combos: [combo("G", "shift")],
     },
   ],
 
@@ -290,6 +307,24 @@ export function getKeyDisplay(key: string): string {
  * Converts a KeyCombo to its display string
  */
 export function getComboDisplay(combo: KeyCombo): string {
+  if (combo.next) {
+    const firstDisplay = getComboDisplay({ key: combo.key, modifiers: combo.modifiers });
+    const secondDisplay = getComboDisplay(combo.next);
+    if (
+      combo.modifiers.length === 0 &&
+      combo.next.modifiers.length === 0 &&
+      combo.key.length === 1 &&
+      combo.next.key.length === 1
+    ) {
+      return `${combo.key}${combo.next.key}`;
+    }
+    return `${firstDisplay} ${secondDisplay}`;
+  }
+
+  if (combo.modifiers.length === 1 && combo.modifiers[0] === "shift" && combo.key.length === 1) {
+    return combo.key;
+  }
+
   const modifierSymbols = combo.modifiers.map((m) => MODIFIER_DISPLAY_MAP[m]);
   const keyDisplay = getKeyDisplay(combo.key);
   return [...modifierSymbols, keyDisplay].join("");
