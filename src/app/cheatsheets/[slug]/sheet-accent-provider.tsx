@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useSyncExternalStore, type ReactNode, type CSSProperties } from "react";
+import { useMemo, type ReactNode, type CSSProperties } from "react";
 import { useUISettings } from "@/hooks/use-ui-settings";
-import { SELECTED_SHEET_ACCENT_KEY } from "@/lib/constants";
+import { useSelectedSheetAccent } from "@/hooks/use-selected-sheet-accent";
 
 type Props = {
   /** The sheet's own color (from frontmatter) */
@@ -11,26 +11,6 @@ type Props = {
   sheetColorFrom: string;
   children: ReactNode;
 };
-
-// Subscribe to session storage changes
-function subscribe(callback: () => void): () => void {
-  const handleStorageChange = (event: StorageEvent) => {
-    if (event.key === SELECTED_SHEET_ACCENT_KEY || event.key === null) {
-      callback();
-    }
-  };
-  window.addEventListener("storage", handleStorageChange);
-  return () => window.removeEventListener("storage", handleStorageChange);
-}
-
-function getSnapshot(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.sessionStorage.getItem(SELECTED_SHEET_ACCENT_KEY);
-}
-
-function getServerSnapshot(): string | null {
-  return null;
-}
 
 /**
  * SheetAccentProvider manages the dynamic accent color for cheatsheet pages.
@@ -45,7 +25,7 @@ function getServerSnapshot(): string | null {
  */
 export function SheetAccentProvider({ sheetColor, sheetColorFrom, children }: Props) {
   const { settings } = useUISettings();
-  const sessionAccentColor = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const sessionAccentColor = useSelectedSheetAccent();
 
   const accentColor = useMemo(() => {
     const colorMode = settings.modern.colorMode;

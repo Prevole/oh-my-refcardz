@@ -104,6 +104,11 @@ type SheetFile = {
   categoryPath: string | null;
 };
 
+type ParsedSheet = {
+  file: SheetFile;
+  data: YamlCheatSheet;
+};
+
 function parseFolderName(folderName: string): ParsedFolderName {
   const match = folderName.match(/^(\d+)[-_ ]?(.*)$/);
   if (!match) {
@@ -156,6 +161,62 @@ function assertUniqueSlugs(files: SheetFile[]) {
   }
 }
 
+function parseYamlCheatSheet(raw: string, fileLabel: string): YamlCheatSheet {
+  const parsed = yamlCheatSheetSchema.safeParse(load(raw));
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid YAML cheatsheet ${fileLabel}: ${parsed.error.issues
+        .map((issue) => `${issue.path.join(".") || "root"} — ${issue.message}`)
+        .join(", ")}`
+    );
+  }
+
+  return parsed.data;
+}
+
+async function getSheetFileBySlug(slug: string): Promise<SheetFile | null> {
+  const files = await listSheetFiles(contentDirectory);
+  assertUniqueSlugs(files);
+  return files.find((file) => file.slug === slug) ?? null;
+}
+
+async function readSheetFile(file: SheetFile): Promise<YamlCheatSheet> {
+  const raw = await fs.readFile(file.filePath, "utf8");
+  return parseYamlCheatSheet(raw, path.relative(contentDirectory, file.filePath));
+}
+
+async function readParsedSheetBySlug(slug: string): Promise<ParsedSheet | null> {
+  const file = await getSheetFileBySlug(slug);
+  if (!file) {
+    return null;
+  }
+
+  try {
+    const data = await readSheetFile(file);
+    return { file, data };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+function getSheetCategoryMeta(categoryPath: string | null) {
+  const categoryId = categoryPath ?? "__root__";
+  const folderName = categoryId === "__root__" ? null : categoryId;
+  const parsedFolder = folderName ? parseFolderName(folderName) : { order: -1, id: "general" };
+
+  return {
+    categoryId,
+    folderName,
+    order: parsedFolder.order,
+    fallbackName: parsedFolder.id,
+    categoryColor: getCategoryPrimaryColor(parsedFolder.order),
+  };
+}
+
 async function readCategoryMeta(categoryPath: string | null): Promise<{ title: string; description: string }> {
   if (!categoryPath) {
     return {
@@ -195,66 +256,19 @@ async function readCategoryMeta(categoryPath: string | null): Promise<{ title: s
 }
 
 export async function getYamlCheatSheet(slug: string): Promise<YamlCheatSheet | null> {
-  const files = await listSheetFiles(contentDirectory);
-  assertUniqueSlugs(files);
-  const candidate = files.find((file) => file.slug === slug);
-
-  if (!candidate) {
-    return null;
-  }
-
-  let raw: string;
-  try {
-    raw = await fs.readFile(candidate.filePath, "utf8");
-  } catch {
-    return null;
-  }
-
-  const parsed = yamlCheatSheetSchema.safeParse(load(raw));
-  if (!parsed.success) {
-    throw new Error(
-      `Invalid YAML cheatsheet ${slug}.yaml: ${parsed.error.issues
-        .map((issue) => `${issue.path.join(".") || "root"} — ${issue.message}`)
-        .join(", ")}`
-    );
-  }
-
-  return parsed.data;
+  return (await readParsedSheetBySlug(slug))?.data ?? null;
 }
 
 export async function getYamlCheatSheetWithMeta(slug: string): Promise<YamlCheatSheetWithMeta | null> {
-  const files = await listSheetFiles(contentDirectory);
-  assertUniqueSlugs(files);
-  const candidate = files.find((file) => file.slug === slug);
-
-  if (!candidate) {
+  const parsedSheet = await readParsedSheetBySlug(slug);
+  if (!parsedSheet) {
     return null;
   }
 
-  let raw: string;
-  try {
-    raw = await fs.readFile(candidate.filePath, "utf8");
-  } catch {
-    return null;
-  }
-
-  const parsed = yamlCheatSheetSchema.safeParse(load(raw));
-  if (!parsed.success) {
-    throw new Error(
-      `Invalid YAML cheatsheet ${slug}.yaml: ${parsed.error.issues
-        .map((issue) => `${issue.path.join(".") || "root"} — ${issue.message}`)
-        .join(", ")}`
-    );
-  }
-
-  // Calculate category color based on folder order
-  const categoryId = candidate.categoryPath ?? "__root__";
-  const folderName = categoryId === "__root__" ? null : categoryId;
-  const parsedFolder = folderName ? parseFolderName(folderName) : { order: -1, id: "general" };
-  const categoryColor = getCategoryPrimaryColor(parsedFolder.order);
+  const { categoryId, categoryColor } = getSheetCategoryMeta(parsedSheet.file.categoryPath);
 
   return {
-    ...parsed.data,
+    ...parsedSheet.data,
     colorFrom: categoryColor,
     categoryId,
   };
@@ -267,22 +281,16 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
   // First pass: read all sheets without category colors (we need category order first)
   const sheetsRaw = await Promise.all(
     files.map(async (file) => {
-      const raw = await fs.readFile(file.filePath, "utf8");
-      const parsed = yamlCheatSheetSchema.safeParse(load(raw));
-      if (!parsed.success) {
-        throw new Error(
-          `Invalid YAML cheatsheet ${path.relative(contentDirectory, file.filePath)}: ${parsed.error.issues
-            .map((issue) => `${issue.path.join(".") || "root"} — ${issue.message}`)
-            .join(", ")}`
-        );
-      }
+      const parsed = await readSheetFile(file);
+      const { categoryId } = getSheetCategoryMeta(file.categoryPath);
+
       return {
         slug: file.slug,
-        title: parsed.data.title,
-        summary: parsed.data.summary,
-        color: parsed.data.color,
-        icon: parsed.data.icon,
-        categoryId: file.categoryPath ?? "__root__",
+        title: parsed.title,
+        summary: parsed.summary,
+        color: parsed.color,
+        icon: parsed.icon,
+        categoryId,
       };
     })
   );
@@ -303,16 +311,17 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     Array.from(grouped.entries()).map(async ([categoryId, categorySheets]) => {
       // Sort sheets alphabetically by title
       categorySheets.sort((a, b) => a.title.localeCompare(b.title));
-      const folderName = categoryId === "__root__" ? null : categoryId;
-      const parsedFolder = folderName ? parseFolderName(folderName) : { order: -1, id: "general" };
+      const { folderName, order, fallbackName } = getSheetCategoryMeta(
+        categoryId === "__root__" ? null : categoryId
+      );
       const meta = await readCategoryMeta(folderName);
 
       return {
         id: categoryId,
         title: meta.title,
         description: meta.description,
-        order: parsedFolder.order,
-        fallbackName: parsedFolder.id,
+        order,
+        fallbackName,
         sheetsRaw: categorySheets,
       };
     })

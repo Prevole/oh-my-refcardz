@@ -1,6 +1,6 @@
 # Oh My Refcardz
 
-Keyboard-first developer cheat sheets. Browse a honeycomb grid of reference cards, navigate with `hjkl` or arrow keys, search instantly, and open any sheet — all without touching the mouse.
+Keyboard-first developer cheat sheets. Browse a honeycomb grid of reference cards, navigate with `hjkl` or arrow keys, search instantly, and open any sheet without touching the mouse.
 
 ## Features
 
@@ -8,9 +8,11 @@ Keyboard-first developer cheat sheets. Browse a honeycomb grid of reference card
 - YAML-powered cheat sheets with rich key combo rendering
 - Honeycomb grid layout that adapts navigation to the current viewport
 - Dark theme with a polished glassmorphism UI
-- 21 cheat sheets across 2 categories (Tooling, Languages)
+- 22 cheat sheets across 2 categories (Tooling, Languages)
 
 ## Getting started
+
+Requires Node.js `20.9+`.
 
 ```bash
 npm install
@@ -42,7 +44,8 @@ sections:
               - mytool run --verbose
 
           - type: shortcut
-            keys: ["Ctrl", "C"]
+            keys:
+              - "Ctrl + C"
             description: Copy to clipboard
 ```
 
@@ -53,6 +56,13 @@ npm run validate:cheatsheets
 ```
 
 The new card appears automatically on the home page.
+
+Shortcut items accept one or more display strings. Examples:
+
+- `"Ctrl + C"` for a combo
+- `"j|k"` for alternatives
+- `"/ <pattern>"` for mixed symbols and text
+- `"←"`, `"→"`, `"↑"`, `"↓"` for arrows
 
 ### Category metadata
 
@@ -80,6 +90,9 @@ Folders are sorted by numeric prefix (e.g., `01-tooling/`, `02-languages/`).
 | `Esc` | Clear search |
 | `i` | Toggle details |
 | `?` | Toggle help |
+| `,` | Toggle settings |
+| `gg` | Go to top |
+| `Shift+G` | Go to bottom |
 
 ### Cheat sheet page
 
@@ -92,6 +105,10 @@ Folders are sorted by numeric prefix (e.g., `01-tooling/`, `02-languages/`).
 | `y` | Copy command |
 | `i` | Show example |
 | `Esc` / `Backspace` | Back to grid |
+| `?` | Toggle help |
+| `,` | Toggle settings |
+| `gg` | Go to top |
+| `Shift+G` | Go to bottom |
 
 ## Tech stack
 
@@ -108,8 +125,18 @@ Folders are sorted by numeric prefix (e.g., `01-tooling/`, `02-languages/`).
 |---------|-------------|
 | `npm run dev` | Start the development server |
 | `npm run build` | Build for production |
+| `npm run start` | Start the production server |
 | `npm run lint` | Run ESLint |
 | `npm run test` | Run unit tests |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with coverage report |
 | `npm run validate:cheatsheets` | Validate all cheat sheets against the Zod schema |
+
+Recommended checks before shipping content or UI changes:
+
+```bash
+npm run lint
+npm test
+npm run build
+npm run validate:cheatsheets
+```

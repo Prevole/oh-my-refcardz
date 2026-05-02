@@ -176,6 +176,10 @@ export function HomeClient({ categories }: Props) {
     return map;
   }, [visibleCards]);
 
+  const cardBySlug = useMemo(() => {
+    return new Map(visibleCards.map((card) => [card.slug, card]));
+  }, [visibleCards]);
+
   const navigationBySlug = useMemo(() => {
     const map = new Map<string, NavigationCard>();
     let rowOffset = 0;
@@ -237,7 +241,7 @@ export function HomeClient({ categories }: Props) {
 
   // Helper to calculate accent color for any slug
   const getAccentColorForSlug = useCallback((slug: string): string | null => {
-    const card = visibleCards.find((c) => c.slug === slug);
+    const card = cardBySlug.get(slug);
     if (!card) return null;
 
     if (uiSettings.modern.colorMode === "grid") {
@@ -256,7 +260,7 @@ export function HomeClient({ categories }: Props) {
 
     // Normal mode: use sheet's own color
     return card.color;
-  }, [visibleCards, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
+  }, [cardBySlug, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
 
   // Restore selection from session storage
   useEffect(() => {

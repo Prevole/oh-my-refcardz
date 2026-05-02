@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import { useUISettings } from "@/hooks/use-ui-settings";
-import { SELECTED_SHEET_ACCENT_KEY } from "@/lib/constants";
+import { useSelectedSheetAccent } from "@/hooks/use-selected-sheet-accent";
 import { SectionNavigation } from "@/components/navigation/section-navigation";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
 
@@ -12,28 +12,9 @@ type Props = {
   sheetColorFrom: string;
 };
 
-function subscribe(callback: () => void): () => void {
-  const handleStorageChange = (event: StorageEvent) => {
-    if (event.key === SELECTED_SHEET_ACCENT_KEY || event.key === null) {
-      callback();
-    }
-  };
-  window.addEventListener("storage", handleStorageChange);
-  return () => window.removeEventListener("storage", handleStorageChange);
-}
-
-function getSnapshot(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.sessionStorage.getItem(SELECTED_SHEET_ACCENT_KEY);
-}
-
-function getServerSnapshot(): string | null {
-  return null;
-}
-
 export function SheetSectionNavigation({ sections, sheetColor, sheetColorFrom }: Props) {
   const { settings } = useUISettings();
-  const sessionAccentColor = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const sessionAccentColor = useSelectedSheetAccent();
 
   const baseColor = useMemo(() => {
     switch (settings.modern.colorMode) {

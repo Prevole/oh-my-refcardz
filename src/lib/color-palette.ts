@@ -82,17 +82,6 @@ export function getSecondaryColorForColumn(columnIndex: number): string {
 }
 
 /**
- * Get the gradient colors for a sheet based on its category order
- * and its column index (0-based, from the hex layout).
- * Used by "hexa" color mode.
- */
-export function getSheetGradient(categoryOrder: number, columnIndex: number): SheetGradient {
-  const from = getCategoryPrimaryColor(categoryOrder);
-  const to = getSecondaryColorForColumn(columnIndex);
-  return { from, to };
-}
-
-/**
  * Get the gradient pair for a category based on its order.
  * Cycles through the palette if order exceeds palette size.
  * Used by "grid" color mode.
