@@ -50,7 +50,8 @@ describe("yamlCheatSheetSchema", () => {
   });
 
   it("rejects missing title", () => {
-    const { title: _title, ...noTitle } = validSheet;
+    const noTitle = { ...validSheet };
+    delete noTitle.title;
     const result = yamlCheatSheetSchema.safeParse(noTitle);
 
     expect(result.success).toBe(false);
@@ -63,14 +64,16 @@ describe("yamlCheatSheetSchema", () => {
   });
 
   it("rejects missing summary", () => {
-    const { summary: _summary, ...noSummary } = validSheet;
+    const noSummary = { ...validSheet };
+    delete noSummary.summary;
     const result = yamlCheatSheetSchema.safeParse(noSummary);
 
     expect(result.success).toBe(false);
   });
 
   it("rejects missing color", () => {
-    const { color: _color, ...noColor } = validSheet;
+    const noColor = { ...validSheet };
+    delete noColor.color;
     const result = yamlCheatSheetSchema.safeParse(noColor);
 
     expect(result.success).toBe(false);
