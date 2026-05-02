@@ -17,7 +17,7 @@ describe("yaml-cheatsheets integration", () => {
 
       expect(sheet).not.toBeNull();
       expect(sheet?.title).toBe("Git");
-      expect(sheet?.summary).toContain("commands");
+      expect(sheet?.summary).toContain("aliases");
       expect(sheet?.color).toMatch(/^#[0-9a-fA-F]{6}$/);
       expect(sheet?.sections.length).toBeGreaterThan(0);
     });
@@ -29,7 +29,7 @@ describe("yaml-cheatsheets integration", () => {
     });
 
     it("parses command items correctly", async () => {
-      const sheet = await getYamlCheatSheet("git");
+      const sheet = await getYamlCheatSheet("git-dummy");
 
       expect(sheet).not.toBeNull();
       const allItems = sheet!.sections.flatMap((s) =>
@@ -45,7 +45,7 @@ describe("yaml-cheatsheets integration", () => {
     });
 
     it("parses shortcut items correctly", async () => {
-      const sheet = await getYamlCheatSheet("git");
+      const sheet = await getYamlCheatSheet("git-dummy");
 
       expect(sheet).not.toBeNull();
       const allItems = sheet!.sections.flatMap((s) =>
@@ -57,6 +57,25 @@ describe("yaml-cheatsheets integration", () => {
       if (shortcutItem?.type === "shortcut") {
         expect(shortcutItem.keys.length).toBeGreaterThan(0);
         expect(shortcutItem.description).toBeDefined();
+      }
+    });
+
+    it("parses command aliases correctly", async () => {
+      const sheet = await getYamlCheatSheet("git");
+
+      expect(sheet).not.toBeNull();
+      const allItems = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items)
+      );
+      const commandItem = allItems.find(
+        (item) => item.type === "command" && item.aliases && item.aliases.length > 0
+      );
+
+      expect(commandItem).toBeDefined();
+      if (commandItem?.type === "command") {
+        expect(commandItem.title).toBeDefined();
+        expect(commandItem.command).toBeDefined();
+        expect(commandItem.aliases?.length).toBeGreaterThan(0);
       }
     });
 

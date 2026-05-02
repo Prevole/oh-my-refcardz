@@ -39,6 +39,7 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
       <SheetCommand
         title={item.title}
         command={item.command}
+        aliases={item.aliases}
         description={item.description}
         example={item.examples?.[0]}
       />

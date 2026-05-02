@@ -9,7 +9,8 @@ import sheetCommandStyles from "./sheet-commands.module.css";
 
 type SheetCommandProps = {
   title: string;
-  command?: string;
+  command: string;
+  aliases?: string[];
   description?: string;
   example?: string;
 };
@@ -78,7 +79,7 @@ function IconCheck() {
   );
 }
 
-export function SheetCommand({ title, command, description, example }: SheetCommandProps) {
+export function SheetCommand({ title, command, aliases, description, example }: SheetCommandProps) {
   const [showExample, setShowExample] = useState(false);
   const [showCopy, setShowCopy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -87,10 +88,14 @@ export function SheetCommand({ title, command, description, example }: SheetComm
 
   const placeholders = parsePlaceholders(command);
   const hasPlaceholders = placeholders.length > 0;
+  const primaryAliasCommand = aliases?.[0];
+  const copyValue = primaryAliasCommand ? `git ${primaryAliasCommand}` : command;
+  const aliasDisplayValue = aliases?.length
+    ? `git ${aliases.length === 1 ? aliases[0] : `(${aliases.join("|")})`}`
+    : null;
 
   function handleCopyDirect() {
-    if (!command) return;
-    navigator.clipboard.writeText(command).then(() => {
+    navigator.clipboard.writeText(copyValue).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     });
@@ -157,7 +162,7 @@ export function SheetCommand({ title, command, description, example }: SheetComm
             <button
               type="button"
               className={`${sheetCommandStyles.commandActionButton} ${copied ? sheetCommandStyles.commandActionButtonCopied : ""}`}
-              aria-label={`Copy command: ${title}`}
+              aria-label={`Copy ${aliases?.length ? "alias" : "command"}: ${title}`}
               title={hasPlaceholders ? "Fill and copy (y)" : "Copy (y)"}
               onClick={handleCopyAction}
             >
@@ -165,7 +170,18 @@ export function SheetCommand({ title, command, description, example }: SheetComm
             </button>
           </div>
         </div>
-        {command ? <p className={sheetCommandStyles.commandTerminal}>$ {command}</p> : null}
+        {aliasDisplayValue ? (
+          <>
+            <p className={sheetCommandStyles.commandBlockLabel}>Alias</p>
+            <p className={`${sheetCommandStyles.commandTerminal} ${sheetCommandStyles.commandAliasTerminal}`}>
+              $ {aliasDisplayValue}
+            </p>
+            <p className={sheetCommandStyles.commandBlockLabel}>Original command</p>
+            <p className={sheetCommandStyles.commandTerminal}>$ {command}</p>
+          </>
+        ) : (
+          <p className={sheetCommandStyles.commandTerminal}>$ {command}</p>
+        )}
         {description ? <p className={sheetCommandStyles.commandDescription}>{description}</p> : null}
       </div>
 

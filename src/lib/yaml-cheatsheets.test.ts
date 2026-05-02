@@ -205,6 +205,17 @@ describe("yamlCheatSheetSchema", () => {
       expect(result.success).toBe(true);
     });
 
+    it("accepts command with aliases", () => {
+      const item = {
+        type: "command",
+        title: "Status",
+        command: "git status",
+        aliases: ["s", "st"],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(true);
+    });
+
     it("rejects command without title", () => {
       const item = {
         type: "command",
@@ -238,6 +249,17 @@ describe("yamlCheatSheetSchema", () => {
         type: "command",
         title: "Run",
         command: "",
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects command with empty alias entry", () => {
+      const item = {
+        type: "command",
+        title: "Status",
+        command: "git status",
+        aliases: ["s", ""],
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(false);
@@ -323,6 +345,7 @@ describe("yamlCheatSheetSchema", () => {
       expect(result.success).toBe(false);
     });
   });
+
 
   describe("discriminated union (type field)", () => {
     const makeSheetWithItem = (item: unknown) => ({

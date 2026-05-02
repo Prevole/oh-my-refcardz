@@ -1,0 +1,486 @@
+title: Git Dummy
+summary: Core commands for status, branching, and review.
+color: "#00bcd4"
+icon: git
+
+sections:
+  - title: Inspect and Review
+    cards:
+      - title: Working tree
+        items:
+          - type: command
+            title: Inspect working tree
+            command: git status
+            description: See branch info, staged files, and unstaged changes.
+
+          - type: command
+            title: Review unstaged changes
+            command: git diff
+            description: Check edits before staging.
+            examples:
+              - git diff src/components/sheet-command.tsx
+
+          - type: command
+            title: Review staged changes
+            command: git diff --staged
+            description: Verify exactly what will be committed.
+            examples:
+              - git diff --staged
+
+          - type: shortcut
+            keys:
+              - "q"
+            description: Quit pager (less)
+
+          - type: shortcut
+            keys:
+              - "/<pattern>"
+            description: Search in pager
+
+          - type: shortcut
+            keys:
+              - "n|N"
+            description: Next / previous match in pager
+
+      - title: History
+        items:
+          - type: command
+            title: Browse compact history
+            command: git log --oneline --graph
+            description: Visual overview of recent commits and branches.
+            examples:
+              - git log --oneline --graph --all
+
+          - type: command
+            title: Inspect one commit
+            command: git show <sha>
+            description: Display diff, metadata, and message for a commit.
+            examples:
+              - git show a3f9c12
+
+          - type: command
+            title: Search commit messages
+            command: git log --grep <pattern>
+            description: Filter history by commit message content.
+            examples:
+              - git log --grep feat
+
+          - type: command
+            title: Find who changed a line
+            command: git blame <file>
+            description: Show last author for each line of a file.
+            examples:
+              - git blame src/lib/cheatsheets.ts
+
+          - type: shortcut
+            keys:
+              - "gg"
+            description: Go to top of pager
+
+          - type: shortcut
+            keys:
+              - G
+            description: Go to bottom of pager
+
+          - type: shortcut
+            keys:
+              - "zz"
+            description: Center current line in pager
+
+      - title: File history
+        items:
+          - type: command
+            title: Log for a specific file
+            command: git log --follow <file>
+            description: Show commit history for a file, tracking renames.
+            examples:
+              - git log --follow src/lib/cheatsheets.ts
+
+          - type: command
+            title: Show file at a revision
+            command: git show <sha>:<file>
+            description: Print a file as it was at a given commit.
+            examples:
+              - git show a3f9c12:src/lib/cheatsheets.ts
+
+          - type: command
+            title: Diff between two commits
+            command: git diff <from>..<to>
+            description: Compare any two commits or branches.
+            examples:
+              - git diff main..feat/dark-mode
+
+          - type: command
+            title: List changed files in a commit
+            command: git show --stat <sha>
+            description: Show files affected by a commit without the full diff.
+            examples:
+              - git show --stat a3f9c12
+
+      - title: Search
+        items:
+          - type: command
+            title: Search across working tree
+            command: git grep <pattern>
+            description: Fast grep limited to tracked files.
+            examples:
+              - git grep "sheet-command"
+
+          - type: command
+            title: Search in a specific revision
+            command: git grep <pattern> <sha>
+            description: Search file contents at a given commit.
+            examples:
+              - git grep "sheet-command" a3f9c12
+
+          - type: command
+            title: Find first bad commit
+            command: git bisect start
+            description: Begin a binary search through history to find a regression.
+
+          - type: shortcut
+            keys:
+              - "b"
+            description: Mark current commit as bad (git bisect bad)
+
+          - type: shortcut
+            keys:
+              - "g"
+            description: Mark current commit as good (git bisect good)
+
+  - title: Branching
+    cards:
+      - title: Local branches
+        items:
+          - type: command
+            title: List all branches
+            command: git branch -a
+            description: Show local and remote-tracking branches.
+
+          - type: command
+            title: Create and switch branch
+            command: git switch -c <name>
+            description: Start work in a dedicated branch.
+            examples:
+              - git switch -c feat/dark-mode
+
+          - type: command
+            title: Switch branch
+            command: git switch <name>
+            description: Move to an existing local branch.
+            examples:
+              - git switch main
+
+          - type: command
+            title: Rename branch
+            command: git branch -m <old> <new>
+            description: Rename a local branch.
+            examples:
+              - git branch -m feat/darkmode feat/dark-mode
+
+          - type: command
+            title: Delete merged branch
+            command: git branch -d <name>
+            description: Clean up local branches after merge.
+            examples:
+              - git branch -d feat/dark-mode
+
+          - type: command
+            title: Force delete branch
+            command: git branch -D <name>
+            description: Delete a branch even if it has unmerged commits.
+            examples:
+              - git branch -D feat/experiment
+
+      - title: Remote branches
+        items:
+          - type: command
+            title: Update remotes and prune
+            command: git fetch --prune
+            description: Refresh remote state and remove stale tracking refs.
+
+          - type: command
+            title: Push and track remote
+            command: git push -u origin <name>
+            description: Push branch and set upstream tracking.
+            examples:
+              - git push -u origin feat/dark-mode
+
+          - type: command
+            title: Pull with rebase
+            command: git pull --rebase
+            description: Fetch and rebase local commits on top of remote changes.
+
+          - type: command
+            title: Delete remote branch
+            command: git push origin --delete <name>
+            description: Remove a branch from the remote.
+            examples:
+              - git push origin --delete feat/dark-mode
+
+          - type: shortcut
+            keys:
+              - "Ctrl + c"
+            description: Abort current git operation
+
+      - title: Merge
+        items:
+          - type: command
+            title: Merge branch
+            command: git merge <name>
+            description: Integrate another branch into the current one.
+            examples:
+              - git merge feat/dark-mode
+
+          - type: command
+            title: Merge without fast-forward
+            command: git merge --no-ff <name>
+            description: Always create a merge commit, preserving branch history.
+            examples:
+              - git merge --no-ff feat/dark-mode
+
+          - type: command
+            title: Abort merge
+            command: git merge --abort
+            description: Cancel an in-progress merge and restore the previous state.
+
+          - type: shortcut
+            keys:
+              - "Ctrl + c"
+            description: Abort merge editor prompt
+
+      - title: Rebase
+        items:
+          - type: command
+            title: Rebase onto branch
+            command: git rebase <base>
+            description: Replay current branch commits on top of another branch.
+            examples:
+              - git rebase main
+
+          - type: command
+            title: Interactive rebase
+            command: git rebase -i <base>
+            description: Rewrite, squash, or reorder commits interactively.
+            examples:
+              - git rebase -i HEAD~4
+
+          - type: command
+            title: Continue after conflict
+            command: git rebase --continue
+            description: Resume rebase after resolving a conflict.
+
+          - type: command
+            title: Abort rebase
+            command: git rebase --abort
+            description: Cancel the rebase and restore the original branch state.
+
+          - type: shortcut
+            keys:
+              - "p"
+            description: Keep commit as-is (pick) in interactive rebase
+
+          - type: shortcut
+            keys:
+              - "s"
+            description: Squash commit into previous in interactive rebase
+
+          - type: shortcut
+            keys:
+              - "r"
+            description: Reword commit message in interactive rebase
+
+          - type: shortcut
+            keys:
+              - "d"
+            description: Drop commit in interactive rebase
+
+  - title: Staging and Committing
+    cards:
+      - title: Stage
+        items:
+          - type: command
+            title: Stage all changes
+            command: git add .
+            description: Stage every modified and untracked file.
+
+          - type: command
+            title: Stage by hunk
+            command: git add -p
+            description: Interactively pick which hunks to stage.
+
+          - type: shortcut
+            keys:
+              - "y|n"
+            description: Accept / skip hunk in interactive staging
+
+          - type: shortcut
+            keys:
+              - s
+            description: Split hunk into smaller pieces
+
+          - type: shortcut
+            keys:
+              - e
+            description: Manually edit the hunk
+
+          - type: command
+            title: Unstage file
+            command: git restore --staged <file>
+            description: Remove a file from the staging area without discarding changes.
+            examples:
+              - git restore --staged src/app/globals.css
+
+          - type: command
+            title: Discard unstaged changes
+            command: git restore <file>
+            description: Revert file to its last committed state.
+            examples:
+              - git restore src/app/globals.css
+
+      - title: Commit
+        items:
+          - type: command
+            title: Commit staged changes
+            command: 'git commit -m "message"'
+            description: Create a commit with an explicit message.
+            examples:
+              - 'git commit -m "feat: add dark mode toggle"'
+
+          - type: command
+            title: Amend last commit
+            command: git commit --amend --no-edit
+            description: Add staged changes into the previous commit without changing its
+              message.
+
+          - type: command
+            title: Amend commit message
+            command: git commit --amend
+            description: Rewrite the message of the last (unpushed) commit.
+
+          - type: command
+            title: Empty commit
+            command: 'git commit --allow-empty -m "message"'
+            description: Create a commit with no file changes, useful to trigger CI.
+            examples:
+              - 'git commit --allow-empty -m "chore: trigger deploy"'
+
+      - title: Reset and restore
+        items:
+          - type: command
+            title: Soft reset
+            command: git reset --soft HEAD~<n>
+            description: Undo the last N commits but keep changes staged.
+            examples:
+              - git reset --soft HEAD~1
+
+          - type: command
+            title: Mixed reset
+            command: git reset HEAD~<n>
+            description: Undo the last N commits, unstage changes but keep them in working
+              tree.
+            examples:
+              - git reset HEAD~2
+
+          - type: command
+            title: Hard reset
+            command: git reset --hard HEAD~<n>
+            description: Permanently discard the last N commits and all their changes.
+            examples:
+              - git reset --hard HEAD~1
+
+          - type: command
+            title: Restore deleted file
+            command: git checkout <sha> -- <file>
+            description: Recover a file deleted in a previous commit.
+            examples:
+              - git checkout a3f9c12 -- src/lib/cheatsheets.ts
+
+  - title: Stash and Cherry-pick
+    cards:
+      - title: Stash
+        items:
+          - type: command
+            title: Stash changes
+            command: git stash
+            description: Temporarily shelve all uncommitted changes.
+
+          - type: command
+            title: Stash with message
+            command: 'git stash push -m "message"'
+            description: Save a stash with a descriptive label.
+            examples:
+              - 'git stash push -m "wip: dark mode"'
+
+          - type: command
+            title: List stashes
+            command: git stash list
+            description: Show all saved stash entries.
+
+          - type: command
+            title: Pop latest stash
+            command: git stash pop
+            description: Reapply and remove the most recent stash.
+
+          - type: command
+            title: Apply without dropping
+            command: git stash apply stash@{<n>}
+            description: Reapply a specific stash entry and keep it in the list.
+            examples:
+              - git stash apply stash@{1}
+
+          - type: command
+            title: Drop a stash
+            command: git stash drop stash@{<n>}
+            description: Remove a specific stash entry.
+            examples:
+              - git stash drop stash@{0}
+
+      - title: Cherry-pick and revert
+        items:
+          - type: command
+            title: Cherry-pick commit
+            command: git cherry-pick <sha>
+            description: Apply a specific commit onto the current branch.
+            examples:
+              - git cherry-pick a3f9c12
+
+          - type: command
+            title: Cherry-pick range
+            command: git cherry-pick <from>..<to>
+            description: Apply a range of commits onto the current branch.
+            examples:
+              - git cherry-pick a3f9c12..d8e4f01
+
+          - type: command
+            title: Revert a commit
+            command: git revert <sha>
+            description: Create a new commit that undoes a previous one. Safe for shared
+              history.
+            examples:
+              - git revert a3f9c12
+
+          - type: shortcut
+            keys:
+              - "Ctrl + c"
+            description: Abort an in-progress cherry-pick or revert
+
+      - title: Reflog
+        items:
+          - type: command
+            title: Show reflog
+            command: git reflog
+            description: List every position HEAD has been at — useful to recover lost
+              commits.
+
+          - type: command
+            title: Recover lost commit
+            command: git switch -c <name> <sha>
+            description: Create a branch from a sha found in the reflog.
+            examples:
+              - git switch -c recover/lost-work a3f9c12
+
+          - type: command
+            title: Expire old reflog entries
+            command: git reflog expire --expire=90.days --all
+            description: Remove reflog entries older than a given duration.

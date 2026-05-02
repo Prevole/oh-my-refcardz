@@ -105,6 +105,27 @@
   color: #8ef6d8;
 }
 
+.commandAliasTerminal {
+  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 20%, rgba(10, 16, 28, 0.92)),
+    rgba(7, 12, 22, 0.96)
+  );
+  color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 70%, white);
+  font-weight: 700;
+}
+
+.commandBlockLabel {
+  margin: 0.45rem 0 0.2rem;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(237, 242, 244, 0.55);
+}
+
 .commandDescription {
   margin: 0.45rem 0 0;
   font-family: var(--font-space-grotesk), sans-serif;

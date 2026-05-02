@@ -33,6 +33,7 @@ const commandItemSchema = z.object({
   type: z.literal("command"),
   title: z.string().min(1),
   command: z.string().min(1),
+  aliases: z.array(z.string().min(1)).optional(),
   description: z.string().optional(),
   examples: z.array(z.string()).optional(),
 });
