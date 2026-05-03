@@ -2,6 +2,12 @@
 
 Keyboard-first developer cheat sheets. Browse a honeycomb grid of reference cards, navigate with `hjkl` or arrow keys, search instantly, and open any sheet without touching the mouse.
 
+## Product constraints
+
+- Desktop and laptop only.
+- The application is not designed for phone or tablet usage.
+- Responsive behavior should target common desktop and laptop window sizes, not mobile breakpoints.
+
 ## Features
 
 - Vim-style keyboard navigation (`hjkl` / arrows, `Enter`, `Esc`, `/` to search)

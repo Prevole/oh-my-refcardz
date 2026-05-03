@@ -8,6 +8,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Single-package Next.js 16 app. Keyboard-first developer cheat sheet hub. Content is MDX files in `content/cheatsheets/`, rendered at request time via `compileMDX` from `next-mdx-remote/rsc`. No database, no auth, no API routes.
 
+## Product Constraints
+
+- Desktop and laptop only.
+- Do not design for phone or tablet usage.
+- Responsive work should target common desktop and laptop window sizes, not mobile breakpoints.
+
 ## Commands
 
 ```bash
