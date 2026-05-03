@@ -1,5 +1,6 @@
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { SheetCommand } from "@/components/sheets/sheet-command";
+import { SheetConfig } from "@/components/sheets/sheet-config";
 import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
 import type { YamlCheatSheet, CheatSheetItem } from "@/lib/yaml-cheatsheets";
@@ -52,6 +53,18 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
 
   if (item.type === "shortcut") {
     return <SheetShortcut keys={item.keys} description={item.description} />;
+  }
+
+  if (item.type === "config") {
+    return (
+      <SheetConfig
+        title={item.title}
+        file={item.file}
+        context={item.context}
+        entries={item.entries}
+        description={item.description}
+      />
+    );
   }
 
   return null;

@@ -47,6 +47,15 @@ sections:
             keys:
               - "Ctrl + C"
             description: Copy to clipboard
+
+          - type: config
+            title: Shared profile
+            file: ~/.gitconf/perso.config
+            context: Included for repositories under ~/Documents/repositories/.
+            entries:
+              - '[user]'
+              - '  email = "me@example.com"'
+            description: Identity and signing defaults.
 ```
 
 2. Validate the schema:
@@ -63,6 +72,14 @@ Shortcut items accept one or more display strings. Examples:
 - `"j|k"` for alternatives
 - `"/ <pattern>"` for mixed symbols and text
 - `"←"`, `"→"`, `"↑"`, `"↓"` for arrows
+
+Config items render a file-oriented config snippet. Fields:
+
+- `title`: short label shown in the card
+- `file`: source file path like `~/.gitconfig` or `.git/config`
+- `context`: optional sentence explaining when the config applies
+- `entries`: one or more raw config lines shown as a snippet
+- `description`: optional explanation of why that config exists
 
 ### Category metadata
 

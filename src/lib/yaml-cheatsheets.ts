@@ -44,7 +44,16 @@ const shortcutItemSchema = z.object({
   description: z.string().min(1),
 });
 
-const itemSchema = z.discriminatedUnion("type", [commandItemSchema, shortcutItemSchema]);
+const configItemSchema = z.object({
+  type: z.literal("config"),
+  title: z.string().min(1),
+  file: z.string().min(1),
+  context: z.string().min(1).optional(),
+  entries: z.array(z.string().min(1)).min(1),
+  description: z.string().optional(),
+});
+
+const itemSchema = z.discriminatedUnion("type", [commandItemSchema, shortcutItemSchema, configItemSchema]);
 
 const cardSchema = z.object({
   title: z.string().min(1),
@@ -75,6 +84,7 @@ export const categoryMetaSchema = z.object({
 
 export type CommandItem = z.infer<typeof commandItemSchema>;
 export type ShortcutItem = z.infer<typeof shortcutItemSchema>;
+export type ConfigItem = z.infer<typeof configItemSchema>;
 export type CheatSheetItem = z.infer<typeof itemSchema>;
 export type CheatSheetCard = z.infer<typeof cardSchema>;
 export type CheatSheetSection = z.infer<typeof sectionSchema>;

@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  yamlCheatSheetSchema,
-  categoryMetaSchema,
-} from "./yaml-cheatsheets";
+import { yamlCheatSheetSchema, categoryMetaSchema } from "./yaml-cheatsheets";
 
 // ---------------------------------------------------------------------------
 // yamlCheatSheetSchema
@@ -340,6 +337,84 @@ describe("yamlCheatSheetSchema", () => {
         type: "shortcut",
         keys: ["Ctrl", "C"],
         description: "",
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("config item validation", () => {
+    const makeSheetWithItem = (item: unknown) => ({
+      ...validSheet,
+      sections: [
+        {
+          title: "Section",
+          cards: [{ title: "Card", items: [item] }],
+        },
+      ],
+    });
+
+    it("validates config item with all fields", () => {
+      const item = {
+        type: "config",
+        title: "Shared profile",
+        file: "~/.gitconf/perso.config",
+        context: "Included for work repositories.",
+        entries: ["[user]", '  name = "Prevole"'],
+        description: "Identity and signing settings.",
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts config item without optional context and description", () => {
+      const item = {
+        type: "config",
+        title: "Repo remote",
+        file: ".git/config",
+        entries: ['[remote "origin"]', "  url = git@github.com:org/repo.git"],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects config item without title", () => {
+      const item = {
+        type: "config",
+        file: ".git/config",
+        entries: ["key = value"],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects config item without file", () => {
+      const item = {
+        type: "config",
+        title: "Repo remote",
+        entries: ["key = value"],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects config item with empty entries", () => {
+      const item = {
+        type: "config",
+        title: "Repo remote",
+        file: ".git/config",
+        entries: [],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects config item with empty entry", () => {
+      const item = {
+        type: "config",
+        title: "Repo remote",
+        file: ".git/config",
+        entries: ["key = value", ""],
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(false);

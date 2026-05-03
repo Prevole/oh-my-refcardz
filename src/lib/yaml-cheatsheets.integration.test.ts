@@ -60,6 +60,21 @@ describe("yaml-cheatsheets integration", () => {
       }
     });
 
+    it("parses config items correctly", async () => {
+      const sheet = await getYamlCheatSheet("git");
+
+      expect(sheet).not.toBeNull();
+      const allItems = sheet!.sections.flatMap((s) => s.cards.flatMap((c) => c.items));
+      const configItem = allItems.find((item) => item.type === "config");
+
+      expect(configItem).toBeDefined();
+      if (configItem?.type === "config") {
+        expect(configItem.title).toBeDefined();
+        expect(configItem.file).toBeDefined();
+        expect(configItem.entries.length).toBeGreaterThan(0);
+      }
+    });
+
     it("parses command aliases correctly", async () => {
       const sheet = await getYamlCheatSheet("git");
 

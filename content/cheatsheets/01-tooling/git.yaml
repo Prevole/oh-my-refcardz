@@ -1,6 +1,6 @@
 title: Git
-summary: Personal Git aliases from local config, from quick shorthands to shell helpers.
-color: "#00bcd4"
+summary: Practical Git aliases and configuration patterns, from quick command shorthands to path-based config layering.
+color: "#F1502F"
 icon: git
 
 sections:
@@ -16,21 +16,21 @@ sections:
               - st
               - sta
               - stat
-            description: Show branch state, staged changes, unstaged edits, and untracked files.
+            description: Show the current branch state together with staged changes, unstaged edits, and untracked files before taking action.
 
           - type: command
             title: Diff
             command: git diff
             aliases:
               - d
-            description: Review unstaged changes.
+            description: Review unstaged changes in the working tree before deciding what to stage.
 
           - type: command
             title: Cached Diff
             command: git diff --cached
             aliases:
               - dc
-            description: Review staged changes before commit.
+            description: Review the exact staged diff that will be included in the next commit.
 
       - title: Fancy Diff Helpers
         items:
@@ -39,14 +39,14 @@ sections:
             command: '!f() { [ -z "$GIT_PREFIX" ] || cd "$GIT_PREFIX" && git diff --color "$@" | diff-so-fancy  | less --tabs=4 -RFX; }; f'
             aliases:
               - dsf
-            description: Pretty diff pager preserving repo-relative paths.
+            description: Open an enhanced diff view with `diff-so-fancy` while preserving paths relative to the repository root.
 
           - type: command
             title: Cached Diff So Fancy
             command: '!f() { [ -z "$GIT_PREFIX" ] || cd "$GIT_PREFIX" && git diff --cached --color "$@" | diff-so-fancy  | less --tabs=4 -RFX; }; f'
             aliases:
               - dsfc
-            description: Pretty pager for staged diffs.
+            description: Use the same enhanced pager for staged changes when reviewing a commit before creating it.
 
   - title: Branching and Commits
     cards:
@@ -57,14 +57,14 @@ sections:
             command: git checkout
             aliases:
               - co
-            description: Legacy shorthand for switching branches or restoring files.
+            description: Short alias for the older `checkout` workflow, useful on setups that still rely on it for branch switching or file restore operations.
 
           - type: command
             title: Branch
             command: git branch
             aliases:
               - b
-            description: Short alias for branch operations.
+            description: Short alias for listing, creating, or deleting branches depending on the flags you add.
 
       - title: Stage and Commit
         items:
@@ -73,21 +73,21 @@ sections:
             command: git add .
             aliases:
               - a
-            description: Stage all changes from the current directory.
+            description: Stage every tracked and untracked change under the current directory, not necessarily the whole repository.
 
           - type: command
             title: Commit Message
             command: git commit -m
             aliases:
               - ci
-            description: Commit with an inline message.
+            description: Create a commit with a message passed directly on the command line for quick save points.
 
           - type: command
             title: Amend Commit
             command: git commit --amend
             aliases:
               - ca
-            description: Amend the last commit.
+            description: Rewrite the most recent commit to adjust its message or include newly staged changes.
 
   - title: History and Inspection
     cards:
@@ -98,21 +98,21 @@ sections:
             command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
             aliases:
               - g
-            description: Compact decorated graph view of recent history.
+            description: Show a compact branch graph with decoration, relative dates, and author names for recent history inspection.
 
           - type: command
             title: Graph Log All
             command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all"
             aliases:
               - ga
-            description: Same graph view across all refs.
+            description: Extend the same graph view to every local and remote ref so diverging branches are easier to spot.
 
           - type: command
             title: Oneline Graph All
             command: git log --oneline --graph --decorate --all
             aliases:
               - graph
-            description: Simpler all-branches graph view.
+            description: Use a simpler one-line graph when you want an overview of all branches without the custom pretty format.
 
       - title: Config and Files
         items:
@@ -122,21 +122,21 @@ sections:
             aliases:
               - info
               - i
-            description: Print the repository local Git config.
+            description: Print the repository-local config file exactly as stored on disk, which is handy when checking remotes or branch tracking.
 
           - type: command
             title: Edit Local Git Config
             command: '!$EDITOR .git/config'
             aliases:
               - ei
-            description: Open the repository local Git config in the current editor.
+            description: Open `.git/config` in the current editor to tweak repository-specific settings directly.
 
           - type: command
             title: List Directory
             command: '!eza -la --sort=modified'
             aliases:
               - l
-            description: Handy repo-local file listing sorted by modification time.
+            description: Show a detailed file listing sorted by modification time, useful when you want quick repository context without leaving the shell.
 
   - title: Remote and Cleanup
     cards:
@@ -147,28 +147,28 @@ sections:
             command: git push -u origin HEAD
             aliases:
               - fp
-            description: Push the current branch and set upstream tracking.
+            description: Push the current branch to `origin` and create upstream tracking in one step, especially useful for a first push.
 
           - type: command
             title: Force Push With Lease
             command: git push --force-with-lease
             aliases:
               - pf
-            description: Safer force push that checks remote state first.
+            description: Force-push more safely by refusing to overwrite remote work you have not fetched yet.
 
           - type: command
             title: Pull Rebase
             command: git pull --rebase
             aliases:
               - pull
-            description: Pull while replaying local commits on top.
+            description: Update from the remote while replaying local commits on top, keeping history linear.
 
           - type: command
             title: Push Then Tags
             command: '!git push && git push --tags'
             aliases:
               - pt
-            description: Push commits first, then push tags.
+            description: Push commits first and only push tags if that initial push succeeds.
 
       - title: Merged Branch Cleanup
         items:
@@ -177,11 +177,130 @@ sections:
             command: '!f() { git fetch --prune && git branch --merged | grep -Ev "(^\\*|master|main|dev)"; }; f'
             aliases:
               - lcb
-            description: List merged branches except protected names.
+            description: Fetch and prune first, then list merged local branches while excluding the current branch and a few protected names.
 
           - type: command
             title: Delete Cleanable Branches
             command: '!f() { git fetch --prune && git branch --merged | grep -Ev "(^\\*|master|main|dev)" | xargs git branch -d; }; f'
             aliases:
               - cb
-            description: Delete merged branches except protected names.
+            description: Delete the merged branches returned by the previous helper, keeping the protected branch names untouched.
+
+  - title: Configuration
+    cards:
+      - title: Inspect Config
+        items:
+          - type: command
+            title: Show config with origins
+            command: git config --list --show-origin
+            description: Print the effective Git configuration together with the source file for each value, which is useful for understanding layered config overrides.
+
+          - type: command
+            title: Show local config only
+            command: git config --list --show-origin --local
+            description: Restrict config inspection to `.git/config`, which helps isolate repository-only overrides from global and included files.
+
+      - title: Conditional Includes
+        items:
+          - type: config
+            title: Path-based include with `includeIf`
+            file: ~/.gitconfig
+            context: Use `includeIf` to load an extra config file only when Git is running inside repositories under a specific parent path.
+            entries:
+              - '[includeIf "gitdir:~/work/repos/"]'
+              - '  path = ~/.config/git/work.inc'
+            description: Add this block to `~/.gitconfig`, replace the parent path and included file with your own values, then keep repository-specific identity or signing rules in the included file.
+
+      - title: Identity and Signing
+        items:
+          - type: config
+            title: Author identity
+            file: ~/.gitconfig
+            context: Basic identity settings can live directly in your main Git config or in an included profile.
+            entries:
+              - '[user]'
+              - '  name = "Alex Example"'
+              - '  email = "alex@example.dev"'
+            description: Sets the default author name and email used for commits in repositories that inherit this config.
+
+          - type: config
+            title: SSH signing with 1Password
+            file: ~/.gitconfig
+            context: Use Git's SSH signing mode when you want commit signing without a classic GPG keypair.
+            entries:
+              - '[gpg]'
+              - '  format = ssh'
+              - '[gpg "ssh"]'
+              - '  program = "/Applications/Example.app/Contents/MacOS/git-sign"'
+              - '[commit]'
+              - '  gpgsign = true'
+            description: Enables SSH-based commit signing and tells Git to call the 1Password signing helper through the `program` entry under `[gpg "ssh"]`.
+
+          - type: config
+            title: GitHub and credential helper
+            file: ~/.gitconfig
+            context: These options support authentication-related workflows outside of commit authoring itself.
+            entries:
+              - '[github]'
+              - '  user = "alex-example"'
+              - '[credential]'
+              - '  helper = osxkeychain'
+            description: Stores a default GitHub username for CLI integrations and uses the macOS keychain to cache and retrieve Git credentials.
+
+      - title: Aliases
+        items:
+          - type: config
+            title: Command aliases
+            file: ~/.gitconfig
+            context: Short aliases can wrap common commands or shell helpers.
+            entries:
+              - '[alias]'
+              - '  st = status --short --branch'
+              - '  lg = log --oneline --graph --decorate --all'
+              - '  amend = commit --amend'
+              - '  cleanup = !git fetch --prune && git branch --merged | grep -Ev "(^\\*|main|master|develop)"'
+            description: Aliases are invoked as `git <alias>`. Use them to shorten repetitive commands, for example `git st` for a compact status view or `git lg` for a readable history graph.
+
+      - title: Global Defaults
+        items:
+          - type: config
+            title: Output and history
+            file: ~/.gitconfig
+            context: Small global defaults can improve day-to-day readability without changing repository data.
+            entries:
+              - '[color]'
+              - '  ui = true'
+              - '[branch]'
+              - '  sort = -committerdate'
+            description: Enables colored output and sorts local branches by most recent commit activity, which makes branch listings easier to scan.
+
+          - type: config
+            title: Sync and pull behavior
+            file: ~/.gitconfig
+            context: These defaults shape how Git updates your local repository when fetching or pulling.
+            entries:
+              - '[fetch]'
+              - '  prune = true'
+              - '[pull]'
+              - '  rebase = true'
+            description: Automatically removes stale remote-tracking refs on fetch and rebases by default on pull to keep history cleaner and more linear.
+
+          - type: config
+            title: Diff and conflict reuse
+            file: ~/.gitconfig
+            context: Diff and merge settings can reduce friction when reviewing changes or resolving repeat conflicts.
+            entries:
+              - '[diff]'
+              - '  algorithm = histogram'
+              - '[rerere]'
+              - '  enabled = true'
+            description: Uses the histogram diff algorithm for more readable diffs and enables `rerere` so Git can remember and reuse previous conflict resolutions.
+
+          - type: config
+            title: New repository defaults
+            file: ~/.gitconfig
+            context: These settings apply when Git initializes a brand new repository.
+            entries:
+              - '[init]'
+              - '  defaultBranch = main'
+            description: Sets `main` as the default branch name for newly created repositories.
