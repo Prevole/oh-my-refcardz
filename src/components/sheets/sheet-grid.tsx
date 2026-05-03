@@ -1,13 +1,21 @@
-import { Children, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
-export function SheetGrid({ children }: { children: ReactNode }) {
-  const cardCount = Children.count(children);
+type SheetGridProps = {
+  children: ReactNode;
+  columns: number;
+  editMode?: boolean;
+};
 
-  const gridColumnsClass =
-    cardCount <= 1 ? "grid-cols-1" : cardCount === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
-
-  return <section className={`grid gap-4 ${gridColumnsClass}`}>{children}</section>;
+export function SheetGrid({ children, columns, editMode = false }: SheetGridProps) {
+  return (
+    <section
+      className={`${cheatsheetStyles.dashboardGrid} ${editMode ? cheatsheetStyles.dashboardGridEditMode : ""}`}
+      style={{ ["--sheet-grid-columns" as string]: String(columns) }}
+    >
+      {children}
+    </section>
+  );
 }
 
 type SheetCardProps = {
@@ -15,11 +23,38 @@ type SheetCardProps = {
   badge?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
+  colSpan?: number;
+  rowSpan?: number;
+  editMode?: boolean;
+  layoutLabel?: string;
+  controls?: ReactNode;
 };
 
-export function SheetCard({ title, badge, footer, children }: SheetCardProps) {
+export function SheetCard({
+  title,
+  badge,
+  footer,
+  children,
+  colSpan = 1,
+  rowSpan = 1,
+  editMode = false,
+  layoutLabel,
+  controls,
+}: SheetCardProps) {
   return (
-    <article className={cheatsheetStyles.card}>
+    <article
+      className={`${cheatsheetStyles.card} ${editMode ? cheatsheetStyles.cardEditMode : ""}`}
+      style={{
+        ["--card-col-span" as string]: String(colSpan),
+        ["--card-row-span" as string]: String(rowSpan),
+      }}
+    >
+      {editMode ? (
+        <div className={cheatsheetStyles.cardLayoutBadgeRow}>
+          <div className={cheatsheetStyles.cardLayoutBadge}>{layoutLabel ?? `${colSpan}x${rowSpan}`}</div>
+          {controls}
+        </div>
+      ) : null}
       <div className={cheatsheetStyles.cardHeader}>
         <h2 className={cheatsheetStyles.cardTitle}>{title}</h2>
         {badge ? <span className={cheatsheetStyles.cardBadge}>{badge}</span> : null}

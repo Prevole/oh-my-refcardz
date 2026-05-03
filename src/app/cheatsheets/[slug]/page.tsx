@@ -51,7 +51,7 @@ export default async function CheatSheetPage({ params }: Props) {
 
           <div className={`${cheatsheetStyles.content} mt-8 max-w-none`}>
             <SheetCommandsShell>
-              <YamlSheetRenderer sheet={sheet} />
+              <YamlSheetRenderer key={slug} sheetSlug={slug} sheet={sheet} />
             </SheetCommandsShell>
           </div>
         </main>
