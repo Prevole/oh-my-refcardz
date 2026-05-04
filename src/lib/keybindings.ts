@@ -1,51 +1,21 @@
-/**
- * Keybinding system for customizable keyboard shortcuts.
- *
- * Keybindings are organized by context (global, home, sheet, sheet-commands).
- * Each action has a unique ID, a label, and an array of key combinations.
- */
-
 import type { KeyboardScopeId } from "@/hooks/use-keyboard-context";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Modifier keys */
 export type Modifier = "ctrl" | "alt" | "shift" | "meta";
 
-/**
- * Represents a single key combination (e.g., Ctrl+K or just "k")
- */
 export interface KeyCombo {
-  /** The main key (e.g., "k", "Enter", "ArrowUp") */
   key: string;
-  /** Modifier keys required */
   modifiers: Modifier[];
-  /** Optional second key for sequence shortcuts (e.g., g then g) */
   next?: KeyCombo;
 }
 
-/**
- * An action that can be triggered by a keybinding
- */
 export interface KeybindingAction {
-  /** Unique identifier for the action */
   id: string;
-  /** Human-readable label */
   label: string;
-  /** Array of key combinations that trigger this action (first match wins) */
   combos: KeyCombo[];
 }
 
-/**
- * Context-specific keybindings configuration
- */
 export type KeybindingContext = "global" | "home" | "sheet" | "sheet-commands" | "sheet-layout";
 
-/**
- * Map a KeyboardScopeId to a KeybindingContext
- */
 export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null {
   switch (scope) {
     case "global":
@@ -59,17 +29,9 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
   }
 }
 
-/**
- * All keybindings organized by context
- */
 export type KeybindingsConfig = Record<KeybindingContext, KeybindingAction[]>;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Action IDs (typed constants for type-safety)
-// ─────────────────────────────────────────────────────────────────────────────
-
 export const ACTION_IDS = {
-  // Global actions (available everywhere)
   TOGGLE_HELP: "global.toggle-help",
   TOGGLE_SETTINGS: "global.toggle-settings",
   MOVE_LEFT: "global.move-left",
@@ -79,20 +41,16 @@ export const ACTION_IDS = {
   GO_TOP: "global.go-top",
   GO_BOTTOM: "global.go-bottom",
 
-  // Home page actions
   FOCUS_SEARCH: "home.focus-search",
   CLEAR_SEARCH: "home.clear-search",
   TOGGLE_INFO: "home.toggle-info",
   OPEN_SHEET: "home.open-sheet",
 
-  // Sheet page actions
   BACK_TO_HOME: "sheet.back-to-home",
 
-  // Sheet commands actions
   COPY_COMMAND: "sheet-commands.copy",
   SHOW_EXAMPLE: "sheet-commands.show-example",
 
-  // Sheet layout actions (card navigation and manipulation)
   CARD_NAV_LEFT: "sheet-layout.nav-left",
   CARD_NAV_RIGHT: "sheet-layout.nav-right",
   CARD_NAV_UP: "sheet-layout.nav-up",
@@ -109,20 +67,10 @@ export const ACTION_IDS = {
 
 export type ActionId = (typeof ACTION_IDS)[keyof typeof ACTION_IDS];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper functions
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Creates a simple key combo (no modifiers)
- */
 export function key(k: string): KeyCombo {
   return { key: k, modifiers: [] };
 }
 
-/**
- * Creates a key combo with modifiers
- */
 export function combo(k: string, ...modifiers: Modifier[]): KeyCombo {
   return { key: k, modifiers };
 }
@@ -130,10 +78,6 @@ export function combo(k: string, ...modifiers: Modifier[]): KeyCombo {
 export function sequence(first: KeyCombo, second: KeyCombo): KeyCombo {
   return { ...first, next: second };
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Default keybindings
-// ─────────────────────────────────────────────────────────────────────────────
 
 export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   global: [
@@ -224,7 +168,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   ],
 
   "sheet-layout": [
-    // Card navigation (uppercase HJKL)
     {
       id: ACTION_IDS.CARD_NAV_LEFT,
       label: "Navigate to card left",
@@ -245,7 +188,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Navigate to card below",
       combos: [key("J"), combo("ArrowDown", "shift")],
     },
-    // Card movement (Alt + hjkl / arrows)
     {
       id: ACTION_IDS.CARD_MOVE_LEFT,
       label: "Move card left",
@@ -266,7 +208,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Move card down",
       combos: [combo("j", "alt"), combo("ArrowDown", "alt")],
     },
-    // Card resize (Alt + Shift + hjkl / arrows)
     {
       id: ACTION_IDS.CARD_SHRINK_WIDTH,
       label: "Shrink card width",
@@ -290,10 +231,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   ],
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Key matching utilities
-// ─────────────────────────────────────────────────────────────────────────────
-
 /**
  * Characters that are typically produced with Shift on various keyboard layouts.
  * For these, we ignore the Shift modifier when matching because Shift is part
@@ -302,28 +239,21 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
 const SHIFT_PRODUCED_CHARS = new Set([
   "?", "/", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+",
   "{", "}", "|", ":", '"', "<", ">", "~",
-  // Also include characters that might need Shift on some layouts
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
   "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 ]);
 
-/**
- * Checks if a KeyboardEvent matches a KeyCombo
- */
 export function matchesCombo(event: KeyboardEvent, combo: KeyCombo): boolean {
-  // Normalize the key comparison
   const eventKey = event.key;
   const eventCode = event.code;
   const targetKey = combo.key;
 
-  // Check if the main key matches
   const keyMatches =
     eventKey === targetKey ||
     (isLetterKey(targetKey) && eventCode === `Key${targetKey.toUpperCase()}`);
 
   if (!keyMatches) return false;
 
-  // Check modifiers
   const hasCtrl = combo.modifiers.includes("ctrl");
   const hasAlt = combo.modifiers.includes("alt");
   const hasShift = combo.modifiers.includes("shift");
@@ -345,16 +275,10 @@ function isLetterKey(key: string): boolean {
   return /^[a-zA-Z]$/.test(key);
 }
 
-/**
- * Checks if a KeyboardEvent matches any combo in an action
- */
 export function matchesAction(event: KeyboardEvent, action: KeybindingAction): boolean {
   return action.combos.some((c) => matchesCombo(event, c));
 }
 
-/**
- * Finds the first matching action in a list
- */
 export function findMatchingAction(
   event: KeyboardEvent,
   actions: KeybindingAction[]
@@ -362,11 +286,6 @@ export function findMatchingAction(
   return actions.find((action) => matchesAction(event, action)) ?? null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Display utilities
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Map of special keys to their display symbols */
 const KEY_DISPLAY_MAP: Record<string, string> = {
   " ": "␣",
   Enter: "↩",
@@ -380,7 +299,6 @@ const KEY_DISPLAY_MAP: Record<string, string> = {
   Delete: "⌦",
 };
 
-/** Map of modifier keys to their display symbols */
 const MODIFIER_DISPLAY_MAP: Record<Modifier, string> = {
   ctrl: "^",
   alt: "⌥",
@@ -388,16 +306,10 @@ const MODIFIER_DISPLAY_MAP: Record<Modifier, string> = {
   meta: "⌘",
 };
 
-/**
- * Converts a key to its display form
- */
 export function getKeyDisplay(key: string): string {
   return KEY_DISPLAY_MAP[key] ?? key;
 }
 
-/**
- * Converts a KeyCombo to its display string
- */
 export function getComboDisplay(combo: KeyCombo): string {
   if (combo.next) {
     const firstDisplay = getComboDisplay({ key: combo.key, modifiers: combo.modifiers });
@@ -422,23 +334,14 @@ export function getComboDisplay(combo: KeyCombo): string {
   return [...modifierSymbols, keyDisplay].join("");
 }
 
-/**
- * Converts an array of KeyCombos to a display string with "or" separators
- */
 export function getCombosDisplay(combos: KeyCombo[]): string[] {
   return combos.map(getComboDisplay);
 }
 
-/**
- * Checks if a key display should render as an arrow glyph
- */
 export function isArrowKey(display: string): boolean {
   return display === "←" || display === "→" || display === "↑" || display === "↓";
 }
 
-/**
- * Gets the arrow direction from a display string
- */
 export function getArrowDirection(display: string): "left" | "right" | "up" | "down" | null {
   switch (display) {
     case "←":

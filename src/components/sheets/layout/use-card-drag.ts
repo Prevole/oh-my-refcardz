@@ -7,10 +7,6 @@ import { pointerToGridPosition, resolveSectionLayout } from "./layout-algorithms
 import type { DragState, SectionLayoutState, SectionMetricsState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
 export type UseCardDragResult = {
   dragState: DragState | null;
   startCardDrag: (sectionIndex: number, cardIndex: number, event: ReactPointerEvent<HTMLElement>) => void;
@@ -25,12 +21,10 @@ export function useCardDrag(
   const [dragState, setDragState] = useState<DragState | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
 
-  // Keep ref in sync with state for use in event listeners
   useEffect(() => {
     dragStateRef.current = dragState;
   }, [dragState]);
 
-  // Global pointer event listeners for drag
   useEffect(() => {
     if (!editMode || !dragState) return;
 
@@ -87,7 +81,6 @@ export function useCardDrag(
   function startCardDrag(sectionIndex: number, cardIndex: number, event: ReactPointerEvent<HTMLElement>) {
     if (!editMode) return;
 
-    // Ignore clicks on layout control buttons
     if ((event.target as HTMLElement).closest("[data-card-layout-controls]")) return;
 
     const grid = event.currentTarget.closest("[data-sheet-grid]");

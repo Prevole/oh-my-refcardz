@@ -110,11 +110,9 @@ export function SheetCommand({ title, command, aliases, description, example }: 
   }
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
-    // Don't steal clicks intended for the action buttons
     if ((e.target as HTMLElement).closest("[data-sheet-command-actions]")) return;
     const el = ref.current;
     if (!el) return;
-    // Remove highlight from all commands, then set on this one
     document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
       n.dataset.navFocused = "false";
     });
@@ -122,7 +120,6 @@ export function SheetCommand({ title, command, aliases, description, example }: 
     el.focus({ preventScroll: true });
   }
 
-  // Expose DOM node for navigation hook via data attribute
   return (
     <>
       <div
@@ -134,7 +131,6 @@ export function SheetCommand({ title, command, aliases, description, example }: 
         aria-label={title}
         onClick={handleClick}
         onKeyDown={(e) => {
-          // These keys are handled locally when focused; navigation keys are global
           if (matchesAction(e.nativeEvent, ACTION_IDS.COPY_COMMAND)) {
             e.preventDefault();
             handleCopyAction();

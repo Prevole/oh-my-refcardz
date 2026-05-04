@@ -7,7 +7,6 @@ import { ACTION_IDS } from "@/lib/keybindings";
 
 type Direction = "up" | "down" | "left" | "right";
 
-// One navigable node with its 4 pre-computed neighbours
 type NavNode = {
   el: HTMLElement;
   up: HTMLElement | null;
@@ -18,8 +17,6 @@ type NavNode = {
 
 type NavGraph = Map<HTMLElement, NavNode>;
 
-// ─── DOM helpers ────────────────────────────────────────────────────────────
-
 function getCardOf(el: HTMLElement): HTMLElement | null {
   let node: HTMLElement | null = el;
   while (node) {
@@ -28,8 +25,6 @@ function getCardOf(el: HTMLElement): HTMLElement | null {
   }
   return null;
 }
-
-// ─── Grid geometry ──────────────────────────────────────────────────────────
 
 type GridPos = { gridCol: number; gridRow: number };
 
@@ -43,11 +38,9 @@ function computeCardGridPositions(
 ): Map<HTMLElement, GridPos> {
   const rects = cards.map((c) => ({ el: c, r: c.getBoundingClientRect() }));
 
-  // Collect unique X centers → sort → assign col index
   const xs = rects.map((c) => c.r.left + c.r.width / 2);
   const colBuckets = cluster(xs, threshold);
 
-  // Collect unique Y tops → sort → assign row index
   const ys = rects.map((c) => c.r.top);
   const rowBuckets = cluster(ys, threshold);
 
@@ -63,7 +56,6 @@ function computeCardGridPositions(
   return result;
 }
 
-/** Returns sorted unique representatives of clusters */
 function cluster(values: number[], threshold: number): number[] {
   const sorted = [...values].sort((a, b) => a - b);
   const buckets: number[] = [];
@@ -74,8 +66,6 @@ function cluster(values: number[], threshold: number): number[] {
   }
   return buckets;
 }
-
-// ─── Graph builder ──────────────────────────────────────────────────────────
 
 /**
  * Builds a navigation graph for all [data-sheet-command] elements.
@@ -94,7 +84,6 @@ function cluster(values: number[], threshold: number): number[] {
 function buildGraph(allNodes: HTMLElement[]): NavGraph {
   if (allNodes.length === 0) return new Map();
 
-  // 1. Group nodes by parent card, sort each group top-to-bottom
   const cardToNodes = new Map<HTMLElement, HTMLElement[]>();
   for (const node of allNodes) {
     const card = getCardOf(node);
@@ -110,11 +99,9 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
     });
   }
 
-  // 2. Compute grid positions for all cards
   const cards = [...cardToNodes.keys()];
   const gridPos = computeCardGridPositions(cards);
 
-  // 3. Build lookup: (gridCol, gridRow) → sorted node list
   type Key = string;
   const gridKey = (gc: number, gr: number): Key => `${gc},${gr}`;
   const gridToNodes = new Map<Key, HTMLElement[]>();
@@ -124,11 +111,9 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
     gridToNodes.set(key, cardToNodes.get(card)!);
   }
 
-  // Helper: get nodes in a grid cell
   const nodesAt = (gc: number, gr: number) =>
     gridToNodes.get(gridKey(gc, gr)) ?? null;
 
-  // 4. Build the graph node for each element
   const graph: NavGraph = new Map();
 
   for (const card of cards) {
@@ -139,21 +124,16 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
     for (let localIdx = 0; localIdx < siblings.length; localIdx++) {
       const el = siblings[localIdx];
 
-      // ── up ──────────────────────────────────────────────────────────────
       let upEl: HTMLElement | null = null;
       if (localIdx > 0) {
-        // Previous sibling in same card
         upEl = siblings[localIdx - 1];
       } else {
-        // Cross into card above — same col first, then adjacent cols
         const above = nodesAt(gridCol, gridRow - 1);
         if (above) {
           upEl = above[above.length - 1];
         } else {
-          // Same row above doesn't exist — search adjacent cols on gridRow-1
           const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
           for (let gr = gridRow - 1; gr >= 0; gr--) {
-            // Search outward from current col: right then left
             for (let offset = 1; offset <= maxCol; offset++) {
               for (const gc of [gridCol + offset, gridCol - offset]) {
                 if (gc < 0 || gc > maxCol) continue;
@@ -170,22 +150,17 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
         }
       }
 
-      // ── down ────────────────────────────────────────────────────────────
       let downEl: HTMLElement | null = null;
       if (localIdx < siblings.length - 1) {
-        // Next sibling in same card
         downEl = siblings[localIdx + 1];
       } else {
-        // Cross into card below — same col first, then adjacent cols
         const below = nodesAt(gridCol, gridRow + 1);
         if (below) {
           downEl = below[0];
         } else {
-          // Same col below doesn't exist — search adjacent cols on gridRow+1
           const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
           const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
           for (let gr = gridRow + 1; gr <= maxRow; gr++) {
-            // Search outward from current col: right then left
             for (let offset = 1; offset <= maxCol; offset++) {
               for (const gc of [gridCol + offset, gridCol - offset]) {
                 if (gc < 0 || gc > maxCol) continue;
@@ -202,12 +177,10 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
         }
       }
 
-      // ── left ────────────────────────────────────────────────────────────
       let leftEl: HTMLElement | null = null;
       {
         const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
 
-        // 1. Try same gridRow, columns to the left — skip empty cells
         for (let gc = gridCol - 1; gc >= 0; gc--) {
           const candidate = nodesAt(gc, gridRow);
           if (candidate) {
@@ -216,8 +189,6 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
           }
         }
 
-        // 2. If nothing found on same row, look on the row below:
-        //    try col gridCol-1 … 0 on gridRow+1, take first element
         if (!leftEl) {
           for (let gr = gridRow + 1; gr <= maxRow; gr++) {
             for (let gc = gridCol - 1; gc >= 0; gc--) {
@@ -232,12 +203,10 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
         }
       }
 
-      // ── right ───────────────────────────────────────────────────────────
       let rightEl: HTMLElement | null = null;
       {
         const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
 
-        // 1. Try same gridRow, columns to the right — skip empty cells
         for (let gc = gridCol + 1; gc <= maxCol; gc++) {
           const candidate = nodesAt(gc, gridRow);
           if (candidate) {
@@ -246,8 +215,6 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
           }
         }
 
-        // 2. If nothing found on same row, look on the row above:
-        //    try col gridCol+1 … maxCol on gridRow-1, take last element
         if (!rightEl) {
           for (let gr = gridRow - 1; gr >= 0; gr--) {
             for (let gc = gridCol + 1; gc <= maxCol; gc++) {
@@ -268,8 +235,6 @@ function buildGraph(allNodes: HTMLElement[]): NavGraph {
 
   return graph;
 }
-
-// ─── Hook ───────────────────────────────────────────────────────────────────
 
 type UseCommandNavigationOptions = {
   modalOpen: boolean;
@@ -295,7 +260,6 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     };
 
     function setFocused(el: HTMLElement | null) {
-      // Remove highlight from any previously focused command
       document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
         n.dataset.navFocused = "false";
       });
@@ -312,7 +276,6 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
 
       const focused = getFocused();
       if (!focused) {
-        // Focus first node in graph (top-left)
         const first = graphRef.current.keys().next().value;
         if (first) setFocused(first);
         return;
@@ -325,13 +288,11 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       if (target) setFocused(target);
     }
 
-    // Build on first use; rebuild on resize (layout may reflow)
     rebuildGraph();
 
     const onResize = () => rebuildGraph();
     window.addEventListener("resize", onResize);
 
-    // Clean up highlight when focus leaves a command entirely
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget as HTMLElement | null;
       if (!next || next.dataset.sheetCommand === undefined) {
@@ -343,7 +304,6 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     document.addEventListener("focusout", onFocusOut);
 
     const onKeyDown = (e: KeyboardEvent) => {
-      // Only handle keys when global scope is active (no panels/modals open)
       if (!isScopeActive("global")) return;
 
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();

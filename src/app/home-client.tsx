@@ -58,12 +58,10 @@ export function HomeClient({ categories }: Props) {
   const hasRestoredSelectionRef = useRef(false);
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
 
-  // Keyboard context scopes - panels push their scope when open
   useKeyboardScope("settings", settingsPanelOpen);
   useKeyboardScope("help", helpOpen);
   useKeyboardScope("info", infoOpen);
 
-  // UI Settings
   const {
     settings: uiSettings,
     setColorMode,
@@ -74,7 +72,6 @@ export function HomeClient({ categories }: Props) {
     resetModern,
   } = useUISettings();
 
-  // Keybindings
   const { resolveAction } = useKeybindings();
 
   const getGradientCoords = () => {
@@ -93,7 +90,6 @@ export function HomeClient({ categories }: Props) {
     "--hex-card-ratio": HEX_CARD_RATIO,
   } as CSSProperties;
 
-  // Responsive column calculation
   useEffect(() => {
     const node = boardMeasureRef.current;
     if (!node) return;
@@ -116,7 +112,6 @@ export function HomeClient({ categories }: Props) {
     return () => observer.disconnect();
   }, []);
 
-  // Filter categories based on search query
   const visibleCategories = useMemo(() => {
     const normalized = query.toLowerCase().trim();
     if (!normalized) return categories;
@@ -135,7 +130,6 @@ export function HomeClient({ categories }: Props) {
       .filter((category) => category.sheets.length > 0);
   }, [categories, query]);
 
-  // Build hex layouts for each category
   const categoryLayouts = useMemo(() => {
     return visibleCategories.map((category) => ({
       category,
@@ -143,7 +137,6 @@ export function HomeClient({ categories }: Props) {
     }));
   }, [visibleCategories, columns]);
 
-  // Flatten rows for navigation
   const navigationRows = useMemo(() => {
     return categoryLayouts.flatMap(({ rows }) => rows);
   }, [categoryLayouts]);
@@ -152,7 +145,6 @@ export function HomeClient({ categories }: Props) {
     return categoryLayouts.flatMap(({ rows }) => rows.map((_, rowIndex) => rowIndex % 2));
   }, [categoryLayouts]);
 
-  // Flatten all visible cards
   const visibleCards = useMemo(() => {
     return categoryLayouts.flatMap(({ category }) => category.sheets);
   }, [categoryLayouts]);
@@ -167,7 +159,6 @@ export function HomeClient({ categories }: Props) {
 
   const selectedCard = visibleCards[selectedIndex] ?? null;
 
-  // Index maps for fast lookup
   const cardIndexBySlug = useMemo(() => {
     const map = new Map<string, number>();
     visibleCards.forEach((card, index) => {
@@ -197,7 +188,6 @@ export function HomeClient({ categories }: Props) {
     return map;
   }, [categoryLayouts]);
 
-  // Calculate interpolated colors for grid mode
   const sheetGridColors = useMemo(() => {
     if (uiSettings.modern.colorMode !== "grid") return new Map<string, string>();
 
@@ -218,7 +208,6 @@ export function HomeClient({ categories }: Props) {
     return colorMap;
   }, [categoryLayouts, uiSettings.modern.colorMode]);
 
-  // Calculate accent color for selected card (hexa: colorTo, grid: interpolated color, category: colorFrom)
   const selectedAccentColor = useMemo(() => {
     if (!selectedCard) return null;
 
@@ -239,7 +228,6 @@ export function HomeClient({ categories }: Props) {
     return null;
   }, [selectedCard, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
 
-  // Helper to calculate accent color for any slug
   const getAccentColorForSlug = useCallback((slug: string): string | null => {
     const card = cardBySlug.get(slug);
     if (!card) return null;
@@ -258,11 +246,9 @@ export function HomeClient({ categories }: Props) {
       return card.colorFrom;
     }
 
-    // Normal mode: use sheet's own color
     return card.color;
   }, [cardBySlug, navigationBySlug, sheetGridColors, uiSettings.modern.colorMode]);
 
-  // Restore selection from session storage
   useEffect(() => {
     if (hasRestoredSelectionRef.current || visibleCards.length === 0) return;
 
@@ -280,7 +266,6 @@ export function HomeClient({ categories }: Props) {
     hasRestoredSelectionRef.current = true;
   }, [visibleCards]);
 
-  // Persist selection to session storage
   useEffect(() => {
     if (!selectedCard) return;
     window.sessionStorage.setItem(SELECTED_SHEET_STORAGE_KEY, selectedCard.slug);
@@ -289,7 +274,6 @@ export function HomeClient({ categories }: Props) {
   const openSheet = useCallback(
     (slug: string) => {
       window.sessionStorage.setItem(SELECTED_SHEET_STORAGE_KEY, slug);
-      // Store the calculated accent color for the sheet page to use
       const accentColor = getAccentColorForSlug(slug);
       if (accentColor) {
         window.sessionStorage.setItem(SELECTED_SHEET_ACCENT_KEY, accentColor);
@@ -335,7 +319,6 @@ export function HomeClient({ categories }: Props) {
     [cardIndexBySlug, navigationBySlug, navigationRowParityByIndex, navigationRows, selectedCard]
   );
 
-  // Global keyboard shortcuts (only active when no panel is open)
   const handleGlobalKeyDown = useCallback(
     (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -356,7 +339,6 @@ export function HomeClient({ categories }: Props) {
         ACTION_IDS.OPEN_SHEET,
       ]);
 
-      // Global actions (work even in input, except for clear search)
       if (matchedAction === ACTION_IDS.TOGGLE_HELP) {
         event.preventDefault();
         setHelpOpen(true);
@@ -369,9 +351,7 @@ export function HomeClient({ categories }: Props) {
         return;
       }
 
-      // Home-specific actions (don't trigger when in input)
       if (isInInput) {
-        // Only clear search works in input
         if (matchedAction === ACTION_IDS.CLEAR_SEARCH) {
           setQuery("");
           target.blur();
@@ -504,28 +484,23 @@ export function HomeClient({ categories }: Props) {
                     const isGridMode = uiSettings.modern.colorMode === "grid";
                     const isCategoryMode = uiSettings.modern.colorMode === "category";
 
-                    // Determine colors based on mode
                     let primaryColor: string;
                     let secondaryColor: string;
                     let titleColor: string;
 
                     if (isGridMode && gridColor) {
-                      // Grid mode: single interpolated color
                       primaryColor = gridColor;
                       secondaryColor = gridColor;
                       titleColor = gridColor;
                     } else if (isHexaMode) {
-                      // Hexa mode: gradient from category color to column color
                       primaryColor = sheet.colorFrom;
                       secondaryColor = hexaColorTo;
                       titleColor = sheet.colorFrom; // Will use gradient CSS
                     } else if (isCategoryMode) {
-                      // Category mode: single color per category
                       primaryColor = sheet.colorFrom;
                       secondaryColor = sheet.colorFrom;
                       titleColor = sheet.colorFrom;
                     } else {
-                      // Normal mode: sheet's own color
                       primaryColor = sheet.color;
                       secondaryColor = sheet.color;
                       titleColor = sheet.color;
@@ -668,15 +643,12 @@ export function HomeClient({ categories }: Props) {
         ) : null}
       </main>
 
-      {/* Help Button */}
       <HelpButton onClick={() => setHelpOpen(true)} />
 
-      {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsPanelOpen(true)} />
 
       <SectionNavigation items={categoryNavigationItems} ariaLabel="Category navigation" />
 
-      {/* Settings Panel */}
       <SettingsPanel
         isOpen={settingsPanelOpen}
         onClose={() => setSettingsPanelOpen(false)}

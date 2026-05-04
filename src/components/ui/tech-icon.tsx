@@ -11,7 +11,6 @@ type Props = {
 
 const DEFAULT_ICON = "/icons/default.svg";
 
-// Module-level cache to avoid repeated fetches across renders and instances
 const svgCache = new Map<string, string>();
 const pendingFetches = new Map<string, Promise<string | null>>();
 
@@ -24,17 +23,14 @@ function getCachedSvg(iconPath: string): string | null {
 }
 
 async function fetchSvg(path: string): Promise<string | null> {
-  // Return cached result if available
   if (svgCache.has(path)) {
     return svgCache.get(path)!;
   }
 
-  // Return pending fetch if one is already in progress
   if (pendingFetches.has(path)) {
     return pendingFetches.get(path)!;
   }
 
-  // Start new fetch and track it
   const fetchPromise = (async () => {
     try {
       const response = await fetch(path);
@@ -63,7 +59,6 @@ export function TechIcon({ icon, color, className = "", style }: Props) {
   useEffect(() => {
     const currentIconPath = getIconPath(icon);
 
-    // Already have content for this icon
     const cached = getCachedSvg(currentIconPath);
     if (cached && svgContent === cached) {
       return;
@@ -78,7 +73,6 @@ export function TechIcon({ icon, color, className = "", style }: Props) {
       if (svg) {
         setSvgContent(svg);
       } else if (currentIconPath !== DEFAULT_ICON) {
-        // Fallback to default icon
         const fallbackSvg = await fetchSvg(DEFAULT_ICON);
         if (!cancelled && fallbackSvg) {
           setSvgContent(fallbackSvg);

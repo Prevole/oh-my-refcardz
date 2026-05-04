@@ -17,10 +17,6 @@ import {
   HEX_CELL_SIZE_MOBILE,
 } from "./constants";
 
-// ---------------------------------------------------------------------------
-// getHexMetrics
-// ---------------------------------------------------------------------------
-
 describe("getHexMetrics", () => {
   it("calculates metrics for desktop hex size", () => {
     const metrics = getHexMetrics(HEX_CELL_SIZE_DESKTOP);
@@ -81,10 +77,6 @@ describe("getHexMetrics", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// buildHexRows
-// ---------------------------------------------------------------------------
-
 describe("buildHexRows", () => {
   it("returns empty array for empty items", () => {
     const rows = buildHexRows([], 3);
@@ -114,9 +106,6 @@ describe("buildHexRows", () => {
     const items = ["a", "b", "c", "d", "e", "f", "g"];
     const rows = buildHexRows(items, 3);
 
-    // Row 0 (even): 3 items
-    // Row 1 (odd): 2 items
-    // Row 2 (even): 2 items (remaining)
     expect(rows[0]).toEqual(["a", "b", "c"]);
     expect(rows[1]).toEqual(["d", "e"]);
     expect(rows[2]).toEqual(["f", "g"]);
@@ -126,15 +115,14 @@ describe("buildHexRows", () => {
     const items = ["a", "b", "c", "d", "e"];
     const rows = buildHexRows(items, 3);
 
-    expect(rows[0].length).toBe(3); // even row
-    expect(rows[1].length).toBe(2); // odd row (columns - 1)
+    expect(rows[0].length).toBe(3);
+    expect(rows[1].length).toBe(2);
   });
 
   it("handles columns = 1", () => {
     const items = ["a", "b", "c"];
     const rows = buildHexRows(items, 1);
 
-    // With columns = 1, odd rows would have max(1, 0) = 1 item
     expect(rows).toEqual([["a"], ["b"], ["c"]]);
   });
 
@@ -146,10 +134,6 @@ describe("buildHexRows", () => {
     expect(flattened).toEqual(items);
   });
 });
-
-// ---------------------------------------------------------------------------
-// getHexRowWidth
-// ---------------------------------------------------------------------------
 
 describe("getHexRowWidth", () => {
   it("calculates width for single column", () => {
@@ -183,14 +167,9 @@ describe("getHexRowWidth", () => {
     const width = getHexRowWidth(0, 100);
     const metrics = getHexMetrics(100);
 
-    // Math.max(0, 0 - 1) * step = 0, so just cardInset + hexCardWidth
     expect(width).toBeCloseTo(metrics.cardInset + metrics.hexCardWidth);
   });
 });
-
-// ---------------------------------------------------------------------------
-// getHexBoardDimensions
-// ---------------------------------------------------------------------------
 
 describe("getHexBoardDimensions", () => {
   it("returns hexWidth as height for empty rows", () => {
@@ -207,7 +186,6 @@ describe("getHexBoardDimensions", () => {
     const dimensions = getHexBoardDimensions(rows, hexWidth);
     const metrics = getHexMetrics(hexWidth);
 
-    // Row 0 has 3 items, row 1 has 2 items + oddRowOffset
     const row0Width = getHexRowWidth(3, hexWidth);
     const row1Width = getHexRowWidth(2, hexWidth) + metrics.oddRowOffset;
 
@@ -220,7 +198,6 @@ describe("getHexBoardDimensions", () => {
     const dimensions = getHexBoardDimensions(rows, hexWidth);
     const metrics = getHexMetrics(hexWidth);
 
-    // height = (rows.length - 1) * verticalStep + hexWidth
     expect(dimensions.height).toBeCloseTo(2 * metrics.verticalStep + hexWidth);
   });
 
@@ -232,10 +209,6 @@ describe("getHexBoardDimensions", () => {
     expect(dimensions.height).toBeCloseTo(hexWidth);
   });
 });
-
-// ---------------------------------------------------------------------------
-// getMaxColumnsForWidth
-// ---------------------------------------------------------------------------
 
 describe("getMaxColumnsForWidth", () => {
   it("returns 1 for very narrow width", () => {

@@ -9,10 +9,6 @@ import {
 import type { SectionLayoutState } from "./layout-types";
 import type { YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 
-// ---------------------------------------------------------------------------
-// Test fixtures
-// ---------------------------------------------------------------------------
-
 function createMockSheet(sectionCardCounts: number[]): YamlCheatSheet {
   return {
     slug: "test-sheet",
@@ -40,10 +36,6 @@ function createValidLayout(sectionCardCounts: number[]): SectionLayoutState[] {
   }));
 }
 
-// ---------------------------------------------------------------------------
-// buildStorageKey
-// ---------------------------------------------------------------------------
-
 describe("buildStorageKey", () => {
   it("creates storage key with prefix", () => {
     expect(buildStorageKey("git")).toBe("sheet-layout:git");
@@ -57,10 +49,6 @@ describe("buildStorageKey", () => {
     expect(buildStorageKey("")).toBe("sheet-layout:");
   });
 });
-
-// ---------------------------------------------------------------------------
-// areLayoutsEqual
-// ---------------------------------------------------------------------------
 
 describe("areLayoutsEqual", () => {
   it("returns true for identical layouts", () => {
@@ -103,10 +91,6 @@ describe("areLayoutsEqual", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// isValidStoredLayout
-// ---------------------------------------------------------------------------
-
 describe("isValidStoredLayout", () => {
   describe("structure validation", () => {
     it("returns true for valid layout matching sheet structure", () => {
@@ -127,14 +111,14 @@ describe("isValidStoredLayout", () => {
 
     it("returns false when section count mismatches", () => {
       const sheet = createMockSheet([2, 3]);
-      const layout = createValidLayout([2]); // Missing one section
+      const layout = createValidLayout([2]);
 
       expect(isValidStoredLayout(layout, sheet)).toBe(false);
     });
 
     it("returns false when card count mismatches", () => {
       const sheet = createMockSheet([2, 3]);
-      const layout = createValidLayout([2, 2]); // Second section has 2 instead of 3
+      const layout = createValidLayout([2, 2]);
 
       expect(isValidStoredLayout(layout, sheet)).toBe(false);
     });
@@ -271,10 +255,6 @@ describe("isValidStoredLayout", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// mergeStoredLayouts
-// ---------------------------------------------------------------------------
-
 describe("mergeStoredLayouts", () => {
   it("uses stored values when present", () => {
     const stored: SectionLayoutState[] = [
@@ -291,7 +271,7 @@ describe("mergeStoredLayouts", () => {
 
   it("uses default values when stored card is missing", () => {
     const stored: SectionLayoutState[] = [
-      { cards: [] }, // Empty cards array
+      { cards: [] },
     ];
     const defaults: SectionLayoutState[] = [
       { cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }] },
@@ -317,7 +297,6 @@ describe("mergeStoredLayouts", () => {
 
     const result = mergeStoredLayouts(stored, defaults);
 
-    // First card uses stored, second uses default
     expect(result[0].cards[0]).toEqual({ colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 });
     expect(result[0].cards[1]).toEqual({ colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 });
   });
@@ -338,10 +317,6 @@ describe("mergeStoredLayouts", () => {
     expect(result[1].cards[0].colStart).toBe(6);
   });
 });
-
-// ---------------------------------------------------------------------------
-// parseStoredLayouts
-// ---------------------------------------------------------------------------
 
 describe("parseStoredLayouts", () => {
   it("returns null for null input", () => {

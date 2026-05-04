@@ -25,10 +25,6 @@ export type CheatSheetCategory = {
   sheets: CheatSheetMeta[];
 };
 
-// ---------------------------------------------------------------------------
-// Schema
-// ---------------------------------------------------------------------------
-
 const commandItemSchema = z.object({
   type: z.literal("command"),
   title: z.string().min(1),
@@ -78,10 +74,6 @@ export const categoryMetaSchema = z.object({
   description: z.string().min(1),
 });
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 export type CommandItem = z.infer<typeof commandItemSchema>;
 export type ShortcutItem = z.infer<typeof shortcutItemSchema>;
 export type ConfigItem = z.infer<typeof configItemSchema>;
@@ -90,15 +82,10 @@ export type CheatSheetCard = z.infer<typeof cardSchema>;
 export type CheatSheetSection = z.infer<typeof sectionSchema>;
 export type YamlCheatSheet = z.infer<typeof yamlCheatSheetSchema>;
 
-/** Extended YamlCheatSheet with category color information */
 export type YamlCheatSheetWithMeta = YamlCheatSheet & {
   colorFrom: string;
   categoryId: string;
 };
-
-// ---------------------------------------------------------------------------
-// FS reader
-// ---------------------------------------------------------------------------
 
 const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
 
@@ -289,7 +276,6 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
   const files = await listSheetFiles(contentDirectory);
   assertUniqueSlugs(files);
 
-  // First pass: read all sheets without category colors (we need category order first)
   const sheetsRaw = await Promise.all(
     files.map(async (file) => {
       const parsed = await readSheetFile(file);
@@ -306,7 +292,6 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     })
   );
 
-  // Group by category
   const grouped = new Map<string, typeof sheetsRaw>();
   for (const sheet of sheetsRaw) {
     const group = grouped.get(sheet.categoryId);
@@ -317,10 +302,8 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     }
   }
 
-  // Build categories with metadata and compute order
   const categories = await Promise.all(
     Array.from(grouped.entries()).map(async ([categoryId, categorySheets]) => {
-      // Sort sheets alphabetically by title
       categorySheets.sort((a, b) => a.title.localeCompare(b.title));
       const { folderName, order, fallbackName } = getSheetCategoryMeta(
         categoryId === "__root__" ? null : categoryId
@@ -338,7 +321,6 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     })
   );
 
-  // Sort categories by order
   categories.sort((a, b) => {
     if (a.order !== b.order) {
       return a.order - b.order;
@@ -346,7 +328,6 @@ export async function getAllCheatSheetsMeta(): Promise<CheatSheetCategory[]> {
     return a.fallbackName.localeCompare(b.fallbackName);
   });
 
-  // Now assign colors based on category order
   return categories.map(({ id, title, description, order, sheetsRaw: categorySheets }) => {
     const categoryColor = getCategoryPrimaryColor(order);
     const gradientPair = getCategoryGradientPair(order);

@@ -49,7 +49,6 @@ function getRandomModernSettings(): ModernSettings {
   return { random: true, colorMode, border, direction };
 }
 
-// In-memory cache to track if we've already randomized
 let hasRandomizedThisSession = false;
 let cachedSettings: UISettings | null = null;
 
@@ -58,7 +57,6 @@ function loadSettings(): UISettings {
     return DEFAULT_SETTINGS;
   }
 
-  // Return cached settings if we've already loaded them
   if (cachedSettings !== null) {
     return cachedSettings;
   }
@@ -67,14 +65,12 @@ function loadSettings(): UISettings {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as UISettings;
-      // Merge with defaults to handle missing fields
       const merged = {
         ...DEFAULT_SETTINGS,
         ...parsed,
         modern: { ...DEFAULT_SETTINGS.modern, ...parsed.modern },
         accordion: { ...DEFAULT_SETTINGS.accordion, ...parsed.accordion },
       };
-      // If random is enabled and we haven't randomized this session, randomize
       if (merged.modern?.random && !hasRandomizedThisSession) {
         hasRandomizedThisSession = true;
         cachedSettings = {
@@ -87,7 +83,6 @@ function loadSettings(): UISettings {
       return merged;
     }
   } catch {
-    // Ignore parse errors
   }
 
   cachedSettings = DEFAULT_SETTINGS;
@@ -102,18 +97,15 @@ function saveSettings(settings: UISettings): void {
   try {
     cachedSettings = settings;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    // Dispatch storage event to notify other subscribers
     window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
   } catch {
-    // Ignore storage errors
   }
 }
 
-// Subscribe to storage changes
 function subscribe(callback: () => void): () => void {
   const handleStorageChange = (event: StorageEvent) => {
     if (event.key === STORAGE_KEY || event.key === null) {
-      cachedSettings = null; // Invalidate cache
+      cachedSettings = null;
       callback();
     }
   };
@@ -129,7 +121,6 @@ function getServerSnapshot(): UISettings {
   return DEFAULT_SETTINGS;
 }
 
-// Context type
 interface UISettingsContextValue {
   settings: UISettings;
   isLoaded: boolean;

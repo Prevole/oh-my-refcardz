@@ -13,7 +13,6 @@ type Props = {
 };
 
 export function HomeHelpModal({ open, onClose }: Props) {
-  // Handle Escape key to close modal (only when help scope is active)
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape" || event.key === "?") {
@@ -32,7 +31,6 @@ export function HomeHelpModal({ open, onClose }: Props) {
         KEYBOARD SHORTCUTS
       </p>
 
-      {/* Navigation */}
       <h3 className="mt-4 text-xl font-semibold">Navigation</h3>
       <table className={`${keybindingStyles.legendTable} mt-3`}>
         <colgroup>
@@ -62,7 +60,6 @@ export function HomeHelpModal({ open, onClose }: Props) {
         </tbody>
       </table>
 
-      {/* Search */}
       <h3 className="mt-6 text-xl font-semibold">Search</h3>
       <table className={`${keybindingStyles.legendTable} mt-3`}>
         <colgroup>
@@ -79,7 +76,6 @@ export function HomeHelpModal({ open, onClose }: Props) {
         </tbody>
       </table>
 
-      {/* Misc */}
       <h3 className="mt-6 text-xl font-semibold">Misc</h3>
       <table className={`${keybindingStyles.legendTable} mt-3`}>
         <colgroup>

@@ -10,21 +10,15 @@ type Props = {
   className?: string;
 };
 
-/**
- * Modal wrapper with backdrop click-to-close and focus trap.
- */
 export function Modal({ open, onClose, children, className = "" }: Props) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
-  // Focus trap and restore focus on close
   useEffect(() => {
     if (!open) return;
 
-    // Store currently focused element to restore later
     previousActiveElement.current = document.activeElement as HTMLElement;
 
-    // Focus the modal container
     modalRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -43,13 +37,11 @@ export function Modal({ open, onClose, children, className = "" }: Props) {
       const lastElement = focusableElements[focusableElements.length - 1];
 
       if (event.shiftKey) {
-        // Shift+Tab: if on first element, wrap to last
         if (document.activeElement === firstElement) {
           event.preventDefault();
           lastElement.focus();
         }
       } else {
-        // Tab: if on last element, wrap to first
         if (document.activeElement === lastElement) {
           event.preventDefault();
           firstElement.focus();
@@ -61,7 +53,6 @@ export function Modal({ open, onClose, children, className = "" }: Props) {
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      // Restore focus when modal closes
       previousActiveElement.current?.focus();
     };
   }, [open]);

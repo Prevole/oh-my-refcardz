@@ -1,17 +1,9 @@
 import { GRID_COLUMNS, GRID_GAP_PX } from "../sheet-grid";
 import { MAX_ROW_SPAN, type CardLayoutState } from "./layout-types";
 
-// ---------------------------------------------------------------------------
-// Utility
-// ---------------------------------------------------------------------------
-
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
-
-// ---------------------------------------------------------------------------
-// Grid position conversion
-// ---------------------------------------------------------------------------
 
 export function pointerToGridPosition(
   clientX: number,
@@ -29,10 +21,6 @@ export function pointerToGridPosition(
     rowStart: Math.max(1, rawRow),
   };
 }
-
-// ---------------------------------------------------------------------------
-// Collision detection
-// ---------------------------------------------------------------------------
 
 export function hasCollision(occupied: Set<string>, card: CardLayoutState): boolean {
   for (let row = card.rowStart; row < card.rowStart + card.rowSpan; row++) {
@@ -53,10 +41,6 @@ export function markOccupied(occupied: Set<string>, card: CardLayoutState): void
     }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Card placement
-// ---------------------------------------------------------------------------
 
 export function clampCardLayoutToGrid(card: CardLayoutState): CardLayoutState {
   const colSpan = clamp(card.colSpan, 1, GRID_COLUMNS);
@@ -87,10 +71,6 @@ export function placeCardAtNearestSlot(card: CardLayoutState, occupied: Set<stri
 
   return { ...card, colStart: 1, rowStart: startRow };
 }
-
-// ---------------------------------------------------------------------------
-// Section layout resolution
-// ---------------------------------------------------------------------------
 
 export function resolveSectionLayout(
   cards: CardLayoutState[],

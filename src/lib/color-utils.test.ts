@@ -6,10 +6,6 @@ import {
   getGridInterpolationFactor,
 } from "./color-utils";
 
-// ---------------------------------------------------------------------------
-// hexToHSL
-// ---------------------------------------------------------------------------
-
 describe("hexToHSL", () => {
   describe("basic colors", () => {
     it("converts pure red", () => {
@@ -23,7 +19,7 @@ describe("hexToHSL", () => {
     it("converts pure green", () => {
       const hsl = hexToHSL("#00FF00");
 
-      expect(hsl.h).toBeCloseTo(1 / 3); // 120° / 360° = 0.333
+      expect(hsl.h).toBeCloseTo(1 / 3);
       expect(hsl.s).toBeCloseTo(1);
       expect(hsl.l).toBeCloseTo(0.5);
     });
@@ -31,7 +27,7 @@ describe("hexToHSL", () => {
     it("converts pure blue", () => {
       const hsl = hexToHSL("#0000FF");
 
-      expect(hsl.h).toBeCloseTo(2 / 3); // 240° / 360° = 0.666
+      expect(hsl.h).toBeCloseTo(2 / 3);
       expect(hsl.s).toBeCloseTo(1);
       expect(hsl.l).toBeCloseTo(0.5);
     });
@@ -89,7 +85,7 @@ describe("hexToHSL", () => {
     it("converts cyan (#00FFFF)", () => {
       const hsl = hexToHSL("#00FFFF");
 
-      expect(hsl.h).toBeCloseTo(0.5); // 180° / 360°
+      expect(hsl.h).toBeCloseTo(0.5);
       expect(hsl.s).toBeCloseTo(1);
       expect(hsl.l).toBeCloseTo(0.5);
     });
@@ -97,7 +93,7 @@ describe("hexToHSL", () => {
     it("converts magenta (#FF00FF)", () => {
       const hsl = hexToHSL("#FF00FF");
 
-      expect(hsl.h).toBeCloseTo(5 / 6); // 300° / 360°
+      expect(hsl.h).toBeCloseTo(5 / 6);
       expect(hsl.s).toBeCloseTo(1);
       expect(hsl.l).toBeCloseTo(0.5);
     });
@@ -105,16 +101,12 @@ describe("hexToHSL", () => {
     it("converts yellow (#FFFF00)", () => {
       const hsl = hexToHSL("#FFFF00");
 
-      expect(hsl.h).toBeCloseTo(1 / 6); // 60° / 360°
+      expect(hsl.h).toBeCloseTo(1 / 6);
       expect(hsl.s).toBeCloseTo(1);
       expect(hsl.l).toBeCloseTo(0.5);
     });
   });
 });
-
-// ---------------------------------------------------------------------------
-// hslToHex
-// ---------------------------------------------------------------------------
 
 describe("hslToHex", () => {
   describe("basic colors", () => {
@@ -190,10 +182,6 @@ describe("hslToHex", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// interpolateHSL
-// ---------------------------------------------------------------------------
-
 describe("interpolateHSL", () => {
   describe("basic interpolation", () => {
     it("returns start color at t=0", () => {
@@ -209,11 +197,9 @@ describe("interpolateHSL", () => {
     });
 
     it("returns midpoint color at t=0.5", () => {
-      // Red to blue, midpoint should be somewhere in between
       const result = interpolateHSL("#FF0000", "#0000FF", 0.5);
       const hsl = hexToHSL(result);
 
-      // Should be in the magenta area (around 300° = 5/6)
       expect(hsl.h).toBeGreaterThan(0.6);
       expect(hsl.h).toBeLessThan(0.9);
     });
@@ -244,19 +230,15 @@ describe("interpolateHSL", () => {
 
   describe("hue shortest path", () => {
     it("takes shortest path around color wheel", () => {
-      // Red (h=0) to magenta (h≈0.83) should go backwards through 1
-      // rather than forwards through 0.5
       const result = interpolateHSL("#FF0000", "#FF00FF", 0.5);
       const hsl = hexToHSL(result);
 
-      // Should be around pink/rose area, not cyan/green
       expect(hsl.s).toBeCloseTo(1, 1);
     });
   });
 
   describe("saturation and lightness interpolation", () => {
     it("interpolates saturation", () => {
-      // Vivid red to gray-ish red
       const vivid = "#FF0000";
       const muted = "#804040"; // less saturated red
 

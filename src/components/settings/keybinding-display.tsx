@@ -12,10 +12,6 @@ import {
 } from "@/lib/keybindings";
 import keybindingStyles from "./keybinding-display.module.css";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// KeycapDisplay - Renders a single keycap with proper styling
-// ─────────────────────────────────────────────────────────────────────────────
-
 type KeycapVariant = "inline" | "legend";
 
 type KeycapDisplayProps = {
@@ -38,7 +34,6 @@ function KeycapDisplayInner({ display, variant = "inline" }: KeycapDisplayProps)
     }
   }
 
-  // Check for small-caps display (esc)
   if (display === "esc") {
     return (
       <span className={className}>
@@ -50,10 +45,6 @@ function KeycapDisplayInner({ display, variant = "inline" }: KeycapDisplayProps)
   return <span className={className}>{display}</span>;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ComboDisplay - Renders a single key combo
-// ─────────────────────────────────────────────────────────────────────────────
-
 type ComboDisplayProps = {
   combo: KeyCombo;
   variant?: KeycapVariant;
@@ -63,10 +54,6 @@ export function ComboDisplay({ combo, variant = "inline" }: ComboDisplayProps) {
   const display = getComboDisplay(combo);
   return <KeycapDisplayInner display={display} variant={variant} />;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CombosDisplay - Renders multiple combos with "or" separator
-// ─────────────────────────────────────────────────────────────────────────────
 
 type CombosDisplayProps = {
   combos: KeyCombo[];
@@ -89,10 +76,6 @@ export function CombosDisplay({ combos, variant = "inline", maxCombos }: CombosD
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ActionKeybinding - Renders keybinding(s) for an action by ID
-// ─────────────────────────────────────────────────────────────────────────────
-
 type ActionKeybindingProps = {
   actionId: ActionId;
   variant?: KeycapVariant;
@@ -114,10 +97,6 @@ export function ActionKeybinding({
   return <CombosDisplay combos={action.combos} variant={variant} maxCombos={maxCombos} />;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ActionLabel - Renders just the label for an action by ID
-// ─────────────────────────────────────────────────────────────────────────────
-
 type ActionLabelProps = {
   actionId: ActionId;
 };
@@ -133,13 +112,9 @@ export function ActionLabel({ actionId }: ActionLabelProps) {
   return <>{action.label}</>;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HelpRow - A single row in a help table with keybinding and description
-// ─────────────────────────────────────────────────────────────────────────────
-
 type HelpRowProps = {
   actionId: ActionId;
-  label?: string; // Override the action label if needed
+  label?: string;
 };
 
 export function HelpRow({ actionId, label }: HelpRowProps) {
@@ -160,19 +135,11 @@ export function HelpRow({ actionId, label }: HelpRowProps) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// useActionCombos - Hook to get combos for an action
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function useActionCombos(actionId: ActionId): KeyCombo[] {
   const { getAction } = useKeybindings();
   const action = getAction(actionId);
   return useMemo(() => action?.combos ?? [], [action]);
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useActionLabel - Hook to get label for an action
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function useActionLabel(actionId: ActionId): string {
   const { getAction } = useKeybindings();

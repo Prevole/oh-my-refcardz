@@ -19,10 +19,6 @@ import {
   type KeyCombo,
 } from "@/lib/keybindings";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Storage
-// ─────────────────────────────────────────────────────────────────────────────
-
 const STORAGE_KEY = "oh-my-refcardz:keybindings";
 
 let cachedConfig: KeybindingsConfig | null = null;
@@ -40,12 +36,10 @@ function loadKeybindings(): KeybindingsConfig {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<KeybindingsConfig>;
-      // Deep merge with defaults to handle new actions
       cachedConfig = mergeWithDefaults(parsed);
       return cachedConfig;
     }
   } catch {
-    // Ignore parse errors
   }
 
   cachedConfig = DEFAULT_KEYBINDINGS;
@@ -62,7 +56,6 @@ function saveKeybindings(config: KeybindingsConfig): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
   } catch {
-    // Ignore storage errors
   }
 }
 
@@ -85,14 +78,6 @@ function getServerSnapshot(): KeybindingsConfig {
   return DEFAULT_KEYBINDINGS;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Merge utilities
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Merges stored keybindings with defaults, keeping user customizations
- * but adding any new actions from defaults
- */
 function mergeWithDefaults(stored: Partial<KeybindingsConfig>): KeybindingsConfig {
   const result: KeybindingsConfig = {
     global: [],
@@ -109,7 +94,6 @@ function mergeWithDefaults(stored: Partial<KeybindingsConfig>): KeybindingsConfi
     result[context] = defaultActions.map((defaultAction) => {
       const storedAction = storedActions.find((a) => a.id === defaultAction.id);
       if (storedAction) {
-        // Use stored combos but keep default label (in case we update it)
         return { ...defaultAction, combos: storedAction.combos };
       }
       return defaultAction;
@@ -119,30 +103,20 @@ function mergeWithDefaults(stored: Partial<KeybindingsConfig>): KeybindingsConfi
   return result;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Conflict detection
-// ─────────────────────────────────────────────────────────────────────────────
-
 export interface KeybindingConflict {
-  /** The action that already uses this combo */
   existingAction: KeybindingAction;
-  /** The context where the conflict occurs */
   context: KeybindingContext;
 }
 
-/**
- * Checks if a combo is already used by another action in the same context
- */
 function findConflict(
   config: KeybindingsConfig,
   context: KeybindingContext,
   actionId: string,
   newCombo: KeyCombo
 ): KeybindingConflict | null {
-  // Check same context
   for (const action of config[context]) {
     if (action.id === actionId) continue;
-    
+
     for (const combo of action.combos) {
       if (combosEqual(combo, newCombo)) {
         return { existingAction: action, context };
@@ -150,11 +124,10 @@ function findConflict(
     }
   }
 
-  // Also check global context if we're not already in it
   if (context !== "global") {
     for (const action of config.global) {
       if (action.id === actionId) continue;
-      
+
       for (const combo of action.combos) {
         if (combosEqual(combo, newCombo)) {
           return { existingAction: action, context: "global" };
@@ -175,61 +148,35 @@ function combosEqual(a: KeyCombo, b: KeyCombo): boolean {
   return combosEqual(a.next, b.next);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Context
-// ─────────────────────────────────────────────────────────────────────────────
-
 interface KeybindingsContextValue {
-  /** Current keybindings configuration */
   config: KeybindingsConfig;
-
-  /** Get actions for a specific context */
   getActionsForContext: (context: KeybindingContext) => KeybindingAction[];
-
-  /** Get a specific action by ID */
   getAction: (actionId: ActionId) => KeybindingAction | null;
-
-  /** Check if an event matches an action */
   matchesAction: (event: KeyboardEvent, actionId: ActionId) => boolean;
-
-  /** Resolve one matching action from a prioritized list */
   resolveAction: (event: KeyboardEvent, actionIds: ActionId[]) => ActionId | null;
-
-  /** Update combos for an action */
   setActionCombos: (
     context: KeybindingContext,
     actionId: string,
     combos: KeyCombo[]
   ) => KeybindingConflict | null;
-
-  /** Add a combo to an action */
   addCombo: (
     context: KeybindingContext,
     actionId: string,
     combo: KeyCombo
   ) => KeybindingConflict | null;
-
-  /** Remove a combo from an action */
   removeCombo: (
     context: KeybindingContext,
     actionId: string,
     comboIndex: number
   ) => void;
-
-  /** Set a combo as primary (move to first position) */
   setPrimaryCombo: (
     context: KeybindingContext,
     actionId: string,
     comboIndex: number
   ) => void;
 
-  /** Reset a single action to defaults */
   resetAction: (context: KeybindingContext, actionId: string) => void;
-
-  /** Reset all keybindings to defaults */
   resetAll: () => void;
-
-  /** Check for conflicts before setting a combo */
   checkConflict: (
     context: KeybindingContext,
     actionId: string,
@@ -238,10 +185,6 @@ interface KeybindingsContextValue {
 }
 
 const KeybindingsContext = createContext<KeybindingsContextValue | null>(null);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Provider
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function KeybindingsProvider({ children }: { children: ReactNode }) {
   const config = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -347,11 +290,9 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       actionId: string,
       combos: KeyCombo[]
     ): KeybindingConflict | null => {
-      // Check for conflicts with the first combo (main one)
       if (combos.length > 0) {
         const conflict = findConflict(config, context, actionId, combos[0]);
         if (conflict) {
-          // Remove the conflicting combo from the existing action
           const newConfig = { ...config };
           newConfig[conflict.context] = newConfig[conflict.context].map((action) => {
             if (action.id === conflict.existingAction.id) {
@@ -363,7 +304,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
             return action;
           });
 
-          // Now update the target action
           newConfig[context] = newConfig[context].map((action) => {
             if (action.id === actionId) {
               return { ...action, combos };
@@ -376,7 +316,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // No conflict, just update
       const newConfig = { ...config };
       newConfig[context] = newConfig[context].map((action) => {
         if (action.id === actionId) {
@@ -404,7 +343,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
 
       const newConfig = { ...config };
 
-      // If there's a conflict, remove the combo from the conflicting action
       if (conflict) {
         newConfig[conflict.context] = newConfig[conflict.context].map((a) => {
           if (a.id === conflict.existingAction.id) {
@@ -417,7 +355,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      // Add the new combo to the target action
       newConfig[context] = newConfig[context].map((a) => {
         if (a.id === actionId) {
           return { ...a, combos: [...a.combos, combo] };
@@ -530,10 +467,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Hook
-// ─────────────────────────────────────────────────────────────────────────────
-
 export function useKeybindings(): KeybindingsContextValue {
   const context = useContext(KeybindingsContext);
   if (!context) {
@@ -542,17 +475,11 @@ export function useKeybindings(): KeybindingsContextValue {
   return context;
 }
 
-/**
- * Hook to get keybindings for a specific context
- */
 export function useContextKeybindings(context: KeybindingContext): KeybindingAction[] {
   const { getActionsForContext } = useKeybindings();
   return getActionsForContext(context);
 }
 
-/**
- * Hook to check if an event matches an action
- */
 export function useActionMatcher() {
   const { matchesAction } = useKeybindings();
   return matchesAction;

@@ -1,14 +1,3 @@
-/**
- * Color palette for categories and sheets.
- *
- * - Each category (identified by its `order` field, 1-10) has a primary color.
- * - Each sheet within a category gets a gradient from the category's primary
- *   color to a secondary color based on its visual column position.
- */
-
-// Primary colors for categories (indexed 1-10)
-// These form a cohesive rainbow progression for a modern dark UI.
-// Used by "hexa" color mode.
 export const CATEGORY_PRIMARY_COLORS = [
   "#00D4FF", // 1 - Cyan electric
   "#FF00E5", // 2 - Magenta
@@ -22,10 +11,6 @@ export const CATEGORY_PRIMARY_COLORS = [
   "#F43F5E", // 10 - Coral red
 ] as const;
 
-// Secondary colors for gradients (one per column, cycled)
-// These are chosen to contrast STRONGLY with any primary color.
-// Avoiding blues/cyans/magentas to ensure contrast with primary colors 1-4.
-// Used by "hexa" color mode.
 export const GRADIENT_SECONDARY_COLORS = [
   "#FF6B6B", // 0 - Coral red
   "#FFE66D", // 1 - Sunny yellow
@@ -39,10 +24,6 @@ export const GRADIENT_SECONDARY_COLORS = [
   "#FFAB76", // 9 - Peach
 ] as const;
 
-// Gradient pairs for grid mode (diagonal interpolation from → to)
-// Each category gets a distinct pair that creates a pleasing diagonal gradient.
-// Colors are interpolated in HSL space for smooth transitions.
-// Used by "grid" color mode.
 export const CATEGORY_GRADIENT_PAIRS = [
   { from: "#4ECDC4", to: "#FF8C42" }, // 1 - Teal → Orange
   { from: "#A78BFA", to: "#FB7185" }, // 2 - Violet → Rose
@@ -61,31 +42,16 @@ export type SheetGradient = {
   to: string;
 };
 
-/**
- * Get the primary color for a category based on its order.
- * Falls back to the first color if order is out of range.
- * Used by "hexa" color mode.
- */
 export function getCategoryPrimaryColor(order: number): string {
   const index = Math.max(0, Math.min(order - 1, CATEGORY_PRIMARY_COLORS.length - 1));
   return CATEGORY_PRIMARY_COLORS[index];
 }
 
-/**
- * Get the secondary color for a given column index.
- * Cycles through the palette if column exceeds palette size.
- * Used by "hexa" color mode.
- */
 export function getSecondaryColorForColumn(columnIndex: number): string {
   const index = columnIndex % GRADIENT_SECONDARY_COLORS.length;
   return GRADIENT_SECONDARY_COLORS[index];
 }
 
-/**
- * Get the gradient pair for a category based on its order.
- * Cycles through the palette if order exceeds palette size.
- * Used by "grid" color mode.
- */
 export function getCategoryGradientPair(order: number): SheetGradient {
   if (!Number.isFinite(order)) {
     return CATEGORY_GRADIENT_PAIRS[CATEGORY_GRADIENT_PAIRS.length - 1];

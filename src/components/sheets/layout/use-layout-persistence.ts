@@ -11,10 +11,6 @@ import {
   parseStoredLayouts,
 } from "./layout-persistence";
 
-// ---------------------------------------------------------------------------
-// Hydration helpers (for SSR/client sync)
-// ---------------------------------------------------------------------------
-
 function subscribeToHydration() {
   return () => {};
 }
@@ -26,10 +22,6 @@ function getClientSnapshot() {
 function getServerSnapshot() {
   return false;
 }
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
 
 export type UseLayoutPersistenceResult = {
   sectionLayouts: SectionLayoutState[];
@@ -48,7 +40,6 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheet): 
 
   const hasSavedLayout = storageHydrated && !areLayoutsEqual(sectionLayouts, defaultSectionLayouts);
 
-  // Read from localStorage on mount
   useEffect(() => {
     const raw = window.localStorage.getItem(buildStorageKey(sheetSlug));
     const savedLayouts = parseStoredLayouts(raw, sheet, defaultSectionLayouts);
@@ -61,7 +52,6 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheet): 
     });
   }, [defaultSectionLayouts, sheet, sheetSlug]);
 
-  // Write to localStorage on change
   useEffect(() => {
     if (!didHydrateStorage.current) return;
 

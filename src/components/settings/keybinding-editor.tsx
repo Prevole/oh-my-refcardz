@@ -15,21 +15,13 @@ import {
 } from "@/lib/keybindings";
 import styles from "./keybinding-editor.module.css";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
-
 type RecordingState = {
   context: KeybindingContext;
   actionId: string;
-  comboIndex: number | null; // null = adding new combo
+  comboIndex: number | null;
 } | null;
 
 const SEQUENCE_TIMEOUT_MS = 800;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────────────────────
 
 function KeycapDisplay({ display }: { display: string }) {
   if (isArrowKey(display)) {
@@ -43,7 +35,6 @@ function KeycapDisplay({ display }: { display: string }) {
     }
   }
 
-  // Check for small-caps display (esc)
   if (display === "esc") {
     return (
       <span className={styles.keycap}>
@@ -102,15 +93,12 @@ function RecordingOverlay({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Always stop propagation to prevent settings panel from closing
       event.stopPropagation();
 
-      // Ignore modifier-only presses
       if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) {
         return;
       }
 
-      // Cancel on Escape without modifiers
       if (event.key === "Escape" && !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
         event.preventDefault();
         onCancel();
@@ -152,10 +140,6 @@ function RecordingOverlay({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Action Row Component
-// ─────────────────────────────────────────────────────────────────────────────
-
 function ActionRow({
   context,
   action,
@@ -180,11 +164,9 @@ function ActionRow({
 
   const handleComboClick = (e: React.MouseEvent, index: number) => {
     if (e.shiftKey && index > 0) {
-      // Shift+Click: set as primary
       e.preventDefault();
       onSetPrimary(index);
     } else {
-      // Normal click: start recording
       onStartRecording(index);
     }
   };
@@ -256,10 +238,6 @@ function ActionRow({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Context Section Component
-// ─────────────────────────────────────────────────────────────────────────────
-
 const CONTEXT_LABELS: Record<KeybindingContext, string> = {
   global: "Global",
   home: "Home",
@@ -304,10 +282,6 @@ function ContextSection({
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Editor Component
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function KeybindingEditor() {
   const {

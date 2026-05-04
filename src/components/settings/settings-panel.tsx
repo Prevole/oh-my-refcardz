@@ -73,7 +73,6 @@ export function SettingsPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
-  // Handle Escape key to close panel (only when settings scope is active)
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -86,27 +85,22 @@ export function SettingsPanel({
 
   useScopedKeyboardHandler("settings", handleKeyDown, [handleKeyDown]);
 
-  // Focus trap and focus management
   useEffect(() => {
     if (!isOpen) return;
 
     const panel = panelRef.current;
     if (!panel) return;
 
-    // Store currently focused element to restore later
     previousActiveElement.current = document.activeElement as HTMLElement;
 
-    // Focus the first focusable element in the panel
     const focusableElements = panel.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
     const firstElement = focusableElements[0];
     if (firstElement) {
-      // Small delay to ensure the panel is rendered
       requestAnimationFrame(() => firstElement.focus());
     }
 
-    // Handle Tab key for focus trap
     const handleTabKey = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return;
 
@@ -120,13 +114,11 @@ export function SettingsPanel({
       const last = focusable[focusable.length - 1];
 
       if (event.shiftKey) {
-        // Shift+Tab: if on first element, wrap to last
         if (document.activeElement === first) {
           event.preventDefault();
           last.focus();
         }
       } else {
-        // Tab: if on last element, wrap to first
         if (document.activeElement === last) {
           event.preventDefault();
           first.focus();
@@ -138,12 +130,10 @@ export function SettingsPanel({
 
     return () => {
       document.removeEventListener("keydown", handleTabKey);
-      // Restore focus when panel closes
       previousActiveElement.current?.focus();
     };
   }, [isOpen]);
 
-  // Close on click outside
   useEffect(() => {
     if (!isOpen) return;
 
@@ -170,7 +160,6 @@ export function SettingsPanel({
   return (
     <div className={styles.overlay}>
       <div ref={panelRef} className={styles.panel}>
-        {/* Header */}
         <div className={styles.header}>
           <h2 className={styles.title}>Settings</h2>
           <button onClick={onClose} className={styles.close} aria-label="Close">
@@ -180,16 +169,13 @@ export function SettingsPanel({
           </button>
         </div>
 
-        {/* Accordion Content */}
         <div className={styles.content}>
-          {/* UI Section */}
           <AccordionItem
             title="UI"
             isOpen={settings.accordion.ui}
             onToggle={() => onToggleAccordion("ui")}
           >
             <div className={styles.section}>
-              {/* Random Toggle */}
               <div className={styles.row}>
                 <label className={styles.toggle}>
                   <input
@@ -201,7 +187,6 @@ export function SettingsPanel({
                 </label>
               </div>
 
-              {/* Color Mode */}
               <div className={styles.grid}>
                 <div className={`${styles.gridItem} ${styles.gridItemFull}`}>
                   <span className={styles.label}>Color mode:</span>
@@ -219,7 +204,6 @@ export function SettingsPanel({
                 </div>
               </div>
 
-              {/* Border Style */}
               <div className={styles.grid}>
                 <div className={`${styles.gridItem} ${styles.gridItemFull}`}>
                   <span className={styles.label}>Border style:</span>
@@ -238,7 +222,6 @@ export function SettingsPanel({
 
               </div>
 
-              {/* Orientation */}
               <div className={styles.grid}>
                 <div className={`${styles.gridItem} ${styles.gridItemFull} ${!showDirectionOptions ? styles.gridItemDisabled : ""}`}>
                   <span className={styles.label}>Orientation from:</span>
@@ -266,7 +249,6 @@ export function SettingsPanel({
             </div>
           </AccordionItem>
 
-          {/* Keybindings Section */}
           <AccordionItem
             title="Keybindings"
             isOpen={settings.accordion.keybindings}

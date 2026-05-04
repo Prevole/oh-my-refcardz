@@ -1,4 +1,3 @@
-// Types and constants
 export type {
   CardLayoutState,
   SectionLayoutState,
@@ -7,7 +6,6 @@ export type {
 } from "./layout-types";
 export { MAX_ROW_SPAN, FALLBACK_METRICS } from "./layout-types";
 
-// Algorithms
 export {
   clamp,
   pointerToGridPosition,
@@ -18,14 +16,12 @@ export {
   resolveSectionLayout,
 } from "./layout-algorithms";
 
-// Inference
 export {
   inferCardColSpan,
   inferCardRowSpan,
   buildDefaultSectionLayouts,
 } from "./layout-inference";
 
-// Hooks
 export { useLayoutPersistence } from "./use-layout-persistence";
 export type { UseLayoutPersistenceResult } from "./use-layout-persistence";
 
@@ -35,5 +31,4 @@ export type { UseCardDragResult } from "./use-card-drag";
 export { useCardKeyboard } from "./use-card-keyboard";
 export type { UseCardKeyboardResult, CardFocus } from "./use-card-keyboard";
 
-// Components
 export { CardLayoutControls } from "./card-layout-controls";

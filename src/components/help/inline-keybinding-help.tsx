@@ -4,10 +4,6 @@ import Link from "next/link";
 import { ActionKeybinding } from "@/components/settings/keybinding-display";
 import { ACTION_IDS } from "@/lib/keybindings";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// InlineKeybinding - Inline display of a single keybinding (primary only by default)
-// ─────────────────────────────────────────────────────────────────────────────
-
 type InlineKeybindingProps = {
   actionId: (typeof ACTION_IDS)[keyof typeof ACTION_IDS];
   maxCombos?: number;
@@ -16,10 +12,6 @@ type InlineKeybindingProps = {
 export function InlineKeybinding({ actionId, maxCombos = 1 }: InlineKeybindingProps) {
   return <ActionKeybinding actionId={actionId} variant="inline" maxCombos={maxCombos} />;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HomeInlineHelp - Inline help text for the home page
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function HomeInlineHelp() {
   return (
@@ -41,10 +33,6 @@ export function HomeInlineHelp() {
     </p>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SheetInlineHelp - Inline help text for the cheatsheet page
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function SheetInlineHelp() {
   return (

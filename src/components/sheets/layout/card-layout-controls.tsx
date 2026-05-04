@@ -2,10 +2,6 @@ import { GRID_COLUMNS } from "../sheet-grid";
 import cheatsheetStyles from "../cheatsheet-rendering.module.css";
 import { MAX_ROW_SPAN } from "./layout-types";
 
-// ---------------------------------------------------------------------------
-// CardLayoutControls
-// ---------------------------------------------------------------------------
-
 type CardLayoutControlsProps = {
   colSpan: number;
   rowSpan: number;
@@ -44,10 +40,6 @@ export function CardLayoutControls({
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// LayoutAxisControl
-// ---------------------------------------------------------------------------
 
 type LayoutAxisControlProps = {
   label: string;

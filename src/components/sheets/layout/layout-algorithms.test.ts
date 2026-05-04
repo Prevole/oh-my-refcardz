@@ -11,10 +11,6 @@ import {
 import { GRID_COLUMNS, GRID_GAP_PX } from "../sheet-grid";
 import { MAX_ROW_SPAN } from "./layout-types";
 
-// ---------------------------------------------------------------------------
-// clamp
-// ---------------------------------------------------------------------------
-
 describe("clamp", () => {
   it("returns value when within range", () => {
     expect(clamp(5, 1, 10)).toBe(5);
@@ -38,10 +34,6 @@ describe("clamp", () => {
     expect(clamp(0, -10, -1)).toBe(-1);
   });
 });
-
-// ---------------------------------------------------------------------------
-// pointerToGridPosition
-// ---------------------------------------------------------------------------
 
 describe("pointerToGridPosition", () => {
   const mockGridRect = {
@@ -75,7 +67,6 @@ describe("pointerToGridPosition", () => {
 
   it("clamps colStart to prevent card overflow beyond grid", () => {
     const colSpan = 4;
-    // Pointer far to the right
     const result = pointerToGridPosition(2000, 200, mockGridRect, unitSize, colSpan);
     expect(result.colStart).toBe(GRID_COLUMNS - colSpan + 1);
   });
@@ -90,10 +81,6 @@ describe("pointerToGridPosition", () => {
     expect(result.rowStart).toBe(1);
   });
 });
-
-// ---------------------------------------------------------------------------
-// hasCollision / markOccupied
-// ---------------------------------------------------------------------------
 
 describe("hasCollision", () => {
   it("returns false for empty occupied set", () => {
@@ -138,10 +125,6 @@ describe("markOccupied", () => {
     expect(occupied.size).toBe(2);
   });
 });
-
-// ---------------------------------------------------------------------------
-// clampCardLayoutToGrid
-// ---------------------------------------------------------------------------
 
 describe("clampCardLayoutToGrid", () => {
   it("returns card unchanged when within bounds", () => {
@@ -188,10 +171,6 @@ describe("clampCardLayoutToGrid", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// placeCardAtNearestSlot
-// ---------------------------------------------------------------------------
-
 describe("placeCardAtNearestSlot", () => {
   it("places card at preferred position when slot is free", () => {
     const occupied = new Set<string>();
@@ -203,7 +182,6 @@ describe("placeCardAtNearestSlot", () => {
 
   it("finds next available column in same row", () => {
     const occupied = new Set<string>();
-    // Occupy columns 1-4, row 1
     for (let col = 1; col <= 4; col++) {
       occupied.add(`${col}:1`);
     }
@@ -215,7 +193,6 @@ describe("placeCardAtNearestSlot", () => {
 
   it("moves to next row when current row is full", () => {
     const occupied = new Set<string>();
-    // Occupy entire row 1
     for (let col = 1; col <= GRID_COLUMNS; col++) {
       occupied.add(`${col}:1`);
     }
@@ -227,21 +204,15 @@ describe("placeCardAtNearestSlot", () => {
 
   it("respects colSpan when finding slot", () => {
     const occupied = new Set<string>();
-    // Occupy columns 1-10 in row 1
     for (let col = 1; col <= 10; col++) {
       occupied.add(`${col}:1`);
     }
     const card = { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 1 };
     const result = placeCardAtNearestSlot(card, occupied);
-    // Card needs 4 columns, only 11-12 are free (2 cols), so it moves to row 2
     expect(result.rowStart).toBe(2);
     expect(result.colStart).toBe(1);
   });
 });
-
-// ---------------------------------------------------------------------------
-// resolveSectionLayout
-// ---------------------------------------------------------------------------
 
 describe("resolveSectionLayout", () => {
   it("places non-overlapping cards without changes", () => {
@@ -257,13 +228,11 @@ describe("resolveSectionLayout", () => {
   it("repositions overlapping cards", () => {
     const cards = [
       { colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
-      { colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 }, // Overlaps first
+      { colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
     ];
     const result = resolveSectionLayout(cards);
-    // First card stays at original position
     expect(result[0].colStart).toBe(1);
     expect(result[0].rowStart).toBe(1);
-    // Second card should be moved
     expect(result[1].colStart).toBe(7);
     expect(result[1].rowStart).toBe(1);
   });
@@ -275,10 +244,8 @@ describe("resolveSectionLayout", () => {
     ];
     const pinnedLayout = { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 };
     const result = resolveSectionLayout(cards, 1, pinnedLayout);
-    // Pinned card (index 1) should be at pinned position
     expect(result[1].colStart).toBe(1);
     expect(result[1].rowStart).toBe(1);
-    // First card should be moved to avoid overlap
     expect(result[0].colStart).toBe(5);
   });
 

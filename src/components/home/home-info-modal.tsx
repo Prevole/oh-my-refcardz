@@ -15,7 +15,6 @@ type Props = {
 };
 
 export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
-  // Handle Escape key to close modal (only when info scope is active)
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape" || event.key === "i") {
@@ -30,7 +29,6 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
 
   if (!sheet) return null;
 
-  // Use accent color when provided (hexa mode: gradient, grid mode: solid interpolated color)
   const titleStyle: CSSProperties = accentColor
     ? {
         background: `linear-gradient(135deg, ${sheet.colorFrom}, ${accentColor})`,

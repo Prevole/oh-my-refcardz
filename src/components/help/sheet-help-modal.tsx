@@ -19,7 +19,6 @@ type Tab = "shortcuts" | "legend";
 export function SheetHelpModal({ open, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("shortcuts");
 
-  // Handle Escape key to close modal (only when help scope is active)
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape" || event.key === "?") {
@@ -38,7 +37,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
         KEYBOARD SHORTCUTS
       </p>
 
-      {/* Tabs */}
       <div className={helpStyles.tabs}>
         <button
           className={helpStyles.tab}
@@ -56,9 +54,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
         </button>
       </div>
 
-      {/* Tab: App Shortcuts */}
       <div className={helpStyles.tabContent} data-active={activeTab === "shortcuts"}>
-        {/* Navigation */}
         <h3 className="mt-4 text-xl font-semibold">Navigation</h3>
         <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
@@ -80,7 +76,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
           </tbody>
         </table>
 
-        {/* Commands */}
         <h3 className="mt-6 text-xl font-semibold">Commands</h3>
         <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
@@ -105,7 +100,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
           </tbody>
         </table>
 
-        {/* Layout Mode */}
         <h3 className="mt-6 text-xl font-semibold">Layout Mode</h3>
         <p className="mt-1 text-sm text-white/60">
           Enter layout mode to rearrange and resize cards using the keyboard.
@@ -145,7 +139,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
           </tbody>
         </table>
 
-        {/* Misc */}
         <h3 className="mt-6 text-xl font-semibold">Misc</h3>
         <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>
@@ -163,7 +156,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
         </table>
       </div>
 
-      {/* Tab: Symbol Legend */}
       <div className={helpStyles.tabContent} data-active={activeTab === "legend"}>
         <p className="mt-4 text-sm text-white/70">
           Symbols used in cheatsheet keybindings:

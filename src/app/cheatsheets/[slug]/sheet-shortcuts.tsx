@@ -16,11 +16,9 @@ export function SheetShortcuts() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 
-  // Keyboard context scopes - panels push their scope when open
   useKeyboardScope("settings", settingsPanelOpen);
   useKeyboardScope("help", helpOpen);
 
-  // UI Settings
   const {
     settings: uiSettings,
     setColorMode,
@@ -31,13 +29,10 @@ export function SheetShortcuts() {
     resetModern,
   } = useUISettings();
 
-  // Keybindings
   const { resolveAction } = useKeybindings();
 
-  // Global keyboard shortcuts for sheet page (only active when no panel is open)
   const handleGlobalKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      // Never hijack keys when focus is inside an editable element
       const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
@@ -75,7 +70,6 @@ export function SheetShortcuts() {
 
       if (matchedAction === ACTION_IDS.BACK_TO_HOME) {
         event.preventDefault();
-        // If a command modal is open, let it handle Escape itself
         if (document.querySelector("[data-command-modal-overlay]")) return;
         router.push("/");
       }
@@ -87,16 +81,9 @@ export function SheetShortcuts() {
 
   return (
     <>
-      {/* Help Modal */}
       <SheetHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-
-      {/* Help Button */}
       <HelpButton onClick={() => setHelpOpen(true)} />
-
-      {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsPanelOpen(true)} />
-
-      {/* Settings Panel */}
       <SettingsPanel
         isOpen={settingsPanelOpen}
         onClose={() => setSettingsPanelOpen(false)}

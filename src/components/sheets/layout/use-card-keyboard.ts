@@ -10,42 +10,25 @@ import { clamp, resolveSectionLayout } from "./layout-algorithms";
 import type { CardLayoutState, SectionLayoutState } from "./layout-types";
 import { MAX_ROW_SPAN } from "./layout-types";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 export type CardFocus = {
   sectionIndex: number;
   cardIndex: number;
 };
 
 export type UseCardKeyboardResult = {
-  /** Currently focused card (null if no card focused) */
   focusedCard: CardFocus | null;
-  /** Set focus to a specific card */
   setFocusedCard: Dispatch<SetStateAction<CardFocus | null>>;
-  /** Whether a card manipulation (move/resize) is in progress */
   isManipulating: boolean;
 };
 
 type UseCardKeyboardOptions = {
-  /** Whether layout edit mode is active */
   editMode: boolean;
-  /** Exit layout edit mode */
   onExitLayoutMode: () => void;
-  /** Current section layouts */
   sectionLayouts: SectionLayoutState[];
-  /** Setter for section layouts */
   setSectionLayouts: Dispatch<SetStateAction<SectionLayoutState[]>>;
-  /** Total number of sections */
   sectionCount: number;
-  /** Get card count for a section */
   getCardCount: (sectionIndex: number) => number;
 };
-
-// ---------------------------------------------------------------------------
-// Card navigation helpers
-// ---------------------------------------------------------------------------
 
 type CardPosition = {
   sectionIndex: number;
@@ -62,9 +45,6 @@ type CardBounds = {
 
 const SECTION_ROW_GAP = 2;
 
-/**
- * Get all cards with their positions across all sections
- */
 function getAllCards(sectionLayouts: SectionLayoutState[]): CardPosition[] {
   const cards: CardPosition[] = [];
   sectionLayouts.forEach((section, sectionIndex) => {
@@ -75,9 +55,6 @@ function getAllCards(sectionLayouts: SectionLayoutState[]): CardPosition[] {
   return cards;
 }
 
-/**
- * Find the card to navigate to based on direction
- */
 function findCardInDirection(
   cards: CardPosition[],
   current: CardPosition,
@@ -233,14 +210,10 @@ function compareScores(
   return left.secondaryDistance - right.secondaryDistance;
 }
 
-/**
- * Find the first card in a section (top-left)
- */
 function findFirstCard(sectionLayouts: SectionLayoutState[]): CardFocus | null {
   for (let sectionIndex = 0; sectionIndex < sectionLayouts.length; sectionIndex++) {
     const section = sectionLayouts[sectionIndex];
     if (section.cards.length > 0) {
-      // Find the top-left card
       let bestIndex = 0;
       let bestLayout = section.cards[0];
       section.cards.forEach((layout, cardIndex) => {
@@ -258,9 +231,6 @@ function findFirstCard(sectionLayouts: SectionLayoutState[]): CardFocus | null {
   return null;
 }
 
-/**
- * Validate a card focus against current layout state
- */
 function validateFocus(
   focus: CardFocus | null,
   sectionCount: number,
@@ -274,10 +244,6 @@ function validateFocus(
   return focus;
 }
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
 export function useCardKeyboard({
   editMode,
   onExitLayoutMode,
@@ -289,18 +255,14 @@ export function useCardKeyboard({
   const { isScopeActive, pushScope, popScope } = useKeyboardContext();
   const { matchesAction } = useKeybindings();
 
-  // State is managed here but we derive valid focus
   const [rawFocusedCard, setRawFocusedCard] = useState<CardFocus | null>(null);
   const [isManipulating, setIsManipulating] = useState(false);
   const manipulationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Track if sheet-layout scope is pushed
   const scopePushedRef = useRef(false);
 
-  // Derive the actual focused card — null if edit mode is off or focus is invalid
   const focusedCard = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
 
-  // Wrapper setter that clears focus when edit mode is off
   const setFocusedCard: Dispatch<SetStateAction<CardFocus | null>> = useCallback(
     (action) => {
       if (!editMode) return;
@@ -309,7 +271,6 @@ export function useCardKeyboard({
     [editMode]
   );
 
-  // Push/pop scope based on layout mode.
   useEffect(() => {
     if (editMode && !scopePushedRef.current) {
       pushScope("sheet-layout");
@@ -327,7 +288,6 @@ export function useCardKeyboard({
     };
   }, [editMode, pushScope, popScope]);
 
-  // Keep the focused card visible while navigating or manipulating the layout.
   useEffect(() => {
     if (!editMode || !focusedCard) return;
 
@@ -340,13 +300,11 @@ export function useCardKeyboard({
     card.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
   }, [editMode, focusedCard, sectionLayouts]);
 
-  // Navigation handler
   const handleNavigation = useCallback(
     (direction: "up" | "down" | "left" | "right") => {
       const validFocus = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
       
       if (!validFocus) {
-        // Focus first card if none focused
         const first = findFirstCard(sectionLayouts);
         if (first) setRawFocusedCard(first);
         return;
@@ -371,7 +329,6 @@ export function useCardKeyboard({
     [editMode, rawFocusedCard, sectionCount, getCardCount, sectionLayouts]
   );
 
-  // Move handler
   const handleMove = useCallback(
     (direction: "up" | "down" | "left" | "right") => {
       const validFocus = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
@@ -412,7 +369,6 @@ export function useCardKeyboard({
           break;
       }
 
-      // Skip if no change
       if (
         nextLayout.colStart === currentLayout.colStart &&
         nextLayout.rowStart === currentLayout.rowStart
@@ -429,7 +385,6 @@ export function useCardKeyboard({
         })
       );
 
-      // Show manipulation feedback
       setIsManipulating(true);
       if (manipulationTimeoutRef.current) {
         clearTimeout(manipulationTimeoutRef.current);
@@ -441,7 +396,6 @@ export function useCardKeyboard({
     [editMode, rawFocusedCard, sectionCount, getCardCount, sectionLayouts, setSectionLayouts]
   );
 
-  // Resize handler
   const handleResize = useCallback(
     (direction: "up" | "down" | "left" | "right") => {
       const validFocus = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
@@ -454,32 +408,27 @@ export function useCardKeyboard({
       let nextLayout: CardLayoutState;
       switch (direction) {
         case "left":
-          // Shrink width
           nextLayout = {
             ...currentLayout,
             colSpan: clamp(currentLayout.colSpan - 1, 1, GRID_COLUMNS),
           };
           break;
         case "right":
-          // Grow width
           nextLayout = {
             ...currentLayout,
             colSpan: clamp(currentLayout.colSpan + 1, 1, GRID_COLUMNS),
           };
-          // Adjust colStart if needed to fit in grid
           if (nextLayout.colStart + nextLayout.colSpan - 1 > GRID_COLUMNS) {
             nextLayout.colStart = GRID_COLUMNS - nextLayout.colSpan + 1;
           }
           break;
         case "up":
-          // Shrink height
           nextLayout = {
             ...currentLayout,
             rowSpan: clamp(currentLayout.rowSpan - 1, 1, MAX_ROW_SPAN),
           };
           break;
         case "down":
-          // Grow height
           nextLayout = {
             ...currentLayout,
             rowSpan: clamp(currentLayout.rowSpan + 1, 1, MAX_ROW_SPAN),
@@ -487,7 +436,6 @@ export function useCardKeyboard({
           break;
       }
 
-      // Skip if no change
       if (
         nextLayout.colSpan === currentLayout.colSpan &&
         nextLayout.rowSpan === currentLayout.rowSpan &&
@@ -505,7 +453,6 @@ export function useCardKeyboard({
         })
       );
 
-      // Show manipulation feedback
       setIsManipulating(true);
       if (manipulationTimeoutRef.current) {
         clearTimeout(manipulationTimeoutRef.current);
@@ -517,19 +464,15 @@ export function useCardKeyboard({
     [editMode, rawFocusedCard, sectionCount, getCardCount, sectionLayouts, setSectionLayouts]
   );
 
-  // Keyboard event handler
   useEffect(() => {
     if (!editMode) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle when sheet-layout scope is active or global scope (no card focused yet)
       if (!isScopeActive("sheet-layout") && !isScopeActive("global")) return;
 
-      // Skip if target is an input element
       const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      // Card navigation (Shift + hjkl)
       if (matchesAction(event, ACTION_IDS.CARD_NAV_LEFT)) {
         event.preventDefault();
         handleNavigation("left");
@@ -551,7 +494,6 @@ export function useCardKeyboard({
         return;
       }
 
-      // Card movement and resize only when a card is focused
       const validFocus = validateFocus(rawFocusedCard, sectionCount, getCardCount);
       if (validFocus) {
         if (event.key === "Escape") {
@@ -562,7 +504,6 @@ export function useCardKeyboard({
           return;
         }
 
-        // Card movement (Ctrl + hjkl)
         if (matchesAction(event, ACTION_IDS.CARD_MOVE_LEFT)) {
           event.preventDefault();
           handleMove("left");
@@ -584,7 +525,6 @@ export function useCardKeyboard({
           return;
         }
 
-        // Card resize (Ctrl + Shift + hjkl)
         if (matchesAction(event, ACTION_IDS.CARD_SHRINK_WIDTH)) {
           event.preventDefault();
           handleResize("left");
@@ -629,7 +569,6 @@ export function useCardKeyboard({
     onExitLayoutMode,
   ]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (manipulationTimeoutRef.current) {

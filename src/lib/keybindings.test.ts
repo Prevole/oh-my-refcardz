@@ -16,10 +16,6 @@ import {
   type KeybindingAction,
 } from "./keybindings";
 
-// ---------------------------------------------------------------------------
-// Helper to create mock KeyboardEvent
-// ---------------------------------------------------------------------------
-
 function mockKeyboardEvent(
   key: string,
   options: {
@@ -40,10 +36,6 @@ function mockKeyboardEvent(
   } as KeyboardEvent;
 }
 
-// ---------------------------------------------------------------------------
-// key()
-// ---------------------------------------------------------------------------
-
 describe("key", () => {
   it("creates a simple key combo without modifiers", () => {
     const result = key("k");
@@ -63,10 +55,6 @@ describe("key", () => {
     expect(result).toEqual({ key: "ArrowUp", modifiers: [] });
   });
 });
-
-// ---------------------------------------------------------------------------
-// combo()
-// ---------------------------------------------------------------------------
 
 describe("combo", () => {
   it("creates a key combo with a single modifier", () => {
@@ -96,10 +84,6 @@ describe("combo", () => {
     expect(result).toEqual({ key: "k", modifiers: [] });
   });
 });
-
-// ---------------------------------------------------------------------------
-// sequence()
-// ---------------------------------------------------------------------------
 
 describe("sequence", () => {
   it("creates a sequence of two simple keys", () => {
@@ -138,10 +122,6 @@ describe("sequence", () => {
     });
   });
 });
-
-// ---------------------------------------------------------------------------
-// matchesCombo()
-// ---------------------------------------------------------------------------
 
 describe("matchesCombo", () => {
   describe("simple keys without modifiers", () => {
@@ -260,10 +240,6 @@ describe("matchesCombo", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// matchesAction()
-// ---------------------------------------------------------------------------
-
 describe("matchesAction", () => {
   it("matches when event matches any combo in action", () => {
     const action: KeybindingAction = {
@@ -309,10 +285,6 @@ describe("matchesAction", () => {
     expect(matchesAction(event, action)).toBe(false);
   });
 });
-
-// ---------------------------------------------------------------------------
-// findMatchingAction()
-// ---------------------------------------------------------------------------
 
 describe("findMatchingAction", () => {
   const actions: KeybindingAction[] = [
@@ -363,10 +335,6 @@ describe("findMatchingAction", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// getKeyDisplay()
-// ---------------------------------------------------------------------------
-
 describe("getKeyDisplay", () => {
   it("converts space to symbol", () => {
     expect(getKeyDisplay(" ")).toBe("␣");
@@ -405,10 +373,6 @@ describe("getKeyDisplay", () => {
     expect(getKeyDisplay("?")).toBe("?");
   });
 });
-
-// ---------------------------------------------------------------------------
-// getComboDisplay()
-// ---------------------------------------------------------------------------
 
 describe("getComboDisplay", () => {
   it("displays simple key", () => {

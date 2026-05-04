@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-// Import types and helpers for testing
 import type { CardLayoutState, SectionLayoutState } from "./layout-types";
-
-// We need to test the pure functions used by useCardKeyboard
-// Since they're not exported, we'll extract them to a separate file for testability
-// For now, let's test the logic conceptually by reimplementing the same functions
 
 type CardPosition = {
   sectionIndex: number;
@@ -209,10 +204,6 @@ function validateFocus(
   return focus;
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe("Card keyboard navigation helpers", () => {
   describe("getAllCards", () => {
     it("returns empty array for empty layouts", () => {
@@ -314,16 +305,13 @@ describe("Card keyboard navigation helpers", () => {
   });
 
   describe("findCardInDirection", () => {
-    // Create a test grid layout:
-    // [Card0: 1-4, row1] [Card1: 5-8, row1]
-    // [Card2: 1-4, row2] [Card3: 5-8, row2]
     const createGridLayout = (): SectionLayoutState[] => [
       {
         cards: [
-          { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 1 }, // Card 0
-          { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 1 }, // Card 1
-          { colStart: 1, rowStart: 2, colSpan: 4, rowSpan: 1 }, // Card 2
-          { colStart: 5, rowStart: 2, colSpan: 4, rowSpan: 1 }, // Card 3
+            { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 1 },
+            { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 1 },
+            { colStart: 1, rowStart: 2, colSpan: 4, rowSpan: 1 },
+            { colStart: 5, rowStart: 2, colSpan: 4, rowSpan: 1 },
         ],
       },
     ];
@@ -367,7 +355,7 @@ describe("Card keyboard navigation helpers", () => {
     it("returns null when no card in direction", () => {
       const layouts = createGridLayout();
       const cards = getAllCards(layouts);
-      const current = cards[0]; // Top-left card
+      const current = cards[0];
 
       expect(findCardInDirection(cards, current, "left")).toBeNull();
       expect(findCardInDirection(cards, current, "up")).toBeNull();
@@ -377,16 +365,15 @@ describe("Card keyboard navigation helpers", () => {
       const layouts: SectionLayoutState[] = [
         {
           cards: [
-            { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }, // Tall card
-            { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 1 }, // Short card, row 1
-            { colStart: 5, rowStart: 2, colSpan: 4, rowSpan: 1 }, // Short card, row 2
+            { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
+            { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 1 },
+            { colStart: 5, rowStart: 2, colSpan: 4, rowSpan: 1 },
           ],
         },
       ];
       const cards = getAllCards(layouts);
       const tallCard = cards[0];
 
-      // From tall card, navigating right should find the first overlapping card
       const result = findCardInDirection(cards, tallCard, "right");
       expect(result?.cardIndex).toBe(1);
     });
@@ -395,16 +382,15 @@ describe("Card keyboard navigation helpers", () => {
       const layouts: SectionLayoutState[] = [
         {
           cards: [
-            { colStart: 1, rowStart: 1, colSpan: 2, rowSpan: 1 }, // Card 0
-            { colStart: 5, rowStart: 1, colSpan: 2, rowSpan: 1 }, // Card 1 (farther right)
-            { colStart: 9, rowStart: 1, colSpan: 2, rowSpan: 1 }, // Card 2 (even farther right)
+            { colStart: 1, rowStart: 1, colSpan: 2, rowSpan: 1 },
+            { colStart: 5, rowStart: 1, colSpan: 2, rowSpan: 1 },
+            { colStart: 9, rowStart: 1, colSpan: 2, rowSpan: 1 },
           ],
         },
       ];
       const cards = getAllCards(layouts);
       const current = cards[0];
 
-      // Should find card 1 (closest to the right), not card 2
       const result = findCardInDirection(cards, current, "right");
       expect(result?.cardIndex).toBe(1);
     });

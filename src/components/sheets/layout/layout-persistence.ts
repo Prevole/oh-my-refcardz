@@ -1,31 +1,14 @@
-/**
- * Pure functions for layout persistence logic.
- * Extracted from use-layout-persistence.ts for testability.
- */
-
 import type { YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 import { GRID_COLUMNS } from "../sheet-grid";
 import { MAX_ROW_SPAN, type SectionLayoutState } from "./layout-types";
-
-// ---------------------------------------------------------------------------
-// Storage key
-// ---------------------------------------------------------------------------
 
 export function buildStorageKey(sheetSlug: string): string {
   return `sheet-layout:${sheetSlug}`;
 }
 
-// ---------------------------------------------------------------------------
-// Layout comparison
-// ---------------------------------------------------------------------------
-
 export function areLayoutsEqual(left: SectionLayoutState[], right: SectionLayoutState[]): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
-
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
 
 /**
  * Validates that a parsed value from storage matches the expected structure
@@ -70,14 +53,6 @@ export function isValidStoredLayout(value: unknown, sheet: YamlCheatSheet): valu
   });
 }
 
-// ---------------------------------------------------------------------------
-// Merging
-// ---------------------------------------------------------------------------
-
-/**
- * Merges stored layouts with default layouts, using defaults as fallback
- * for any missing or invalid card positions.
- */
 export function mergeStoredLayouts(
   storedLayouts: SectionLayoutState[],
   defaultLayouts: SectionLayoutState[]
@@ -92,14 +67,6 @@ export function mergeStoredLayouts(
   }));
 }
 
-// ---------------------------------------------------------------------------
-// Parsing
-// ---------------------------------------------------------------------------
-
-/**
- * Parses and validates a raw JSON string from storage.
- * Returns validated layouts or null if invalid.
- */
 export function parseStoredLayouts(
   raw: string | null,
   sheet: YamlCheatSheet,

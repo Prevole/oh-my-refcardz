@@ -22,10 +22,6 @@ export type HexBoardDimensions = {
   height: number;
 };
 
-/**
- * Calculate hex grid metrics based on cell width.
- * All dimensions are derived from the base hexWidth to maintain proportions.
- */
 export function getHexMetrics(hexWidth: number): HexMetrics {
   const hexCardWidth = hexWidth * HEX_CARD_RATIO;
   const hexCardHeight = hexWidth * HEX_CARD_RATIO;
@@ -45,17 +41,11 @@ export function getHexMetrics(hexWidth: number): HexMetrics {
   };
 }
 
-/**
- * Build honeycomb rows from a flat list of items.
- * Even rows have `columns` items, odd rows have `columns - 1` items.
- * Special case: if items fit in 2 rows, distribute them evenly.
- */
 export function buildHexRows<T>(items: T[], columns: number): HexRows<T> {
   const evenCount = Math.max(1, columns);
   const oddCount = Math.max(1, columns - 1);
   const rows: HexRows<T> = [];
 
-  // Special case: distribute items across 2 rows if they fit
   if (items.length > 1 && items.length <= evenCount) {
     const firstRowCount = Math.min(evenCount, Math.ceil(items.length / 2));
     return [items.slice(0, firstRowCount), items.slice(firstRowCount)].filter(
@@ -77,17 +67,11 @@ export function buildHexRows<T>(items: T[], columns: number): HexRows<T> {
   return rows;
 }
 
-/**
- * Calculate the width of a single hex row.
- */
 export function getHexRowWidth(columnCount: number, hexWidth: number): number {
   const { cardInset, hexCardWidth, horizontalStep } = getHexMetrics(hexWidth);
   return cardInset + hexCardWidth + Math.max(0, columnCount - 1) * horizontalStep;
 }
 
-/**
- * Calculate the dimensions of the entire hex board.
- */
 export function getHexBoardDimensions<T>(
   rows: HexRows<T>,
   hexWidth: number
@@ -107,9 +91,6 @@ export function getHexBoardDimensions<T>(
   return { width, height };
 }
 
-/**
- * Calculate the maximum number of columns that fit in a given width.
- */
 export function getMaxColumnsForWidth(width: number, hexWidth: number): number {
   let maxColumns = 1;
 
@@ -120,11 +101,6 @@ export function getMaxColumnsForWidth(width: number, hexWidth: number): number {
   return maxColumns;
 }
 
-/**
- * Calculate position for each item in the hex grid.
- * Returns colIndex (position in row) and visualColIndex (interleaved position for color assignment).
- * visualColIndex uses interleaving: even rows get 0, 2, 4... and odd rows get 1, 3, 5...
- */
 export function getPositionedItems<T>(
   rows: HexRows<T>,
   hexWidth: number
@@ -142,14 +118,6 @@ export function getPositionedItems<T>(
   );
 }
 
-// ---------------------------------------------------------------------------
-// Navigation helpers for honeycomb grid
-// ---------------------------------------------------------------------------
-
-/**
- * Find the target item when moving vertically (up/down).
- * Navigates to the same parity row (even→even, odd→odd).
- */
 export function getVerticalTarget<T>(
   rows: HexRows<T>,
   rowParityByIndex: number[],
@@ -176,10 +144,6 @@ export function getVerticalTarget<T>(
   return null;
 }
 
-/**
- * Find the target item when moving horizontally (left/right).
- * In a honeycomb, left/right movement often means moving diagonally to adjacent rows.
- */
 export function getHorizontalTarget<T>(
   rows: HexRows<T>,
   isOddRow: boolean,
@@ -201,7 +165,6 @@ export function getHorizontalTarget<T>(
   const currentRow = rows[rowIndex];
   const sameRowCol = direction === "right" ? colIndex + 1 : colIndex - 1;
 
-  // Try preferred adjacent row first
   for (const nextRowIndex of [preferredRowIndex]) {
     const nextRow = rows[nextRowIndex];
     if (!nextRow || targetCol < 0 || targetCol >= nextRow.length) {
@@ -211,12 +174,10 @@ export function getHorizontalTarget<T>(
     return nextRow[targetCol] ?? null;
   }
 
-  // Try same row
   if (sameRowCol >= 0 && sameRowCol < currentRow.length) {
     return currentRow[sameRowCol] ?? null;
   }
 
-  // Try fallback adjacent row
   for (const nextRowIndex of [fallbackRowIndex]) {
     const nextRow = rows[nextRowIndex];
     if (!nextRow || targetCol < 0 || targetCol >= nextRow.length) {

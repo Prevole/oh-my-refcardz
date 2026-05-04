@@ -20,10 +20,6 @@ import {
 } from "./layout";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 type Props = {
   sheetSlug: string;
   sheet: YamlCheatSheet;
@@ -90,7 +86,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     );
   }
 
-  // Clear keyboard focus when starting a drag
   function handleHeaderPointerDown(
     sectionIndex: number,
     cardIndex: number,
@@ -212,10 +207,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     </>
   );
 }
-
-// ---------------------------------------------------------------------------
-// SheetItem
-// ---------------------------------------------------------------------------
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
   if (item.type === "command") {

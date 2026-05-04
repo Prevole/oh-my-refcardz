@@ -1,9 +1,5 @@
 import { GRID_COLUMNS } from "../sheet-grid";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 export type CardLayoutState = {
   colStart: number;
   rowStart: number;
@@ -32,10 +28,6 @@ export type DragState = {
   pointerOffsetX: number;
   pointerOffsetY: number;
 };
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
 
 export const MAX_ROW_SPAN = 24;
 

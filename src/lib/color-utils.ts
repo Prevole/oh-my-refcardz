@@ -1,16 +1,6 @@
-/**
- * Color utilities for HSL interpolation.
- * Used to create gradient effects across hex grids.
- */
-
 type HSL = { h: number; s: number; l: number };
 
-/**
- * Parse a hex color string to HSL values.
- * Supports #RGB and #RRGGBB formats.
- */
 export function hexToHSL(hex: string): HSL {
-  // Normalize hex
   let normalizedHex = hex.replace("#", "");
   if (normalizedHex.length === 3) {
     normalizedHex = normalizedHex
@@ -50,9 +40,6 @@ export function hexToHSL(hex: string): HSL {
   return { h, s, l };
 }
 
-/**
- * Convert HSL values to a hex color string.
- */
 export function hslToHex(hsl: HSL): string {
   const { h, s, l } = hsl;
 
@@ -81,21 +68,12 @@ export function hslToHex(hsl: HSL): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
-/**
- * Interpolate between two hex colors in HSL space.
- * @param colorFrom - Starting color (hex)
- * @param colorTo - Ending color (hex)
- * @param t - Interpolation factor (0.0 to 1.0)
- * @returns Interpolated color as hex string
- */
 export function interpolateHSL(colorFrom: string, colorTo: string, t: number): string {
   const from = hexToHSL(colorFrom);
   const to = hexToHSL(colorTo);
 
-  // Clamp t to [0, 1]
   const clampedT = Math.max(0, Math.min(1, t));
 
-  // Handle hue interpolation (shortest path around the color wheel)
   let hDiff = to.h - from.h;
   if (hDiff > 0.5) hDiff -= 1;
   if (hDiff < -0.5) hDiff += 1;
@@ -107,15 +85,6 @@ export function interpolateHSL(colorFrom: string, colorTo: string, t: number): s
   return hslToHex({ h, s, l });
 }
 
-/**
- * Calculate interpolation factor for a position in a grid.
- * Uses diagonal interpolation (top-left to bottom-right).
- * @param rowIndex - Current row index
- * @param colIndex - Current column index
- * @param maxRow - Maximum row index in the grid
- * @param maxCol - Maximum column index in the grid
- * @returns Interpolation factor (0.0 to 1.0)
- */
 export function getGridInterpolationFactor(
   rowIndex: number,
   colIndex: number,

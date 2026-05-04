@@ -6,10 +6,6 @@ import {
 } from "./layout-inference";
 import type { CheatSheetCard, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 
-// ---------------------------------------------------------------------------
-// Test fixtures
-// ---------------------------------------------------------------------------
-
 function createCard(itemCount: number, types: Array<"command" | "shortcut" | "config"> = []): CheatSheetCard {
   const items = [];
   for (let i = 0; i < itemCount; i++) {
@@ -50,10 +46,6 @@ function createSheet(sections: Array<{ cards: CheatSheetCard[] }>): YamlCheatShe
   };
 }
 
-// ---------------------------------------------------------------------------
-// inferCardColSpan
-// ---------------------------------------------------------------------------
-
 describe("inferCardColSpan", () => {
   it("returns 4 for card with 1-2 items", () => {
     expect(inferCardColSpan(createCard(1))).toBe(4);
@@ -75,10 +67,6 @@ describe("inferCardColSpan", () => {
     expect(inferCardColSpan(createCard(2, ["command", "config"]))).toBe(8);
   });
 });
-
-// ---------------------------------------------------------------------------
-// inferCardRowSpan
-// ---------------------------------------------------------------------------
 
 describe("inferCardRowSpan", () => {
   it("returns 4 for card with 1-2 items", () => {
@@ -106,10 +94,6 @@ describe("inferCardRowSpan", () => {
     expect(inferCardRowSpan(createCard(2, ["command", "config"]))).toBe(8);
   });
 });
-
-// ---------------------------------------------------------------------------
-// buildDefaultSectionLayouts
-// ---------------------------------------------------------------------------
 
 describe("buildDefaultSectionLayouts", () => {
   it("returns empty array for sheet with no sections", () => {
@@ -140,12 +124,9 @@ describe("buildDefaultSectionLayouts", () => {
       { cards: [createCard(2), createCard(5)] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
-    
-    // First card: 2 items -> colSpan 4, rowSpan 4
     expect(result[0].cards[0].colSpan).toBe(4);
     expect(result[0].cards[0].rowSpan).toBe(4);
-    
-    // Second card: 5 items -> colSpan 8, rowSpan 8
+
     expect(result[0].cards[1].colSpan).toBe(8);
     expect(result[0].cards[1].rowSpan).toBe(8);
   });
@@ -155,9 +136,6 @@ describe("buildDefaultSectionLayouts", () => {
       { cards: [createCard(2), createCard(2), createCard(2)] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
-    
-    // All 3 cards have colSpan 4, should fit in one row (12 columns total)
-    // They should be positioned at col 1, 5, 9
     expect(result[0].cards[0].colStart).toBe(1);
     expect(result[0].cards[1].colStart).toBe(5);
     expect(result[0].cards[2].colStart).toBe(9);
@@ -169,8 +147,6 @@ describe("buildDefaultSectionLayouts", () => {
       { cards: [createCard(5), createCard(5)] }, // Both have colSpan 8
     ]);
     const result = buildDefaultSectionLayouts(sheet);
-    
-    // First card at col 1, second should wrap to next row
     expect(result[0].cards[0].colStart).toBe(1);
     expect(result[0].cards[0].rowStart).toBe(1);
     expect(result[0].cards[1].colStart).toBe(1);
@@ -182,7 +158,6 @@ describe("buildDefaultSectionLayouts", () => {
       { cards: [createCard(1, ["config"])] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
-    
     expect(result[0].cards[0].colSpan).toBe(8);
     expect(result[0].cards[0].rowSpan).toBe(8);
   });

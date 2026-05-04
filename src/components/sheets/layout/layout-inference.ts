@@ -2,10 +2,6 @@ import type { CheatSheetCard, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 import { resolveSectionLayout } from "./layout-algorithms";
 import type { SectionLayoutState } from "./layout-types";
 
-// ---------------------------------------------------------------------------
-// Card dimension inference
-// ---------------------------------------------------------------------------
-
 export function inferCardColSpan(card: CheatSheetCard): number {
   const itemCount = card.items.length;
   const hasConfig = card.items.some((item) => item.type === "config");
@@ -27,10 +23,6 @@ export function inferCardRowSpan(card: CheatSheetCard): number {
   if (itemCount >= 3) return 5;
   return 4;
 }
-
-// ---------------------------------------------------------------------------
-// Default layout generation
-// ---------------------------------------------------------------------------
 
 export function buildDefaultSectionLayouts(sheet: YamlCheatSheet): SectionLayoutState[] {
   return sheet.sections.map((section) => {
