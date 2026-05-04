@@ -141,6 +141,43 @@ Folders are sorted by numeric prefix (e.g., `01-tooling/`, `02-languages/`).
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Zod v4](https://zod.dev) for schema validation
 - [Vitest](https://vitest.dev) for unit testing
+- [Playwright](https://playwright.dev) for E2E testing
+
+## Testing
+
+The project uses a two-tier testing strategy:
+
+### Unit tests (Vitest)
+
+Unit tests cover pure logic functions in `src/lib/` and `src/components/sheets/layout/`. These are fast, isolated, and run with code coverage.
+
+```bash
+npm run test              # Run all unit tests
+npm run test:watch        # Run in watch mode
+npm run test:coverage     # Run with coverage report
+```
+
+Coverage is tracked only for unit tests because they measure actual logic coverage. The coverage configuration targets:
+- `src/lib/**/*.ts` — utilities, color functions, keybindings, schemas
+- `src/components/sheets/layout/**/*.ts` — layout algorithms and persistence logic
+
+### E2E tests (Playwright)
+
+E2E tests verify critical user journeys: keyboard navigation, drag & drop, and layout persistence. They run against a real browser (Chromium).
+
+```bash
+npm run test:e2e          # Run all E2E tests
+npm run test:e2e:ui       # Run with Playwright UI (useful for debugging)
+```
+
+**Why no coverage for E2E?** E2E tests verify *user behavior*, not *code paths*. Coverage metrics would be diluted across the entire stack (React, Next.js, DOM) and wouldn't reflect meaningful test quality.
+
+### What each tier tests
+
+| Tier | Tests | Coverage |
+|------|-------|----------|
+| Unit | Logic functions, algorithms, validation | ✅ Yes |
+| E2E | Navigation, drag & drop, persistence | ❌ No |
 
 ## Scripts
 
@@ -151,15 +188,18 @@ Folders are sorted by numeric prefix (e.g., `01-tooling/`, `02-languages/`).
 | `npm run start` | Start the production server |
 | `npm run lint` | Run ESLint |
 | `npm run test` | Run unit tests |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run test:coverage` | Run tests with coverage report |
+| `npm run test:watch` | Run unit tests in watch mode |
+| `npm run test:coverage` | Run unit tests with coverage report |
+| `npm run test:e2e` | Run E2E tests (Playwright) |
+| `npm run test:e2e:ui` | Run E2E tests with Playwright UI |
 | `npm run validate:cheatsheets` | Validate all cheat sheets against the Zod schema |
 
 Recommended checks before shipping content or UI changes:
 
 ```bash
 npm run lint
-npm test
+npm run test
+npm run test:e2e
 npm run build
 npm run validate:cheatsheets
 ```

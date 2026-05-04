@@ -20,15 +20,62 @@ Single-package Next.js 16 app. Keyboard-first developer cheat sheet hub. Content
 npm run dev                   # Dev server (Turbopack, localhost:3000)
 npm run build                 # Production build (Turbopack)
 npm run lint                  # ESLint — do NOT use `next lint`, it was removed in v16
-npm run validate:cheatsheets  # Validate MDX frontmatter against Zod schema
+npm run test                  # Unit tests (Vitest)
+npm run test:coverage         # Unit tests with coverage
+npm run test:e2e              # E2E tests (Playwright, requires dev server)
+npm run validate:cheatsheets  # Validate YAML cheatsheets against Zod schema
 ```
 
-No test suite. No typecheck script (use `tsc --noEmit` manually if needed).
+## Validation Rules
+
+**Run these checks automatically after making changes:**
+
+| Changed files | Run |
+|---------------|-----|
+| `src/**/*.ts`, `src/**/*.tsx` | `npm run lint && npm run test` |
+| `e2e/**/*.ts` | `npm run test:e2e` |
+| `content/cheatsheets/**/*.yaml` | `npm run validate:cheatsheets` |
+| `src/lib/yaml-cheatsheets.ts` (schema) | `npm run validate:cheatsheets && npm run test` |
+
+**When to run E2E tests:**
+- Changes to keyboard navigation logic (`use-keybindings.ts`, `use-command-navigation.ts`, `home-client.tsx`)
+- Changes to drag & drop or layout persistence (`use-card-drag.ts`, `use-layout-persistence.ts`, `layout-*.ts`)
+- Changes to core UI components that affect user interaction
+
+**Skip E2E when:**
+- Only modifying styles (CSS modules)
+- Only modifying content (YAML files)
+- Only modifying non-interactive components
+
+## Testing Strategy
+
+Two-tier testing approach:
+
+### Unit tests (Vitest)
+- **Scope**: Pure logic in `src/lib/` and `src/components/sheets/layout/*.ts`
+- **Coverage**: Yes — tracked for unit tests only
+- **Run**: `npm run test` or `npm run test:coverage`
+
+### E2E tests (Playwright)
+- **Scope**: User journeys — keyboard navigation, drag & drop, layout persistence
+- **Coverage**: No — E2E tests verify behavior, not code paths
+- **Run**: `npm run test:e2e` (starts dev server automatically)
+- **Debug**: `npm run test:e2e:ui` for Playwright UI
+
+### Key tested behaviors
+- Home page: hjkl/arrow navigation, search, sheet selection
+- Cheatsheet page: command navigation, copy, back navigation
+- Layout: drag & drop cards, resize, localStorage persistence
+
+### Adding tests
+- Unit tests: colocate with source as `*.test.ts` (e.g., `keybindings.test.ts`)
+- E2E tests: add to `e2e/` directory as `*.spec.ts`
 
 ## Architecture
 
 ```
-content/cheatsheets/   # MDX content files — slug = filename without .mdx
+content/cheatsheets/   # YAML content files — slug = filename without .yaml
+e2e/                   # Playwright E2E tests (*.spec.ts)
 scripts/               # validate-cheatsheets.ts (run via tsx)
 src/
   app/
@@ -62,7 +109,7 @@ No `tailwind.config.js`. Configuration is entirely in `src/app/globals.css` via 
 
 ## MDX Content
 
-- Each `.mdx` file must have frontmatter: `title` (string), `summary` (string), `color` (hex, e.g. `#FF0000`).
+- Each `.yaml` file must have frontmatter: `title` (string), `summary` (string), `color` (hex, e.g. `#FF0000`).
 - After adding a cheatsheet, run `npm run validate:cheatsheets`.
 - Custom MDX components (`SheetGrid`, `SheetCard`, `SheetCommand`, `code: SheetCode`) must be registered in `src/app/cheatsheets/[slug]/page.tsx`.
 - Import from `next-mdx-remote/rsc`, not `next-mdx-remote`.
