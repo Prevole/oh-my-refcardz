@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { SheetGrid, SheetCard, GRID_COLUMNS } from "@/components/sheets/sheet-grid";
+import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { SheetCommand } from "@/components/sheets/sheet-command";
 import { SheetConfig } from "@/components/sheets/sheet-config";
 import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
@@ -10,12 +10,9 @@ import type { CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 import {
   useLayoutPersistence,
   useCardDrag,
+  useCardResize,
   useCardKeyboard,
-  CardLayoutControls,
-  resolveSectionLayout,
-  clamp,
   FALLBACK_METRICS,
-  MAX_ROW_SPAN,
   type SectionMetricsState,
 } from "./layout";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
@@ -26,7 +23,6 @@ type Props = {
 };
 
 export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
-  const [editMode, setEditMode] = useState(false);
   const [sectionMetrics, setSectionMetrics] = useState<SectionMetricsState[]>(() =>
     sheet.sections.map(() => FALLBACK_METRICS)
   );
@@ -36,7 +32,8 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     sheet
   );
 
-  const { dragState, startCardDrag } = useCardDrag(editMode, sectionLayouts, setSectionLayouts, sectionMetrics);
+  const { dragState, startCardDrag } = useCardDrag(sectionLayouts, setSectionLayouts, sectionMetrics);
+  const { resizeState, startCardResize } = useCardResize(sectionLayouts, setSectionLayouts, sectionMetrics);
 
   const getCardCount = useCallback(
     (sectionIndex: number) => sheet.sections[sectionIndex]?.cards.length ?? 0,
@@ -44,13 +41,13 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   );
 
   const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboard({
-    editMode,
-    onExitLayoutMode: () => setEditMode(false),
     sectionLayouts,
     setSectionLayouts,
     sectionCount: sheet.sections.length,
     getCardCount,
   });
+
+  const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
 
   function updateSectionMetrics(sectionIndex: number, nextMetrics: SectionMetricsState) {
     setSectionMetrics((currentMetrics) => {
@@ -63,29 +60,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     });
   }
 
-  function updateCardSpan(sectionIndex: number, cardIndex: number, axis: "colSpan" | "rowSpan", delta: -1 | 1) {
-    setSectionLayouts((currentLayouts) =>
-      currentLayouts.map((sectionLayout, currentSectionIndex) => {
-        if (currentSectionIndex !== sectionIndex) return sectionLayout;
-
-        const currentCard = sectionLayout.cards[cardIndex];
-        const maxValue = axis === "colSpan" ? GRID_COLUMNS : MAX_ROW_SPAN;
-        const nextValue = clamp(currentCard[axis] + delta, 1, maxValue);
-
-        if (nextValue === currentCard[axis]) return sectionLayout;
-
-        const resizedCard = {
-          ...currentCard,
-          [axis]: nextValue,
-        };
-
-        return {
-          cards: resolveSectionLayout(sectionLayout.cards, cardIndex, resizedCard),
-        };
-      })
-    );
-  }
-
   function handleHeaderPointerDown(
     sectionIndex: number,
     cardIndex: number,
@@ -93,6 +67,16 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   ) {
     setFocusedCard(null);
     startCardDrag(sectionIndex, cardIndex, event);
+  }
+
+  function handleResizePointerDown(
+    sectionIndex: number,
+    cardIndex: number,
+    direction: "north" | "east" | "south" | "west" | "north-east" | "south-east" | "south-west" | "north-west",
+    event: React.PointerEvent<HTMLElement>
+  ) {
+    setFocusedCard(null);
+    startCardResize(sectionIndex, cardIndex, direction, event);
   }
 
   return (
@@ -112,13 +96,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
             Reset layout
           </button>
         </div>
-        <button
-          type="button"
-          className={`${cheatsheetStyles.layoutToggleButton} ${editMode ? cheatsheetStyles.layoutToggleButtonActive : ""}`}
-          onClick={() => setEditMode((current) => !current)}
-        >
-          {editMode ? "Exit layout mode" : "Enter layout mode"}
-        </button>
       </div>
 
       {sheet.sections.map((section, sectionIndex) => {
@@ -132,14 +109,14 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           >
             <div className={cheatsheetStyles.sectionHeaderRow}>
               <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
-              {editMode ? (
+              {isLayoutActive ? (
                 <span className={cheatsheetStyles.sectionLayoutLabel}>
                   {metrics.columns} cols · {Math.round(metrics.unitSize)}px
                 </span>
               ) : null}
             </div>
 
-            <SheetGrid editMode={editMode} onMetricsChange={(nextMetrics) => updateSectionMetrics(sectionIndex, nextMetrics)}>
+            <SheetGrid editMode={isLayoutActive} onMetricsChange={(nextMetrics) => updateSectionMetrics(sectionIndex, nextMetrics)}>
               {section.cards.map((card, cardIndex) => {
                 const baseLayout = sectionLayouts[sectionIndex]?.cards[cardIndex];
                 if (!baseLayout) return null;
@@ -147,19 +124,28 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
                 const isDragging = Boolean(
                   dragState && dragState.sectionIndex === sectionIndex && dragState.cardIndex === cardIndex
                 );
+                const isResizing = Boolean(
+                  resizeState && resizeState.sectionIndex === sectionIndex && resizeState.cardIndex === cardIndex
+                );
                 const isKeyboardFocused = Boolean(
                   focusedCard && focusedCard.sectionIndex === sectionIndex && focusedCard.cardIndex === cardIndex
                 );
-                const isDimmed = Boolean(dragState || focusedCard) && !isDragging && !isKeyboardFocused;
-                const previewLayout =
-                  isDragging && dragState
+                const isDimmed = Boolean(dragState || resizeState || focusedCard) && !isDragging && !isResizing && !isKeyboardFocused;
+                const previewLayout = isDragging && dragState
                     ? {
                         colStart: dragState.colStart,
                         rowStart: dragState.rowStart,
                         colSpan: dragState.colSpan,
                         rowSpan: dragState.rowSpan,
                       }
-                    : baseLayout;
+                    : isResizing && resizeState
+                      ? {
+                          colStart: resizeState.colStart,
+                          rowStart: resizeState.rowStart,
+                          colSpan: resizeState.colSpan,
+                          rowSpan: resizeState.rowSpan,
+                        }
+                      : baseLayout;
 
                 return (
                   <SheetCard
@@ -169,27 +155,19 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
                     rowStart={previewLayout.rowStart}
                     colSpan={previewLayout.colSpan}
                     rowSpan={previewLayout.rowSpan}
-                    editMode={editMode}
-                    dragging={isDragging}
+                    editMode={isLayoutActive}
+                    dragging={isDragging || isResizing}
                     dimmed={isDimmed}
                     keyboardFocused={isKeyboardFocused}
                     manipulating={isKeyboardFocused && isManipulating}
                     sectionIndex={sectionIndex}
                     cardIndex={cardIndex}
                     onHeaderPointerDown={(event) => handleHeaderPointerDown(sectionIndex, cardIndex, event)}
-                    layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
-                    controls={
-                      editMode ? (
-                        <CardLayoutControls
-                          colSpan={baseLayout.colSpan}
-                          rowSpan={baseLayout.rowSpan}
-                          onDecreaseWidth={() => updateCardSpan(sectionIndex, cardIndex, "colSpan", -1)}
-                          onIncreaseWidth={() => updateCardSpan(sectionIndex, cardIndex, "colSpan", 1)}
-                          onDecreaseHeight={() => updateCardSpan(sectionIndex, cardIndex, "rowSpan", -1)}
-                          onIncreaseHeight={() => updateCardSpan(sectionIndex, cardIndex, "rowSpan", 1)}
-                        />
-                      ) : null
+                    onResizePointerDown={(direction, event) =>
+                      handleResizePointerDown(sectionIndex, cardIndex, direction, event)
                     }
+                    activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
+                    layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
                   >
                     {card.items.map((item, itemIndex) => (
                       <div key={itemIndex}>

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import type { ResizeHandleDirection } from "./layout";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 export const GRID_GAP_PX = 16;
@@ -80,6 +81,8 @@ type SheetCardProps = {
   sectionIndex?: number;
   cardIndex?: number;
   onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onResizePointerDown?: (direction: ResizeHandleDirection, event: ReactPointerEvent<HTMLDivElement>) => void;
+  activeResizeDirection?: ResizeHandleDirection | null;
 };
 
 export function SheetCard({
@@ -101,6 +104,8 @@ export function SheetCard({
   sectionIndex,
   cardIndex,
   onHeaderPointerDown,
+  onResizePointerDown,
+  activeResizeDirection = null,
 }: SheetCardProps) {
   const classNames = [
     cheatsheetStyles.card,
@@ -133,12 +138,64 @@ export function SheetCard({
         </div>
       ) : null}
       <div
-        className={`${cheatsheetStyles.cardHeader} ${editMode ? cheatsheetStyles.cardHeaderDraggable : ""}`}
-        onPointerDown={editMode ? onHeaderPointerDown : undefined}
+        className={`${cheatsheetStyles.cardHeader} ${onHeaderPointerDown ? cheatsheetStyles.cardHeaderDraggable : ""}`}
+        onPointerDown={onHeaderPointerDown}
       >
         <h2 className={cheatsheetStyles.cardTitle}>{title}</h2>
         {badge ? <span className={cheatsheetStyles.cardBadge}>{badge}</span> : null}
       </div>
+      {onResizePointerDown ? (
+        <>
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleNorth}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "north" || activeResizeDirection === "north-east" || activeResizeDirection === "north-west"}
+            onPointerDown={(event) => onResizePointerDown("north", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleNorthEast}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "north-east"}
+            onPointerDown={(event) => onResizePointerDown("north-east", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleEast}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "east" || activeResizeDirection === "north-east" || activeResizeDirection === "south-east"}
+            onPointerDown={(event) => onResizePointerDown("east", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleSouth}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "south" || activeResizeDirection === "south-east" || activeResizeDirection === "south-west"}
+            onPointerDown={(event) => onResizePointerDown("south", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleSouthEast}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "south-east"}
+            onPointerDown={(event) => onResizePointerDown("south-east", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleSouthWest}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "south-west"}
+            onPointerDown={(event) => onResizePointerDown("south-west", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleWest}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "west" || activeResizeDirection === "north-west" || activeResizeDirection === "south-west"}
+            onPointerDown={(event) => onResizePointerDown("west", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleNorthWest}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "north-west"}
+            onPointerDown={(event) => onResizePointerDown("north-west", event)}
+          />
+        </>
+      ) : null}
       <div className={cheatsheetStyles.cardBody}>{children}</div>
       {footer ? <div className={cheatsheetStyles.cardFooter}>{footer}</div> : null}
     </article>

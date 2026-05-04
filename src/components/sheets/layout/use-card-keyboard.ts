@@ -22,8 +22,6 @@ export type UseCardKeyboardResult = {
 };
 
 type UseCardKeyboardOptions = {
-  editMode: boolean;
-  onExitLayoutMode: () => void;
   sectionLayouts: SectionLayoutState[];
   setSectionLayouts: Dispatch<SetStateAction<SectionLayoutState[]>>;
   sectionCount: number;
@@ -245,8 +243,6 @@ function validateFocus(
 }
 
 export function useCardKeyboard({
-  editMode,
-  onExitLayoutMode,
   sectionLayouts,
   setSectionLayouts,
   sectionCount,
@@ -261,21 +257,17 @@ export function useCardKeyboard({
 
   const scopePushedRef = useRef(false);
 
-  const focusedCard = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
+  const focusedCard = validateFocus(rawFocusedCard, sectionCount, getCardCount);
 
-  const setFocusedCard: Dispatch<SetStateAction<CardFocus | null>> = useCallback(
-    (action) => {
-      if (!editMode) return;
-      setRawFocusedCard(action);
-    },
-    [editMode]
-  );
+  const setFocusedCard: Dispatch<SetStateAction<CardFocus | null>> = useCallback((action) => {
+    setRawFocusedCard(action);
+  }, []);
 
   useEffect(() => {
-    if (editMode && !scopePushedRef.current) {
+    if (focusedCard && !scopePushedRef.current) {
       pushScope("sheet-layout");
       scopePushedRef.current = true;
-    } else if (!editMode && scopePushedRef.current) {
+    } else if (!focusedCard && scopePushedRef.current) {
       popScope("sheet-layout");
       scopePushedRef.current = false;
     }
@@ -286,10 +278,10 @@ export function useCardKeyboard({
         scopePushedRef.current = false;
       }
     };
-  }, [editMode, pushScope, popScope]);
+  }, [focusedCard, pushScope, popScope]);
 
   useEffect(() => {
-    if (!editMode || !focusedCard) return;
+    if (!focusedCard) return;
 
     const card = document.querySelector<HTMLElement>(
       `[data-layout-card="true"][data-layout-section-index="${focusedCard.sectionIndex}"][data-layout-card-index="${focusedCard.cardIndex}"]`
@@ -298,12 +290,12 @@ export function useCardKeyboard({
     if (!card) return;
 
     card.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-  }, [editMode, focusedCard, sectionLayouts]);
+  }, [focusedCard, sectionLayouts]);
 
   const handleNavigation = useCallback(
     (direction: "up" | "down" | "left" | "right") => {
-      const validFocus = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
-      
+      const validFocus = validateFocus(rawFocusedCard, sectionCount, getCardCount);
+
       if (!validFocus) {
         const first = findFirstCard(sectionLayouts);
         if (first) setRawFocusedCard(first);
@@ -326,12 +318,12 @@ export function useCardKeyboard({
         });
       }
     },
-    [editMode, rawFocusedCard, sectionCount, getCardCount, sectionLayouts]
+    [rawFocusedCard, sectionCount, getCardCount, sectionLayouts]
   );
 
   const handleMove = useCallback(
     (direction: "up" | "down" | "left" | "right") => {
-      const validFocus = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
+      const validFocus = validateFocus(rawFocusedCard, sectionCount, getCardCount);
       if (!validFocus) return;
 
       const { sectionIndex, cardIndex } = validFocus;
@@ -393,12 +385,12 @@ export function useCardKeyboard({
         setIsManipulating(false);
       }, 300);
     },
-    [editMode, rawFocusedCard, sectionCount, getCardCount, sectionLayouts, setSectionLayouts]
+    [rawFocusedCard, sectionCount, getCardCount, sectionLayouts, setSectionLayouts]
   );
 
   const handleResize = useCallback(
     (direction: "up" | "down" | "left" | "right") => {
-      const validFocus = editMode ? validateFocus(rawFocusedCard, sectionCount, getCardCount) : null;
+      const validFocus = validateFocus(rawFocusedCard, sectionCount, getCardCount);
       if (!validFocus) return;
 
       const { sectionIndex, cardIndex } = validFocus;
@@ -461,14 +453,20 @@ export function useCardKeyboard({
         setIsManipulating(false);
       }, 300);
     },
-    [editMode, rawFocusedCard, sectionCount, getCardCount, sectionLayouts, setSectionLayouts]
+    [rawFocusedCard, sectionCount, getCardCount, sectionLayouts, setSectionLayouts]
   );
 
   useEffect(() => {
-    if (!editMode) return;
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isScopeActive("sheet-layout") && !isScopeActive("global")) return;
+      const layoutScopeActive = isScopeActive("sheet-layout");
+      const globalScopeActive = isScopeActive("global");
+      const commandScopeActive = isScopeActive("sheet-commands");
+
+      if (!layoutScopeActive && !globalScopeActive && !commandScopeActive) return;
+
+      if (!layoutScopeActive && !rawFocusedCard && !event.shiftKey && !event.altKey) {
+        return;
+      }
 
       const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
@@ -546,18 +544,11 @@ export function useCardKeyboard({
           return;
         }
       }
-
-      if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        onExitLayoutMode();
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
-    editMode,
     rawFocusedCard,
     sectionCount,
     getCardCount,
@@ -566,7 +557,6 @@ export function useCardKeyboard({
     handleNavigation,
     handleMove,
     handleResize,
-    onExitLayoutMode,
   ]);
 
   useEffect(() => {

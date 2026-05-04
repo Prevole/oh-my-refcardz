@@ -13,7 +13,6 @@ export type UseCardDragResult = {
 };
 
 export function useCardDrag(
-  editMode: boolean,
   sectionLayouts: SectionLayoutState[],
   setSectionLayouts: Dispatch<SetStateAction<SectionLayoutState[]>>,
   sectionMetrics: SectionMetricsState[]
@@ -26,7 +25,7 @@ export function useCardDrag(
   }, [dragState]);
 
   useEffect(() => {
-    if (!editMode || !dragState) return;
+    if (!dragState) return;
 
     function handlePointerMove(event: PointerEvent) {
       const active = dragStateRef.current;
@@ -76,12 +75,11 @@ export function useCardDrag(
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [dragState, editMode, setSectionLayouts]);
+  }, [dragState, setSectionLayouts]);
 
   function startCardDrag(sectionIndex: number, cardIndex: number, event: ReactPointerEvent<HTMLElement>) {
-    if (!editMode) return;
-
     if ((event.target as HTMLElement).closest("[data-card-layout-controls]")) return;
+    if ((event.target as HTMLElement).closest("[data-card-resize-handle]")) return;
 
     const grid = event.currentTarget.closest("[data-sheet-grid]");
     if (!(grid instanceof HTMLElement)) return;

@@ -1,4 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+async function focusFirstLayoutCard(page: Page) {
+  await page.keyboard.press("H");
+  await page.waitForTimeout(100);
+}
 
 test.describe("Drag & drop and layout persistence", () => {
   test.beforeEach(async ({ page }) => {
@@ -20,29 +25,31 @@ test.describe("Drag & drop and layout persistence", () => {
     await expect(statusText).toBeVisible();
   });
 
-  test("enters and exits layout mode", async ({ page }) => {
+  test("activates and clears the layout overlay around keyboard focus", async ({ page }) => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    const layoutButton = page.locator("text=Enter layout mode");
-    await expect(layoutButton).toBeVisible();
-    await layoutButton.click();
+    const metricsText = page.locator("text=/\\d+ cols/");
+    await expect(metricsText.first()).not.toBeVisible();
 
-    const exitButton = page.locator("text=Exit layout mode");
-    await expect(exitButton).toBeVisible();
+    await focusFirstLayoutCard(page);
 
     const layoutControls = page.locator("[data-card-layout-controls]");
     await expect(layoutControls.first()).toBeVisible();
+    await expect(metricsText.first()).toBeVisible();
 
-    await exitButton.click();
-    await expect(layoutButton).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(100);
+
+    await expect(layoutControls.first()).not.toBeVisible();
+    await expect(metricsText.first()).not.toBeVisible();
   });
 
   test("shows column metrics in layout mode", async ({ page }) => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await page.locator("text=Enter layout mode").click();
+    await focusFirstLayoutCard(page);
     const metricsText = page.locator("text=/\\d+ cols/");
     await expect(metricsText.first()).toBeVisible();
   });
@@ -51,7 +58,7 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await page.locator("text=Enter layout mode").click();
+    await focusFirstLayoutCard(page);
     const controls = page.locator("[data-card-layout-controls]").first();
     await expect(controls).toBeVisible();
 
@@ -76,7 +83,7 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await page.locator("text=Enter layout mode").click();
+    await focusFirstLayoutCard(page);
     const controls = page.locator("[data-card-layout-controls]").first();
     await expect(controls).toBeVisible();
 
@@ -98,7 +105,7 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await page.locator("text=Enter layout mode").click();
+    await focusFirstLayoutCard(page);
     const controls = page.locator("[data-card-layout-controls]").first();
     await controls.locator("button").first().click();
     await page.waitForTimeout(200);
@@ -120,7 +127,7 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await page.locator("text=Enter layout mode").click();
+    await focusFirstLayoutCard(page);
     const controls = page.locator("[data-card-layout-controls]").first();
     await controls.locator("button").first().click();
     await page.waitForTimeout(300);
@@ -148,8 +155,6 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await page.locator("text=Enter layout mode").click();
-    await page.waitForTimeout(200);
     const firstCard = page.locator("article").first();
     await expect(firstCard).toBeVisible();
     const cardHeader = firstCard.locator("[class*='cardHeader']").first();
@@ -179,8 +184,8 @@ test.describe("Layout persistence across navigation", () => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    // Enter layout mode and make a change
-    await page.locator("text=Enter layout mode").click();
+    // Focus a card and make a change
+    await focusFirstLayoutCard(page);
     const controls = page.locator("[data-card-layout-controls]").first();
     await controls.locator("button").first().click();
     await page.waitForTimeout(200);
@@ -188,7 +193,7 @@ test.describe("Layout persistence across navigation", () => {
     // Verify saved
     await expect(page.locator("text=Saved locally")).toBeVisible();
 
-    await page.locator("text=Exit layout mode").click();
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Backspace");
     await expect(page).toHaveURL("/");
 

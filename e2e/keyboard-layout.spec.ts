@@ -25,8 +25,6 @@ test.describe("Keyboard layout management", () => {
 
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
-    await page.locator("text=Enter layout mode").click();
-    await page.waitForTimeout(200);
   });
 
   test.describe("Card navigation with Shift+hjkl", () => {
@@ -235,28 +233,29 @@ test.describe("Keyboard layout management", () => {
     });
   });
 
-  test.describe("Layout mode interaction", () => {
-    test("clears card focus when exiting layout mode", async ({ page }) => {
+  test.describe("Layout interaction", () => {
+    test("clears card focus with Escape", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
       await expectFocusedLayoutCard(page);
 
-      await page.locator("text=Exit layout mode").click();
+      await page.keyboard.press("Escape");
       await page.waitForTimeout(100);
 
       const focusedCardAfter = page.locator("article[class*='cardKeyboardFocused']");
       await expect(focusedCardAfter).not.toBeVisible();
     });
 
-    test("keyboard shortcuts don't work outside layout mode", async ({ page }) => {
-      await page.locator("text=Exit layout mode").click();
-      await page.waitForTimeout(100);
-
-      await page.keyboard.press("Shift+h");
-      await page.waitForTimeout(100);
-
+    test("keeps layout overlay hidden until interaction starts", async ({ page }) => {
       const focusedCard = page.locator("article[data-layout-card='true'][class*='cardKeyboardFocused']");
+      const metricsText = page.locator("text=/\\d+ cols/");
+
       await expect(focusedCard).not.toBeVisible();
+      await expect(metricsText.first()).not.toBeVisible();
+
+      await focusFirstLayoutCard(page);
+
+      await expect(metricsText.first()).toBeVisible();
     });
 
     test("dragging clears keyboard focus", async ({ page }) => {
@@ -279,10 +278,10 @@ test.describe("Keyboard layout management", () => {
   });
 
   test.describe("Help modal shows layout shortcuts", () => {
-    test("displays layout mode shortcuts in help modal", async ({ page }) => {
+    test("displays layout shortcuts in help modal", async ({ page }) => {
       await page.getByRole("button", { name: "Help" }).click();
 
-      const layoutSection = page.getByRole("heading", { name: "Layout Mode" });
+      const layoutSection = page.getByRole("heading", { name: "Layout" });
       await expect(layoutSection).toBeVisible();
 
       const moveCardText = page.locator("text=/Move card/i");

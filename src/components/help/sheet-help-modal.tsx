@@ -100,9 +100,9 @@ export function SheetHelpModal({ open, onClose }: Props) {
           </tbody>
         </table>
 
-        <h3 className="mt-6 text-xl font-semibold">Layout Mode</h3>
+        <h3 className="mt-6 text-xl font-semibold">Layout</h3>
         <p className="mt-1 text-sm text-white/60">
-          Enter layout mode to rearrange and resize cards using the keyboard.
+          Drag cards or their edges at any time. Keyboard layout editing is implicit too: use Shift plus arrows or hjkl to focus a card, then keep editing from there.
         </p>
         <table className={`${keybindingStyles.legendTable} mt-3`}>
           <colgroup>

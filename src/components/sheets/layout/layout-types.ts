@@ -29,6 +29,33 @@ export type DragState = {
   pointerOffsetY: number;
 };
 
+export type ResizeHandleDirection =
+  | "north"
+  | "east"
+  | "south"
+  | "west"
+  | "north-east"
+  | "south-east"
+  | "south-west"
+  | "north-west";
+
+export type ResizeState = {
+  sectionIndex: number;
+  cardIndex: number;
+  colStart: number;
+  rowStart: number;
+  colSpan: number;
+  rowSpan: number;
+  direction: ResizeHandleDirection;
+  startClientX: number;
+  startClientY: number;
+  originColStart: number;
+  originRowStart: number;
+  originColSpan: number;
+  originRowSpan: number;
+  unitSize: number;
+};
+
 export const MAX_ROW_SPAN = 24;
 
 export const FALLBACK_METRICS: SectionMetricsState = {

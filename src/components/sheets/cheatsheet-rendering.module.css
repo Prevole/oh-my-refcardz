@@ -43,32 +43,6 @@
   cursor: not-allowed;
 }
 
-.layoutToggleButton {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(9, 14, 26, 0.82);
-  color: rgba(237, 242, 244, 0.82);
-  border-radius: 999px;
-  padding: 0.5rem 0.9rem;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-}
-
-.layoutToggleButton:hover {
-  border-color: rgba(255, 255, 255, 0.24);
-  background: rgba(14, 22, 38, 0.92);
-  color: rgba(237, 242, 244, 0.96);
-}
-
-.layoutToggleButtonActive {
-  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 48%, transparent);
-  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 18%, rgba(14, 22, 38, 0.94));
-  color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 76%, white);
-}
-
 .dashboardGrid {
   --sheet-grid-columns: 12;
   --sheet-grid-column-size: 12rem;
@@ -124,6 +98,24 @@
 .card:hover {
   border-color: rgba(255, 255, 255, 0.18);
   background: rgba(0, 0, 0, 0.45);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--sheet-accent, var(--accent)) 28%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover::before,
+.cardEditMode::before,
+.cardKeyboardFocused::before,
+.cardDragging::before {
+  opacity: 1;
 }
 
 .cardEditMode {
@@ -261,6 +253,125 @@
 
 .cardHeaderDraggable:active {
   cursor: grabbing;
+}
+
+.cardResizeHandle {
+  position: absolute;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.cardResizeHandle:hover,
+.cardResizeHandle[data-active="true"] {
+  opacity: 1;
+}
+
+.cardResizeHandle::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.cardResizeHandleNorth,
+.cardResizeHandleSouth {
+  left: 0.85rem;
+  right: 0.85rem;
+  height: 0.7rem;
+  cursor: ns-resize;
+}
+
+.cardResizeHandleNorth {
+  top: 0.2rem;
+}
+
+.cardResizeHandleNorth::before,
+.cardResizeHandleSouth::before {
+  left: calc(50% - 0.9rem);
+  top: calc(50% - 0.38rem);
+  width: 1.8rem;
+  height: 0.76rem;
+  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 72%, white);
+  box-shadow: 0 0 0 1px rgba(5, 8, 14, 0.82);
+  clip-path: polygon(0 0, 50% 100%, 100% 0, 82% 0, 50% 60%, 18% 0);
+}
+
+.cardResizeHandleNorth::before {
+  transform: rotate(180deg);
+}
+
+.cardResizeHandleSouth {
+  bottom: 0.2rem;
+}
+
+.cardResizeHandleEast,
+.cardResizeHandleWest {
+  top: 0.85rem;
+  bottom: 0.85rem;
+  width: 0.7rem;
+  cursor: ew-resize;
+}
+
+.cardResizeHandleEast {
+  right: 0.2rem;
+}
+
+.cardResizeHandleEast::before,
+.cardResizeHandleWest::before {
+  top: calc(50% - 0.9rem);
+  left: calc(50% - 0.38rem);
+  width: 0.76rem;
+  height: 1.8rem;
+  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 72%, white);
+  box-shadow: 0 0 0 1px rgba(5, 8, 14, 0.82);
+  clip-path: polygon(0 0, 100% 50%, 0 100%, 0 82%, 60% 50%, 0 18%);
+}
+
+.cardResizeHandleWest {
+  left: 0.2rem;
+}
+
+.cardResizeHandleWest::before {
+  transform: rotate(180deg);
+}
+
+.cardResizeHandleNorthEast,
+.cardResizeHandleSouthEast,
+.cardResizeHandleSouthWest,
+.cardResizeHandleNorthWest {
+  width: 1rem;
+  height: 1rem;
+}
+
+.cardResizeHandleNorthEast {
+  top: 0.2rem;
+  right: 0.2rem;
+  cursor: nesw-resize;
+}
+
+.cardResizeHandleSouthEast {
+  right: 0.2rem;
+  bottom: 0.2rem;
+  cursor: nwse-resize;
+}
+
+.cardResizeHandleSouthWest {
+  left: 0.2rem;
+  bottom: 0.2rem;
+  cursor: nesw-resize;
+}
+
+.cardResizeHandleNorthWest {
+  top: 0.2rem;
+  left: 0.2rem;
+  cursor: nwse-resize;
+}
+
+.cardResizeHandleNorthEast::before,
+.cardResizeHandleSouthEast::before,
+.cardResizeHandleSouthWest::before,
+.cardResizeHandleNorthWest::before {
+  display: none;
 }
 
 .cardTitle {

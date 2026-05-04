@@ -171,22 +171,22 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.CARD_NAV_LEFT,
       label: "Navigate to card left",
-      combos: [key("H"), combo("ArrowLeft", "shift")],
+      combos: [combo("h", "shift"), combo("ArrowLeft", "shift")],
     },
     {
       id: ACTION_IDS.CARD_NAV_RIGHT,
       label: "Navigate to card right",
-      combos: [key("L"), combo("ArrowRight", "shift")],
+      combos: [combo("l", "shift"), combo("ArrowRight", "shift")],
     },
     {
       id: ACTION_IDS.CARD_NAV_UP,
       label: "Navigate to card above",
-      combos: [key("K"), combo("ArrowUp", "shift")],
+      combos: [combo("k", "shift"), combo("ArrowUp", "shift")],
     },
     {
       id: ACTION_IDS.CARD_NAV_DOWN,
       label: "Navigate to card below",
-      combos: [key("J"), combo("ArrowDown", "shift")],
+      combos: [combo("j", "shift"), combo("ArrowDown", "shift")],
     },
     {
       id: ACTION_IDS.CARD_MOVE_LEFT,
@@ -239,8 +239,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
 const SHIFT_PRODUCED_CHARS = new Set([
   "?", "/", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+",
   "{", "}", "|", ":", '"', "<", ">", "~",
-  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 ]);
 
 export function matchesCombo(event: KeyboardEvent, combo: KeyCombo): boolean {
