@@ -41,7 +41,7 @@ export interface KeybindingAction {
 /**
  * Context-specific keybindings configuration
  */
-export type KeybindingContext = "global" | "home" | "sheet" | "sheet-commands";
+export type KeybindingContext = "global" | "home" | "sheet" | "sheet-commands" | "sheet-layout";
 
 /**
  * Map a KeyboardScopeId to a KeybindingContext
@@ -52,6 +52,8 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "global";
     case "sheet-commands":
       return "sheet-commands";
+    case "sheet-layout":
+      return "sheet-layout";
     default:
       return null;
   }
@@ -82,12 +84,27 @@ export const ACTION_IDS = {
   CLEAR_SEARCH: "home.clear-search",
   TOGGLE_INFO: "home.toggle-info",
   OPEN_SHEET: "home.open-sheet",
+
   // Sheet page actions
   BACK_TO_HOME: "sheet.back-to-home",
 
   // Sheet commands actions
   COPY_COMMAND: "sheet-commands.copy",
   SHOW_EXAMPLE: "sheet-commands.show-example",
+
+  // Sheet layout actions (card navigation and manipulation)
+  CARD_NAV_LEFT: "sheet-layout.nav-left",
+  CARD_NAV_RIGHT: "sheet-layout.nav-right",
+  CARD_NAV_UP: "sheet-layout.nav-up",
+  CARD_NAV_DOWN: "sheet-layout.nav-down",
+  CARD_MOVE_LEFT: "sheet-layout.move-left",
+  CARD_MOVE_RIGHT: "sheet-layout.move-right",
+  CARD_MOVE_UP: "sheet-layout.move-up",
+  CARD_MOVE_DOWN: "sheet-layout.move-down",
+  CARD_SHRINK_WIDTH: "sheet-layout.shrink-width",
+  CARD_GROW_WIDTH: "sheet-layout.grow-width",
+  CARD_SHRINK_HEIGHT: "sheet-layout.shrink-height",
+  CARD_GROW_HEIGHT: "sheet-layout.grow-height",
 } as const;
 
 export type ActionId = (typeof ACTION_IDS)[keyof typeof ACTION_IDS];
@@ -203,6 +220,72 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.SHOW_EXAMPLE,
       label: "Show example",
       combos: [key("i")],
+    },
+  ],
+
+  "sheet-layout": [
+    // Card navigation (Shift + hjkl)
+    {
+      id: ACTION_IDS.CARD_NAV_LEFT,
+      label: "Navigate to card left",
+      combos: [combo("h", "shift"), combo("ArrowLeft", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_NAV_RIGHT,
+      label: "Navigate to card right",
+      combos: [combo("l", "shift"), combo("ArrowRight", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_NAV_UP,
+      label: "Navigate to card above",
+      combos: [combo("k", "shift"), combo("ArrowUp", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_NAV_DOWN,
+      label: "Navigate to card below",
+      combos: [combo("j", "shift"), combo("ArrowDown", "shift")],
+    },
+    // Card movement (Ctrl + hjkl)
+    {
+      id: ACTION_IDS.CARD_MOVE_LEFT,
+      label: "Move card left",
+      combos: [combo("h", "ctrl"), combo("ArrowLeft", "ctrl")],
+    },
+    {
+      id: ACTION_IDS.CARD_MOVE_RIGHT,
+      label: "Move card right",
+      combos: [combo("l", "ctrl"), combo("ArrowRight", "ctrl")],
+    },
+    {
+      id: ACTION_IDS.CARD_MOVE_UP,
+      label: "Move card up",
+      combos: [combo("k", "ctrl"), combo("ArrowUp", "ctrl")],
+    },
+    {
+      id: ACTION_IDS.CARD_MOVE_DOWN,
+      label: "Move card down",
+      combos: [combo("j", "ctrl"), combo("ArrowDown", "ctrl")],
+    },
+    // Card resize (Ctrl + Shift + hjkl)
+    {
+      id: ACTION_IDS.CARD_SHRINK_WIDTH,
+      label: "Shrink card width",
+      combos: [combo("h", "ctrl", "shift"), combo("ArrowLeft", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_GROW_WIDTH,
+      label: "Grow card width",
+      combos: [combo("l", "ctrl", "shift"), combo("ArrowRight", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_SHRINK_HEIGHT,
+      label: "Shrink card height",
+      combos: [combo("k", "ctrl", "shift"), combo("ArrowUp", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_GROW_HEIGHT,
+      label: "Grow card height",
+      combos: [combo("j", "ctrl", "shift"), combo("ArrowDown", "ctrl", "shift")],
     },
   ],
 };

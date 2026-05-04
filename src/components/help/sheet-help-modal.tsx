@@ -105,6 +105,46 @@ export function SheetHelpModal({ open, onClose }: Props) {
           </tbody>
         </table>
 
+        {/* Layout Mode */}
+        <h3 className="mt-6 text-xl font-semibold">Layout Mode</h3>
+        <p className="mt-1 text-sm text-white/60">
+          Enter layout mode to rearrange and resize cards using the keyboard.
+        </p>
+        <table className={`${keybindingStyles.legendTable} mt-3`}>
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <tbody>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.CARD_NAV_LEFT} label="Focus card left" />
+              <HelpRow actionId={ACTION_IDS.CARD_NAV_RIGHT} label="Focus card right" />
+            </tr>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.CARD_NAV_UP} label="Focus card above" />
+              <HelpRow actionId={ACTION_IDS.CARD_NAV_DOWN} label="Focus card below" />
+            </tr>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.CARD_MOVE_LEFT} />
+              <HelpRow actionId={ACTION_IDS.CARD_MOVE_RIGHT} />
+            </tr>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.CARD_MOVE_UP} />
+              <HelpRow actionId={ACTION_IDS.CARD_MOVE_DOWN} />
+            </tr>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.CARD_SHRINK_WIDTH} />
+              <HelpRow actionId={ACTION_IDS.CARD_GROW_WIDTH} />
+            </tr>
+            <tr>
+              <HelpRow actionId={ACTION_IDS.CARD_SHRINK_HEIGHT} />
+              <HelpRow actionId={ACTION_IDS.CARD_GROW_HEIGHT} />
+            </tr>
+          </tbody>
+        </table>
+
         {/* Misc */}
         <h3 className="mt-6 text-xl font-semibold">Misc</h3>
         <table className={`${keybindingStyles.legendTable} mt-3`}>

@@ -75,6 +75,8 @@ type SheetCardProps = {
   controls?: ReactNode;
   dragging?: boolean;
   dimmed?: boolean;
+  keyboardFocused?: boolean;
+  manipulating?: boolean;
   onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
 };
 
@@ -92,11 +94,24 @@ export function SheetCard({
   controls,
   dragging = false,
   dimmed = false,
+  keyboardFocused = false,
+  manipulating = false,
   onHeaderPointerDown,
 }: SheetCardProps) {
+  const classNames = [
+    cheatsheetStyles.card,
+    editMode ? cheatsheetStyles.cardEditMode : "",
+    dragging ? cheatsheetStyles.cardDragging : "",
+    dimmed ? cheatsheetStyles.cardDimmed : "",
+    keyboardFocused ? cheatsheetStyles.cardKeyboardFocused : "",
+    manipulating ? cheatsheetStyles.cardManipulating : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <article
-      className={`${cheatsheetStyles.card} ${editMode ? cheatsheetStyles.cardEditMode : ""} ${dragging ? cheatsheetStyles.cardDragging : ""} ${dimmed ? cheatsheetStyles.cardDimmed : ""}`}
+      className={classNames}
       style={{
         ["--card-col-start" as string]: String(colStart),
         ["--card-row-start" as string]: String(rowStart),

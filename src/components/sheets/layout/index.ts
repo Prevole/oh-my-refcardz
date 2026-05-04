@@ -32,5 +32,8 @@ export type { UseLayoutPersistenceResult } from "./use-layout-persistence";
 export { useCardDrag } from "./use-card-drag";
 export type { UseCardDragResult } from "./use-card-drag";
 
+export { useCardKeyboard } from "./use-card-keyboard";
+export type { UseCardKeyboardResult, CardFocus } from "./use-card-keyboard";
+
 // Components
 export { CardLayoutControls } from "./card-layout-controls";

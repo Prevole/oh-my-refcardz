@@ -24,7 +24,7 @@ import {
  *   // In settings panel: pushScope("settings") on open, popScope("settings") on close
  */
 
-export type KeyboardScopeId = "global" | "settings" | "help" | "info" | "sheet-commands";
+export type KeyboardScopeId = "global" | "settings" | "help" | "info" | "sheet-commands" | "sheet-layout";
 
 type KeyboardContextValue = {
   /** Current active scope (top of the stack) */

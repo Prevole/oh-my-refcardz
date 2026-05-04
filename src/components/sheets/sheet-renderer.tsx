@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SheetGrid, SheetCard, GRID_COLUMNS } from "@/components/sheets/sheet-grid";
 import { SheetCommand } from "@/components/sheets/sheet-command";
 import { SheetConfig } from "@/components/sheets/sheet-config";
@@ -10,6 +10,7 @@ import type { CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 import {
   useLayoutPersistence,
   useCardDrag,
+  useCardKeyboard,
   CardLayoutControls,
   resolveSectionLayout,
   clamp,
@@ -40,6 +41,19 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   );
 
   const { dragState, startCardDrag } = useCardDrag(editMode, sectionLayouts, setSectionLayouts, sectionMetrics);
+
+  const getCardCount = useCallback(
+    (sectionIndex: number) => sheet.sections[sectionIndex]?.cards.length ?? 0,
+    [sheet.sections]
+  );
+
+  const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboard({
+    editMode,
+    sectionLayouts,
+    setSectionLayouts,
+    sectionCount: sheet.sections.length,
+    getCardCount,
+  });
 
   function updateSectionMetrics(sectionIndex: number, nextMetrics: SectionMetricsState) {
     setSectionMetrics((currentMetrics) => {
@@ -73,6 +87,16 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         };
       })
     );
+  }
+
+  // Clear keyboard focus when starting a drag
+  function handleHeaderPointerDown(
+    sectionIndex: number,
+    cardIndex: number,
+    event: React.PointerEvent<HTMLElement>
+  ) {
+    setFocusedCard(null);
+    startCardDrag(sectionIndex, cardIndex, event);
   }
 
   return (
@@ -127,7 +151,10 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
                 const isDragging = Boolean(
                   dragState && dragState.sectionIndex === sectionIndex && dragState.cardIndex === cardIndex
                 );
-                const isDimmed = Boolean(dragState) && !isDragging;
+                const isKeyboardFocused = Boolean(
+                  focusedCard && focusedCard.sectionIndex === sectionIndex && focusedCard.cardIndex === cardIndex
+                );
+                const isDimmed = Boolean(dragState || focusedCard) && !isDragging && !isKeyboardFocused;
                 const previewLayout =
                   isDragging && dragState
                     ? {
@@ -149,7 +176,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
                     editMode={editMode}
                     dragging={isDragging}
                     dimmed={isDimmed}
-                    onHeaderPointerDown={(event) => startCardDrag(sectionIndex, cardIndex, event)}
+                    keyboardFocused={isKeyboardFocused}
+                    manipulating={isKeyboardFocused && isManipulating}
+                    onHeaderPointerDown={(event) => handleHeaderPointerDown(sectionIndex, cardIndex, event)}
                     layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
                     controls={
                       editMode ? (

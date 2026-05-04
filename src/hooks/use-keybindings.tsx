@@ -99,6 +99,7 @@ function mergeWithDefaults(stored: Partial<KeybindingsConfig>): KeybindingsConfi
     home: [],
     sheet: [],
     "sheet-commands": [],
+    "sheet-layout": [],
   };
 
   for (const context of Object.keys(DEFAULT_KEYBINDINGS) as KeybindingContext[]) {
