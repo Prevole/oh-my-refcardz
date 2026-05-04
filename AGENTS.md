@@ -107,6 +107,14 @@ Path alias: `@/*` → `./src/*`
 
 No `tailwind.config.js`. Configuration is entirely in `src/app/globals.css` via CSS directives.
 
+## Comments
+
+- Default to no comment.
+- Keep code comments rare.
+- Do not add comments that restate what the code already makes obvious.
+- Only add a comment when it explains intent, a non-obvious constraint, a tradeoff, or surprising behavior.
+- If a comment can become stale easily, prefer clearer code over a comment.
+
 ## MDX Content
 
 - Each `.yaml` file must have frontmatter: `title` (string), `summary` (string), `color` (hex, e.g. `#FF0000`).
