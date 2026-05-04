@@ -188,7 +188,7 @@ test.describe("Layout persistence across navigation", () => {
     // Verify saved
     await expect(page.locator("text=Saved locally")).toBeVisible();
 
-    // Go back to home
+    await page.locator("text=Exit layout mode").click();
     await page.keyboard.press("Backspace");
     await expect(page).toHaveURL("/");
 
