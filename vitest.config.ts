@@ -10,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      include: ["src/lib/**/*.ts"],
+      include: ["src/lib/**/*.ts", "src/components/sheets/layout/**/*.ts"],
       exclude: ["src/**/*.test.ts"],
     },
   },
