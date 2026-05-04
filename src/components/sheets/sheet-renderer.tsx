@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { SheetCommand } from "@/components/sheets/sheet-command";
 import { SheetConfig } from "@/components/sheets/sheet-config";
@@ -14,11 +14,35 @@ type Props = {
   sheet: YamlCheatSheet;
 };
 
+const MAX_ROW_SPAN = 24;
+
+type CardLayoutState = {
+  colSpan: number;
+  rowSpan: number;
+};
+
+type SectionLayoutState = {
+  cards: CardLayoutState[];
+};
+
+type SectionMetricsState = {
+  columns: number;
+  unitSize: number;
+};
+
+const FALLBACK_METRICS: SectionMetricsState = {
+  columns: 12,
+  unitSize: 96,
+};
+
 export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const [editMode, setEditMode] = useState(false);
   const defaultSectionLayouts = useMemo(() => buildDefaultSectionLayouts(sheet), [sheet]);
   const [sectionLayouts, setSectionLayouts] = useState(defaultSectionLayouts);
   const [storageHydrated, setStorageHydrated] = useState(false);
+  const [sectionMetrics, setSectionMetrics] = useState<SectionMetricsState[]>(() =>
+    sheet.sections.map(() => FALLBACK_METRICS)
+  );
   const didHydrateStorage = useRef(false);
   const hasSavedLayout = storageHydrated && !areLayoutsEqual(sectionLayouts, defaultSectionLayouts);
 
@@ -28,6 +52,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
     queueMicrotask(() => {
       setSectionLayouts(nextLayouts);
+      setSectionMetrics(sheet.sections.map(() => FALLBACK_METRICS));
       setStorageHydrated(true);
       didHydrateStorage.current = true;
     });
@@ -46,7 +71,20 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     window.localStorage.setItem(storageKey, JSON.stringify(sectionLayouts));
   }, [defaultSectionLayouts, sectionLayouts, sheetSlug]);
 
-  function updateCardSpan(sectionIndex: number, cardIndex: number, axis: "colSpan" | "rowSpan", delta: -1 | 1) {
+  const updateSectionMetrics = useCallback((sectionIndex: number, nextMetrics: SectionMetricsState) => {
+    setSectionMetrics((currentMetrics) => {
+      const previous = currentMetrics[sectionIndex];
+      if (previous && previous.columns === nextMetrics.columns && previous.unitSize === nextMetrics.unitSize) {
+        return currentMetrics;
+      }
+
+      return currentMetrics.map((metrics, currentIndex) =>
+        currentIndex === sectionIndex ? nextMetrics : metrics
+      );
+    });
+  }, []);
+
+  function updateCardSpan(sectionIndex: number, cardIndex: number, axis: keyof CardLayoutState, delta: -1 | 1) {
     setSectionLayouts((currentLayouts) =>
       currentLayouts.map((sectionLayout, currentSectionIndex) => {
         if (currentSectionIndex !== sectionIndex) return sectionLayout;
@@ -56,7 +94,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           cards: sectionLayout.cards.map((cardLayout, currentCardIndex) => {
             if (currentCardIndex !== cardIndex) return cardLayout;
 
-            const maxValue = axis === "colSpan" ? sectionLayout.columns : MAX_ROW_SPAN;
+            const maxValue = axis === "colSpan" ? sectionMetrics[sectionIndex]?.columns ?? FALLBACK_METRICS.columns : MAX_ROW_SPAN;
             const nextValue = clamp(cardLayout[axis] + delta, 1, maxValue);
 
             if (nextValue === cardLayout[axis]) return cardLayout;
@@ -98,102 +136,88 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           {editMode ? "Exit layout mode" : "Enter layout mode"}
         </button>
       </div>
-      {sheet.sections.map((section, index) => (
-        <section
-          key={section.title}
-          id={buildSectionAnchorId("sheet-section", section.title, index)}
-          className={cheatsheetStyles.section}
-        >
-          <div className={cheatsheetStyles.sectionHeaderRow}>
-            <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
-            {editMode ? (
-              <span className={cheatsheetStyles.sectionLayoutLabel}>
-                {sectionLayouts[index].columns} cols
-              </span>
-            ) : null}
-          </div>
-          <SheetGrid columns={sectionLayouts[index].columns} editMode={editMode}>
-            {section.cards.map((card, cardIndex) => {
-              const layout = sectionLayouts[index].cards[cardIndex];
 
-              return (
-                <SheetCard
-                  key={card.title}
-                  title={card.title}
-                  colSpan={layout.colSpan}
-                  rowSpan={layout.rowSpan}
-                  editMode={editMode}
-                  layoutLabel={`${layout.colSpan}x${layout.rowSpan}`}
-                  controls={
-                    editMode ? (
-                      <CardLayoutControls
-                        colSpan={layout.colSpan}
-                        rowSpan={layout.rowSpan}
-                        maxColumns={sectionLayouts[index].columns}
-                        onDecreaseWidth={() => updateCardSpan(index, cardIndex, "colSpan", -1)}
-                        onIncreaseWidth={() => updateCardSpan(index, cardIndex, "colSpan", 1)}
-                        onDecreaseHeight={() => updateCardSpan(index, cardIndex, "rowSpan", -1)}
-                        onIncreaseHeight={() => updateCardSpan(index, cardIndex, "rowSpan", 1)}
-                      />
-                    ) : null
-                  }
-                >
-                  {card.items.map((item, index) => (
-                    <div key={index}>
-                      {index > 0 && <hr className={cheatsheetStyles.itemDivider} />}
-                      <SheetItem item={item} />
-                    </div>
-                  ))}
-                </SheetCard>
-              );
-            })}
-          </SheetGrid>
-        </section>
-      ))}
+      {sheet.sections.map((section, sectionIndex) => {
+        const metrics = sectionMetrics[sectionIndex] ?? FALLBACK_METRICS;
+
+        return (
+          <section
+            key={section.title}
+            id={buildSectionAnchorId("sheet-section", section.title, sectionIndex)}
+            className={cheatsheetStyles.section}
+          >
+            <div className={cheatsheetStyles.sectionHeaderRow}>
+              <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
+              {editMode ? (
+                <span className={cheatsheetStyles.sectionLayoutLabel}>
+                  {metrics.columns} cols · {Math.round(metrics.unitSize)}px
+                </span>
+              ) : null}
+            </div>
+
+            <SheetGrid
+              editMode={editMode}
+              onMetricsChange={(nextMetrics) => updateSectionMetrics(sectionIndex, nextMetrics)}
+            >
+              {section.cards.map((card, cardIndex) => {
+                const layout = sectionLayouts[sectionIndex].cards[cardIndex];
+
+                return (
+                  <SheetCard
+                    key={card.title}
+                    title={card.title}
+                    colSpan={clamp(layout.colSpan, 1, metrics.columns)}
+                    rowSpan={layout.rowSpan}
+                    editMode={editMode}
+                    layoutLabel={`${layout.colSpan}x${layout.rowSpan}`}
+                    controls={
+                      editMode ? (
+                        <CardLayoutControls
+                          colSpan={layout.colSpan}
+                          rowSpan={layout.rowSpan}
+                          maxColumns={metrics.columns}
+                          onDecreaseWidth={() => updateCardSpan(sectionIndex, cardIndex, "colSpan", -1)}
+                          onIncreaseWidth={() => updateCardSpan(sectionIndex, cardIndex, "colSpan", 1)}
+                          onDecreaseHeight={() => updateCardSpan(sectionIndex, cardIndex, "rowSpan", -1)}
+                          onIncreaseHeight={() => updateCardSpan(sectionIndex, cardIndex, "rowSpan", 1)}
+                        />
+                      ) : null
+                    }
+                  >
+                    {card.items.map((item, itemIndex) => (
+                      <div key={itemIndex}>
+                        {itemIndex > 0 && <hr className={cheatsheetStyles.itemDivider} />}
+                        <SheetItem item={item} />
+                      </div>
+                    ))}
+                  </SheetCard>
+                );
+              })}
+            </SheetGrid>
+          </section>
+        );
+      })}
     </>
   );
 }
 
-const MAX_ROW_SPAN = 4;
-
-type SectionLayoutState = {
-  columns: number;
-  cards: Array<{
-    colSpan: number;
-    rowSpan: number;
-  }>;
-};
-
 function buildDefaultSectionLayouts(sheet: YamlCheatSheet): SectionLayoutState[] {
-  return sheet.sections.map((section) => {
-    const columns = inferSectionColumns(section.cards.length);
-
-    return {
-      columns,
-      cards: section.cards.map((card) => ({
-        colSpan: inferCardColSpan(card, columns),
-        rowSpan: inferCardRowSpan(card),
-      })),
-    };
-  });
+  return sheet.sections.map((section) => ({
+    cards: section.cards.map((card) => ({
+      colSpan: inferCardColSpan(card),
+      rowSpan: inferCardRowSpan(card),
+    })),
+  }));
 }
 
-function inferSectionColumns(cardCount: number) {
-  if (cardCount <= 1) return 1;
-  if (cardCount === 2) return 2;
-  return 3;
-}
-
-function inferCardColSpan(card: CheatSheetCard, columns: number) {
+function inferCardColSpan(card: CheatSheetCard) {
   const itemCount = card.items.length;
+  const hasConfig = card.items.some((item) => item.type === "config");
 
-  if (columns === 1) return 1;
-  if (columns === 2) {
-    return itemCount >= 4 ? 2 : 1;
-  }
-
-  if (itemCount >= 5) return 2;
-  return 1;
+  if (hasConfig) return 8;
+  if (itemCount >= 5) return 8;
+  if (itemCount >= 3) return 6;
+  return 4;
 }
 
 function inferCardRowSpan(card: CheatSheetCard) {
@@ -201,9 +225,11 @@ function inferCardRowSpan(card: CheatSheetCard) {
   const hasConfig = card.items.some((item) => item.type === "config");
   const hasCommand = card.items.some((item) => item.type === "command");
 
-  if (hasConfig || itemCount >= 4) return 2;
-  if (hasCommand && itemCount >= 3) return 2;
-  return 1;
+  if (hasConfig) return 8;
+  if (itemCount >= 5) return 8;
+  if (hasCommand && itemCount >= 3) return 6;
+  if (itemCount >= 3) return 5;
+  return 4;
 }
 
 type CardLayoutControlsProps = {
@@ -291,40 +317,28 @@ function buildStorageKey(sheetSlug: string) {
   return `sheet-layout:${sheetSlug}`;
 }
 
-function readStoredLayouts(
-  sheetSlug: string,
-  sheet: YamlCheatSheet,
-  defaultSectionLayouts: SectionLayoutState[]
-) {
+function readStoredLayouts(sheetSlug: string, sheet: YamlCheatSheet, defaultSectionLayouts: SectionLayoutState[]) {
   const raw = window.localStorage.getItem(buildStorageKey(sheetSlug));
 
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw);
-    return isValidStoredLayout(parsed, sheet, defaultSectionLayouts) ? parsed : null;
+    return isValidStoredLayout(parsed, sheet) ? mergeStoredLayouts(parsed, defaultSectionLayouts) : null;
   } catch {
     return null;
   }
 }
 
-function isValidStoredLayout(
-  value: unknown,
-  sheet: YamlCheatSheet,
-  defaultSectionLayouts: SectionLayoutState[]
-): value is SectionLayoutState[] {
+function isValidStoredLayout(value: unknown, sheet: YamlCheatSheet): value is SectionLayoutState[] {
   if (!Array.isArray(value) || value.length !== sheet.sections.length) return false;
 
   return value.every((sectionLayout: unknown, sectionIndex) => {
     if (!sectionLayout || typeof sectionLayout !== "object") return false;
-    if (!("columns" in sectionLayout) || !("cards" in sectionLayout)) return false;
-    if (typeof sectionLayout.columns !== "number") return false;
-    if (sectionLayout.columns !== defaultSectionLayouts[sectionIndex].columns) return false;
+    if (!("cards" in sectionLayout)) return false;
     if (!Array.isArray(sectionLayout.cards) || sectionLayout.cards.length !== sheet.sections[sectionIndex].cards.length) {
       return false;
     }
-
-    const maxColumns = sectionLayout.columns;
 
     return sectionLayout.cards.every((cardLayout: unknown) => {
       if (!cardLayout || typeof cardLayout !== "object") return false;
@@ -335,12 +349,20 @@ function isValidStoredLayout(
         Number.isInteger(cardLayout.colSpan) &&
         Number.isInteger(cardLayout.rowSpan) &&
         cardLayout.colSpan >= 1 &&
-        cardLayout.colSpan <= maxColumns &&
         cardLayout.rowSpan >= 1 &&
         cardLayout.rowSpan <= MAX_ROW_SPAN
       );
     });
   });
+}
+
+function mergeStoredLayouts(storedLayouts: SectionLayoutState[], defaultLayouts: SectionLayoutState[]) {
+  return defaultLayouts.map((defaultSection, sectionIndex) => ({
+    cards: defaultSection.cards.map((defaultCard, cardIndex) => ({
+      colSpan: storedLayouts[sectionIndex].cards[cardIndex]?.colSpan ?? defaultCard.colSpan,
+      rowSpan: storedLayouts[sectionIndex].cards[cardIndex]?.rowSpan ?? defaultCard.rowSpan,
+    })),
+  }));
 }
 
 function areLayoutsEqual(left: SectionLayoutState[], right: SectionLayoutState[]) {
