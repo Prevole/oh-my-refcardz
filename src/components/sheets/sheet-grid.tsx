@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 export const GRID_GAP_PX = 16;
@@ -52,6 +53,7 @@ export function SheetGrid({ children, editMode = false, onMetricsChange }: Sheet
   return (
     <section
       ref={ref}
+      data-sheet-grid
       className={`${cheatsheetStyles.dashboardGrid} ${editMode ? cheatsheetStyles.dashboardGridEditMode : ""}`}
     >
       {children}
@@ -64,11 +66,16 @@ type SheetCardProps = {
   badge?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
+  colStart?: number;
+  rowStart?: number;
   colSpan?: number;
   rowSpan?: number;
   editMode?: boolean;
   layoutLabel?: string;
   controls?: ReactNode;
+  dragging?: boolean;
+  dimmed?: boolean;
+  onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
 };
 
 export function SheetCard({
@@ -76,16 +83,23 @@ export function SheetCard({
   badge,
   footer,
   children,
+  colStart = 1,
+  rowStart = 1,
   colSpan = 1,
   rowSpan = 1,
   editMode = false,
   layoutLabel,
   controls,
+  dragging = false,
+  dimmed = false,
+  onHeaderPointerDown,
 }: SheetCardProps) {
   return (
     <article
-      className={`${cheatsheetStyles.card} ${editMode ? cheatsheetStyles.cardEditMode : ""}`}
+      className={`${cheatsheetStyles.card} ${editMode ? cheatsheetStyles.cardEditMode : ""} ${dragging ? cheatsheetStyles.cardDragging : ""} ${dimmed ? cheatsheetStyles.cardDimmed : ""}`}
       style={{
+        ["--card-col-start" as string]: String(colStart),
+        ["--card-row-start" as string]: String(rowStart),
         ["--card-col-span" as string]: String(colSpan),
         ["--card-row-span" as string]: String(rowSpan),
       }}
@@ -96,7 +110,10 @@ export function SheetCard({
           {controls}
         </div>
       ) : null}
-      <div className={cheatsheetStyles.cardHeader}>
+      <div
+        className={`${cheatsheetStyles.cardHeader} ${editMode ? cheatsheetStyles.cardHeaderDraggable : ""}`}
+        onPointerDown={editMode ? onHeaderPointerDown : undefined}
+      >
         <h2 className={cheatsheetStyles.cardTitle}>{title}</h2>
         {badge ? <span className={cheatsheetStyles.cardBadge}>{badge}</span> : null}
       </div>
