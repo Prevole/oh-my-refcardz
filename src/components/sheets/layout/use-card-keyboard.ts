@@ -31,6 +31,8 @@ export type UseCardKeyboardResult = {
 type UseCardKeyboardOptions = {
   /** Whether layout edit mode is active */
   editMode: boolean;
+  /** Exit layout edit mode */
+  onExitLayoutMode: () => void;
   /** Current section layouts */
   sectionLayouts: SectionLayoutState[];
   /** Setter for section layouts */
@@ -50,6 +52,15 @@ type CardPosition = {
   cardIndex: number;
   layout: CardLayoutState;
 };
+
+type CardBounds = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+const SECTION_ROW_GAP = 2;
 
 /**
  * Get all cards with their positions across all sections
@@ -72,90 +83,154 @@ function findCardInDirection(
   current: CardPosition,
   direction: "up" | "down" | "left" | "right"
 ): CardPosition | null {
-  // Filter to cards in the same section for now (simpler navigation)
   const sameSection = cards.filter((c) => c.sectionIndex === current.sectionIndex);
+  const currentBounds = getCardBounds(current.layout);
 
+  const sameSectionCandidates = sameSection
+    .filter((c) => c.cardIndex !== current.cardIndex)
+    .map((candidate) => {
+      const candidateBounds = getCardBounds(candidate.layout);
+      return {
+        candidate,
+        bounds: candidateBounds,
+        score: scoreCandidateInDirection(currentBounds, candidateBounds, direction),
+      };
+    })
+    .filter((entry) => entry.score !== null)
+    .sort((left, right) => compareScores(left.score!, right.score!));
+
+  if (sameSectionCandidates[0]) {
+    return sameSectionCandidates[0].candidate;
+  }
+
+  const sectionOffsets = computeSectionRowOffsets(cards);
+  const currentGlobalBounds = getGlobalCardBounds(current, sectionOffsets);
+
+  const crossSectionCandidates = cards
+    .filter(
+      (candidate) =>
+        !(candidate.sectionIndex === current.sectionIndex && candidate.cardIndex === current.cardIndex)
+    )
+    .map((candidate) => ({
+      candidate,
+      score: scoreCandidateInDirection(
+        currentGlobalBounds,
+        getGlobalCardBounds(candidate, sectionOffsets),
+        direction
+      ),
+    }))
+    .filter((entry) => entry.score !== null)
+    .sort((left, right) => compareScores(left.score!, right.score!));
+
+  return crossSectionCandidates[0]?.candidate ?? null;
+}
+
+function getCardBounds(layout: CardLayoutState): CardBounds {
+  return {
+    left: layout.colStart,
+    right: layout.colStart + layout.colSpan - 1,
+    top: layout.rowStart,
+    bottom: layout.rowStart + layout.rowSpan - 1,
+  };
+}
+
+function getGlobalCardBounds(
+  card: CardPosition,
+  sectionOffsets: Map<number, number>
+): CardBounds {
+  const offset = sectionOffsets.get(card.sectionIndex) ?? 0;
+  const bounds = getCardBounds(card.layout);
+
+  return {
+    ...bounds,
+    top: bounds.top + offset,
+    bottom: bounds.bottom + offset,
+  };
+}
+
+function computeSectionRowOffsets(cards: CardPosition[]) {
+  const sectionMaxBottom = new Map<number, number>();
+
+  for (const card of cards) {
+    const bottom = card.layout.rowStart + card.layout.rowSpan - 1;
+    const currentMax = sectionMaxBottom.get(card.sectionIndex) ?? 0;
+    sectionMaxBottom.set(card.sectionIndex, Math.max(currentMax, bottom));
+  }
+
+  const sectionIndices = [...new Set(cards.map((card) => card.sectionIndex))].sort((a, b) => a - b);
+  const offsets = new Map<number, number>();
+  let currentOffset = 0;
+
+  for (const sectionIndex of sectionIndices) {
+    offsets.set(sectionIndex, currentOffset);
+    const sectionHeight = sectionMaxBottom.get(sectionIndex) ?? 0;
+    currentOffset += sectionHeight + SECTION_ROW_GAP;
+  }
+
+  return offsets;
+}
+
+function getOverlapSize(startA: number, endA: number, startB: number, endB: number) {
+  return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB) + 1);
+}
+
+function scoreCandidateInDirection(
+  current: CardBounds,
+  candidate: CardBounds,
+  direction: "up" | "down" | "left" | "right"
+) {
   switch (direction) {
     case "left": {
-      // Find cards to the left (lower colStart) that overlap vertically
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        // Card must be to the left
-        if (c.layout.colStart >= current.layout.colStart) return false;
-        // Check vertical overlap
-        const currentTop = current.layout.rowStart;
-        const currentBottom = currentTop + current.layout.rowSpan - 1;
-        const candidateTop = c.layout.rowStart;
-        const candidateBottom = candidateTop + c.layout.rowSpan - 1;
-        return candidateTop <= currentBottom && candidateBottom >= currentTop;
-      });
-      if (candidates.length === 0) return null;
-      // Return the rightmost of the candidates (closest to current)
-      return candidates.reduce((best, c) =>
-        c.layout.colStart > best.layout.colStart ? c : best
-      );
+      if (candidate.right >= current.left) return null;
+      const primaryDistance = current.left - candidate.right;
+      const overlap = getOverlapSize(current.top, current.bottom, candidate.top, candidate.bottom);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.top, current.bottom, candidate.top, candidate.bottom);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
 
     case "right": {
-      // Find cards to the right (higher colStart) that overlap vertically
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        // Card must be to the right
-        if (c.layout.colStart <= current.layout.colStart) return false;
-        // Check vertical overlap
-        const currentTop = current.layout.rowStart;
-        const currentBottom = currentTop + current.layout.rowSpan - 1;
-        const candidateTop = c.layout.rowStart;
-        const candidateBottom = candidateTop + c.layout.rowSpan - 1;
-        return candidateTop <= currentBottom && candidateBottom >= currentTop;
-      });
-      if (candidates.length === 0) return null;
-      // Return the leftmost of the candidates (closest to current)
-      return candidates.reduce((best, c) =>
-        c.layout.colStart < best.layout.colStart ? c : best
-      );
+      if (candidate.left <= current.right) return null;
+      const primaryDistance = candidate.left - current.right;
+      const overlap = getOverlapSize(current.top, current.bottom, candidate.top, candidate.bottom);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.top, current.bottom, candidate.top, candidate.bottom);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
 
     case "up": {
-      // Find cards above (lower rowStart) that overlap horizontally
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        // Card must be above
-        if (c.layout.rowStart >= current.layout.rowStart) return false;
-        // Check horizontal overlap
-        const currentLeft = current.layout.colStart;
-        const currentRight = currentLeft + current.layout.colSpan - 1;
-        const candidateLeft = c.layout.colStart;
-        const candidateRight = candidateLeft + c.layout.colSpan - 1;
-        return candidateLeft <= currentRight && candidateRight >= currentLeft;
-      });
-      if (candidates.length === 0) return null;
-      // Return the lowest of the candidates (closest to current)
-      return candidates.reduce((best, c) =>
-        c.layout.rowStart > best.layout.rowStart ? c : best
-      );
+      if (candidate.bottom >= current.top) return null;
+      const primaryDistance = current.top - candidate.bottom;
+      const overlap = getOverlapSize(current.left, current.right, candidate.left, candidate.right);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.left, current.right, candidate.left, candidate.right);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
 
     case "down": {
-      // Find cards below (higher rowStart) that overlap horizontally
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        // Card must be below
-        if (c.layout.rowStart <= current.layout.rowStart) return false;
-        // Check horizontal overlap
-        const currentLeft = current.layout.colStart;
-        const currentRight = currentLeft + current.layout.colSpan - 1;
-        const candidateLeft = c.layout.colStart;
-        const candidateRight = candidateLeft + c.layout.colSpan - 1;
-        return candidateLeft <= currentRight && candidateRight >= currentLeft;
-      });
-      if (candidates.length === 0) return null;
-      // Return the highest of the candidates (closest to current)
-      return candidates.reduce((best, c) =>
-        c.layout.rowStart < best.layout.rowStart ? c : best
-      );
+      if (candidate.top <= current.bottom) return null;
+      const primaryDistance = candidate.top - current.bottom;
+      const overlap = getOverlapSize(current.left, current.right, candidate.left, candidate.right);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.left, current.right, candidate.left, candidate.right);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
   }
+}
+
+function distanceBetweenRanges(startA: number, endA: number, startB: number, endB: number) {
+  if (endA < startB) return startB - endA;
+  if (endB < startA) return startA - endB;
+  return 0;
+}
+
+function compareScores(
+  left: { overlapPriority: number; primaryDistance: number; secondaryDistance: number },
+  right: { overlapPriority: number; primaryDistance: number; secondaryDistance: number }
+) {
+  if (left.overlapPriority !== right.overlapPriority) {
+    return left.overlapPriority - right.overlapPriority;
+  }
+  if (left.primaryDistance !== right.primaryDistance) {
+    return left.primaryDistance - right.primaryDistance;
+  }
+  return left.secondaryDistance - right.secondaryDistance;
 }
 
 /**
@@ -205,6 +280,7 @@ function validateFocus(
 
 export function useCardKeyboard({
   editMode,
+  onExitLayoutMode,
   sectionLayouts,
   setSectionLayouts,
   sectionCount,
@@ -233,12 +309,12 @@ export function useCardKeyboard({
     [editMode]
   );
 
-  // Push/pop scope based on edit mode and focus
+  // Push/pop scope based on layout mode.
   useEffect(() => {
-    if (editMode && focusedCard && !scopePushedRef.current) {
+    if (editMode && !scopePushedRef.current) {
       pushScope("sheet-layout");
       scopePushedRef.current = true;
-    } else if ((!editMode || !focusedCard) && scopePushedRef.current) {
+    } else if (!editMode && scopePushedRef.current) {
       popScope("sheet-layout");
       scopePushedRef.current = false;
     }
@@ -249,7 +325,20 @@ export function useCardKeyboard({
         scopePushedRef.current = false;
       }
     };
-  }, [editMode, focusedCard, pushScope, popScope]);
+  }, [editMode, pushScope, popScope]);
+
+  // Keep the focused card visible while navigating or manipulating the layout.
+  useEffect(() => {
+    if (!editMode || !focusedCard) return;
+
+    const card = document.querySelector<HTMLElement>(
+      `[data-layout-card="true"][data-layout-section-index="${focusedCard.sectionIndex}"][data-layout-card-index="${focusedCard.cardIndex}"]`
+    );
+
+    if (!card) return;
+
+    card.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [editMode, focusedCard, sectionLayouts]);
 
   // Navigation handler
   const handleNavigation = useCallback(
@@ -465,6 +554,14 @@ export function useCardKeyboard({
       // Card movement and resize only when a card is focused
       const validFocus = validateFocus(rawFocusedCard, sectionCount, getCardCount);
       if (validFocus) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          setRawFocusedCard(null);
+          setIsManipulating(false);
+          return;
+        }
+
         // Card movement (Ctrl + hjkl)
         if (matchesAction(event, ACTION_IDS.CARD_MOVE_LEFT)) {
           event.preventDefault();
@@ -509,6 +606,12 @@ export function useCardKeyboard({
           return;
         }
       }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        onExitLayoutMode();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -523,6 +626,7 @@ export function useCardKeyboard({
     handleNavigation,
     handleMove,
     handleResize,
+    onExitLayoutMode,
   ]);
 
   // Cleanup timeout on unmount

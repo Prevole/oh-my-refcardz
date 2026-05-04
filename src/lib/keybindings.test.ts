@@ -23,6 +23,7 @@ import {
 function mockKeyboardEvent(
   key: string,
   options: {
+    code?: string;
     ctrlKey?: boolean;
     altKey?: boolean;
     shiftKey?: boolean;
@@ -31,6 +32,7 @@ function mockKeyboardEvent(
 ): KeyboardEvent {
   return {
     key,
+    code: options.code ?? "",
     ctrlKey: options.ctrlKey ?? false,
     altKey: options.altKey ?? false,
     shiftKey: options.shiftKey ?? false,
@@ -220,6 +222,24 @@ describe("matchesCombo", () => {
     it("ignores shift for uppercase letters", () => {
       const comboKey = combo("G", "shift");
       const event = mockKeyboardEvent("G", { shiftKey: true });
+
+      expect(matchesCombo(event, comboKey)).toBe(true);
+    });
+
+    it("matches uppercase letter without explicit shift modifier", () => {
+      const comboKey = key("H");
+      const event = mockKeyboardEvent("H", { shiftKey: true });
+
+      expect(matchesCombo(event, comboKey)).toBe(true);
+    });
+
+    it("matches letter shortcuts from physical key code with alt+shift", () => {
+      const comboKey = combo("H", "alt", "shift");
+      const event = mockKeyboardEvent("Ó", {
+        code: "KeyH",
+        altKey: true,
+        shiftKey: true,
+      });
 
       expect(matchesCombo(event, comboKey)).toBe(true);
     });

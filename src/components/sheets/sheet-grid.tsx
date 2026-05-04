@@ -77,6 +77,8 @@ type SheetCardProps = {
   dimmed?: boolean;
   keyboardFocused?: boolean;
   manipulating?: boolean;
+  sectionIndex?: number;
+  cardIndex?: number;
   onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
 };
 
@@ -96,6 +98,8 @@ export function SheetCard({
   dimmed = false,
   keyboardFocused = false,
   manipulating = false,
+  sectionIndex,
+  cardIndex,
   onHeaderPointerDown,
 }: SheetCardProps) {
   const classNames = [
@@ -112,6 +116,9 @@ export function SheetCard({
   return (
     <article
       className={classNames}
+      data-layout-card={sectionIndex !== undefined && cardIndex !== undefined ? "true" : undefined}
+      data-layout-section-index={sectionIndex}
+      data-layout-card-index={cardIndex}
       style={{
         ["--card-col-start" as string]: String(colStart),
         ["--card-row-start" as string]: String(rowStart),

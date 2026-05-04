@@ -49,6 +49,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboard({
     editMode,
+    onExitLayoutMode: () => setEditMode(false),
     sectionLayouts,
     setSectionLayouts,
     sectionCount: sheet.sections.length,
@@ -178,6 +179,8 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
                     dimmed={isDimmed}
                     keyboardFocused={isKeyboardFocused}
                     manipulating={isKeyboardFocused && isManipulating}
+                    sectionIndex={sectionIndex}
+                    cardIndex={cardIndex}
                     onHeaderPointerDown={(event) => handleHeaderPointerDown(sectionIndex, cardIndex, event)}
                     layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
                     controls={

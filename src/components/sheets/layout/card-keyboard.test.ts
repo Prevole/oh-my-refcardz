@@ -13,6 +13,15 @@ type CardPosition = {
   layout: CardLayoutState;
 };
 
+type CardBounds = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+const SECTION_ROW_GAP = 2;
+
 function getAllCards(sectionLayouts: SectionLayoutState[]): CardPosition[] {
   const cards: CardPosition[] = [];
   sectionLayouts.forEach((section, sectionIndex) => {
@@ -29,72 +38,136 @@ function findCardInDirection(
   direction: "up" | "down" | "left" | "right"
 ): CardPosition | null {
   const sameSection = cards.filter((c) => c.sectionIndex === current.sectionIndex);
+  const currentBounds = getCardBounds(current.layout);
 
+  const sameSectionCandidates = sameSection
+    .filter((c) => c.cardIndex !== current.cardIndex)
+    .map((candidate) => ({
+      candidate,
+      score: scoreCandidateInDirection(currentBounds, getCardBounds(candidate.layout), direction),
+    }))
+    .filter((entry) => entry.score !== null)
+    .sort((left, right) => compareScores(left.score!, right.score!));
+
+  if (sameSectionCandidates[0]) {
+    return sameSectionCandidates[0].candidate;
+  }
+
+  const sectionOffsets = computeSectionRowOffsets(cards);
+  const currentGlobalBounds = getGlobalCardBounds(current, sectionOffsets);
+
+  const crossSectionCandidates = cards
+    .filter((candidate) => !(candidate.sectionIndex === current.sectionIndex && candidate.cardIndex === current.cardIndex))
+    .map((candidate) => ({
+      candidate,
+      score: scoreCandidateInDirection(currentGlobalBounds, getGlobalCardBounds(candidate, sectionOffsets), direction),
+    }))
+    .filter((entry) => entry.score !== null)
+    .sort((left, right) => compareScores(left.score!, right.score!));
+
+  return crossSectionCandidates[0]?.candidate ?? null;
+}
+
+function getCardBounds(layout: CardLayoutState): CardBounds {
+  return {
+    left: layout.colStart,
+    right: layout.colStart + layout.colSpan - 1,
+    top: layout.rowStart,
+    bottom: layout.rowStart + layout.rowSpan - 1,
+  };
+}
+
+function getGlobalCardBounds(card: CardPosition, sectionOffsets: Map<number, number>): CardBounds {
+  const offset = sectionOffsets.get(card.sectionIndex) ?? 0;
+  const bounds = getCardBounds(card.layout);
+
+  return {
+    ...bounds,
+    top: bounds.top + offset,
+    bottom: bounds.bottom + offset,
+  };
+}
+
+function computeSectionRowOffsets(cards: CardPosition[]) {
+  const sectionMaxBottom = new Map<number, number>();
+
+  for (const card of cards) {
+    const bottom = card.layout.rowStart + card.layout.rowSpan - 1;
+    const currentMax = sectionMaxBottom.get(card.sectionIndex) ?? 0;
+    sectionMaxBottom.set(card.sectionIndex, Math.max(currentMax, bottom));
+  }
+
+  const sectionIndices = [...new Set(cards.map((card) => card.sectionIndex))].sort((a, b) => a - b);
+  const offsets = new Map<number, number>();
+  let currentOffset = 0;
+
+  for (const sectionIndex of sectionIndices) {
+    offsets.set(sectionIndex, currentOffset);
+    const sectionHeight = sectionMaxBottom.get(sectionIndex) ?? 0;
+    currentOffset += sectionHeight + SECTION_ROW_GAP;
+  }
+
+  return offsets;
+}
+
+function getOverlapSize(startA: number, endA: number, startB: number, endB: number) {
+  return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB) + 1);
+}
+
+function scoreCandidateInDirection(
+  current: CardBounds,
+  candidate: CardBounds,
+  direction: "up" | "down" | "left" | "right"
+) {
   switch (direction) {
     case "left": {
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        if (c.layout.colStart >= current.layout.colStart) return false;
-        const currentTop = current.layout.rowStart;
-        const currentBottom = currentTop + current.layout.rowSpan - 1;
-        const candidateTop = c.layout.rowStart;
-        const candidateBottom = candidateTop + c.layout.rowSpan - 1;
-        return candidateTop <= currentBottom && candidateBottom >= currentTop;
-      });
-      if (candidates.length === 0) return null;
-      return candidates.reduce((best, c) =>
-        c.layout.colStart > best.layout.colStart ? c : best
-      );
+      if (candidate.right >= current.left) return null;
+      const primaryDistance = current.left - candidate.right;
+      const overlap = getOverlapSize(current.top, current.bottom, candidate.top, candidate.bottom);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.top, current.bottom, candidate.top, candidate.bottom);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
-
     case "right": {
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        if (c.layout.colStart <= current.layout.colStart) return false;
-        const currentTop = current.layout.rowStart;
-        const currentBottom = currentTop + current.layout.rowSpan - 1;
-        const candidateTop = c.layout.rowStart;
-        const candidateBottom = candidateTop + c.layout.rowSpan - 1;
-        return candidateTop <= currentBottom && candidateBottom >= currentTop;
-      });
-      if (candidates.length === 0) return null;
-      return candidates.reduce((best, c) =>
-        c.layout.colStart < best.layout.colStart ? c : best
-      );
+      if (candidate.left <= current.right) return null;
+      const primaryDistance = candidate.left - current.right;
+      const overlap = getOverlapSize(current.top, current.bottom, candidate.top, candidate.bottom);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.top, current.bottom, candidate.top, candidate.bottom);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
-
     case "up": {
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        if (c.layout.rowStart >= current.layout.rowStart) return false;
-        const currentLeft = current.layout.colStart;
-        const currentRight = currentLeft + current.layout.colSpan - 1;
-        const candidateLeft = c.layout.colStart;
-        const candidateRight = candidateLeft + c.layout.colSpan - 1;
-        return candidateLeft <= currentRight && candidateRight >= currentLeft;
-      });
-      if (candidates.length === 0) return null;
-      return candidates.reduce((best, c) =>
-        c.layout.rowStart > best.layout.rowStart ? c : best
-      );
+      if (candidate.bottom >= current.top) return null;
+      const primaryDistance = current.top - candidate.bottom;
+      const overlap = getOverlapSize(current.left, current.right, candidate.left, candidate.right);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.left, current.right, candidate.left, candidate.right);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
-
     case "down": {
-      const candidates = sameSection.filter((c) => {
-        if (c.cardIndex === current.cardIndex) return false;
-        if (c.layout.rowStart <= current.layout.rowStart) return false;
-        const currentLeft = current.layout.colStart;
-        const currentRight = currentLeft + current.layout.colSpan - 1;
-        const candidateLeft = c.layout.colStart;
-        const candidateRight = candidateLeft + c.layout.colSpan - 1;
-        return candidateLeft <= currentRight && candidateRight >= currentLeft;
-      });
-      if (candidates.length === 0) return null;
-      return candidates.reduce((best, c) =>
-        c.layout.rowStart < best.layout.rowStart ? c : best
-      );
+      if (candidate.top <= current.bottom) return null;
+      const primaryDistance = candidate.top - current.bottom;
+      const overlap = getOverlapSize(current.left, current.right, candidate.left, candidate.right);
+      const secondaryDistance = overlap > 0 ? 0 : distanceBetweenRanges(current.left, current.right, candidate.left, candidate.right);
+      return { overlapPriority: overlap > 0 ? 0 : 1, primaryDistance, secondaryDistance };
     }
   }
+}
+
+function distanceBetweenRanges(startA: number, endA: number, startB: number, endB: number) {
+  if (endA < startB) return startB - endA;
+  if (endB < startA) return startA - endB;
+  return 0;
+}
+
+function compareScores(
+  left: { overlapPriority: number; primaryDistance: number; secondaryDistance: number },
+  right: { overlapPriority: number; primaryDistance: number; secondaryDistance: number }
+) {
+  if (left.overlapPriority !== right.overlapPriority) {
+    return left.overlapPriority - right.overlapPriority;
+  }
+  if (left.primaryDistance !== right.primaryDistance) {
+    return left.primaryDistance - right.primaryDistance;
+  }
+  return left.secondaryDistance - right.secondaryDistance;
 }
 
 type CardFocus = {
@@ -336,7 +409,7 @@ describe("Card keyboard navigation helpers", () => {
       expect(result?.cardIndex).toBe(1);
     });
 
-    it("requires vertical overlap for left/right navigation", () => {
+    it("falls back to the nearest card on the right when vertical overlap is missing", () => {
       const layouts: SectionLayoutState[] = [
         {
           cards: [
@@ -348,12 +421,11 @@ describe("Card keyboard navigation helpers", () => {
       const cards = getAllCards(layouts);
       const current = cards[0];
 
-      // Should return null because card 1 doesn't overlap vertically
       const result = findCardInDirection(cards, current, "right");
-      expect(result).toBeNull();
+      expect(result?.cardIndex).toBe(1);
     });
 
-    it("requires horizontal overlap for up/down navigation", () => {
+    it("falls back to the nearest card below when horizontal overlap is missing", () => {
       const layouts: SectionLayoutState[] = [
         {
           cards: [
@@ -365,9 +437,54 @@ describe("Card keyboard navigation helpers", () => {
       const cards = getAllCards(layouts);
       const current = cards[0];
 
-      // Should return null because card 1 doesn't overlap horizontally
       const result = findCardInDirection(cards, current, "down");
-      expect(result).toBeNull();
+      expect(result?.cardIndex).toBe(1);
+    });
+
+    it("prefers overlapping cards over diagonally closer non-overlapping cards", () => {
+      const layouts: SectionLayoutState[] = [
+        {
+          cards: [
+            { colStart: 5, rowStart: 5, colSpan: 2, rowSpan: 2 }, // current
+            { colStart: 8, rowStart: 5, colSpan: 2, rowSpan: 2 }, // overlapping right
+            { colStart: 7, rowStart: 2, colSpan: 2, rowSpan: 2 }, // slightly closer diagonally
+          ],
+        },
+      ];
+      const cards = getAllCards(layouts);
+
+      const result = findCardInDirection(cards, cards[0], "right");
+      expect(result?.cardIndex).toBe(1);
+    });
+
+    it("falls back to the next section when navigating down with no candidate in section", () => {
+      const layouts: SectionLayoutState[] = [
+        {
+          cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 1 }],
+        },
+        {
+          cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 1 }],
+        },
+      ];
+      const cards = getAllCards(layouts);
+
+      const result = findCardInDirection(cards, cards[0], "down");
+      expect(result).toEqual(cards[1]);
+    });
+
+    it("falls back to the previous section when navigating up with no candidate in section", () => {
+      const layouts: SectionLayoutState[] = [
+        {
+          cards: [{ colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 1 }],
+        },
+        {
+          cards: [{ colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 1 }],
+        },
+      ];
+      const cards = getAllCards(layouts);
+
+      const result = findCardInDirection(cards, cards[1], "up");
+      expect(result).toEqual(cards[0]);
     });
   });
 });

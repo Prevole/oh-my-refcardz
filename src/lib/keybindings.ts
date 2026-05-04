@@ -224,68 +224,68 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   ],
 
   "sheet-layout": [
-    // Card navigation (Shift + hjkl)
+    // Card navigation (uppercase HJKL)
     {
       id: ACTION_IDS.CARD_NAV_LEFT,
       label: "Navigate to card left",
-      combos: [combo("h", "shift"), combo("ArrowLeft", "shift")],
+      combos: [key("H"), combo("ArrowLeft", "shift")],
     },
     {
       id: ACTION_IDS.CARD_NAV_RIGHT,
       label: "Navigate to card right",
-      combos: [combo("l", "shift"), combo("ArrowRight", "shift")],
+      combos: [key("L"), combo("ArrowRight", "shift")],
     },
     {
       id: ACTION_IDS.CARD_NAV_UP,
       label: "Navigate to card above",
-      combos: [combo("k", "shift"), combo("ArrowUp", "shift")],
+      combos: [key("K"), combo("ArrowUp", "shift")],
     },
     {
       id: ACTION_IDS.CARD_NAV_DOWN,
       label: "Navigate to card below",
-      combos: [combo("j", "shift"), combo("ArrowDown", "shift")],
+      combos: [key("J"), combo("ArrowDown", "shift")],
     },
-    // Card movement (Ctrl + hjkl)
+    // Card movement (Alt + hjkl / arrows)
     {
       id: ACTION_IDS.CARD_MOVE_LEFT,
       label: "Move card left",
-      combos: [combo("h", "ctrl"), combo("ArrowLeft", "ctrl")],
+      combos: [combo("h", "alt"), combo("ArrowLeft", "alt")],
     },
     {
       id: ACTION_IDS.CARD_MOVE_RIGHT,
       label: "Move card right",
-      combos: [combo("l", "ctrl"), combo("ArrowRight", "ctrl")],
+      combos: [combo("l", "alt"), combo("ArrowRight", "alt")],
     },
     {
       id: ACTION_IDS.CARD_MOVE_UP,
       label: "Move card up",
-      combos: [combo("k", "ctrl"), combo("ArrowUp", "ctrl")],
+      combos: [combo("k", "alt"), combo("ArrowUp", "alt")],
     },
     {
       id: ACTION_IDS.CARD_MOVE_DOWN,
       label: "Move card down",
-      combos: [combo("j", "ctrl"), combo("ArrowDown", "ctrl")],
+      combos: [combo("j", "alt"), combo("ArrowDown", "alt")],
     },
-    // Card resize (Ctrl + Shift + hjkl)
+    // Card resize (Alt + Shift + hjkl / arrows)
     {
       id: ACTION_IDS.CARD_SHRINK_WIDTH,
       label: "Shrink card width",
-      combos: [combo("h", "ctrl", "shift"), combo("ArrowLeft", "ctrl", "shift")],
+      combos: [combo("H", "alt", "shift"), combo("ArrowLeft", "alt", "shift")],
     },
     {
       id: ACTION_IDS.CARD_GROW_WIDTH,
       label: "Grow card width",
-      combos: [combo("l", "ctrl", "shift"), combo("ArrowRight", "ctrl", "shift")],
+      combos: [combo("L", "alt", "shift"), combo("ArrowRight", "alt", "shift")],
     },
     {
       id: ACTION_IDS.CARD_SHRINK_HEIGHT,
       label: "Shrink card height",
-      combos: [combo("k", "ctrl", "shift"), combo("ArrowUp", "ctrl", "shift")],
+      combos: [combo("K", "alt", "shift"), combo("ArrowUp", "alt", "shift")],
     },
     {
       id: ACTION_IDS.CARD_GROW_HEIGHT,
       label: "Grow card height",
-      combos: [combo("j", "ctrl", "shift"), combo("ArrowDown", "ctrl", "shift")],
+      combos: [combo("J", "alt", "shift"), combo("ArrowDown", "alt", "shift")],
     },
   ],
 };
@@ -313,10 +313,15 @@ const SHIFT_PRODUCED_CHARS = new Set([
 export function matchesCombo(event: KeyboardEvent, combo: KeyCombo): boolean {
   // Normalize the key comparison
   const eventKey = event.key;
+  const eventCode = event.code;
   const targetKey = combo.key;
 
   // Check if the main key matches
-  if (eventKey !== targetKey) return false;
+  const keyMatches =
+    eventKey === targetKey ||
+    (isLetterKey(targetKey) && eventCode === `Key${targetKey.toUpperCase()}`);
+
+  if (!keyMatches) return false;
 
   // Check modifiers
   const hasCtrl = combo.modifiers.includes("ctrl");
@@ -334,6 +339,10 @@ export function matchesCombo(event: KeyboardEvent, combo: KeyCombo): boolean {
     (ignoreShift || event.shiftKey === hasShift) &&
     event.metaKey === hasMeta
   );
+}
+
+function isLetterKey(key: string): boolean {
+  return /^[a-zA-Z]$/.test(key);
 }
 
 /**
