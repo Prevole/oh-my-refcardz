@@ -212,6 +212,33 @@
   white-space: nowrap;
 }
 
+.comboSequence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.comboSequence[data-compact-sequence="true"] {
+  gap: 0;
+}
+
+.comboStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.1rem;
+}
+
+.comboSequence[data-compact-sequence="true"] .comboStep {
+  gap: 0;
+}
+
+.comboStep .keycap {
+  min-width: 0;
+  height: auto;
+  padding: 0;
+}
+
 .arrow {
   width: 0.9rem;
   height: 0.9rem;

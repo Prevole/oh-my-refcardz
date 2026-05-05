@@ -47,7 +47,7 @@ export default async function CheatSheetPage({ params }: Props) {
               {sheet.title}
             </h1>
           </div>
-          <p className="mt-2 max-w-2xl text-white/80">{sheet.summary}</p>
+          <p className="mt-2 text-white/80">{sheet.summary}</p>
 
           <div className={`${cheatsheetStyles.content} mt-8 max-w-none`}>
             <SheetCommandsShell>

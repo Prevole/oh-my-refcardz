@@ -6,7 +6,8 @@ import { useKeybindings } from "@/hooks/use-keybindings";
 import {
   type ActionId,
   type KeyCombo,
-  getComboDisplay,
+  type KeyDisplayPart,
+  getComboSequenceDisplayParts,
   isArrowKey,
   getArrowDirection,
 } from "@/lib/keybindings";
@@ -15,11 +16,12 @@ import keybindingStyles from "./keybinding-display.module.css";
 type KeycapVariant = "inline" | "legend";
 
 type KeycapDisplayProps = {
-  display: string;
+  part: KeyDisplayPart;
   variant?: KeycapVariant;
 };
 
-function KeycapDisplayInner({ display, variant = "inline" }: KeycapDisplayProps) {
+function KeycapDisplayInner({ part, variant = "inline" }: KeycapDisplayProps) {
+  const display = part.value;
   const className = variant === "legend" ? keybindingStyles.legendKeycap : keybindingStyles.keycap;
   const arrowClassName = variant === "legend" ? keybindingStyles.legendArrow : keybindingStyles.keycapArrow;
 
@@ -50,9 +52,30 @@ type ComboDisplayProps = {
   variant?: KeycapVariant;
 };
 
+function isCompactSequenceDisplay(sequence: KeyDisplayPart[][]) {
+  return sequence.length > 1 && sequence.every((step) => step.length === 1 && step[0]?.type === "key" && step[0].value.length === 1);
+}
+
 export function ComboDisplay({ combo, variant = "inline" }: ComboDisplayProps) {
-  const display = getComboDisplay(combo);
-  return <KeycapDisplayInner display={display} variant={variant} />;
+  const sequence = getComboSequenceDisplayParts(combo);
+  const isCompactSequence = isCompactSequenceDisplay(sequence);
+  const className = variant === "legend" ? keybindingStyles.comboBoxLegend : keybindingStyles.comboBox;
+
+  return (
+    <span className={className} data-compact-sequence={isCompactSequence}>
+      {sequence.map((step, stepIndex) => (
+        <span key={stepIndex} className={keybindingStyles.comboStep}>
+          {step.map((part, partIndex) => (
+            <KeycapDisplayInner
+              key={`${stepIndex}-${partIndex}-${part.type}-${part.value}`}
+              part={part}
+              variant={variant}
+            />
+          ))}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 type CombosDisplayProps = {

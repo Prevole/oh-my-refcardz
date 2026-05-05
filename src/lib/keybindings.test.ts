@@ -8,6 +8,8 @@ import {
   findMatchingAction,
   getKeyDisplay,
   getComboDisplay,
+  getComboDisplayParts,
+  getComboSequenceDisplayParts,
   getCombosDisplay,
   isArrowKey,
   getArrowDirection,
@@ -206,11 +208,11 @@ describe("matchesCombo", () => {
       expect(matchesCombo(event, comboKey)).toBe(true);
     });
 
-    it("matches uppercase letter without explicit shift modifier", () => {
+    it("does not match uppercase letter without explicit shift modifier", () => {
       const comboKey = key("H");
       const event = mockKeyboardEvent("H", { shiftKey: true });
 
-      expect(matchesCombo(event, comboKey)).toBe(true);
+      expect(matchesCombo(event, comboKey)).toBe(false);
     });
 
     it("matches letter shortcuts from physical key code with alt+shift", () => {
@@ -424,6 +426,41 @@ describe("getComboDisplay", () => {
     const seq = sequence(key("Enter"), key("Enter"));
 
     expect(getComboDisplay(seq)).toBe("↩ ↩");
+  });
+});
+
+describe("getComboDisplayParts", () => {
+  it("returns separate parts for modifiers and key", () => {
+    expect(getComboDisplayParts(combo("h", "shift"))).toEqual([
+      { type: "modifier", value: "⇧" },
+      { type: "key", value: "h" },
+    ]);
+  });
+
+  it("normalizes uppercase letters to lowercase keycaps", () => {
+    expect(getComboDisplayParts(combo("G", "shift"))).toEqual([
+      { type: "modifier", value: "⇧" },
+      { type: "key", value: "g" },
+    ]);
+  });
+
+  it("keeps arrow keys as arrow symbols", () => {
+    expect(getComboDisplayParts(combo("ArrowRight", "shift"))).toEqual([
+      { type: "modifier", value: "⇧" },
+      { type: "key", value: "→" },
+    ]);
+  });
+});
+
+describe("getComboSequenceDisplayParts", () => {
+  it("returns each step of a sequence separately", () => {
+    expect(getComboSequenceDisplayParts(sequence(combo("x", "ctrl"), key("k")))).toEqual([
+      [
+        { type: "modifier", value: "^" },
+        { type: "key", value: "x" },
+      ],
+      [{ type: "key", value: "k" }],
+    ]);
   });
 });
 

@@ -8,7 +8,8 @@ import {
   type KeybindingAction,
   type KeyCombo,
   type Modifier,
-  getComboDisplay,
+  getComboSequenceDisplayParts,
+  type KeyDisplayPart,
   isArrowKey,
   getArrowDirection,
   DEFAULT_KEYBINDINGS,
@@ -23,7 +24,9 @@ type RecordingState = {
 
 const SEQUENCE_TIMEOUT_MS = 800;
 
-function KeycapDisplay({ display }: { display: string }) {
+function KeycapDisplay({ part }: { part: KeyDisplayPart }) {
+  const display = part.value;
+
   if (isArrowKey(display)) {
     const direction = getArrowDirection(display);
     if (direction) {
@@ -47,13 +50,24 @@ function KeycapDisplay({ display }: { display: string }) {
 }
 
 function ComboDisplay({ combo }: { combo: KeyCombo }) {
-  const display = getComboDisplay(combo);
-  return <KeycapDisplay display={display} />;
+  const sequence = getComboSequenceDisplayParts(combo);
+  const isCompactSequence = sequence.length > 1 && sequence.every((step) => step.length === 1 && step[0]?.type === "key" && step[0].value.length === 1);
+
+  return (
+    <span className={styles.comboSequence} data-compact-sequence={isCompactSequence}>
+      {sequence.map((step, stepIndex) => (
+        <span key={stepIndex} className={styles.comboStep}>
+          {step.map((part, partIndex) => (
+            <KeycapDisplay key={`${stepIndex}-${partIndex}-${part.type}-${part.value}`} part={part} />
+          ))}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function isWideCombo(combo: KeyCombo): boolean {
-  if (combo.next) return true;
-  return getComboDisplay(combo).length > 1;
+  return getComboSequenceDisplayParts(combo).some((step) => step.length > 1) || combo.next !== undefined;
 }
 
 function ConflictNotice({

@@ -14,6 +14,11 @@ export interface KeybindingAction {
   combos: KeyCombo[];
 }
 
+export interface KeyDisplayPart {
+  type: "modifier" | "key";
+  value: string;
+}
+
 export type KeybindingContext = "global" | "home" | "sheet" | "sheet-commands" | "sheet-layout";
 
 export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null {
@@ -306,6 +311,33 @@ const MODIFIER_DISPLAY_MAP: Record<Modifier, string> = {
 
 export function getKeyDisplay(key: string): string {
   return KEY_DISPLAY_MAP[key] ?? key;
+}
+
+function getKeycapDisplayValue(key: string): string {
+  if (/^[a-zA-Z]$/.test(key)) {
+    return key.toLowerCase();
+  }
+
+  return getKeyDisplay(key);
+}
+
+export function getComboDisplayParts(combo: KeyCombo): KeyDisplayPart[] {
+  const modifiers = combo.modifiers.map((modifier) => ({
+    type: "modifier" as const,
+    value: MODIFIER_DISPLAY_MAP[modifier],
+  }));
+
+  return [...modifiers, { type: "key", value: getKeycapDisplayValue(combo.key) }];
+}
+
+export function getComboSequenceDisplayParts(combo: KeyCombo): KeyDisplayPart[][] {
+  const parts = [getComboDisplayParts(combo)];
+
+  if (combo.next) {
+    parts.push(...getComboSequenceDisplayParts(combo.next));
+  }
+
+  return parts;
 }
 
 export function getComboDisplay(combo: KeyCombo): string {

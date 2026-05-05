@@ -48,6 +48,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   });
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
+  const layoutMetrics = sectionMetrics[0] ?? FALLBACK_METRICS;
 
   function updateSectionMetrics(sectionIndex: number, nextMetrics: SectionMetricsState) {
     setSectionMetrics((currentMetrics) => {
@@ -86,6 +87,11 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           <span className={cheatsheetStyles.layoutStorageStatus} suppressHydrationWarning>
             {hydrated && hasSavedLayout ? "Saved locally" : "Default layout"}
           </span>
+          {isLayoutActive ? (
+            <span className={cheatsheetStyles.sectionLayoutLabel}>
+              {layoutMetrics.columns} cols · {Math.round(layoutMetrics.unitSize)}px
+            </span>
+          ) : null}
           <button
             type="button"
             className={cheatsheetStyles.layoutSecondaryButton}
@@ -99,8 +105,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
       </div>
 
       {sheet.sections.map((section, sectionIndex) => {
-        const metrics = sectionMetrics[sectionIndex] ?? FALLBACK_METRICS;
-
         return (
           <section
             key={section.title}
@@ -109,11 +113,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           >
             <div className={cheatsheetStyles.sectionHeaderRow}>
               <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
-              {isLayoutActive ? (
-                <span className={cheatsheetStyles.sectionLayoutLabel}>
-                  {metrics.columns} cols · {Math.round(metrics.unitSize)}px
-                </span>
-              ) : null}
             </div>
 
             <SheetGrid editMode={isLayoutActive} onMetricsChange={(nextMetrics) => updateSectionMetrics(sectionIndex, nextMetrics)}>

@@ -18,6 +18,11 @@ export function Modal({ open, onClose, children, className = "" }: Props) {
     if (!open) return;
 
     previousActiveElement.current = document.activeElement as HTMLElement;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     modalRef.current?.focus();
 
@@ -53,6 +58,8 @@ export function Modal({ open, onClose, children, className = "" }: Props) {
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
       previousActiveElement.current?.focus();
     };
   }, [open]);
