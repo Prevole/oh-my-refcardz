@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {
   getYamlCheatSheet,
+  getYamlCheatSheetWithMeta,
   getAllCheatSheetsMeta,
 } from "./yaml-cheatsheets";
 
@@ -434,6 +435,138 @@ sections: []
 
       // Both have order 50, so they should be sorted by fallback name (alpha < beta)
       expect(alphaIndex).toBeLessThan(betaIndex);
+    });
+  });
+
+  describe("savedLayout loading", () => {
+    const fixtureDir = path.join(contentDir, "96-layout-test");
+
+    beforeEach(async () => {
+      await fs.mkdir(fixtureDir, { recursive: true });
+      await fs.writeFile(
+        path.join(fixtureDir, "meta.yaml"),
+        `title: Layout Test
+description: Testing layout loading
+`
+      );
+    });
+
+    afterEach(async () => {
+      await fs.rm(fixtureDir, { recursive: true, force: true });
+    });
+
+    it("returns savedLayout when .layout.json exists", async () => {
+      const savedLayout = [
+        { cards: [{ colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 }] },
+      ];
+
+      await fs.writeFile(
+        path.join(fixtureDir, "with-layout.yaml"),
+        `title: With Layout
+summary: A sheet with saved layout
+color: "#AABBCC"
+sections:
+  - title: Section
+    cards:
+      - title: Card
+        items:
+          - type: command
+            title: Test
+            command: test
+`
+      );
+      await fs.writeFile(
+        path.join(fixtureDir, "with-layout.layout.json"),
+        JSON.stringify(savedLayout, null, 2)
+      );
+
+      const sheet = await getYamlCheatSheetWithMeta("with-layout");
+
+      expect(sheet).not.toBeNull();
+      expect(sheet?.savedLayout).toEqual(savedLayout);
+    });
+
+    it("returns undefined savedLayout when .layout.json does not exist", async () => {
+      await fs.writeFile(
+        path.join(fixtureDir, "no-layout.yaml"),
+        `title: No Layout
+summary: A sheet without saved layout
+color: "#DDEEFF"
+sections:
+  - title: Section
+    cards:
+      - title: Card
+        items:
+          - type: command
+            title: Test
+            command: test
+`
+      );
+
+      const sheet = await getYamlCheatSheetWithMeta("no-layout");
+
+      expect(sheet).not.toBeNull();
+      expect(sheet?.savedLayout).toBeUndefined();
+    });
+
+    it("returns undefined savedLayout when .layout.json is invalid JSON", async () => {
+      await fs.writeFile(
+        path.join(fixtureDir, "invalid-layout.yaml"),
+        `title: Invalid Layout
+summary: A sheet with invalid layout JSON
+color: "#112233"
+sections:
+  - title: Section
+    cards:
+      - title: Card
+        items:
+          - type: command
+            title: Test
+            command: test
+`
+      );
+      await fs.writeFile(
+        path.join(fixtureDir, "invalid-layout.layout.json"),
+        "not valid json {"
+      );
+
+      const sheet = await getYamlCheatSheetWithMeta("invalid-layout");
+
+      expect(sheet).not.toBeNull();
+      expect(sheet?.savedLayout).toBeUndefined();
+    });
+
+    it("includes colorFrom and categoryId alongside savedLayout", async () => {
+      const savedLayout = [
+        { cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }] },
+      ];
+
+      await fs.writeFile(
+        path.join(fixtureDir, "full-meta.yaml"),
+        `title: Full Meta
+summary: A sheet with all metadata
+color: "#445566"
+sections:
+  - title: Section
+    cards:
+      - title: Card
+        items:
+          - type: command
+            title: Test
+            command: test
+`
+      );
+      await fs.writeFile(
+        path.join(fixtureDir, "full-meta.layout.json"),
+        JSON.stringify(savedLayout, null, 2)
+      );
+
+      const sheet = await getYamlCheatSheetWithMeta("full-meta");
+
+      expect(sheet).not.toBeNull();
+      expect(sheet?.savedLayout).toEqual(savedLayout);
+      expect(sheet?.colorFrom).toBeDefined();
+      expect(sheet?.categoryId).toBe("96-layout-test");
     });
   });
 });

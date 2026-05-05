@@ -78,25 +78,29 @@ test.describe("Cheatsheet keyboard navigation", () => {
 
   test("scrolls to top with gg", async ({ page }) => {
     await page.evaluate(() => window.scrollTo(0, 500));
-    await page.waitForTimeout(100);
 
-    const scrollBefore = await page.evaluate(() => window.scrollY);
-    expect(scrollBefore).toBeGreaterThan(0);
+    await expect(async () => {
+      const scrollBefore = await page.evaluate(() => window.scrollY);
+      expect(scrollBefore).toBeGreaterThan(0);
+    }).toPass({ timeout: 2000 });
 
     await page.keyboard.press("g");
     await page.keyboard.press("g");
 
-    await page.waitForTimeout(500);
-    const scrollAfter = await page.evaluate(() => window.scrollY);
-    expect(scrollAfter).toBe(0);
+    await expect(async () => {
+      const scrollAfter = await page.evaluate(() => window.scrollY);
+      expect(scrollAfter).toBe(0);
+    }).toPass({ timeout: 2000 });
   });
 
   test("scrolls to bottom with Shift+G", async ({ page }) => {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.keyboard.press("Shift+G");
-    await page.waitForTimeout(1000);
-    const scrollY = await page.evaluate(() => window.scrollY);
-    expect(scrollY).toBeGreaterThan(100);
+
+    await expect(async () => {
+      const scrollY = await page.evaluate(() => window.scrollY);
+      expect(scrollY).toBeGreaterThan(100);
+    }).toPass({ timeout: 2000 });
   });
 });
 
@@ -112,22 +116,26 @@ test.describe("Cheatsheet command actions", () => {
     const focusedCommand = page.locator("[data-sheet-command][data-nav-focused='true']");
     await expect(focusedCommand).toBeVisible();
     await page.keyboard.press("y");
-    await page.waitForTimeout(100);
 
-    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardText.length).toBeGreaterThan(0);
+    await expect(async () => {
+      const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+      expect(clipboardText.length).toBeGreaterThan(0);
+    }).toPass({ timeout: 2000 });
   });
 
   test("shows example modal with i key", async ({ page }) => {
     await page.keyboard.press("j");
+    const focusedCommand = page.locator("[data-sheet-command][data-nav-focused='true']");
+    await expect(focusedCommand).toBeVisible();
+
     await page.keyboard.press("i");
-    await page.waitForTimeout(200);
+
     const modalOverlay = page.locator("[data-command-modal-overlay]");
     const modalCount = await modalOverlay.count();
     if (modalCount > 0) {
       await expect(modalOverlay).toBeVisible();
       await page.keyboard.press("Escape");
-      await expect(modalOverlay).not.toBeVisible();
+      await expect(modalOverlay).toHaveCount(0);
     }
   });
 });

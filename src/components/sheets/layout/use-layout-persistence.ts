@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { YamlCheatSheet } from "@/lib/yaml-cheatsheets";
+import type { YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
+import { syncLayoutToDev, deleteLayoutFromDev } from "@/lib/dev-layout-sync";
 import { buildDefaultSectionLayouts } from "./layout-inference";
 import type { SectionLayoutState } from "./layout-types";
 import {
@@ -31,9 +32,16 @@ export type UseLayoutPersistenceResult = {
   resetLayout: () => void;
 };
 
-export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheet): UseLayoutPersistenceResult {
+export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWithMeta): UseLayoutPersistenceResult {
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot);
-  const defaultSectionLayouts = useMemo(() => buildDefaultSectionLayouts(sheet), [sheet]);
+
+  const defaultSectionLayouts = useMemo(() => {
+    if (sheet.savedLayout) {
+      return sheet.savedLayout as SectionLayoutState[];
+    }
+    return buildDefaultSectionLayouts(sheet);
+  }, [sheet]);
+
   const [sectionLayouts, setSectionLayouts] = useState(defaultSectionLayouts);
   const [storageHydrated, setStorageHydrated] = useState(false);
   const didHydrateStorage = useRef(false);
@@ -63,6 +71,10 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheet): 
     }
 
     window.localStorage.setItem(storageKey, JSON.stringify(sectionLayouts));
+
+    if (process.env.NODE_ENV === "development") {
+      syncLayoutToDev(sheetSlug, sectionLayouts);
+    }
   }, [defaultSectionLayouts, sectionLayouts, sheetSlug]);
 
   function resetLayout() {
@@ -70,6 +82,10 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheet): 
 
     window.localStorage.removeItem(buildStorageKey(sheetSlug));
     setSectionLayouts(defaultSectionLayouts);
+
+    if (process.env.NODE_ENV === "development") {
+      deleteLayoutFromDev(sheetSlug);
+    }
   }
 
   return {

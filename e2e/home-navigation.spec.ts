@@ -45,12 +45,18 @@ test.describe("Home keyboard navigation", () => {
 
     const initialTitle = await selectedCard().locator("[class*='hexTitle']").textContent();
     await page.keyboard.press("j");
-    const afterDown = await selectedCard().locator("[class*='hexTitle']").textContent();
-    expect(afterDown).not.toBe(initialTitle);
+
+    await expect(async () => {
+      const afterDown = await selectedCard().locator("[class*='hexTitle']").textContent();
+      expect(afterDown).not.toBe(initialTitle);
+    }).toPass({ timeout: 2000 });
 
     await page.keyboard.press("k");
-    const afterUp = await selectedCard().locator("[class*='hexTitle']").textContent();
-    expect(afterUp).toBe(initialTitle);
+
+    await expect(async () => {
+      const afterUp = await selectedCard().locator("[class*='hexTitle']").textContent();
+      expect(afterUp).toBe(initialTitle);
+    }).toPass({ timeout: 2000 });
   });
 
   test("opens selected sheet with Enter", async ({ page }) => {
@@ -85,9 +91,11 @@ test.describe("Home keyboard navigation", () => {
   test("clears search with Escape", async ({ page }) => {
     await page.keyboard.press("/");
     await page.keyboard.type("git");
-    await page.waitForTimeout(100);
-    await page.keyboard.press("Escape");
+
     const searchInput = page.locator("#search");
+    await expect(searchInput).toHaveValue("git");
+
+    await page.keyboard.press("Escape");
     await expect(searchInput).toHaveValue("");
     await expect(searchInput).not.toBeFocused();
   });
@@ -104,7 +112,7 @@ test.describe("Home keyboard navigation", () => {
     await expect(helpModal).toBeVisible();
 
     await page.keyboard.press("Escape");
-    await expect(helpModal).not.toBeVisible();
+    await expect(helpModal).toHaveCount(0);
   });
 
   test("opens settings panel with ,", async ({ page }) => {

@@ -4,6 +4,17 @@ import { load } from "js-yaml";
 import { z } from "zod";
 import { getCategoryPrimaryColor, getCategoryGradientPair } from "./color-palette";
 
+export type SavedCardLayout = {
+  colStart: number;
+  rowStart: number;
+  colSpan: number;
+  rowSpan: number;
+};
+
+export type SavedSectionLayout = {
+  cards: SavedCardLayout[];
+};
+
 export type CheatSheetMeta = {
   slug: string;
   title: string;
@@ -85,6 +96,7 @@ export type YamlCheatSheet = z.infer<typeof yamlCheatSheetSchema>;
 export type YamlCheatSheetWithMeta = YamlCheatSheet & {
   colorFrom: string;
   categoryId: string;
+  savedLayout?: SavedSectionLayout[];
 };
 
 const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
@@ -183,6 +195,16 @@ async function readSheetFile(file: SheetFile): Promise<YamlCheatSheet> {
   return parseYamlCheatSheet(raw, path.relative(contentDirectory, file.filePath));
 }
 
+async function readLayoutFile(yamlFilePath: string): Promise<SavedSectionLayout[] | null> {
+  const layoutPath = yamlFilePath.replace(/\.yaml$/, ".layout.json");
+  try {
+    const raw = await fs.readFile(layoutPath, "utf8");
+    return JSON.parse(raw) as SavedSectionLayout[];
+  } catch {
+    return null;
+  }
+}
+
 async function readParsedSheetBySlug(slug: string): Promise<ParsedSheet | null> {
   const file = await getSheetFileBySlug(slug);
   if (!file) {
@@ -264,11 +286,13 @@ export async function getYamlCheatSheetWithMeta(slug: string): Promise<YamlCheat
   }
 
   const { categoryId, categoryColor } = getSheetCategoryMeta(parsedSheet.file.categoryPath);
+  const savedLayout = await readLayoutFile(parsedSheet.file.filePath);
 
   return {
     ...parsedSheet.data,
     colorFrom: categoryColor,
     categoryId,
+    ...(savedLayout && { savedLayout }),
   };
 }
 

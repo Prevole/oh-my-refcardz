@@ -6,7 +6,7 @@ import { SheetCommand } from "@/components/sheets/sheet-command";
 import { SheetConfig } from "@/components/sheets/sheet-config";
 import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
-import type { CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetItem, YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import {
   useLayoutPersistence,
   useCardDrag,
@@ -19,7 +19,7 @@ import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 type Props = {
   sheetSlug: string;
-  sheet: YamlCheatSheet;
+  sheet: YamlCheatSheetWithMeta;
 };
 
 export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
