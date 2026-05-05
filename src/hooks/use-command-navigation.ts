@@ -4,6 +4,7 @@ import { useEffect, useCallback, useRef } from "react";
 import { useKeyboardContext } from "./use-keyboard-context";
 import { useKeybindings } from "./use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
+import { computeGridPositions, type GridPos } from "@/lib/grid-clustering";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -26,8 +27,6 @@ function getCardOf(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-type GridPos = { gridCol: number; gridRow: number };
-
 /**
  * Given a list of cards, infer their grid column and row by clustering
  * their center-X (columns) and top-Y (rows) coordinates.
@@ -36,35 +35,14 @@ function computeCardGridPositions(
   cards: HTMLElement[],
   threshold = 40
 ): Map<HTMLElement, GridPos> {
-  const rects = cards.map((c) => ({ el: c, r: c.getBoundingClientRect() }));
-
-  const xs = rects.map((c) => c.r.left + c.r.width / 2);
-  const colBuckets = cluster(xs, threshold);
-
-  const ys = rects.map((c) => c.r.top);
-  const rowBuckets = cluster(ys, threshold);
+  const rects = cards.map((c) => c.getBoundingClientRect());
+  const positions = computeGridPositions(rects, threshold);
 
   const result = new Map<HTMLElement, GridPos>();
-  rects.forEach(({ el, r }) => {
-    const cx = r.left + r.width / 2;
-    const top = r.top;
-    result.set(el, {
-      gridCol: colBuckets.findIndex((b) => Math.abs(b - cx) <= threshold),
-      gridRow: rowBuckets.findIndex((b) => Math.abs(b - top) <= threshold),
-    });
+  cards.forEach((card, i) => {
+    result.set(card, positions[i]);
   });
   return result;
-}
-
-function cluster(values: number[], threshold: number): number[] {
-  const sorted = [...values].sort((a, b) => a - b);
-  const buckets: number[] = [];
-  for (const v of sorted) {
-    if (buckets.length === 0 || Math.abs(v - buckets[buckets.length - 1]) > threshold) {
-      buckets.push(v);
-    }
-  }
-  return buckets;
 }
 
 /**

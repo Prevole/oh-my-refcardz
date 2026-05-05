@@ -7,7 +7,7 @@ async function expectFocusedLayoutCard(page: Page) {
 }
 
 async function focusFirstLayoutCard(page: Page) {
-  await page.keyboard.press("H");
+  await page.keyboard.press("Shift+h");
   await page.waitForTimeout(100);
   return expectFocusedLayoutCard(page);
 }
@@ -35,7 +35,7 @@ test.describe("Keyboard layout management", () => {
     test("navigates between cards with Shift+L (right)", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
-      await page.keyboard.press("L");
+      await page.keyboard.press("Shift+l");
       await page.waitForTimeout(100);
 
       await expectFocusedLayoutCard(page);
@@ -44,7 +44,7 @@ test.describe("Keyboard layout management", () => {
     test("navigates between cards with Shift+J (down)", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
-      await page.keyboard.press("J");
+      await page.keyboard.press("Shift+j");
       await page.waitForTimeout(100);
 
       await expectFocusedLayoutCard(page);
@@ -129,7 +129,7 @@ test.describe("Keyboard layout management", () => {
   });
 
   test.describe("Card resize with Alt+Shift+hjkl", () => {
-    test("shrinks card width with Alt+Shift+H", async ({ page }) => {
+    test("shrinks card width with Alt+Shift+Left", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
       const getColSpan = async () => {
@@ -153,7 +153,7 @@ test.describe("Keyboard layout management", () => {
       await expectFocusedLayoutCard(page);
     });
 
-    test("grows card width with Alt+Shift+L", async ({ page }) => {
+    test("grows card width with Alt+Shift+Right", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
       await page.keyboard.press("Alt+Shift+ArrowLeft");
@@ -178,7 +178,7 @@ test.describe("Keyboard layout management", () => {
       }
     });
 
-    test("shrinks card height with Alt+Shift+K", async ({ page }) => {
+    test("shrinks card height with Alt+Shift+Up", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
       const getRowSpan = async () => {
@@ -200,7 +200,7 @@ test.describe("Keyboard layout management", () => {
       }
     });
 
-    test("grows card height with Alt+Shift+J", async ({ page }) => {
+    test("grows card height with Alt+Shift+Down", async ({ page }) => {
       await focusFirstLayoutCard(page);
 
       const getRowSpan = async () => {
@@ -279,13 +279,21 @@ test.describe("Keyboard layout management", () => {
 
   test.describe("Help modal shows layout shortcuts", () => {
     test("displays layout shortcuts in help modal", async ({ page }) => {
-      await page.getByRole("button", { name: "Help" }).click();
+      await page.keyboard.press("?");
+      await page.waitForTimeout(200);
 
-      const layoutSection = page.getByRole("heading", { name: "Layout" });
-      await expect(layoutSection).toBeVisible();
+      // Click the Layout tab (exact match to avoid "Reset layout" button)
+      const layoutTab = page.getByRole("button", { name: "Layout", exact: true });
+      await expect(layoutTab).toBeVisible();
+      await layoutTab.click();
+      await page.waitForTimeout(100);
 
-      const moveCardText = page.locator("text=/Move card/i");
-      await expect(moveCardText.first()).toBeVisible();
+      // Verify layout section content is visible
+      const focusCardHeading = page.getByRole("heading", { name: "Focus a Card" });
+      await expect(focusCardHeading).toBeVisible();
+
+      const moveCardHeading = page.getByRole("heading", { name: "Move a Card" });
+      await expect(moveCardHeading).toBeVisible();
     });
   });
 });

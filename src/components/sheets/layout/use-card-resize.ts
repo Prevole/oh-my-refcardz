@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, PointerEvent as ReactPointerEvent, SetStateAction } from "react";
 import { GRID_GAP_PX, GRID_COLUMNS } from "../sheet-grid";
-import { clamp, resolveSectionLayout } from "./layout-algorithms";
+import { resolveSectionLayout } from "./layout-algorithms";
+import { calculateResizeBounds, boundsEqual } from "./resize-calculations";
 import type { ResizeHandleDirection, ResizeState, SectionLayoutState, SectionMetricsState } from "./layout-types";
-import { FALLBACK_METRICS, MAX_ROW_SPAN } from "./layout-types";
+import { FALLBACK_METRICS } from "./layout-types";
 
 export type UseCardResizeResult = {
   resizeState: ResizeState | null;
@@ -40,46 +41,29 @@ export function useCardResize(
       const deltaCols = Math.round((event.clientX - active.startClientX) / pitch);
       const deltaRows = Math.round((event.clientY - active.startClientY) / pitch);
 
-      let nextColStart = active.originColStart;
-      let nextRowStart = active.originRowStart;
-      let nextColSpan = active.originColSpan;
-      let nextRowSpan = active.originRowSpan;
+      const origin = {
+        colStart: active.originColStart,
+        rowStart: active.originRowStart,
+        colSpan: active.originColSpan,
+        rowSpan: active.originRowSpan,
+      };
 
-      if (active.direction === "east" || active.direction === "north-east" || active.direction === "south-east") {
-        nextColSpan = clamp(active.originColSpan + deltaCols, 1, GRID_COLUMNS - active.originColStart + 1);
-      }
+      const nextBounds = calculateResizeBounds(origin, deltaCols, deltaRows, active.direction, GRID_COLUMNS);
 
-      if (active.direction === "south" || active.direction === "south-east" || active.direction === "south-west") {
-        nextRowSpan = clamp(active.originRowSpan + deltaRows, 1, MAX_ROW_SPAN);
-      }
+      const currentBounds = {
+        colStart: active.colStart,
+        rowStart: active.rowStart,
+        colSpan: active.colSpan,
+        rowSpan: active.rowSpan,
+      };
 
-      if (active.direction === "west" || active.direction === "north-west" || active.direction === "south-west") {
-        const maxColStart = active.originColStart + active.originColSpan - 1;
-        nextColStart = clamp(active.originColStart + deltaCols, 1, maxColStart);
-        nextColSpan = clamp(active.originColSpan + (active.originColStart - nextColStart), 1, GRID_COLUMNS);
-      }
-
-      if (active.direction === "north" || active.direction === "north-east" || active.direction === "north-west") {
-        const maxRowStart = active.originRowStart + active.originRowSpan - 1;
-        nextRowStart = clamp(active.originRowStart + deltaRows, 1, maxRowStart);
-        nextRowSpan = clamp(active.originRowSpan + (active.originRowStart - nextRowStart), 1, MAX_ROW_SPAN);
-      }
-
-      if (
-        nextColStart === active.colStart &&
-        nextRowStart === active.rowStart &&
-        nextColSpan === active.colSpan &&
-        nextRowSpan === active.rowSpan
-      ) {
+      if (boundsEqual(nextBounds, currentBounds)) {
         return;
       }
 
       setResizeState({
         ...active,
-        colStart: nextColStart,
-        rowStart: nextRowStart,
-        colSpan: nextColSpan,
-        rowSpan: nextRowSpan,
+        ...nextBounds,
       });
     }
 

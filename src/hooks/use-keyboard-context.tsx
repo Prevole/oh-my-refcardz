@@ -10,8 +10,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  pushScopeToStack,
+  popScopeFromStack,
+  isScopeActiveInStack,
+  getActiveScope,
+  type KeyboardScopeId,
+} from "@/lib/keyboard-scope";
 
-export type KeyboardScopeId = "global" | "settings" | "help" | "info" | "sheet-commands" | "sheet-layout";
+export type { KeyboardScopeId } from "@/lib/keyboard-scope";
 
 type KeyboardContextValue = {
   activeScope: KeyboardScopeId;
@@ -25,26 +32,19 @@ const KeyboardContext = createContext<KeyboardContextValue | null>(null);
 export function KeyboardContextProvider({ children }: { children: ReactNode }) {
   const [scopeStack, setScopeStack] = useState<KeyboardScopeId[]>(["global"]);
 
-  const activeScope = scopeStack[scopeStack.length - 1];
+  const activeScope = getActiveScope(scopeStack);
 
   const isScopeActive = useCallback(
-    (scope: KeyboardScopeId) => activeScope === scope,
-    [activeScope]
+    (scope: KeyboardScopeId) => isScopeActiveInStack(scopeStack, scope),
+    [scopeStack]
   );
 
   const pushScope = useCallback((scope: KeyboardScopeId) => {
-    setScopeStack((prev) => {
-      if (prev[prev.length - 1] === scope) return prev;
-      return [...prev, scope];
-    });
+    setScopeStack((prev) => pushScopeToStack(prev, scope));
   }, []);
 
   const popScope = useCallback((scope: KeyboardScopeId) => {
-    setScopeStack((prev) => {
-      const index = prev.lastIndexOf(scope);
-      if (index === -1 || index === 0) return prev;
-      return [...prev.slice(0, index), ...prev.slice(index + 1)];
-    });
+    setScopeStack((prev) => popScopeFromStack(prev, scope));
   }, []);
 
   const value = useMemo<KeyboardContextValue>(

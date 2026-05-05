@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 async function focusFirstLayoutCard(page: Page) {
-  await page.keyboard.press("H");
+  await page.keyboard.press("Shift+h");
   await page.waitForTimeout(100);
 }
 
@@ -25,7 +25,7 @@ test.describe("Drag & drop and layout persistence", () => {
     await expect(statusText).toBeVisible();
   });
 
-  test("activates and clears the layout overlay around keyboard focus", async ({ page }) => {
+  test("activates layout overlay when card is focused", async ({ page }) => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
@@ -34,18 +34,32 @@ test.describe("Drag & drop and layout persistence", () => {
 
     await focusFirstLayoutCard(page);
 
-    const layoutControls = page.locator("[data-card-layout-controls]");
-    await expect(layoutControls.first()).toBeVisible();
+    // Layout metrics should appear when a card is focused
     await expect(metricsText.first()).toBeVisible();
+    
+    // Card should have keyboard focus styling
+    const focusedCard = page.locator("[class*='cardKeyboardFocused']");
+    await expect(focusedCard.first()).toBeVisible();
+  });
+
+  test("clears layout overlay when focus is cleared with Escape", async ({ page }) => {
+    await page.goto("/cheatsheets/git");
+    await page.waitForSelector("[class*='layoutToolbar']");
+
+    await focusFirstLayoutCard(page);
+
+    const focusedCard = page.locator("[class*='cardKeyboardFocused']");
+    const metricsText = page.locator("text=/\\d+ cols/");
+    await expect(focusedCard.first()).toBeVisible();
 
     await page.keyboard.press("Escape");
     await page.waitForTimeout(100);
 
-    await expect(layoutControls.first()).not.toBeVisible();
+    await expect(focusedCard).not.toBeVisible();
     await expect(metricsText.first()).not.toBeVisible();
   });
 
-  test("shows column metrics in layout mode", async ({ page }) => {
+  test("shows column metrics when card is focused", async ({ page }) => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
@@ -54,15 +68,16 @@ test.describe("Drag & drop and layout persistence", () => {
     await expect(metricsText.first()).toBeVisible();
   });
 
-  test("resizes card width with controls", async ({ page }) => {
+  test("resizes card width with keyboard", async ({ page }) => {
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
     await focusFirstLayoutCard(page);
-    const controls = page.locator("[data-card-layout-controls]").first();
-    await expect(controls).toBeVisible();
+    
+    const focusedCard = page.locator("[class*='cardKeyboardFocused']");
+    await expect(focusedCard.first()).toBeVisible();
 
-    const card = page.locator("article").first();
+    const card = page.locator("article[data-layout-card='true']").first();
     const getColSpan = async () => {
       const style = await card.getAttribute("style");
       const match = style?.match(/--card-col-span:\s*(\d+)/);
@@ -72,11 +87,12 @@ test.describe("Drag & drop and layout persistence", () => {
     const initialColSpan = await getColSpan();
     expect(initialColSpan).not.toBeNull();
 
-    const decreaseWidthButton = controls.locator("button").first();
-    await decreaseWidthButton.click();
+    // Use Alt+Shift+l to increase width
+    await page.keyboard.press("Alt+Shift+l");
+    await page.waitForTimeout(100);
 
     const newColSpan = await getColSpan();
-    expect(newColSpan).toBeLessThanOrEqual(initialColSpan!);
+    expect(newColSpan).toBeGreaterThanOrEqual(initialColSpan!);
   });
 
   test("persists layout changes to localStorage", async ({ page }) => {
@@ -84,13 +100,14 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.waitForSelector("[class*='layoutToolbar']");
 
     await focusFirstLayoutCard(page);
-    const controls = page.locator("[data-card-layout-controls]").first();
-    await expect(controls).toBeVisible();
+    
+    const focusedCard = page.locator("[class*='cardKeyboardFocused']");
+    await expect(focusedCard.first()).toBeVisible();
 
-    const firstButton = controls.locator("button").first();
-    await firstButton.click();
+    // Resize the card to trigger a layout change
+    await page.keyboard.press("Alt+Shift+l");
+    await page.waitForTimeout(300);
 
-    await page.waitForTimeout(200);
     const hasLayout = await page.evaluate(() => {
       return localStorage.getItem("sheet-layout:git") !== null;
     });
@@ -106,11 +123,15 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.waitForSelector("[class*='layoutToolbar']");
 
     await focusFirstLayoutCard(page);
-    const controls = page.locator("[data-card-layout-controls]").first();
-    await controls.locator("button").first().click();
-    await page.waitForTimeout(200);
+    await page.keyboard.press("Alt+Shift+l");
+    await page.waitForTimeout(300);
 
     await expect(page.locator("text=Saved locally")).toBeVisible();
+    
+    // Clear focus first to enable the reset button
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(100);
+    
     const resetButton = page.locator("text=Reset layout");
     await expect(resetButton).toBeEnabled();
     await resetButton.click();
@@ -128,8 +149,7 @@ test.describe("Drag & drop and layout persistence", () => {
     await page.waitForSelector("[class*='layoutToolbar']");
 
     await focusFirstLayoutCard(page);
-    const controls = page.locator("[data-card-layout-controls]").first();
-    await controls.locator("button").first().click();
+    await page.keyboard.press("Alt+Shift+l");
     await page.waitForTimeout(300);
 
     const savedLayout = await page.evaluate(() => {
@@ -173,35 +193,29 @@ test.describe("Drag & drop and layout persistence", () => {
       return localStorage.getItem("sheet-layout:git") !== null;
     });
 
-    // Drag was processed (either position changed or layout saved)
     expect(hasLayout).toBe(true);
   });
 });
 
 test.describe("Layout persistence across navigation", () => {
   test("remembers layout when navigating back from home", async ({ page }) => {
-    // Go to a cheatsheet and modify layout
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    // Focus a card and make a change
     await focusFirstLayoutCard(page);
-    const controls = page.locator("[data-card-layout-controls]").first();
-    await controls.locator("button").first().click();
-    await page.waitForTimeout(200);
+    await page.keyboard.press("Alt+Shift+l");
+    await page.waitForTimeout(300);
 
-    // Verify saved
     await expect(page.locator("text=Saved locally")).toBeVisible();
 
-    await page.keyboard.press("Escape");
-    await page.keyboard.press("Backspace");
+    // Navigate back to home using direct navigation
+    await page.goto("/");
     await expect(page).toHaveURL("/");
 
-    // Navigate back to the same cheatsheet
+    // Navigate back to the cheatsheet
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    // Should still show "Saved locally"
     await expect(page.locator("text=Saved locally")).toBeVisible();
   });
 });
