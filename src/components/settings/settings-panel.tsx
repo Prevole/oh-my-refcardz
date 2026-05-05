@@ -92,6 +92,11 @@ export function SettingsPanel({
     if (!panel) return;
 
     previousActiveElement.current = document.activeElement as HTMLElement;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     const focusableElements = panel.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -130,6 +135,8 @@ export function SettingsPanel({
 
     return () => {
       document.removeEventListener("keydown", handleTabKey);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
       previousActiveElement.current?.focus();
     };
   }, [isOpen]);

@@ -494,7 +494,7 @@ export function useCardKeyboard({
 
       const validFocus = validateFocus(rawFocusedCard, sectionCount, getCardCount);
       if (validFocus) {
-        if (event.key === "Escape") {
+        if (matchesAction(event, ACTION_IDS.CARD_CLEAR_FOCUS)) {
           event.preventDefault();
           event.stopImmediatePropagation();
           setRawFocusedCard(null);

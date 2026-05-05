@@ -60,6 +60,7 @@ export const ACTION_IDS = {
   CARD_NAV_RIGHT: "sheet-layout.nav-right",
   CARD_NAV_UP: "sheet-layout.nav-up",
   CARD_NAV_DOWN: "sheet-layout.nav-down",
+  CARD_CLEAR_FOCUS: "sheet-layout.clear-focus",
   CARD_MOVE_LEFT: "sheet-layout.move-left",
   CARD_MOVE_RIGHT: "sheet-layout.move-right",
   CARD_MOVE_UP: "sheet-layout.move-up",
@@ -192,6 +193,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.CARD_NAV_DOWN,
       label: "Navigate to card below",
       combos: [combo("j", "shift"), combo("ArrowDown", "shift")],
+    },
+    {
+      id: ACTION_IDS.CARD_CLEAR_FOCUS,
+      label: "Clear card focus",
+      combos: [key("Escape")],
     },
     {
       id: ACTION_IDS.CARD_MOVE_LEFT,

@@ -3,9 +3,9 @@
 import { useCallback, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
-import { CombosDisplay, HelpRow } from "@/components/settings/keybinding-display";
+import { HelpRow } from "@/components/settings/keybinding-display";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
-import { ACTION_IDS, getCombosDisplay, key } from "@/lib/keybindings";
+import { ACTION_IDS, getCombosDisplay } from "@/lib/keybindings";
 import { useActionCombos } from "@/components/settings/keybinding-display";
 import helpStyles from "./help-modal.module.css";
 import keybindingStyles from "@/components/settings/keybinding-display.module.css";
@@ -231,10 +231,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
               </colgroup>
               <tbody>
                 <tr>
-                  <td>
-                    <CombosDisplay combos={[key("Escape")]} variant="legend" />
-                  </td>
-                  <td>Clear card focus</td>
+                  <HelpRow actionId={ACTION_IDS.CARD_CLEAR_FOCUS} />
                   <td />
                   <td />
                 </tr>
