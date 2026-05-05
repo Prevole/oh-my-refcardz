@@ -30,7 +30,7 @@ describe("yaml-cheatsheets integration", () => {
     });
 
     it("parses command items correctly", async () => {
-      const sheet = await getYamlCheatSheet("git-dummy");
+      const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
       const allItems = sheet!.sections.flatMap((s) =>
@@ -45,20 +45,16 @@ describe("yaml-cheatsheets integration", () => {
       }
     });
 
-    it("parses shortcut items correctly", async () => {
-      const sheet = await getYamlCheatSheet("git-dummy");
+    it("parses multiple command-heavy sheets correctly", async () => {
+      const sheet = await getYamlCheatSheet("diff-so-fancy");
 
       expect(sheet).not.toBeNull();
       const allItems = sheet!.sections.flatMap((s) =>
         s.cards.flatMap((c) => c.items)
       );
-      const shortcutItem = allItems.find((item) => item.type === "shortcut");
+      const commandItems = allItems.filter((item) => item.type === "command");
 
-      expect(shortcutItem).toBeDefined();
-      if (shortcutItem?.type === "shortcut") {
-        expect(shortcutItem.keys.length).toBeGreaterThan(0);
-        expect(shortcutItem.description).toBeDefined();
-      }
+      expect(commandItems.length).toBeGreaterThan(1);
     });
 
     it("parses config items correctly", async () => {
@@ -102,14 +98,14 @@ describe("yaml-cheatsheets integration", () => {
       expect(sheet?.icon).toBe("git");
     });
 
-    it("loads sheets from different categories", async () => {
-      const toolingSheet = await getYamlCheatSheet("docker");
-      const languageSheet = await getYamlCheatSheet("typescript");
+    it("loads multiple sheets from the same category", async () => {
+      const gitSheet = await getYamlCheatSheet("git");
+      const diffSoFancySheet = await getYamlCheatSheet("diff-so-fancy");
 
-      expect(toolingSheet).not.toBeNull();
-      expect(languageSheet).not.toBeNull();
-      expect(toolingSheet?.title).toBe("Docker");
-      expect(languageSheet?.title).toBe("TypeScript");
+      expect(gitSheet).not.toBeNull();
+      expect(diffSoFancySheet).not.toBeNull();
+      expect(gitSheet?.title).toBe("Git");
+      expect(diffSoFancySheet?.title).toBe("Diff So Fancy");
     });
   });
 

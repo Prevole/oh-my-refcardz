@@ -508,6 +508,8 @@ export function HomeClient({ categories }: Props) {
 
                     const useGradientTitle = isHexaMode;
 
+                    const iconName = sheet.icon ?? "default";
+
                     return (
                       <div
                         key={sheet.slug}
@@ -581,12 +583,12 @@ export function HomeClient({ categories }: Props) {
                               style={{ stroke: `url(#hex-grad-${sheet.slug})` }}
                             />
                           </svg>
-                          <div className={`${styles.hexCardInner} ${sheet.icon ? styles.hasIcon : ""}`}>
-                            {sheet.icon ? (
+                          <div className={`${styles.hexCardInner} ${styles.hasIcon}`}>
+                            {
                               <>
                                 <div className={`${styles.hexHalf} ${styles.hexHalfIcon}`}>
                                   <TechIcon
-                                    icon={sheet.icon}
+                                    icon={iconName}
                                     color={primaryColor}
                                     className={styles.hexIcon}
                                   />
@@ -609,24 +611,7 @@ export function HomeClient({ categories }: Props) {
                                   )}
                                 </div>
                               </>
-                            ) : useGradientTitle ? (
-                              <h3
-                                className={`${styles.hexTitle} ${styles.hexTitleCentered} ${styles.hexTitleGradient}`}
-                                style={{
-                                  "--gradient-from": sheet.colorFrom,
-                                  "--gradient-to": hexaColorTo,
-                                } as CSSProperties}
-                              >
-                                {sheet.title}
-                              </h3>
-                            ) : (
-                              <h3
-                                className={`${styles.hexTitle} ${styles.hexTitleCentered}`}
-                                style={{ color: titleColor }}
-                              >
-                                {sheet.title}
-                              </h3>
-                            )}
+                            }
                           </div>
                         </button>
                       </div>

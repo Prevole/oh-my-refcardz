@@ -29,6 +29,8 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
 
   if (!sheet) return null;
 
+  const iconName = sheet.icon ?? "default";
+
   const titleStyle: CSSProperties = accentColor
     ? {
         background: `linear-gradient(135deg, ${sheet.colorFrom}, ${accentColor})`,
@@ -43,23 +45,19 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
   return (
     <Modal open={open} onClose={onClose} className="max-w-xl">
       <div className="flex items-stretch gap-4 max-sm:flex-col max-sm:gap-4">
-        {sheet.icon ? (
-          <div className="flex w-20 shrink-0 items-center justify-center max-sm:w-full max-sm:justify-start">
-            <div className={`${styles.detailsIcon} p-2`}>
-              <TechIcon
-                icon={sheet.icon}
-                color={iconColor}
-                className="h-16 w-16"
-              />
-            </div>
+        <div className="flex w-20 shrink-0 items-center justify-center max-sm:w-full max-sm:justify-start">
+          <div className={`${styles.detailsIcon} p-2`}>
+            <TechIcon
+              icon={iconName}
+              color={iconColor}
+              className="h-16 w-16"
+            />
           </div>
-        ) : null}
-        {sheet.icon ? (
-          <div
-            className={`${styles.detailsDivider} max-sm:hidden`}
-            aria-hidden="true"
-          />
-        ) : null}
+        </div>
+        <div
+          className={`${styles.detailsDivider} max-sm:hidden`}
+          aria-hidden="true"
+        />
         <div className="min-w-0 flex-1">
           <h3
             className="min-w-0 text-2xl font-semibold md:text-[2rem]"

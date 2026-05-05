@@ -29,6 +29,8 @@ export default async function CheatSheetPage({ params }: Props) {
     notFound();
   }
 
+  const iconName = sheet.icon ?? "default";
+
   return (
     <div className="relative min-h-screen overflow-hidden px-6 py-10 md:px-12">
       <SheetShortcuts />
@@ -37,12 +39,10 @@ export default async function CheatSheetPage({ params }: Props) {
         <main className="relative z-10 mx-auto max-w-7xl">
           <SheetInlineHelp />
           <div className="mt-3 flex items-center gap-4">
-            {sheet.icon ? (
-              <TechIcon
-                icon={sheet.icon}
-                className={cheatsheetStyles.headerIcon}
-              />
-            ) : null}
+            <TechIcon
+              icon={iconName}
+              className={cheatsheetStyles.headerIcon}
+            />
             <h1 className={cheatsheetStyles.headerTitle}>
               {sheet.title}
             </h1>
