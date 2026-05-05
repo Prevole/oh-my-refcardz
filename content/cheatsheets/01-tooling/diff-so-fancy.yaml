@@ -1,0 +1,63 @@
+title: Diff So Fancy
+summary: Readable diff review commands for Git and unified diffs, focused on daily
+  inspection rather than Git config.
+color: "#2F855A"
+
+sections:
+  - title: Basics
+    cards:
+      - title: What It Is
+        items:
+          - type: command
+            title: Pipe a diff through diff-so-fancy
+            command: git diff --color | diff-so-fancy
+            description: Render the current unstaged diff with headers, hunk markers, and
+              changed lines formatted for easier scanning.
+
+          - type: command
+            title: Review staged changes
+            command: git diff --cached --color | diff-so-fancy
+            description: Use the same enhanced view for the staged snapshot before creating
+              a commit.
+
+          - type: command
+            title: Unified diff outside Git
+            command: diff -u file_a file_b | diff-so-fancy
+            description: Format any unified diff stream, not just Git output, when comparing
+              two files directly.
+
+      - title: Pager
+        items:
+          - type: command
+            title: Keep colors in less
+            command: git diff --color | diff-so-fancy | less --tabs=4 -RFX
+            description: Preserve ANSI colors and avoid starting a pager session that feels
+              heavy for short diffs.
+
+          - type: command
+            title: Compare branches
+            command: git diff --color main...HEAD | diff-so-fancy | less --tabs=4 -RFX
+            description: Review everything on the current branch since it diverged from
+              `main` with the enhanced formatter.
+
+  - title: Daily Review Flow
+    cards:
+      - title: Common Commands
+        items:
+          - type: command
+            title: Show a single commit
+            command: git show --color HEAD~1 | diff-so-fancy | less --tabs=4 -RFX
+            description: Inspect one commit with readable hunk separation and more obvious
+              filename transitions.
+
+          - type: command
+            title: Review a file only
+            command: git diff --color -- src/app/page.tsx | diff-so-fancy | less --tabs=4 -RFX
+            description: Limit the review to one path when you want focused output during a
+              larger change.
+
+          - type: command
+            title: Compare two commits
+            command: git diff --color abc123 def456 | diff-so-fancy | less --tabs=4 -RFX
+            description: Format the exact delta between two revisions while keeping the
+              command compatible with normal Git diff arguments.

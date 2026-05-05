@@ -7,7 +7,7 @@ icon: git
 sections:
   - title: Inspect and Diff
     cards:
-      - title: Working Tree
+      - title: Status
         items:
           - type: command
             title: Status
@@ -20,6 +20,8 @@ sections:
             description: Show the current branch state together with staged changes,
               unstaged edits, and untracked files before taking action.
 
+      - title: Diff
+        items:
           - type: command
             title: Diff
             command: git diff
@@ -35,26 +37,6 @@ sections:
               - dc
             description: Review the exact staged diff that will be included in the next
               commit.
-
-      - title: Fancy Diff Helpers
-        items:
-          - type: command
-            title: Diff So Fancy
-            command: '!f() { [ -z "$GIT_PREFIX" ] || cd "$GIT_PREFIX" && git diff --color
-              "$@" | diff-so-fancy  | less --tabs=4 -RFX; }; f'
-            aliases:
-              - dsf
-            description: Open an enhanced diff view with `diff-so-fancy` while preserving
-              paths relative to the repository root.
-
-          - type: command
-            title: Cached Diff So Fancy
-            command: '!f() { [ -z "$GIT_PREFIX" ] || cd "$GIT_PREFIX" && git diff --cached
-              --color "$@" | diff-so-fancy  | less --tabs=4 -RFX; }; f'
-            aliases:
-              - dsfc
-            description: Use the same enhanced pager for staged changes when reviewing a
-              commit before creating it.
 
   - title: Branching and Commits
     cards:
@@ -216,6 +198,36 @@ sections:
             command: git config --list --show-origin --local
             description: Restrict config inspection to `.git/config`, which helps isolate
               repository-only overrides from global and included files.
+
+      - title: Diff Pager
+        items:
+          - type: config
+            title: Use diff-so-fancy as core pager
+            file: ~/.gitconfig
+            context: Let Git send diff-like output through `diff-so-fancy` before opening
+              `less`.
+            content: |-
+              [core]
+                pager = diff-so-fancy | less --tabs=4 -RFX
+            description: Makes regular `git diff`, `git show`, and related commands use the
+              prettier pager by default.
+
+          - type: config
+            title: Improve color defaults
+            file: ~/.gitconfig
+            context: Tune Git colors so `diff-so-fancy` gets clean, high-contrast input.
+            content: |-
+              [color]
+                ui = true
+              [color "diff"]
+                meta = yellow bold
+                frag = magenta bold
+                commit = yellow bold
+                old = red bold
+                new = green bold
+                whitespace = red reverse
+            description: Keeps filenames, hunk headers, and inserted or removed lines easy
+              to distinguish in the formatted output.
 
       - title: Conditional Includes
         items:
