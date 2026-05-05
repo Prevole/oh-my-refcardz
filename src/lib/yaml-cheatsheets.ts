@@ -56,7 +56,9 @@ const configItemSchema = z.object({
   title: z.string().min(1),
   file: z.string().min(1),
   context: z.string().min(1).optional(),
-  entries: z.array(z.string().min(1)).min(1),
+  content: z.string().refine((value) => value.trim().length > 0, {
+    message: "Config content cannot be empty",
+  }),
   description: z.string().optional(),
 });
 

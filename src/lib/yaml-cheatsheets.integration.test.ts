@@ -72,7 +72,7 @@ describe("yaml-cheatsheets integration", () => {
       if (configItem?.type === "config") {
         expect(configItem.title).toBeDefined();
         expect(configItem.file).toBeDefined();
-        expect(configItem.entries.length).toBeGreaterThan(0);
+        expect(configItem.content.length).toBeGreaterThan(0);
       }
     });
 

@@ -208,7 +208,7 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
         title={item.title}
         file={item.file}
         context={item.context}
-        entries={item.entries}
+        content={item.content}
         description={item.description}
       />
     );

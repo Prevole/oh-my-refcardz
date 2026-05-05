@@ -5,11 +5,11 @@ type SheetConfigProps = {
   title: string;
   file: string;
   context?: string;
-  entries: string[];
+  content: string;
   description?: string;
 };
 
-export function SheetConfig({ title, file, context, entries, description }: SheetConfigProps) {
+export function SheetConfig({ title, file, context, content, description }: SheetConfigProps) {
   return (
     <div className={cheatsheetStyles.configItem}>
       <div className={cheatsheetStyles.configHeader}>
@@ -21,7 +21,7 @@ export function SheetConfig({ title, file, context, entries, description }: Shee
       </p>
       {context ? <p className={cheatsheetStyles.configContext}>{renderInlineCode(context)}</p> : null}
       <pre className={cheatsheetStyles.configBlock}>
-        <code>{entries.join("\n")}</code>
+        <code>{content}</code>
       </pre>
       {description ? <p className={cheatsheetStyles.configDescription}>{renderInlineCode(description)}</p> : null}
     </div>

@@ -27,7 +27,7 @@ function createCard(itemCount: number, types: Array<"command" | "shortcut" | "co
         type: "config" as const,
         title: `Config ${i}`,
         file: "~/.config",
-        entries: ["key = value"],
+        content: "key = value",
       });
     }
   }

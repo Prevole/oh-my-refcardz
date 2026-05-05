@@ -58,9 +58,9 @@ sections:
             title: Shared profile
             file: ~/.gitconf/perso.config
             context: Included for repositories under ~/Documents/repositories/.
-            entries:
-              - '[user]'
-              - '  email = "me@example.com"'
+            content: |-
+              [user]
+                email = "me@example.com"
             description: Identity and signing defaults.
 ```
 
@@ -84,7 +84,7 @@ Config items render a file-oriented config snippet. Fields:
 - `title`: short label shown in the card
 - `file`: source file path like `~/.gitconfig` or `.git/config`
 - `context`: optional sentence explaining when the config applies
-- `entries`: one or more raw config lines shown as a snippet
+- `content`: raw config snippet content, usually written with YAML `|-`
 - `description`: optional explanation of why that config exists
 
 ### Category metadata

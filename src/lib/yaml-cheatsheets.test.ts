@@ -360,7 +360,7 @@ describe("yamlCheatSheetSchema", () => {
         title: "Shared profile",
         file: "~/.gitconf/perso.config",
         context: "Included for work repositories.",
-        entries: ["[user]", '  name = "Prevole"'],
+        content: '[user]\n  name = "Prevole"',
         description: "Identity and signing settings.",
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
@@ -372,7 +372,7 @@ describe("yamlCheatSheetSchema", () => {
         type: "config",
         title: "Repo remote",
         file: ".git/config",
-        entries: ['[remote "origin"]', "  url = git@github.com:org/repo.git"],
+        content: '[remote "origin"]\n  url = git@github.com:org/repo.git',
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(true);
@@ -382,7 +382,7 @@ describe("yamlCheatSheetSchema", () => {
       const item = {
         type: "config",
         file: ".git/config",
-        entries: ["key = value"],
+        content: "key = value",
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(false);
@@ -392,29 +392,29 @@ describe("yamlCheatSheetSchema", () => {
       const item = {
         type: "config",
         title: "Repo remote",
-        entries: ["key = value"],
+        content: "key = value",
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(false);
     });
 
-    it("rejects config item with empty entries", () => {
+    it("rejects config item with empty content", () => {
       const item = {
         type: "config",
         title: "Repo remote",
         file: ".git/config",
-        entries: [],
+        content: "",
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(false);
     });
 
-    it("rejects config item with empty entry", () => {
+    it("rejects config item with blank content", () => {
       const item = {
         type: "config",
         title: "Repo remote",
         file: ".git/config",
-        entries: ["key = value", ""],
+        content: "   \n  ",
       };
       const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
       expect(result.success).toBe(false);
