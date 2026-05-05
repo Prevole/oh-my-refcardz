@@ -5,6 +5,7 @@ import { CommandExampleModal } from "@/components/sheets/command-example-modal";
 import { CommandCopyModal } from "@/components/sheets/command-copy-modal";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
+import { renderInlineCode } from "./render-inline-code";
 import sheetCommandStyles from "./sheet-commands.module.css";
 
 type SheetCommandProps = {
@@ -178,7 +179,7 @@ export function SheetCommand({ title, command, aliases, description, example }: 
         ) : (
           <p className={sheetCommandStyles.commandTerminal}>$ {command}</p>
         )}
-        {description ? <p className={sheetCommandStyles.commandDescription}>{description}</p> : null}
+        {description ? <p className={sheetCommandStyles.commandDescription}>{renderInlineCode(description)}</p> : null}
       </div>
 
       {showExample && example ? (

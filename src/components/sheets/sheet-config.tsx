@@ -1,4 +1,5 @@
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
+import { renderInlineCode } from "./render-inline-code";
 
 type SheetConfigProps = {
   title: string;
@@ -25,18 +26,4 @@ export function SheetConfig({ title, file, context, entries, description }: Shee
       {description ? <p className={cheatsheetStyles.configDescription}>{renderInlineCode(description)}</p> : null}
     </div>
   );
-}
-
-function renderInlineCode(text: string) {
-  return text.split(/(`[^`]+`)/g).map((part, index) => {
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return (
-        <span key={index} className={cheatsheetStyles.inlineTextCode}>
-          {part.slice(1, -1)}
-        </span>
-      );
-    }
-
-    return part;
-  });
 }
