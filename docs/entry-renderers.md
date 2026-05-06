@@ -49,13 +49,18 @@ export function TitleEntry({ value }: { value: string }) {
 registerHandler("title", (value) => <TitleEntry value={value} />);
 ```
 
-### 3. Auto-Discovery (`entry-renderer.tsx`)
+### 3. Import Registration (`entry-renderer.tsx`)
 
-The main component uses Webpack/Turbopack's `require.context` to auto-discover and import all `*-entry.tsx` files:
+The main component explicitly imports all `*-entry.tsx` files to trigger their self-registration:
 
 ```typescript
-const handlersContext = require.context("./", false, /-entry\.tsx$/);
-handlersContext.keys().forEach((key: string) => handlersContext(key));
+import "./command-entry";
+import "./content-entry";
+import "./keys-entry";
+import "./path-entry";
+import "./settings-entry";
+import "./text-entry";
+import "./title-entry";
 ```
 
 This triggers the self-registration of all handlers at module load time.
@@ -87,7 +92,11 @@ export type CheatSheetEntryMap = {
 };
 ```
 
-That's it! The `require.context` auto-discovery will pick up the new file automatically.
+4. **Add the import** in `entry-renderer.tsx`:
+
+```typescript
+import "./mytype-entry";
+```
 
 ## Entry Context
 

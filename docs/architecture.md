@@ -1,0 +1,236 @@
+# Architecture
+
+oh-my-refcardz is a keyboard-first developer cheat sheet hub built with Next.js 16.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 (CSS-based config) |
+| Content | YAML files with Zod validation |
+| State | React Context + localStorage |
+| Testing | Vitest (unit), Playwright (E2E) |
+
+## Directory Structure
+
+```
+oh-my-refcardz/
+├── content/cheatsheets/     # YAML cheatsheet files
+│   ├── 01-tooling/          # Category folder
+│   │   ├── _category.yaml   # Category metadata
+│   │   ├── git.yaml         # Cheatsheet (slug = filename)
+│   │   └── ...
+│   └── 02-security/
+│       └── ...
+├── docs/                    # Project documentation
+├── e2e/                     # Playwright E2E tests
+├── scripts/                 # Build/validation scripts
+└── src/
+    ├── app/                 # Next.js App Router pages
+    │   ├── page.tsx         # Home page (RSC)
+    │   ├── home-client.tsx  # Home client component
+    │   ├── globals.css      # Tailwind v4 config
+    │   └── cheatsheets/[slug]/
+    │       └── page.tsx     # Cheatsheet page
+    ├── components/
+    │   ├── help/            # Help modals
+    │   ├── home/            # Home page components
+    │   ├── settings/        # Settings panel
+    │   ├── sheets/          # Cheatsheet rendering
+    │   │   ├── entry-renderers/  # Modular entry types
+    │   │   └── layout/      # Grid layout system
+    │   └── ui/              # Shared UI components
+    ├── hooks/               # React hooks
+    │   ├── use-keybindings.tsx
+    │   ├── use-keyboard-context.tsx
+    │   └── ...
+    └── lib/                 # Pure logic, utilities
+        ├── keybindings.ts
+        ├── yaml-cheatsheets.ts
+        └── ...
+```
+
+## Data Flow
+
+### Content Pipeline
+
+```
+YAML files (content/cheatsheets/)
+    ↓
+Zod validation (yaml-cheatsheets.ts)
+    ↓
+Typed data (YamlCheatSheet)
+    ↓
+React components (SheetRenderer)
+    ↓
+Entry renderers (command-entry, text-entry, etc.)
+```
+
+### State Management
+
+| State | Storage | Provider |
+|-------|---------|----------|
+| UI settings (colors, layout) | localStorage | `UISettingsProvider` |
+| Keybindings | localStorage | `KeybindingsProvider` |
+| Keyboard scope | React state | `KeyboardContextProvider` |
+| Sheet accent color | React context | `SheetAccentProvider` |
+
+## Key Systems
+
+### Entry Renderers
+
+Modular system for rendering different entry types (command, text, keys, etc.).
+
+See: [entry-renderers.md](./entry-renderers.md)
+
+### Keybindings
+
+Configurable keyboard shortcuts with scope management.
+
+See: [keybindings.md](./keybindings.md)
+
+### Placeholders
+
+User input prompts in commands with typed fields.
+
+See: [placeholders.md](./placeholders.md)
+
+### Cheatsheet Schema
+
+YAML structure for defining cheatsheets.
+
+See: [cheatsheet-schema.md](./cheatsheet-schema.md)
+
+## Page Structure
+
+### Home Page (`/`)
+
+```
+┌─────────────────────────────────────────┐
+│ Header: Search, Settings, Help          │
+├─────────────────────────────────────────┤
+│ Categories                              │
+│ ├── Category 1                          │
+│ │   ├── Sheet Card                      │
+│ │   └── Sheet Card                      │
+│ └── Category 2                          │
+│     └── ...                             │
+└─────────────────────────────────────────┘
+```
+
+- Server Component fetches all sheet metadata
+- Client Component handles keyboard navigation
+- Cards link to individual cheatsheet pages
+
+### Cheatsheet Page (`/cheatsheets/[slug]`)
+
+```
+┌─────────────────────────────────────────┐
+│ Header: Title, Back, Settings, Help     │
+├─────────────────────────────────────────┤
+│ Sections                                │
+│ ├── Section Title                       │
+│ │   ├── Card (draggable, resizable)     │
+│ │   │   ├── Item                        │
+│ │   │   │   ├── Entry (command)         │
+│ │   │   │   └── Entry (text)            │
+│ │   │   └── Item                        │
+│ │   └── Card                            │
+│ └── Section                             │
+└─────────────────────────────────────────┘
+```
+
+- Cards can be dragged and resized
+- Layout persists to localStorage
+- Keyboard navigation between copyable elements
+
+## Component Hierarchy
+
+```
+RootLayout
+├── KeyboardContextProvider
+├── KeybindingsProvider
+├── UISettingsProvider
+└── Page
+    ├── SheetAccentProvider (cheatsheet page only)
+    ├── SheetCommandsShell
+    │   ├── SheetRenderer
+    │   │   ├── SheetGrid
+    │   │   │   └── SheetCard
+    │   │   │       └── SheetItem
+    │   │   │           └── EntryRenderer
+    │   │   │               └── Terminal / TextEntry / ...
+    │   ├── ItemDetailModal (portal)
+    │   └── CommandCopyModal (portal)
+    └── SheetShortcuts (keyboard handlers)
+```
+
+## Styling
+
+### Tailwind v4
+
+Configuration is in `src/app/globals.css`, not `tailwind.config.js`:
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #3b82f6;
+  --font-mono: "JetBrains Mono", monospace;
+}
+```
+
+### CSS Modules
+
+Component-specific styles use CSS Modules:
+
+```
+component.tsx
+component.module.css
+```
+
+### Sheet Accent Color
+
+Each cheatsheet defines an accent color that propagates via CSS variable:
+
+```css
+--sheet-accent: #F05032;  /* Git orange */
+```
+
+Used for borders, highlights, and modal styling.
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+
+- Pure logic in `src/lib/`
+- Layout algorithms
+- Keybinding matching
+- Placeholder parsing
+
+Run: `npm run test`
+
+### E2E Tests (Playwright)
+
+- Keyboard navigation
+- Drag & drop
+- Copy functionality
+- Layout persistence
+
+Run: `npm run test:e2e`
+
+## Performance Considerations
+
+1. **Static Generation** — Cheatsheet pages are pre-rendered at build time
+2. **Code Splitting** — Each page loads only necessary components
+3. **localStorage** — Settings load synchronously to avoid flicker
+4. **Debounced Layout** — Grid recalculation is debounced on resize
+
+## Security
+
+- No database or authentication
+- No API routes with user input
+- Content is static YAML files
+- localStorage stores only UI preferences

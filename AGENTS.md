@@ -150,6 +150,16 @@ This project uses Zod v4, not v3. Use `.error.issues` (not `.error.errors`) on `
 
 Documentation lives in `docs/`. After making code changes, review documentation for necessary updates.
 
+### Available documentation
+
+| Document | Description |
+|----------|-------------|
+| [architecture.md](docs/architecture.md) | System overview, directory structure, data flow |
+| [cheatsheet-schema.md](docs/cheatsheet-schema.md) | YAML structure, entry types, detailedEntries |
+| [entry-renderers.md](docs/entry-renderers.md) | Modular renderer system, adding new types |
+| [keybindings.md](docs/keybindings.md) | Keyboard shortcuts system, scopes, adding actions |
+| [placeholders.md](docs/placeholders.md) | User input prompts in commands, escaping |
+
 ### Documentation review checklist
 
 | Changed area | Check these docs |
@@ -157,6 +167,8 @@ Documentation lives in `docs/`. After making code changes, review documentation 
 | YAML schema (`yaml-cheatsheets.ts`) | `docs/cheatsheet-schema.md` |
 | Entry renderers (`entry-renderers/`) | `docs/entry-renderers.md` |
 | Placeholder system | `docs/placeholders.md` |
+| Keybindings (`keybindings.ts`, `use-keybindings.tsx`) | `docs/keybindings.md` |
+| Major architectural changes | `docs/architecture.md` |
 | New feature or component | Consider if new doc needed |
 
 ### When reviewing docs, check for:

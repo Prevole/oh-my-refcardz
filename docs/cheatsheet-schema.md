@@ -98,6 +98,8 @@ Each entry is an object with exactly one key that determines its type.
     - git log --graph
 ```
 
+Commands support placeholders for user input. See [placeholders.md](./placeholders.md) for syntax and escaping.
+
 ### Text entries
 
 ```yaml
