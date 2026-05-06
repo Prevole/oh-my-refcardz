@@ -18,10 +18,11 @@ describe("yamlCheatSheetSchema", () => {
             title: "Lifecycle",
             items: [
               {
-                type: "command",
-                title: "Run container",
-                command: "docker run",
-                description: "Run a container from an image",
+                entries: [
+                  { title: "Run container" },
+                  { command: "docker run" },
+                  { text: "Run a container from an image" },
+                ],
               },
             ],
           },
@@ -158,364 +159,284 @@ describe("yamlCheatSheetSchema", () => {
     });
   });
 
-  describe("command item validation", () => {
-    const makeSheetWithItem = (item: unknown) => ({
+  describe("entry validation", () => {
+    const makeSheetWithEntries = (entries: unknown[]) => ({
       ...validSheet,
       sections: [
         {
           title: "Section",
-          cards: [{ title: "Card", items: [item] }],
+          cards: [{ title: "Card", items: [{ entries }] }],
         },
       ],
     });
 
-    it("validates command item with all fields", () => {
-      const item = {
-        type: "command",
-        title: "Run",
-        command: "docker run",
-        description: "Run a container",
-        examples: ["docker run nginx", "docker run -d nginx"],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
+    describe("title entry", () => {
+      it("validates title entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ title: "My Title" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty title entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ title: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("accepts command without optional description", () => {
-      const item = {
-        type: "command",
-        title: "Run",
-        command: "docker run",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
+    describe("command entry", () => {
+      it("validates command entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ command: "docker run" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty command", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ command: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("accepts command without optional examples", () => {
-      const item = {
-        type: "command",
-        title: "Run",
-        command: "docker run",
-        description: "Run a container",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
+    describe("alias entry", () => {
+      it("validates single alias entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ alias: "s" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty alias", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ alias: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("accepts command with aliases", () => {
-      const item = {
-        type: "command",
-        title: "Status",
-        command: "git status",
-        aliases: ["s", "st"],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
+    describe("aliases entry", () => {
+      it("validates aliases entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ aliases: ["s", "st", "sta"] }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty aliases array", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ aliases: [] }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects aliases with empty string", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ aliases: ["s", ""] }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects command without title", () => {
-      const item = {
-        type: "command",
-        command: "docker run",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("example entry", () => {
+      it("validates single example entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ example: "docker run nginx" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty example", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ example: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects command without command field", () => {
-      const item = {
-        type: "command",
-        title: "Run",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("examples entry", () => {
+      it("validates examples entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ examples: ["docker run nginx", "docker run -d nginx"] }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty examples array", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ examples: [] }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects command with empty title", () => {
-      const item = {
-        type: "command",
-        title: "",
-        command: "docker run",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("text entry", () => {
+      it("validates text entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ text: "A description of the command" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty text", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ text: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects command with empty command", () => {
-      const item = {
-        type: "command",
-        title: "Run",
-        command: "",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("keys entry", () => {
+      it("validates keys entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ keys: ["Ctrl", "C"] }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("accepts single key", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ keys: ["Escape"] }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty keys array", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ keys: [] }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects keys with empty string", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ keys: ["Ctrl", ""] }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects command with empty alias entry", () => {
-      const item = {
-        type: "command",
-        title: "Status",
-        command: "git status",
-        aliases: ["s", ""],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-  });
+    describe("file entry", () => {
+      it("validates file entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ file: "~/.gitconfig" }])
+        );
+        expect(result.success).toBe(true);
+      });
 
-  describe("app settings item validation", () => {
-    const makeSheetWithItem = (item: unknown) => ({
-      ...validSheet,
-      sections: [
-        {
-          title: "Section",
-          cards: [{ title: "Card", items: [item] }],
-        },
-      ],
+      it("rejects empty file", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ file: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("validates app settings item with where and settings", () => {
-      const item = {
-        type: "app settings",
-        title: "Enable app integration",
-        entries: [
-          {
-            where: "Settings > Developer",
-            description: "Turn on integration for local developer workflows.",
-            settings: ["App integration = enabled"],
-          },
-        ],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
+    describe("where entry", () => {
+      it("validates where entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ where: "Settings > Developer" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty where", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ where: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("accepts app settings item without where", () => {
-      const item = {
-        type: "app settings",
-        title: "Require approval",
-        entries: [{ settings: ["Touch ID = enabled"] }],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
+    describe("content entry", () => {
+      it("validates content entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ content: "[user]\n  name = Alex" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty content", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ content: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects blank content (whitespace only)", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ content: "   \n  " }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects app settings item without entries", () => {
-      const item = {
-        type: "app settings",
-        title: "Require approval",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("settings entry", () => {
+      it("validates settings entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ settings: ["App integration = enabled"] }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty settings array", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ settings: [] }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects settings with empty string", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ settings: ["enabled", ""] }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
 
-    it("rejects app settings item with empty entries array", () => {
-      const item = {
-        type: "app settings",
-        title: "Require approval",
-        entries: [],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("item validation", () => {
+      it("rejects item without entries", () => {
+        const sheet = {
+          ...validSheet,
+          sections: [
+            {
+              title: "Section",
+              cards: [{ title: "Card", items: [{}] }],
+            },
+          ],
+        };
+        const result = yamlCheatSheetSchema.safeParse(sheet);
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects item with empty entries array", () => {
+        const result = yamlCheatSheetSchema.safeParse(makeSheetWithEntries([]));
+        expect(result.success).toBe(false);
+      });
+
+      it("accepts item with multiple entries", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([
+            { title: "Status" },
+            { command: "git status" },
+            { aliases: ["s", "st"] },
+            { text: "Show the current branch state" },
+          ])
+        );
+        expect(result.success).toBe(true);
+      });
     });
 
-    it("accepts app settings element even when all fields are omitted", () => {
-      const item = {
-        type: "app settings",
-        title: "Require approval",
-        entries: [{}],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe("shortcut item validation", () => {
-    const makeSheetWithItem = (item: unknown) => ({
-      ...validSheet,
-      sections: [
-        {
-          title: "Section",
-          cards: [{ title: "Card", items: [item] }],
-        },
-      ],
-    });
-
-    it("validates shortcut item with all fields", () => {
-      const item = {
-        type: "shortcut",
-        keys: ["Ctrl", "C"],
-        description: "Copy to clipboard",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
-    });
-
-    it("accepts shortcut with single key", () => {
-      const item = {
-        type: "shortcut",
-        keys: ["Escape"],
-        description: "Cancel operation",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
-    });
-
-    it("rejects shortcut without keys", () => {
-      const item = {
-        type: "shortcut",
-        description: "Copy to clipboard",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects shortcut with empty keys array", () => {
-      const item = {
-        type: "shortcut",
-        keys: [],
-        description: "Copy to clipboard",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects shortcut with empty key string", () => {
-      const item = {
-        type: "shortcut",
-        keys: ["Ctrl", ""],
-        description: "Copy to clipboard",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects shortcut without description", () => {
-      const item = {
-        type: "shortcut",
-        keys: ["Ctrl", "C"],
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects shortcut with empty description", () => {
-      const item = {
-        type: "shortcut",
-        keys: ["Ctrl", "C"],
-        description: "",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe("config item validation", () => {
-    const makeSheetWithItem = (item: unknown) => ({
-      ...validSheet,
-      sections: [
-        {
-          title: "Section",
-          cards: [{ title: "Card", items: [item] }],
-        },
-      ],
-    });
-
-    it("validates config item with all fields", () => {
-      const item = {
-        type: "config",
-        title: "Shared profile",
-        file: "~/.gitconf/perso.config",
-        context: "Included for work repositories.",
-        content: '[user]\n  name = "Prevole"',
-        description: "Identity and signing settings.",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
-    });
-
-    it("accepts config item without optional context and description", () => {
-      const item = {
-        type: "config",
-        title: "Repo remote",
-        file: ".git/config",
-        content: '[remote "origin"]\n  url = git@github.com:org/repo.git',
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(true);
-    });
-
-    it("rejects config item without title", () => {
-      const item = {
-        type: "config",
-        file: ".git/config",
-        content: "key = value",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects config item without file", () => {
-      const item = {
-        type: "config",
-        title: "Repo remote",
-        content: "key = value",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects config item with empty content", () => {
-      const item = {
-        type: "config",
-        title: "Repo remote",
-        file: ".git/config",
-        content: "",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects config item with blank content", () => {
-      const item = {
-        type: "config",
-        title: "Repo remote",
-        file: ".git/config",
-        content: "   \n  ",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-  });
-
-
-  describe("discriminated union (type field)", () => {
-    const makeSheetWithItem = (item: unknown) => ({
-      ...validSheet,
-      sections: [
-        {
-          title: "Section",
-          cards: [{ title: "Card", items: [item] }],
-        },
-      ],
-    });
-
-    it("rejects item without type", () => {
-      const item = {
-        title: "Something",
-        command: "cmd",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
-    });
-
-    it("rejects item with invalid type", () => {
-      const item = {
-        type: "invalid",
-        title: "Something",
-      };
-      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
-      expect(result.success).toBe(false);
+    describe("unknown entry type", () => {
+      it("rejects unknown entry type", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ unknownKey: "value" }])
+        );
+        expect(result.success).toBe(false);
+      });
     });
   });
 });

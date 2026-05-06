@@ -47,6 +47,10 @@ npm run validate:cheatsheets  # Validate YAML cheatsheets against Zod schema
 - Only modifying content (YAML files)
 - Only modifying non-interactive components
 
+## Linting
+
+When running `npm run lint`, fix all reported issues — even those in files you did not directly modify during the session. If a change triggers lint errors in related files (e.g., unused imports after refactoring), fix them before committing.
+
 ## Testing Strategy
 
 Two-tier testing approach:

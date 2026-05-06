@@ -36,50 +36,42 @@ export type CheatSheetCategory = {
   sheets: CheatSheetMeta[];
 };
 
-const commandItemSchema = z.object({
-  type: z.literal("command"),
-  title: z.string().min(1),
-  command: z.string().min(1),
-  aliases: z.array(z.string().min(1)).optional(),
-  description: z.string().optional(),
-  examples: z.array(z.string()).optional(),
-});
-
-const shortcutItemSchema = z.object({
-  type: z.literal("shortcut"),
-  keys: z.array(z.string().min(1)).min(1),
-  description: z.string().min(1),
-});
-
-const configItemSchema = z.object({
-  type: z.literal("config"),
-  title: z.string().min(1),
-  file: z.string().min(1),
-  context: z.string().min(1).optional(),
+// Entry schemas - each entry has exactly one key that defines its type
+const titleEntrySchema = z.object({ title: z.string().min(1) });
+const commandEntrySchema = z.object({ command: z.string().min(1) });
+const aliasEntrySchema = z.object({ alias: z.string().min(1) });
+const aliasesEntrySchema = z.object({ aliases: z.array(z.string().min(1)).min(1) });
+const exampleEntrySchema = z.object({ example: z.string().min(1) });
+const examplesEntrySchema = z.object({ examples: z.array(z.string().min(1)).min(1) });
+const textEntrySchema = z.object({ text: z.string().min(1) });
+const keysEntrySchema = z.object({ keys: z.array(z.string().min(1)).min(1) });
+const fileEntrySchema = z.object({ file: z.string().min(1) });
+const whereEntrySchema = z.object({ where: z.string().min(1) });
+const contentEntrySchema = z.object({
   content: z.string().refine((value) => value.trim().length > 0, {
-    message: "Config content cannot be empty",
+    message: "Content cannot be empty",
   }),
-  description: z.string().optional(),
 });
+const settingsEntrySchema = z.object({ settings: z.array(z.string().min(1)).min(1) });
 
-const appSettingsElementSchema = z.object({
-  where: z.string().min(1).optional(),
-  description: z.string().min(1).optional(),
-  settings: z.array(z.string().min(1)).min(1).optional(),
-});
-
-const appSettingsItemSchema = z.object({
-  type: z.literal("app settings"),
-  title: z.string().min(1),
-  entries: z.array(appSettingsElementSchema).min(1),
-});
-
-const itemSchema = z.discriminatedUnion("type", [
-  commandItemSchema,
-  shortcutItemSchema,
-  configItemSchema,
-  appSettingsItemSchema,
+const entrySchema = z.union([
+  titleEntrySchema,
+  commandEntrySchema,
+  aliasEntrySchema,
+  aliasesEntrySchema,
+  exampleEntrySchema,
+  examplesEntrySchema,
+  textEntrySchema,
+  keysEntrySchema,
+  fileEntrySchema,
+  whereEntrySchema,
+  contentEntrySchema,
+  settingsEntrySchema,
 ]);
+
+const itemSchema = z.object({
+  entries: z.array(entrySchema).min(1),
+});
 
 const cardSchema = z.object({
   title: z.string().min(1),
@@ -104,11 +96,21 @@ export const categoryMetaSchema = z.object({
   description: z.string().min(1),
 });
 
-export type CommandItem = z.infer<typeof commandItemSchema>;
-export type ShortcutItem = z.infer<typeof shortcutItemSchema>;
-export type ConfigItem = z.infer<typeof configItemSchema>;
-export type AppSettingsElement = z.infer<typeof appSettingsElementSchema>;
-export type AppSettingsItem = z.infer<typeof appSettingsItemSchema>;
+// Entry types
+export type TitleEntry = z.infer<typeof titleEntrySchema>;
+export type CommandEntry = z.infer<typeof commandEntrySchema>;
+export type AliasEntry = z.infer<typeof aliasEntrySchema>;
+export type AliasesEntry = z.infer<typeof aliasesEntrySchema>;
+export type ExampleEntry = z.infer<typeof exampleEntrySchema>;
+export type ExamplesEntry = z.infer<typeof examplesEntrySchema>;
+export type TextEntry = z.infer<typeof textEntrySchema>;
+export type KeysEntry = z.infer<typeof keysEntrySchema>;
+export type FileEntry = z.infer<typeof fileEntrySchema>;
+export type WhereEntry = z.infer<typeof whereEntrySchema>;
+export type ContentEntry = z.infer<typeof contentEntrySchema>;
+export type SettingsEntry = z.infer<typeof settingsEntrySchema>;
+
+export type CheatSheetEntry = z.infer<typeof entrySchema>;
 export type CheatSheetItem = z.infer<typeof itemSchema>;
 export type CheatSheetCard = z.infer<typeof cardSchema>;
 export type CheatSheetSection = z.infer<typeof sectionSchema>;

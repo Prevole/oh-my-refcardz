@@ -5,7 +5,28 @@ import {
   getYamlCheatSheet,
   getYamlCheatSheetWithMeta,
   getAllCheatSheetsMeta,
+  type CheatSheetEntry,
 } from "./yaml-cheatsheets";
+
+// ---------------------------------------------------------------------------
+// Helper to check if an entry has a specific key
+// ---------------------------------------------------------------------------
+
+function hasEntryType<K extends keyof CheatSheetEntry>(
+  entry: CheatSheetEntry,
+  key: K
+): entry is CheatSheetEntry & Record<K, unknown> {
+  return key in entry;
+}
+
+function findEntryWithKey<K extends keyof CheatSheetEntry>(
+  entries: CheatSheetEntry[],
+  key: K
+): (CheatSheetEntry & Record<K, unknown>) | undefined {
+  return entries.find((e) => hasEntryType(e, key)) as
+    | (CheatSheetEntry & Record<K, unknown>)
+    | undefined;
+}
 
 // ---------------------------------------------------------------------------
 // Integration tests using real content files
@@ -29,81 +50,81 @@ describe("yaml-cheatsheets integration", () => {
       expect(sheet).toBeNull();
     });
 
-    it("parses command items correctly", async () => {
+    it("parses command entries correctly", async () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
-      const allItems = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items)
+      const allEntries = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
       );
-      const commandItem = allItems.find((item) => item.type === "command");
+      const commandEntry = findEntryWithKey(allEntries, "command");
 
-      expect(commandItem).toBeDefined();
-      if (commandItem?.type === "command") {
-        expect(commandItem.title).toBeDefined();
-        expect(commandItem.command).toBeDefined();
-      }
+      expect(commandEntry).toBeDefined();
+      expect(commandEntry?.command).toBeDefined();
     });
 
-    it("parses multiple command-heavy sheets correctly", async () => {
+    it("parses multiple command entries correctly", async () => {
       const sheet = await getYamlCheatSheet("diff-so-fancy");
 
       expect(sheet).not.toBeNull();
-      const allItems = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items)
+      const allEntries = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
       );
-      const commandItems = allItems.filter((item) => item.type === "command");
+      const commandEntries = allEntries.filter((e) => "command" in e);
 
-      expect(commandItems.length).toBeGreaterThan(1);
+      expect(commandEntries.length).toBeGreaterThan(1);
     });
 
-    it("parses config items correctly", async () => {
+    it("parses content entries correctly", async () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
-      const allItems = sheet!.sections.flatMap((s) => s.cards.flatMap((c) => c.items));
-      const configItem = allItems.find((item) => item.type === "config");
+      const allEntries = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
+      );
+      const contentEntry = findEntryWithKey(allEntries, "content");
 
-      expect(configItem).toBeDefined();
-      if (configItem?.type === "config") {
-        expect(configItem.title).toBeDefined();
-        expect(configItem.file).toBeDefined();
-        expect(configItem.content.length).toBeGreaterThan(0);
-      }
+      expect(contentEntry).toBeDefined();
+      expect(contentEntry?.content.length).toBeGreaterThan(0);
     });
 
-    it("parses app settings items correctly", async () => {
+    it("parses where entries correctly", async () => {
       const sheet = await getYamlCheatSheet("1password");
 
       expect(sheet).not.toBeNull();
-      const allItems = sheet!.sections.flatMap((s) => s.cards.flatMap((c) => c.items));
-      const appSettingsItem = allItems.find((item) => item.type === "app settings");
+      const allEntries = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
+      );
+      const whereEntry = findEntryWithKey(allEntries, "where");
 
-      expect(appSettingsItem).toBeDefined();
-      if (appSettingsItem?.type === "app settings") {
-        expect(appSettingsItem.title).toBeDefined();
-        expect(appSettingsItem.entries.length).toBeGreaterThan(0);
-        expect(appSettingsItem.entries[0]?.where ?? appSettingsItem.entries[0]?.description ?? appSettingsItem.entries[0]?.settings?.[0]).toBeDefined();
-      }
+      expect(whereEntry).toBeDefined();
+      expect(whereEntry?.where).toBeDefined();
     });
 
-    it("parses command aliases correctly", async () => {
+    it("parses settings entries correctly", async () => {
+      const sheet = await getYamlCheatSheet("1password");
+
+      expect(sheet).not.toBeNull();
+      const allEntries = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
+      );
+      const settingsEntry = findEntryWithKey(allEntries, "settings");
+
+      expect(settingsEntry).toBeDefined();
+      expect(settingsEntry?.settings.length).toBeGreaterThan(0);
+    });
+
+    it("parses aliases entries correctly", async () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
-      const allItems = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items)
+      const allEntries = sheet!.sections.flatMap((s) =>
+        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
       );
-      const commandItem = allItems.find(
-        (item) => item.type === "command" && item.aliases && item.aliases.length > 0
-      );
+      const aliasesEntry = findEntryWithKey(allEntries, "aliases");
 
-      expect(commandItem).toBeDefined();
-      if (commandItem?.type === "command") {
-        expect(commandItem.title).toBeDefined();
-        expect(commandItem.command).toBeDefined();
-        expect(commandItem.aliases?.length).toBeGreaterThan(0);
-      }
+      expect(aliasesEntry).toBeDefined();
+      expect(aliasesEntry?.aliases.length).toBeGreaterThan(0);
     });
 
     it("includes optional icon field when present", async () => {
@@ -253,19 +274,19 @@ sections: []
       await expect(getYamlCheatSheet("invalid-sheet")).rejects.toThrow(/Invalid YAML cheatsheet/);
     });
 
-    it("throws error for invalid item type", async () => {
+    it("throws error for invalid entry type", async () => {
       await fs.writeFile(
         path.join(fixtureDir, "invalid-item.yaml"),
         `title: Invalid Item
-summary: Has invalid item type
+summary: Has invalid entry type
 color: "#FF0000"
 sections:
   - title: Section
     cards:
       - title: Card
         items:
-          - type: unknown
-            foo: bar
+          - entries:
+              - unknownKey: bar
 `
       );
 
@@ -481,9 +502,9 @@ sections:
     cards:
       - title: Card
         items:
-          - type: command
-            title: Test
-            command: test
+          - entries:
+              - title: Test
+              - command: test
 `
       );
       await fs.writeFile(
@@ -508,9 +529,9 @@ sections:
     cards:
       - title: Card
         items:
-          - type: command
-            title: Test
-            command: test
+          - entries:
+              - title: Test
+              - command: test
 `
       );
 
@@ -531,9 +552,9 @@ sections:
     cards:
       - title: Card
         items:
-          - type: command
-            title: Test
-            command: test
+          - entries:
+              - title: Test
+              - command: test
 `
       );
       await fs.writeFile(
@@ -562,9 +583,9 @@ sections:
     cards:
       - title: Card
         items:
-          - type: command
-            title: Test
-            command: test
+          - entries:
+              - title: Test
+              - command: test
 `
       );
       await fs.writeFile(

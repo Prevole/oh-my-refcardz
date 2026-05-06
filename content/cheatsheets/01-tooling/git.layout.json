@@ -53,47 +53,47 @@
         "colStart": 1,
         "rowStart": 1,
         "colSpan": 6,
-        "rowSpan": 7
+        "rowSpan": 9
       },
       {
         "colStart": 7,
         "rowStart": 1,
         "colSpan": 6,
-        "rowSpan": 7
+        "rowSpan": 9
       }
     ]
   },
   {
     "cards": [
       {
-        "colSpan": 5,
-        "rowSpan": 4,
         "colStart": 1,
-        "rowStart": 1
+        "rowStart": 1,
+        "colSpan": 4,
+        "rowSpan": 4
       },
       {
+        "colStart": 1,
+        "rowStart": 5,
+        "colSpan": 4,
+        "rowSpan": 4
+      },
+      {
+        "colStart": 5,
+        "rowStart": 1,
+        "colSpan": 8,
+        "rowSpan": 8
+      },
+      {
+        "colStart": 8,
+        "rowStart": 9,
+        "colSpan": 5,
+        "rowSpan": 4
+      },
+      {
+        "colStart": 1,
+        "rowStart": 9,
         "colSpan": 7,
-        "rowSpan": 6,
-        "colStart": 6,
-        "rowStart": 9
-      },
-      {
-        "colSpan": 5,
-        "rowSpan": 4,
-        "colStart": 1,
-        "rowStart": 5
-      },
-      {
-        "colSpan": 7,
-        "rowSpan": 8,
-        "colStart": 6,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 5,
-        "rowSpan": 4,
-        "colStart": 1,
-        "rowStart": 9
+        "rowSpan": 10
       }
     ]
   }
