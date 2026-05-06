@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
 import { SheetAccentProvider } from "@/app/cheatsheets/[slug]/sheet-accent-provider";
 import { SheetSectionNavigation } from "@/app/cheatsheets/[slug]/sheet-section-navigation";
+import { SheetLinksProvider } from "@/components/sheets/sheet-links-context";
 import { SheetCommandsShell } from "@/components/sheets/sheet-commands-shell";
 import { YamlSheetRenderer } from "@/components/sheets/sheet-renderer";
 import { TechIcon } from "@/components/ui/tech-icon";
@@ -23,6 +24,7 @@ export async function generateStaticParams() {
 
 export default async function CheatSheetPage({ params }: Props) {
   const { slug } = await params;
+  const categories = await getAllCheatSheetsMeta();
   const sheet = await getYamlCheatSheetWithMeta(slug);
 
   if (!sheet) {
@@ -30,12 +32,14 @@ export default async function CheatSheetPage({ params }: Props) {
   }
 
   const iconName = sheet.icon ?? "default";
+  const knownSlugs = categories.flatMap((category) => category.sheets.map((entry) => entry.slug));
 
   return (
     <div className="relative min-h-screen overflow-hidden px-6 py-10 md:px-12">
       <SheetShortcuts />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
       <SheetAccentProvider sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom}>
+        <SheetLinksProvider knownSlugs={knownSlugs}>
         <main className="relative z-10 mx-auto max-w-7xl">
           <SheetInlineHelp />
           <div className="mt-3 flex items-center gap-4">
@@ -56,6 +60,7 @@ export default async function CheatSheetPage({ params }: Props) {
           </div>
         </main>
         <SheetSectionNavigation sections={sheet.sections} sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom} />
+        </SheetLinksProvider>
       </SheetAccentProvider>
     </div>
   );

@@ -1,9 +1,9 @@
 import { registerHandler } from "./entry-registry";
-import { renderInlineCode } from "../render-inline-code";
+import { InlineRichText } from "../inline-rich-text";
 import styles from "../cheatsheet-rendering.module.css";
 
 export function TextEntry({ value }: { value: string }) {
-  return <p className={styles.configDescription}>{renderInlineCode(value)}</p>;
+  return <p className={styles.configDescription}><InlineRichText text={value} /></p>;
 }
 
 registerHandler("text", (value) => <TextEntry value={value} />);

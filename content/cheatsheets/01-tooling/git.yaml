@@ -244,7 +244,7 @@ sections:
           - entries:
               - title: Use diff-so-fancy as core pager
               - file: ~/.gitconfig
-              - text: Let Git send diff-like output through `diff-so-fancy` before opening
+              - text: Let Git send diff-like output through [[diff-so-fancy|diff-so-fancy]] before opening
                   `less`.
               - content: |-
                   [core]
@@ -255,7 +255,7 @@ sections:
           - entries:
               - title: Improve color defaults
               - file: ~/.gitconfig
-              - text: Tune Git colors so `diff-so-fancy` gets clean, high-contrast input.
+              - text: Tune Git colors so [[diff-so-fancy|diff-so-fancy]] gets clean, high-contrast input.
               - content: |-
                   [color]
                     ui = true
@@ -318,7 +318,7 @@ sections:
                     program = "/Applications/Example.app/Contents/MacOS/git-sign"
                   [commit]
                     gpgsign = true
-              - text: Enables SSH-based commit signing and tells Git to call the 1Password
+              - text: Enables SSH-based commit signing and tells Git to call the [[1password|1Password]]
                   signing helper through the `program` entry under `[gpg
                   "ssh"]`.
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { renderInlineCode } from "./render-inline-code";
+import { InlineRichText } from "./inline-rich-text";
 
 type InlineCodeTextProps = {
   text: string;
@@ -18,5 +18,5 @@ export function InlineCodeText({ text }: InlineCodeTextProps) {
     return text;
   }
 
-  return <>{renderInlineCode(text)}</>;
+  return <InlineRichText text={text} />;
 }

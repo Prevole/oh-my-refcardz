@@ -105,7 +105,11 @@ Commands support placeholders for user input. See [placeholders.md](./placeholde
 ```yaml
 - title: Working Directory         # section title within item
 - text: Explanatory paragraph      # plain text description
+- text: Use [[1password]] for SSH signing
+- text: Configure [[1password|1Password]] first
 ```
+
+Text and titles support inline code with backticks and cross-sheet references with `[[slug]]` or `[[slug|label]]`.
 
 ### Keyboard entries
 
