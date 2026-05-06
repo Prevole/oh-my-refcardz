@@ -119,7 +119,7 @@ sections:
               - command: 'git commit --amend -m "<message>"'
               - example: 'git commit --amend -m "fix: correct typo"'
               - text: Change the author of the commit (useful after misconfigured identity).
-              - command: 'git commit --amend --author="<Name> <<email>>"'
+              - command: 'git commit --amend --author="<Name> \<<email>>"'
               - example: 'git commit --amend --author="John Doe <john@example.com>"'
 
   - title: History and Inspection
@@ -132,7 +132,7 @@ sections:
                   - g
               - command:
                   "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
-                  %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+                  %s %Cgreen(%cr) %C(bold blue)\\<%an>%Creset' --abbrev-commit"
               - text:
                   Show a compact branch graph with decoration, relative dates, and
                   author names for recent history inspection.
@@ -141,7 +141,7 @@ sections:
               - command: git g <branch>
               - example: git g main
               - text: Show the last n commits from HEAD.
-              - command: git g HEAD~<n:int>
+              - command: git g HEAD~<n:number>
               - example: git g HEAD~10
 
           - entries:
@@ -150,7 +150,7 @@ sections:
                   - ga
               - command:
                   "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
-                  %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all"
+                  %s %Cgreen(%cr) %C(bold blue)\\<%an>%Creset' --abbrev-commit --all"
               - text:
                   Extend the same graph view to every local and remote ref so
                   diverging branches are easier to spot.

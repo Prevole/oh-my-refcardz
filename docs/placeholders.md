@@ -64,6 +64,28 @@ Use the last colon as the type separator:
 Displays: `$ docker run <image:tag>`  
 Placeholder name: `image:tag`
 
+## Escaping
+
+To include literal `<...>` in a command without it being treated as a placeholder, escape the `<` with a backslash:
+
+```yaml
+- entries:
+    - command: git log --pretty=format:'%C(bold blue)\<an>%Creset'
+```
+
+Displays: `$ git log --pretty=format:'%C(bold blue)<an>%Creset'`  
+No placeholder prompt — the `\<` is converted to `<` in the output.
+
+### Mixed escaped and real placeholders
+
+```yaml
+- entries:
+    - command: git log \<an> -n <count:int>
+```
+
+Displays: `$ git log <an> -n <count>`  
+Only `count` prompts for input.
+
 ## Behavior
 
 1. **Display**: Placeholders show without the `:type` suffix

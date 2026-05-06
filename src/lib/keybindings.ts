@@ -55,6 +55,7 @@ export const ACTION_IDS = {
 
   COPY_COMMAND: "sheet-commands.copy",
   SHOW_EXAMPLE: "sheet-commands.show-example",
+  CLEAR_COMMAND_FOCUS: "sheet-commands.clear-focus",
 
   CARD_NAV_LEFT: "sheet-layout.nav-left",
   CARD_NAV_RIGHT: "sheet-layout.nav-right",
@@ -156,7 +157,7 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.BACK_TO_HOME,
       label: "Back to grid",
-      combos: [key("Backspace"), key("Escape")],
+      combos: [key("Backspace")],
     },
   ],
 
@@ -170,6 +171,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.SHOW_EXAMPLE,
       label: "Show example",
       combos: [key("i")],
+    },
+    {
+      id: ACTION_IDS.CLEAR_COMMAND_FOCUS,
+      label: "Clear selection",
+      combos: [key("Escape")],
     },
   ],
 

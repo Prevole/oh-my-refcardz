@@ -8,6 +8,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Single-package Next.js 16 app. Keyboard-first developer cheat sheet hub. Content is MDX files in `content/cheatsheets/`, rendered at request time via `compileMDX` from `next-mdx-remote/rsc`. No database, no auth, no API routes.
 
+## Interaction Style
+
+When the user asks a question:
+1. **Pause** — do not immediately implement
+2. **Analyze** — investigate the codebase if needed
+3. **Propose** — present one or more solutions with tradeoffs
+4. **Wait for approval** — only implement after the user confirms
+
+This applies to questions like "how do I...", "can we...", "is it possible to...", "what about...". Direct instructions like "add X" or "fix Y" can proceed without waiting.
+
 ## Product Constraints
 
 - Desktop and laptop only.

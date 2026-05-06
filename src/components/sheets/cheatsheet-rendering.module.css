@@ -683,15 +683,6 @@
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-.itemEntries[data-nav-focused="true"] {
-  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 18%, transparent);
-  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 35%, transparent);
-}
-
-.itemEntries[data-nav-focused="true"]:hover {
-  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 24%, transparent);
-}
-
 .itemEntriesHeader {
   display: flex;
   flex-direction: column;

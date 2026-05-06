@@ -65,6 +65,16 @@ function Terminal({ value, displayOverride, variant = "default" }: TerminalProps
   const withPlaceholders = hasPlaceholders(value);
   const displayValue = displayOverride ?? `$ ${formatDisplayValue(value)}`;
 
+  function handleSelect(e: React.MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-copy-button]")) return;
+
+    document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((el) => {
+      el.dataset.navFocused = "false";
+    });
+    (e.currentTarget as HTMLElement).dataset.navFocused = "true";
+  }
+
   async function handleCopy(e: React.MouseEvent) {
     e.stopPropagation();
     
@@ -93,6 +103,7 @@ function Terminal({ value, displayOverride, variant = "default" }: TerminalProps
       className={className}
       data-copyable={value}
       data-copied={copied ? "true" : undefined}
+      onClick={handleSelect}
     >
       <span className={styles.terminalText}>{displayValue}</span>
       <button

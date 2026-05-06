@@ -46,7 +46,7 @@ function computeCardGridPositions(
 }
 
 /**
- * Builds a navigation graph for all [data-sheet-command] elements.
+ * Builds a navigation graph for all [data-copyable] elements.
  *
  * Structure:
  *   - Elements are grouped by their parent SheetCard (article).
@@ -222,30 +222,59 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
   const { isScopeActive } = useKeyboardContext();
   const { matchesAction } = useKeybindings();
   const graphRef = useRef<NavGraph>(new Map());
+  const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const rebuildGraph = useCallback(() => {
     const nodes = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-sheet-command]")
+      document.querySelectorAll<HTMLElement>("[data-copyable]")
     );
     graphRef.current = buildGraph(nodes);
   }, []);
 
   useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, []);
+
+  useEffect(() => {
     const getFocused = (): HTMLElement | null => {
-      const active = document.activeElement as HTMLElement | null;
-      if (active?.dataset.sheetCommand !== undefined) return active;
-      return null;
+      const focused = document.querySelector<HTMLElement>("[data-copyable][data-nav-focused='true']");
+      return focused;
     };
 
     function setFocused(el: HTMLElement | null) {
-      document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
+      document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((n) => {
         n.dataset.navFocused = "false";
       });
       if (el) {
         el.dataset.navFocused = "true";
-        el.focus({ preventScroll: true });
         el.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
+    }
+
+    function findClosestToMouse(): HTMLElement | null {
+      const nodes = Array.from(graphRef.current.keys());
+      if (nodes.length === 0) return null;
+
+      const { x, y } = lastMousePos.current;
+      let closest: HTMLElement | null = null;
+      let minDist = Infinity;
+
+      for (const node of nodes) {
+        const rect = node.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dist = Math.hypot(centerX - x, centerY - y);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = node;
+        }
+      }
+
+      return closest;
     }
 
     function move(direction: Direction) {
@@ -254,8 +283,8 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
 
       const focused = getFocused();
       if (!focused) {
-        const first = graphRef.current.keys().next().value;
-        if (first) setFocused(first);
+        const closest = findClosestToMouse();
+        if (closest) setFocused(closest);
         return;
       }
 
@@ -273,13 +302,19 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
 
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget as HTMLElement | null;
-      if (!next || next.dataset.sheetCommand === undefined) {
-        document.querySelectorAll<HTMLElement>("[data-sheet-command]").forEach((n) => {
+      if (!next || next.dataset.copyable === undefined) {
+        document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((n) => {
           n.dataset.navFocused = "false";
         });
       }
     };
     document.addEventListener("focusout", onFocusOut);
+
+    function clearFocus() {
+      document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((n) => {
+        n.dataset.navFocused = "false";
+      });
+    }
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (!isScopeActive("global")) return;
@@ -288,7 +323,13 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (modalOpen) return;
 
-      if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
+      if (matchesAction(e, ACTION_IDS.CLEAR_COMMAND_FOCUS)) {
+        const hasFocused = document.querySelector("[data-copyable][data-nav-focused='true']");
+        if (hasFocused) {
+          e.preventDefault();
+          clearFocus();
+        }
+      } else if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
         e.preventDefault();
         move("up");
       } else if (matchesAction(e, ACTION_IDS.MOVE_DOWN)) {

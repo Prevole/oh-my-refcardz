@@ -2,11 +2,10 @@
 
 import { createContext, useContext, useState, useCallback, useRef } from "react";
 import { useEntryCopy } from "@/hooks/use-entry-copy";
+import { useCommandNavigation } from "@/hooks/use-command-navigation";
 import { ItemDetailModal } from "./item-detail-modal";
 import { CommandCopyModal } from "./command-copy-modal";
 import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
-// TODO: Re-enable after entry-based navigation is implemented
-// import { useCommandNavigation } from "@/hooks/use-command-navigation";
 
 type DetailData = {
   title: string;
@@ -82,10 +81,12 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
 
   const modalOpen = openModalCount > 0 || detailData !== null || copyData !== null;
 
-  useEntryCopy({ modalOpen });
+  const handleCopyWithPlaceholders = useCallback((command: string) => {
+    showCopyModal({ command });
+  }, [showCopyModal]);
 
-  // TODO: Re-enable after entry-based navigation is implemented
-  // useCommandNavigation({ modalOpen });
+  useEntryCopy({ modalOpen, onCopyWithPlaceholders: handleCopyWithPlaceholders });
+  useCommandNavigation({ modalOpen });
 
   return (
     <CommandNavigationContext.Provider value={{ registerModalOpen, showDetail, showCopyModal }}>
@@ -98,6 +99,7 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
           detailedEntries={detailData.detailedEntries}
           accentColor={detailData.accentColor}
           onClose={closeDetail}
+          onCopyWithPlaceholders={handleCopyWithPlaceholders}
         />
       )}
       {copyData && (

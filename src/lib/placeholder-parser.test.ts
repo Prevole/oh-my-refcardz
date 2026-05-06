@@ -47,6 +47,16 @@ describe("parsePlaceholders", () => {
     const result = parsePlaceholders("docker run <image:tag:string>");
     expect(result).toEqual([{ raw: "image:tag:string", name: "image:tag", type: "string" }]);
   });
+
+  it("ignores escaped placeholders", () => {
+    const result = parsePlaceholders("git log --pretty=format:'%C(bold blue)\\<an>%Creset'");
+    expect(result).toEqual([]);
+  });
+
+  it("extracts only non-escaped placeholders", () => {
+    const result = parsePlaceholders("git log \\<an> <branch>");
+    expect(result).toEqual([{ raw: "branch", name: "branch", type: "string" }]);
+  });
 });
 
 describe("hasPlaceholders", () => {
@@ -60,6 +70,10 @@ describe("hasPlaceholders", () => {
 
   it("returns true for command with typed placeholder", () => {
     expect(hasPlaceholders("git log -n <count:int>")).toBe(true);
+  });
+
+  it("returns false for escaped placeholder", () => {
+    expect(hasPlaceholders("git log --pretty=format:'\\<an>%Creset'")).toBe(false);
   });
 });
 
@@ -87,6 +101,16 @@ describe("formatDisplayValue", () => {
 
   it("preserves colons in placeholder name", () => {
     expect(formatDisplayValue("docker run <image:tag:string>")).toBe("docker run <image:tag>");
+  });
+
+  it("unescapes escaped placeholders", () => {
+    expect(formatDisplayValue("git log --pretty=format:'%C(bold blue)\\<an>%Creset'"))
+      .toBe("git log --pretty=format:'%C(bold blue)<an>%Creset'");
+  });
+
+  it("handles mix of escaped and real placeholders", () => {
+    expect(formatDisplayValue("git log \\<an> <branch:string>"))
+      .toBe("git log <an> <branch>");
   });
 });
 
@@ -121,5 +145,15 @@ describe("buildCommand", () => {
       commit2: "HEAD",
     });
     expect(result).toBe("git diff HEAD~3...HEAD");
+  });
+
+  it("unescapes escaped placeholders in output", () => {
+    const result = buildCommand("git log --pretty=format:'%C(bold blue)\\<an>%Creset'", {});
+    expect(result).toBe("git log --pretty=format:'%C(bold blue)<an>%Creset'");
+  });
+
+  it("handles mix of escaped and substituted placeholders", () => {
+    const result = buildCommand("git log \\<an> <branch>", { branch: "main" });
+    expect(result).toBe("git log <an> main");
   });
 });

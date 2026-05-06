@@ -42,6 +42,7 @@ export function SheetShortcuts() {
         ACTION_IDS.BACK_TO_HOME,
         ACTION_IDS.GO_TOP,
         ACTION_IDS.GO_BOTTOM,
+        ACTION_IDS.CLEAR_COMMAND_FOCUS,
       ]);
 
       if (matchedAction === ACTION_IDS.TOGGLE_HELP) {
@@ -71,6 +72,9 @@ export function SheetShortcuts() {
       if (matchedAction === ACTION_IDS.BACK_TO_HOME) {
         event.preventDefault();
         if (document.querySelector("[data-command-modal-overlay]")) return;
+        const hasSelection = document.querySelector("[data-copyable][data-nav-focused='true']");
+        const isClearFocusKey = resolveAction(event, [ACTION_IDS.CLEAR_COMMAND_FOCUS]) === ACTION_IDS.CLEAR_COMMAND_FOCUS;
+        if (hasSelection && isClearFocusKey) return;
         router.push("/");
       }
     },

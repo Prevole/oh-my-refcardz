@@ -6,7 +6,8 @@ export type Placeholder = {
   type: PlaceholderType;
 };
 
-const PLACEHOLDER_REGEX = /<([^>]+)>/g;
+const PLACEHOLDER_REGEX = /(?<!\\)<([^>]+)>/g;
+const ESCAPED_LT_REGEX = /\\</g;
 
 export function parsePlaceholders(command: string): Placeholder[] {
   const matches = command.matchAll(PLACEHOLDER_REGEX);
@@ -33,30 +34,34 @@ export function parsePlaceholders(command: string): Placeholder[] {
 }
 
 export function hasPlaceholders(command: string): boolean {
-  return /<[^>]+>/.test(command);
+  return /(?<!\\)<[^>]+>/.test(command);
 }
 
 export function formatDisplayValue(value: string): string {
-  return value.replace(PLACEHOLDER_REGEX, (_, content: string) => {
-    const colonIndex = content.lastIndexOf(":");
-    if (colonIndex === -1) return `<${content}>`;
-    const name = content.slice(0, colonIndex);
-    return `<${name}>`;
-  });
+  return value
+    .replace(PLACEHOLDER_REGEX, (_, content: string) => {
+      const colonIndex = content.lastIndexOf(":");
+      if (colonIndex === -1) return `<${content}>`;
+      const name = content.slice(0, colonIndex);
+      return `<${name}>`;
+    })
+    .replace(ESCAPED_LT_REGEX, "<");
 }
 
 export function buildCommand(
   command: string,
   values: Record<string, string>
 ): string {
-  return command.replace(PLACEHOLDER_REGEX, (match, content: string) => {
-    const colonIndex = content.lastIndexOf(":");
-    const raw = content;
-    const name = colonIndex === -1 ? raw : raw.slice(0, colonIndex);
-    const value = values[raw];
-    if (value === undefined || value === "") {
-      return `<${name}>`;
-    }
-    return value;
-  });
+  return command
+    .replace(PLACEHOLDER_REGEX, (_, content: string) => {
+      const colonIndex = content.lastIndexOf(":");
+      const raw = content;
+      const name = colonIndex === -1 ? raw : raw.slice(0, colonIndex);
+      const value = values[raw];
+      if (value === undefined || value === "") {
+        return `<${name}>`;
+      }
+      return value;
+    })
+    .replace(ESCAPED_LT_REGEX, "<");
 }

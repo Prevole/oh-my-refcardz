@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
@@ -186,24 +186,12 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 }
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
-  const ref = useRef<HTMLDivElement>(null);
   const showDetail = useShowDetail();
 
   const hasAliases = item.entries.some(
     (entry) => "alias" in entry || "aliases" in entry
   );
   const hasDetailedEntries = item.detailedEntries && item.detailedEntries.length > 0;
-
-  function handleClick(e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest("[data-item-actions]")) return;
-
-    document.querySelectorAll<HTMLElement>("[data-nav-focused]").forEach((el) => {
-      el.dataset.navFocused = "false";
-    });
-    if (ref.current) {
-      ref.current.dataset.navFocused = "true";
-    }
-  }
 
   function handleShowDetail() {
     if (!hasDetailedEntries) return;
@@ -216,10 +204,7 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
 
   return (
     <div
-      ref={ref}
       className={cheatsheetStyles.itemEntries}
-      data-nav-focused="false"
-      onClick={handleClick}
     >
       <div className={cheatsheetStyles.itemEntriesHeader}>
         {item.entries.map((entry, index) => (
