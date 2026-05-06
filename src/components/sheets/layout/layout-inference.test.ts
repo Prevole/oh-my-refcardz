@@ -6,7 +6,7 @@ import {
 } from "./layout-inference";
 import type { CheatSheetCard, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 
-function createCard(itemCount: number, types: Array<"command" | "shortcut" | "config"> = []): CheatSheetCard {
+function createCard(itemCount: number, types: Array<"command" | "shortcut" | "config" | "app settings"> = []): CheatSheetCard {
   const items = [];
   for (let i = 0; i < itemCount; i++) {
     const type = types[i] || "command";
@@ -28,6 +28,12 @@ function createCard(itemCount: number, types: Array<"command" | "shortcut" | "co
         title: `Config ${i}`,
         file: "~/.config",
         content: "key = value",
+      });
+    } else if (type === "app settings") {
+      items.push({
+        type: "app settings" as const,
+        title: `App Settings ${i}`,
+        entries: [{ where: "Settings > Developer", settings: ["Feature = enabled"] }],
       });
     }
   }
@@ -66,6 +72,11 @@ describe("inferCardColSpan", () => {
     expect(inferCardColSpan(createCard(1, ["config"]))).toBe(8);
     expect(inferCardColSpan(createCard(2, ["command", "config"]))).toBe(8);
   });
+
+  it("returns 8 for card with app settings item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["app settings"]))).toBe(8);
+    expect(inferCardColSpan(createCard(2, ["command", "app settings"]))).toBe(8);
+  });
 });
 
 describe("inferCardRowSpan", () => {
@@ -92,6 +103,11 @@ describe("inferCardRowSpan", () => {
   it("returns 8 for card with config item regardless of count", () => {
     expect(inferCardRowSpan(createCard(1, ["config"]))).toBe(8);
     expect(inferCardRowSpan(createCard(2, ["command", "config"]))).toBe(8);
+  });
+
+  it("returns 8 for card with app settings item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["app settings"]))).toBe(8);
+    expect(inferCardRowSpan(createCard(2, ["command", "app settings"]))).toBe(8);
   });
 });
 

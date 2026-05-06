@@ -62,7 +62,24 @@ const configItemSchema = z.object({
   description: z.string().optional(),
 });
 
-const itemSchema = z.discriminatedUnion("type", [commandItemSchema, shortcutItemSchema, configItemSchema]);
+const appSettingsElementSchema = z.object({
+  where: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  settings: z.array(z.string().min(1)).min(1).optional(),
+});
+
+const appSettingsItemSchema = z.object({
+  type: z.literal("app settings"),
+  title: z.string().min(1),
+  entries: z.array(appSettingsElementSchema).min(1),
+});
+
+const itemSchema = z.discriminatedUnion("type", [
+  commandItemSchema,
+  shortcutItemSchema,
+  configItemSchema,
+  appSettingsItemSchema,
+]);
 
 const cardSchema = z.object({
   title: z.string().min(1),
@@ -90,6 +107,8 @@ export const categoryMetaSchema = z.object({
 export type CommandItem = z.infer<typeof commandItemSchema>;
 export type ShortcutItem = z.infer<typeof shortcutItemSchema>;
 export type ConfigItem = z.infer<typeof configItemSchema>;
+export type AppSettingsElement = z.infer<typeof appSettingsElementSchema>;
+export type AppSettingsItem = z.infer<typeof appSettingsItemSchema>;
 export type CheatSheetItem = z.infer<typeof itemSchema>;
 export type CheatSheetCard = z.infer<typeof cardSchema>;
 export type CheatSheetSection = z.infer<typeof sectionSchema>;

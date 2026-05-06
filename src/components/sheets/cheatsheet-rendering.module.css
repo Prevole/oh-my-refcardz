@@ -755,6 +755,105 @@
   color: rgba(237, 242, 244, 0.88);
 }
 
+.appSettingsItem {
+  padding: 0.35rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(23, 18, 40, 0.5), rgba(18, 14, 34, 0.3));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.appSettingsLocationLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0.45rem 0 0;
+}
+
+.appSettingsLocationLabel {
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #b18cff 60%, white 40%);
+}
+
+.appSettingsLocation {
+  display: inline-block;
+  margin: 0;
+  padding: 0.06rem 0 0.1rem;
+  border-bottom: 1px dotted color-mix(in srgb, #c7a8ff 72%, white 28%);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  color: rgba(232, 221, 255, 0.96);
+}
+
+.appSettingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.appSettingsEntry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.appSettingsEntryDescription {
+  margin: 0;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 0.88rem;
+  color: rgba(237, 242, 244, 0.72);
+}
+
+.appSettingsBlock {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.18rem;
+  padding-left: 0.8rem;
+}
+
+.appSettingsBlockTitle {
+  margin: 0 0 0.08rem -0.8rem;
+}
+
+.appSettingsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.08rem 0;
+}
+
+.appSettingsBullet {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: #9f7aea;
+  flex: none;
+}
+
+.appSettingsRowCode {
+  display: block;
+  flex: 1;
+  margin: 0;
+  white-space: pre-wrap;
+  max-width: 100%;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.83rem;
+  line-height: 1.32;
+  color: #b794f4;
+  box-sizing: border-box;
+}
+
 .inlineTextCode {
   display: inline-block;
   margin: 0;

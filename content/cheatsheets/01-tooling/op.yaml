@@ -1,0 +1,95 @@
+title: op
+summary: Developer workflows with the 1Password CLI for secret reads, injected config,
+  runtime env, and script-friendly secret references.
+color: "#145FE4"
+icon: 1password
+
+sections:
+  - title: CLI Basics
+    cards:
+      - title: Session
+        items:
+          - type: command
+            title: Sign in
+            command: op signin
+            description: Start an authenticated CLI session, usually backed by the desktop
+              app so terminal access can reuse biometric approval.
+
+          - type: command
+            title: Current account
+            command: op whoami
+            description: Confirm which account and user context the CLI is currently using
+              before reading secrets or running automation.
+
+      - title: Item Access
+        items:
+          - type: command
+            title: Read one secret
+            command: op read "op://app-prod/db/password"
+            description: Resolve a secret reference directly and print the field value to
+              stdout for targeted scripting.
+
+          - type: command
+            title: Inspect one item
+            command: op item get "GitHub" --vault "Engineering"
+            description: Fetch an item with its fields and metadata when you need to inspect
+              or debug stored credentials.
+
+  - title: Secret Injection
+    cards:
+      - title: Environment Variables
+        items:
+          - type: config
+            title: ".env template with secret references"
+            file: .env.1password
+            context: Keep secret references in a template file instead of committing real
+              values to project configuration.
+            content: |-
+              DATABASE_URL=op://app-dev/database/url
+              STRIPE_API_KEY=op://app-dev/stripe/credential
+              NEXTAUTH_SECRET=op://app-dev/web/nextauth_secret
+            description: The `op://...` references stay safe to share internally because the
+              actual secret is resolved only at runtime.
+
+          - type: command
+            title: Run app with injected env
+            command: op run --env-file=".env.1password" -- npm run dev
+            description: Launch a process with secrets resolved into environment variables
+              without writing plaintext values into your shell history or local files.
+
+      - title: Config Files
+        items:
+          - type: config
+            title: Config template for op inject
+            file: config.tpl.yaml
+            context: Store secret references in a committed template and materialize a local
+              config file only when needed.
+            content: |-
+              github:
+                token: op://engineering/github/token
+              database:
+                url: op://app-dev/database/url
+            description: Useful when an application expects a config file instead of reading
+              its settings from environment variables.
+
+          - type: command
+            title: Render a local config
+            command: op inject -i config.tpl.yaml -o config.yaml
+            description: Replace secret references with real values and write the rendered
+              file to a local destination.
+
+  - title: Automation
+    cards:
+      - title: Safer Scripts
+        items:
+          - type: command
+            title: Use a secret inside a script
+            command: export GH_TOKEN="$(op read 'op://engineering/github/token')"
+            description: Pull one secret at the moment it is needed instead of storing it in
+              dotfiles or long-lived plaintext environment variables.
+
+          - type: command
+            title: Resolve secrets in one command
+            command: op run --env-file=".env.1password" -- npm run migrate
+            description: Reuse the same secret reference file for one-off developer tasks
+              like migrations, seeds, or release scripts.

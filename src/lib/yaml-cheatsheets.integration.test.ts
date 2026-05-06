@@ -72,6 +72,21 @@ describe("yaml-cheatsheets integration", () => {
       }
     });
 
+    it("parses app settings items correctly", async () => {
+      const sheet = await getYamlCheatSheet("1password");
+
+      expect(sheet).not.toBeNull();
+      const allItems = sheet!.sections.flatMap((s) => s.cards.flatMap((c) => c.items));
+      const appSettingsItem = allItems.find((item) => item.type === "app settings");
+
+      expect(appSettingsItem).toBeDefined();
+      if (appSettingsItem?.type === "app settings") {
+        expect(appSettingsItem.title).toBeDefined();
+        expect(appSettingsItem.entries.length).toBeGreaterThan(0);
+        expect(appSettingsItem.entries[0]?.where ?? appSettingsItem.entries[0]?.description ?? appSettingsItem.entries[0]?.settings?.[0]).toBeDefined();
+      }
+    });
+
     it("parses command aliases correctly", async () => {
       const sheet = await getYamlCheatSheet("git");
 

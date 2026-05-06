@@ -4,9 +4,9 @@ import type { SectionLayoutState } from "./layout-types";
 
 export function inferCardColSpan(card: CheatSheetCard): number {
   const itemCount = card.items.length;
-  const hasConfig = card.items.some((item) => item.type === "config");
+  const hasStructuredBlock = card.items.some((item) => item.type === "config" || item.type === "app settings");
 
-  if (hasConfig) return 8;
+  if (hasStructuredBlock) return 8;
   if (itemCount >= 5) return 8;
   if (itemCount >= 3) return 6;
   return 4;
@@ -14,10 +14,10 @@ export function inferCardColSpan(card: CheatSheetCard): number {
 
 export function inferCardRowSpan(card: CheatSheetCard): number {
   const itemCount = card.items.length;
-  const hasConfig = card.items.some((item) => item.type === "config");
+  const hasStructuredBlock = card.items.some((item) => item.type === "config" || item.type === "app settings");
   const hasCommand = card.items.some((item) => item.type === "command");
 
-  if (hasConfig) return 8;
+  if (hasStructuredBlock) return 8;
   if (itemCount >= 5) return 8;
   if (hasCommand && itemCount >= 3) return 6;
   if (itemCount >= 3) return 5;

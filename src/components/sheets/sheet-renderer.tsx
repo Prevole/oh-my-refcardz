@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
+import { SheetAppSettings } from "@/components/sheets/sheet-app-settings";
 import { SheetCommand } from "@/components/sheets/sheet-command";
 import { SheetConfig } from "@/components/sheets/sheet-config";
 import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
@@ -210,6 +211,15 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
         context={item.context}
         content={item.content}
         description={item.description}
+      />
+    );
+  }
+
+  if (item.type === "app settings") {
+    return (
+      <SheetAppSettings
+        title={item.title}
+        entries={item.entries}
       />
     );
   }

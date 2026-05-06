@@ -263,6 +263,73 @@ describe("yamlCheatSheetSchema", () => {
     });
   });
 
+  describe("app settings item validation", () => {
+    const makeSheetWithItem = (item: unknown) => ({
+      ...validSheet,
+      sections: [
+        {
+          title: "Section",
+          cards: [{ title: "Card", items: [item] }],
+        },
+      ],
+    });
+
+    it("validates app settings item with where and settings", () => {
+      const item = {
+        type: "app settings",
+        title: "Enable app integration",
+        entries: [
+          {
+            where: "Settings > Developer",
+            description: "Turn on integration for local developer workflows.",
+            settings: ["App integration = enabled"],
+          },
+        ],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts app settings item without where", () => {
+      const item = {
+        type: "app settings",
+        title: "Require approval",
+        entries: [{ settings: ["Touch ID = enabled"] }],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects app settings item without entries", () => {
+      const item = {
+        type: "app settings",
+        title: "Require approval",
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects app settings item with empty entries array", () => {
+      const item = {
+        type: "app settings",
+        title: "Require approval",
+        entries: [],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(false);
+    });
+
+    it("accepts app settings element even when all fields are omitted", () => {
+      const item = {
+        type: "app settings",
+        title: "Require approval",
+        entries: [{}],
+      };
+      const result = yamlCheatSheetSchema.safeParse(makeSheetWithItem(item));
+      expect(result.success).toBe(true);
+    });
+  });
+
   describe("shortcut item validation", () => {
     const makeSheetWithItem = (item: unknown) => ({
       ...validSheet,
