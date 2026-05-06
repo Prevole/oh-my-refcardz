@@ -72,7 +72,7 @@ export function SheetShortcuts() {
       if (matchedAction === ACTION_IDS.BACK_TO_HOME) {
         event.preventDefault();
         if (document.querySelector("[data-command-modal-overlay]")) return;
-        const hasSelection = document.querySelector("[data-copyable][data-nav-focused='true']");
+        const hasSelection = document.querySelector("[data-item][data-nav-focused='true'], [data-copyable][data-nav-focused='true']");
         const isClearFocusKey = resolveAction(event, [ACTION_IDS.CLEAR_COMMAND_FOCUS]) === ACTION_IDS.CLEAR_COMMAND_FOCUS;
         if (hasSelection && isClearFocusKey) return;
         router.push("/");

@@ -19,14 +19,12 @@ export interface KeyDisplayPart {
   value: string;
 }
 
-export type KeybindingContext = "global" | "home" | "sheet" | "sheet-commands" | "sheet-layout";
+export type KeybindingContext = "global" | "home" | "sheet" | "sheet-layout";
 
 export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null {
   switch (scope) {
     case "global":
       return "global";
-    case "sheet-commands":
-      return "sheet-commands";
     case "sheet-layout":
       return "sheet-layout";
     default:
@@ -52,10 +50,9 @@ export const ACTION_IDS = {
   OPEN_SHEET: "home.open-sheet",
 
   BACK_TO_HOME: "sheet.back-to-home",
-
-  COPY_COMMAND: "sheet-commands.copy",
-  SHOW_EXAMPLE: "sheet-commands.show-example",
-  CLEAR_COMMAND_FOCUS: "sheet-commands.clear-focus",
+  COPY_COMMAND: "sheet.copy",
+  SHOW_EXAMPLE: "sheet.show-details",
+  CLEAR_COMMAND_FOCUS: "sheet.clear-focus",
 
   CARD_NAV_LEFT: "sheet-layout.nav-left",
   CARD_NAV_RIGHT: "sheet-layout.nav-right",
@@ -159,17 +156,14 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Back to grid",
       combos: [key("Backspace")],
     },
-  ],
-
-  "sheet-commands": [
     {
       id: ACTION_IDS.COPY_COMMAND,
-      label: "Copy command",
+      label: "Copy",
       combos: [key("y")],
     },
     {
       id: ACTION_IDS.SHOW_EXAMPLE,
-      label: "Show example",
+      label: "Show details",
       combos: [key("i")],
     },
     {

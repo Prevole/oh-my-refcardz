@@ -1,4 +1,4 @@
-export type KeyboardScopeId = "global" | "settings" | "help" | "info" | "sheet-commands" | "sheet-layout";
+export type KeyboardScopeId = "global" | "settings" | "help" | "info" | "sheet-layout";
 
 /**
  * Push a scope onto the stack, avoiding duplicates at the top.

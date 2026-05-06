@@ -250,9 +250,8 @@ export function useCardKeyboard({
     const handleKeyDown = (event: KeyboardEvent) => {
       const layoutScopeActive = isScopeActive("sheet-layout");
       const globalScopeActive = isScopeActive("global");
-      const commandScopeActive = isScopeActive("sheet-commands");
 
-      if (!layoutScopeActive && !globalScopeActive && !commandScopeActive) return;
+      if (!layoutScopeActive && !globalScopeActive) return;
 
       if (!layoutScopeActive && !rawFocusedCard && !event.shiftKey && !event.altKey) {
         return;

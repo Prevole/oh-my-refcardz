@@ -10,10 +10,12 @@ type Direction = "up" | "down" | "left" | "right";
 
 type NavNode = {
   el: HTMLElement;
-  up: HTMLElement | null;
-  down: HTMLElement | null;
-  left: HTMLElement | null;
-  right: HTMLElement | null;
+  type: "item" | "copyable";
+  item: HTMLElement; // Parent item (self if type is "item")
+  up: NavNode | null;
+  down: NavNode | null;
+  left: NavNode | null;
+  right: NavNode | null;
 };
 
 type NavGraph = Map<HTMLElement, NavNode>;
@@ -27,10 +29,10 @@ function getCardOf(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-/**
- * Given a list of cards, infer their grid column and row by clustering
- * their center-X (columns) and top-Y (rows) coordinates.
- */
+function getItemOf(el: HTMLElement): HTMLElement | null {
+  return el.closest<HTMLElement>("[data-item]");
+}
+
 function computeCardGridPositions(
   cards: HTMLElement[],
   threshold = 40
@@ -46,189 +48,317 @@ function computeCardGridPositions(
 }
 
 /**
- * Builds a navigation graph for all [data-copyable] elements.
- *
- * Structure:
- *   - Elements are grouped by their parent SheetCard (article).
- *   - Cards are placed on a virtual grid (gridCol × gridRow).
- *   - Within a card, elements are sorted top-to-bottom by their Y center.
- *   - up/down: move within the same card; at the boundary, look in the card
- *     that is in the same gridCol but adjacent gridRow, targeting the same
- *     local index (clamped). If no such card exists → null.
- *   - left/right: move to the card in the same gridRow but adjacent gridCol,
- *     targeting the same local index (clamped). If the card in that direction
- *     has no navigable elements → keep looking further. If nothing found → null.
+ * Structure for each item: the item element + its copyables in order
  */
-function buildGraph(allNodes: HTMLElement[]): NavGraph {
-  if (allNodes.length === 0) return new Map();
+type ItemWithCopyables = {
+  item: HTMLElement;
+  copyables: HTMLElement[];
+};
 
-  const cardToNodes = new Map<HTMLElement, HTMLElement[]>();
-  for (const node of allNodes) {
-    const card = getCardOf(node);
+/**
+ * Builds a unified navigation graph where:
+ * - Items (blocks) and copyables are both navigable
+ * - ↓ from item → first copyable (or next item if none)
+ * - ↓ from last copyable → next item
+ * - ↑ from first copyable → item
+ * - ↑ from item → previous item's last copyable (or previous item if none)
+ * - ←/→ always navigate between items at block level
+ */
+function buildUnifiedGraph(allItems: HTMLElement[]): NavGraph {
+  if (allItems.length === 0) return new Map();
+
+  // Group items by card and collect their copyables
+  const cardToItemsWithCopyables = new Map<HTMLElement, ItemWithCopyables[]>();
+  
+  for (const item of allItems) {
+    const card = getCardOf(item);
     if (!card) continue;
-    if (!cardToNodes.has(card)) cardToNodes.set(card, []);
-    cardToNodes.get(card)!.push(node);
-  }
-  for (const [, nodes] of cardToNodes) {
-    nodes.sort((a, b) => {
+    
+    const copyables = Array.from(item.querySelectorAll<HTMLElement>("[data-copyable]"));
+    // Sort copyables by vertical position
+    copyables.sort((a, b) => {
       const ra = a.getBoundingClientRect();
       const rb = b.getBoundingClientRect();
-      return (ra.top + ra.height / 2) - (rb.top + rb.height / 2);
+      return ra.top - rb.top;
+    });
+    
+    if (!cardToItemsWithCopyables.has(card)) {
+      cardToItemsWithCopyables.set(card, []);
+    }
+    cardToItemsWithCopyables.get(card)!.push({ item, copyables });
+  }
+
+  // Sort items within each card by vertical position
+  for (const [, items] of cardToItemsWithCopyables) {
+    items.sort((a, b) => {
+      const ra = a.item.getBoundingClientRect();
+      const rb = b.item.getBoundingClientRect();
+      return ra.top - rb.top;
     });
   }
 
-  const cards = [...cardToNodes.keys()];
+  const cards = [...cardToItemsWithCopyables.keys()];
   const gridPos = computeCardGridPositions(cards);
 
   type Key = string;
   const gridKey = (gc: number, gr: number): Key => `${gc},${gr}`;
-  const gridToNodes = new Map<Key, HTMLElement[]>();
+  const gridToItems = new Map<Key, ItemWithCopyables[]>();
+  
   for (const card of cards) {
     const pos = gridPos.get(card)!;
     const key = gridKey(pos.gridCol, pos.gridRow);
-    gridToNodes.set(key, cardToNodes.get(card)!);
+    gridToItems.set(key, cardToItemsWithCopyables.get(card)!);
   }
 
-  const nodesAt = (gc: number, gr: number) =>
-    gridToNodes.get(gridKey(gc, gr)) ?? null;
+  const itemsAt = (gc: number, gr: number) => gridToItems.get(gridKey(gc, gr)) ?? null;
 
+  // Create nodes for all items and copyables
   const graph: NavGraph = new Map();
+  const nodeMap = new Map<HTMLElement, NavNode>();
 
+  // First pass: create all nodes
+  for (const card of cards) {
+    const items = cardToItemsWithCopyables.get(card)!;
+    for (const { item, copyables } of items) {
+      const itemNode: NavNode = {
+        el: item,
+        type: "item",
+        item,
+        up: null,
+        down: null,
+        left: null,
+        right: null,
+      };
+      nodeMap.set(item, itemNode);
+      graph.set(item, itemNode);
+
+      for (const copyable of copyables) {
+        const copyableNode: NavNode = {
+          el: copyable,
+          type: "copyable",
+          item,
+          up: null,
+          down: null,
+          left: null,
+          right: null,
+        };
+        nodeMap.set(copyable, copyableNode);
+        graph.set(copyable, copyableNode);
+      }
+    }
+  }
+
+  // Second pass: link nodes
   for (const card of cards) {
     const pos = gridPos.get(card)!;
     const { gridCol, gridRow } = pos;
-    const siblings = cardToNodes.get(card)!;
+    const items = cardToItemsWithCopyables.get(card)!;
 
-    for (let localIdx = 0; localIdx < siblings.length; localIdx++) {
-      const el = siblings[localIdx];
+    for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
+      const { item, copyables } = items[itemIdx];
+      const itemNode = nodeMap.get(item)!;
 
-      let upEl: HTMLElement | null = null;
-      if (localIdx > 0) {
-        upEl = siblings[localIdx - 1];
+      // Link item ↓ → first copyable or next item
+      if (copyables.length > 0) {
+        itemNode.down = nodeMap.get(copyables[0])!;
+      } else if (itemIdx < items.length - 1) {
+        itemNode.down = nodeMap.get(items[itemIdx + 1].item)!;
       } else {
-        const above = nodesAt(gridCol, gridRow - 1);
-        if (above) {
-          upEl = above[above.length - 1];
-        } else {
-          const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
-          for (let gr = gridRow - 1; gr >= 0; gr--) {
-            for (let offset = 1; offset <= maxCol; offset++) {
-              for (const gc of [gridCol + offset, gridCol - offset]) {
-                if (gc < 0 || gc > maxCol) continue;
-                const candidate = nodesAt(gc, gr);
-                if (candidate) {
-                  upEl = candidate[candidate.length - 1];
-                  break;
-                }
-              }
-              if (upEl) break;
-            }
-            if (upEl) break;
-          }
-        }
+        // Look for next item in card below
+        itemNode.down = findNextItemBelow(gridCol, gridRow, 0, gridPos, itemsAt, nodeMap);
       }
 
-      let downEl: HTMLElement | null = null;
-      if (localIdx < siblings.length - 1) {
-        downEl = siblings[localIdx + 1];
+      // Link item ↑ → previous item's last copyable or previous item
+      if (itemIdx > 0) {
+        const prevItem = items[itemIdx - 1];
+        if (prevItem.copyables.length > 0) {
+          itemNode.up = nodeMap.get(prevItem.copyables[prevItem.copyables.length - 1])!;
+        } else {
+          itemNode.up = nodeMap.get(prevItem.item)!;
+        }
       } else {
-        const below = nodesAt(gridCol, gridRow + 1);
-        if (below) {
-          downEl = below[0];
+        // Look for last item in card above
+        itemNode.up = findPrevItemAbove(gridCol, gridRow, -1, gridPos, itemsAt, nodeMap);
+      }
+
+      // Link item ←/→ to adjacent cards' items
+      itemNode.left = findAdjacentItem(gridCol, gridRow, itemIdx, -1, gridPos, itemsAt, nodeMap, cards);
+      itemNode.right = findAdjacentItem(gridCol, gridRow, itemIdx, 1, gridPos, itemsAt, nodeMap, cards);
+
+      // Link copyables within item
+      for (let copyIdx = 0; copyIdx < copyables.length; copyIdx++) {
+        const copyable = copyables[copyIdx];
+        const copyableNode = nodeMap.get(copyable)!;
+
+        // ↓ from copyable
+        if (copyIdx < copyables.length - 1) {
+          copyableNode.down = nodeMap.get(copyables[copyIdx + 1])!;
+        } else if (itemIdx < items.length - 1) {
+          // Next item in same card
+          copyableNode.down = nodeMap.get(items[itemIdx + 1].item)!;
         } else {
-          const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
-          const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
-          for (let gr = gridRow + 1; gr <= maxRow; gr++) {
-            for (let offset = 1; offset <= maxCol; offset++) {
-              for (const gc of [gridCol + offset, gridCol - offset]) {
-                if (gc < 0 || gc > maxCol) continue;
-                const candidate = nodesAt(gc, gr);
-                if (candidate) {
-                  downEl = candidate[0];
-                  break;
-                }
-              }
-              if (downEl) break;
-            }
-            if (downEl) break;
-          }
+          // Look for next item in card below
+          copyableNode.down = findNextItemBelow(gridCol, gridRow, 0, gridPos, itemsAt, nodeMap);
         }
+
+        // ↑ from copyable
+        if (copyIdx > 0) {
+          copyableNode.up = nodeMap.get(copyables[copyIdx - 1])!;
+        } else {
+          // First copyable → back to item
+          copyableNode.up = itemNode;
+        }
+
+        // ←/→ from copyable → adjacent card's item (same as item's ←/→)
+        copyableNode.left = itemNode.left;
+        copyableNode.right = itemNode.right;
       }
-
-      let leftEl: HTMLElement | null = null;
-      {
-        const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
-
-        for (let gc = gridCol - 1; gc >= 0; gc--) {
-          const candidate = nodesAt(gc, gridRow);
-          if (candidate) {
-            leftEl = candidate[Math.min(localIdx, candidate.length - 1)];
-            break;
-          }
-        }
-
-        if (!leftEl) {
-          for (let gr = gridRow + 1; gr <= maxRow; gr++) {
-            for (let gc = gridCol - 1; gc >= 0; gc--) {
-              const candidate = nodesAt(gc, gr);
-              if (candidate) {
-                leftEl = candidate[0];
-                break;
-              }
-            }
-            if (leftEl) break;
-          }
-        }
-      }
-
-      let rightEl: HTMLElement | null = null;
-      {
-        const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
-
-        for (let gc = gridCol + 1; gc <= maxCol; gc++) {
-          const candidate = nodesAt(gc, gridRow);
-          if (candidate) {
-            rightEl = candidate[Math.min(localIdx, candidate.length - 1)];
-            break;
-          }
-        }
-
-        if (!rightEl) {
-          for (let gr = gridRow - 1; gr >= 0; gr--) {
-            for (let gc = gridCol + 1; gc <= maxCol; gc++) {
-              const candidate = nodesAt(gc, gr);
-              if (candidate) {
-                rightEl = candidate[candidate.length - 1];
-                break;
-              }
-            }
-            if (rightEl) break;
-          }
-        }
-      }
-
-      graph.set(el, { el, up: upEl, down: downEl, left: leftEl, right: rightEl });
     }
   }
 
   return graph;
 }
 
+function findNextItemBelow(
+  gridCol: number,
+  gridRow: number,
+  targetIdx: number,
+  gridPos: Map<HTMLElement, GridPos>,
+  itemsAt: (gc: number, gr: number) => ItemWithCopyables[] | null,
+  nodeMap: Map<HTMLElement, NavNode>
+): NavNode | null {
+  const cards = [...gridPos.keys()];
+  const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
+  const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
+
+  // First try same column below
+  const below = itemsAt(gridCol, gridRow + 1);
+  if (below && below.length > 0) {
+    const idx = Math.min(targetIdx, below.length - 1);
+    return nodeMap.get(below[idx].item) ?? null;
+  }
+
+  // Look in adjacent columns at lower rows
+  for (let gr = gridRow + 1; gr <= maxRow; gr++) {
+    for (let offset = 1; offset <= maxCol; offset++) {
+      for (const gc of [gridCol + offset, gridCol - offset]) {
+        if (gc < 0 || gc > maxCol) continue;
+        const candidate = itemsAt(gc, gr);
+        if (candidate && candidate.length > 0) {
+          return nodeMap.get(candidate[0].item) ?? null;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function findPrevItemAbove(
+  gridCol: number,
+  gridRow: number,
+  _targetIdx: number,
+  gridPos: Map<HTMLElement, GridPos>,
+  itemsAt: (gc: number, gr: number) => ItemWithCopyables[] | null,
+  nodeMap: Map<HTMLElement, NavNode>
+): NavNode | null {
+  const cards = [...gridPos.keys()];
+  const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
+
+  // First try same column above
+  const above = itemsAt(gridCol, gridRow - 1);
+  if (above && above.length > 0) {
+    const lastItem = above[above.length - 1];
+    if (lastItem.copyables.length > 0) {
+      return nodeMap.get(lastItem.copyables[lastItem.copyables.length - 1]) ?? null;
+    }
+    return nodeMap.get(lastItem.item) ?? null;
+  }
+
+  // Look in adjacent columns at upper rows
+  for (let gr = gridRow - 1; gr >= 0; gr--) {
+    for (let offset = 1; offset <= maxCol; offset++) {
+      for (const gc of [gridCol + offset, gridCol - offset]) {
+        if (gc < 0 || gc > maxCol) continue;
+        const candidate = itemsAt(gc, gr);
+        if (candidate && candidate.length > 0) {
+          const lastItem = candidate[candidate.length - 1];
+          if (lastItem.copyables.length > 0) {
+            return nodeMap.get(lastItem.copyables[lastItem.copyables.length - 1]) ?? null;
+          }
+          return nodeMap.get(lastItem.item) ?? null;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function findAdjacentItem(
+  gridCol: number,
+  gridRow: number,
+  localIdx: number,
+  direction: -1 | 1, // -1 for left, 1 for right
+  gridPos: Map<HTMLElement, GridPos>,
+  itemsAt: (gc: number, gr: number) => ItemWithCopyables[] | null,
+  nodeMap: Map<HTMLElement, NavNode>,
+  cards: HTMLElement[]
+): NavNode | null {
+  const maxCol = Math.max(...cards.map((c) => gridPos.get(c)!.gridCol));
+  const maxRow = Math.max(...cards.map((c) => gridPos.get(c)!.gridRow));
+
+  // Try same row first
+  for (let gc = gridCol + direction; gc >= 0 && gc <= maxCol; gc += direction) {
+    const candidate = itemsAt(gc, gridRow);
+    if (candidate && candidate.length > 0) {
+      const idx = Math.min(localIdx, candidate.length - 1);
+      return nodeMap.get(candidate[idx].item) ?? null;
+    }
+  }
+
+  // Try other rows
+  if (direction === -1) {
+    // Left: look at lower rows
+    for (let gr = gridRow + 1; gr <= maxRow; gr++) {
+      for (let gc = gridCol - 1; gc >= 0; gc--) {
+        const candidate = itemsAt(gc, gr);
+        if (candidate && candidate.length > 0) {
+          return nodeMap.get(candidate[0].item) ?? null;
+        }
+      }
+    }
+  } else {
+    // Right: look at upper rows
+    for (let gr = gridRow - 1; gr >= 0; gr--) {
+      for (let gc = gridCol + 1; gc <= maxCol; gc++) {
+        const candidate = itemsAt(gc, gr);
+        if (candidate && candidate.length > 0) {
+          const lastItem = candidate[candidate.length - 1];
+          return nodeMap.get(lastItem.item) ?? null;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 type UseCommandNavigationOptions = {
   modalOpen: boolean;
+  onShowDetails?: (data: { title: string; detailedEntries: unknown[] }) => void;
 };
 
-export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions) {
+export function useCommandNavigation({ modalOpen, onShowDetails }: UseCommandNavigationOptions) {
   const { isScopeActive } = useKeyboardContext();
   const { matchesAction } = useKeybindings();
+  
   const graphRef = useRef<NavGraph>(new Map());
   const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const rebuildGraph = useCallback(() => {
-    const nodes = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-copyable]")
-    );
-    graphRef.current = buildGraph(nodes);
+    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-item]"));
+    graphRef.current = buildUnifiedGraph(items);
   }, []);
 
   useEffect(() => {
@@ -240,37 +370,45 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
   }, []);
 
   useEffect(() => {
-    const getFocused = (): HTMLElement | null => {
-      const focused = document.querySelector<HTMLElement>("[data-copyable][data-nav-focused='true']");
-      return focused;
-    };
+    function getFocused(): HTMLElement | null {
+      // Check copyables first (more specific)
+      const copyable = document.querySelector<HTMLElement>("[data-copyable][data-nav-focused='true']");
+      if (copyable) return copyable;
+      
+      const item = document.querySelector<HTMLElement>("[data-item][data-nav-focused='true']");
+      return item;
+    }
 
-    function setFocused(el: HTMLElement | null) {
-      document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((n) => {
+    function clearAllFocus() {
+      document.querySelectorAll<HTMLElement>("[data-item], [data-copyable]").forEach((n) => {
         n.dataset.navFocused = "false";
       });
+    }
+
+    function setFocused(el: HTMLElement | null) {
+      clearAllFocus();
       if (el) {
         el.dataset.navFocused = "true";
         el.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
     }
 
-    function findClosestToMouse(): HTMLElement | null {
-      const nodes = Array.from(graphRef.current.keys());
-      if (nodes.length === 0) return null;
+    function findClosestItemToMouse(): HTMLElement | null {
+      const items = Array.from(document.querySelectorAll<HTMLElement>("[data-item]"));
+      if (items.length === 0) return null;
 
       const { x, y } = lastMousePos.current;
       let closest: HTMLElement | null = null;
       let minDist = Infinity;
 
-      for (const node of nodes) {
-        const rect = node.getBoundingClientRect();
+      for (const item of items) {
+        const rect = item.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
         const dist = Math.hypot(centerX - x, centerY - y);
         if (dist < minDist) {
           minDist = dist;
-          closest = node;
+          closest = item;
         }
       }
 
@@ -283,38 +421,76 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
 
       const focused = getFocused();
       if (!focused) {
-        const closest = findClosestToMouse();
+        const closest = findClosestItemToMouse();
         if (closest) setFocused(closest);
         return;
       }
 
-      const node = graphRef.current.get(focused);
-      if (!node) return;
+      let node = graphRef.current.get(focused);
+      
+      // If focused element not in graph, rebuild and try again
+      if (!node) {
+        rebuildGraph();
+        node = graphRef.current.get(focused);
+        if (!node) return;
+      }
 
       const target = node[direction];
-      if (target) setFocused(target);
+      if (target) setFocused(target.el);
+    }
+
+    function showDetailsForFocused(): boolean {
+      const focused = getFocused();
+      if (!focused) return false;
+
+      // Get the parent item
+      const item = focused.dataset.item !== undefined ? focused : getItemOf(focused);
+      if (!item) return false;
+
+      const detailsJson = item.dataset.itemDetails;
+      if (!detailsJson || !onShowDetails) return false;
+
+      try {
+        const data = JSON.parse(detailsJson);
+        onShowDetails(data);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function handleClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      
+      // Click on details button
+      if (target.closest("[data-show-details-button]")) {
+        const item = target.closest<HTMLElement>("[data-item]");
+        if (item) {
+          setFocused(item);
+          showDetailsForFocused();
+        }
+        return;
+      }
+
+      // Click on copyable
+      const copyable = target.closest<HTMLElement>("[data-copyable]");
+      if (copyable) {
+        setFocused(copyable);
+        return;
+      }
+
+      // Click on item
+      const item = target.closest<HTMLElement>("[data-item]");
+      if (item) {
+        setFocused(item);
+      }
     }
 
     rebuildGraph();
 
     const onResize = () => rebuildGraph();
     window.addEventListener("resize", onResize);
-
-    const onFocusOut = (e: FocusEvent) => {
-      const next = e.relatedTarget as HTMLElement | null;
-      if (!next || next.dataset.copyable === undefined) {
-        document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((n) => {
-          n.dataset.navFocused = "false";
-        });
-      }
-    };
-    document.addEventListener("focusout", onFocusOut);
-
-    function clearFocus() {
-      document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((n) => {
-        n.dataset.navFocused = "false";
-      });
-    }
+    document.addEventListener("click", handleClick);
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (!isScopeActive("global")) return;
@@ -324,12 +500,22 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
       if (modalOpen) return;
 
       if (matchesAction(e, ACTION_IDS.CLEAR_COMMAND_FOCUS)) {
-        const hasFocused = document.querySelector("[data-copyable][data-nav-focused='true']");
+        const hasFocused = getFocused();
         if (hasFocused) {
           e.preventDefault();
-          clearFocus();
+          clearAllFocus();
         }
-      } else if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
+        return;
+      }
+
+      if (matchesAction(e, ACTION_IDS.SHOW_EXAMPLE)) {
+        if (showDetailsForFocused()) {
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
         e.preventDefault();
         move("up");
       } else if (matchesAction(e, ACTION_IDS.MOVE_DOWN)) {
@@ -348,7 +534,7 @@ export function useCommandNavigation({ modalOpen }: UseCommandNavigationOptions)
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", onResize);
-      document.removeEventListener("focusout", onFocusOut);
+      document.removeEventListener("click", handleClick);
     };
-  }, [modalOpen, isScopeActive, matchesAction, rebuildGraph]);
+  }, [modalOpen, isScopeActive, matchesAction, rebuildGraph, onShowDetails]);
 }

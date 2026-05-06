@@ -67,33 +67,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
           <div className={helpStyles.layoutSection}>
             <h3 className="text-xl font-semibold">Navigation</h3>
             <p className={helpStyles.layoutSectionIntro}>
-              Move around the cheatsheet itself, jump through the page, or return to the grid without reaching for the mouse.
-            </p>
-            <table className={`${keybindingStyles.legendTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.BACK_TO_HOME} />
-                  <HelpRow actionId={ACTION_IDS.GO_TOP} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.GO_BOTTOM} />
-                  <td />
-                  <td />
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Commands</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Browse commands inside cards, inspect examples, and copy what you need while staying in flow.
+              Move around the cheatsheet, jump through the page, or return to the grid without reaching for the mouse.
             </p>
             <table className={`${keybindingStyles.legendTable} mt-3`}>
               <colgroup>
@@ -111,6 +85,31 @@ export function SheetHelpModal({ open, onClose }: Props) {
                   <HelpRow actionId={ACTION_IDS.MOVE_DOWN} />
                   <HelpRow actionId={ACTION_IDS.MOVE_UP} />
                 </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.CLEAR_COMMAND_FOCUS} />
+                  <HelpRow actionId={ACTION_IDS.BACK_TO_HOME} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.GO_TOP} />
+                  <HelpRow actionId={ACTION_IDS.GO_BOTTOM} />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className={helpStyles.layoutSection}>
+            <h3 className="text-xl font-semibold">Actions</h3>
+            <p className={helpStyles.layoutSectionIntro}>
+              Copy commands and inspect details while staying in flow.
+            </p>
+            <table className={`${keybindingStyles.legendTable} mt-3`}>
+              <colgroup>
+                <col />
+                <col />
+                <col />
+                <col />
+              </colgroup>
+              <tbody>
                 <tr>
                   <HelpRow actionId={ACTION_IDS.COPY_COMMAND} />
                   <HelpRow actionId={ACTION_IDS.SHOW_EXAMPLE} />

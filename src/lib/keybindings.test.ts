@@ -543,12 +543,12 @@ describe("scopeToContext", () => {
     expect(scopeToContext("global")).toBe("global");
   });
 
-  it("maps sheet-commands scope to sheet-commands context", () => {
-    expect(scopeToContext("sheet-commands")).toBe("sheet-commands");
+  it("maps sheet-layout scope to sheet-layout context", () => {
+    expect(scopeToContext("sheet-layout")).toBe("sheet-layout");
   });
 
   it("returns null for unknown scope", () => {
-    expect(scopeToContext("home" as "global")).toBeNull();
-    expect(scopeToContext("sheet" as "global")).toBeNull();
+    expect(scopeToContext("settings")).toBeNull();
+    expect(scopeToContext("help")).toBeNull();
   });
 });

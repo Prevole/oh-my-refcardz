@@ -28,7 +28,7 @@ An action is a named operation that can be triggered by keyboard shortcuts:
 export const ACTION_IDS = {
   TOGGLE_HELP: "global.toggle-help",
   MOVE_UP: "global.move-up",
-  COPY_COMMAND: "sheet-commands.copy",
+  COPY_COMMAND: "sheet.copy",
   // ...
 } as const;
 ```
@@ -60,8 +60,7 @@ Keybindings are grouped by context:
 |---------|-------------|-----------------|
 | `global` | Always | Navigation, help, settings |
 | `home` | Home page | Search, open sheet |
-| `sheet` | Cheatsheet page | Back to home |
-| `sheet-commands` | Cheatsheet page | Copy, show details, clear focus |
+| `sheet` | Cheatsheet page | Copy, show details, back to home |
 | `sheet-layout` | Cheatsheet page | Card navigation, resize |
 
 ### Scopes
@@ -156,7 +155,7 @@ In `src/lib/keybindings.ts`:
 ```typescript
 export const ACTION_IDS = {
   // ... existing
-  MY_NEW_ACTION: "sheet-commands.my-action",
+  MY_NEW_ACTION: "sheet.my-action",
 } as const;
 ```
 
@@ -167,7 +166,7 @@ In `src/lib/keybindings.ts`, add to the appropriate context:
 ```typescript
 export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   // ...
-  "sheet-commands": [
+  "sheet": [
     // ... existing
     {
       id: ACTION_IDS.MY_NEW_ACTION,

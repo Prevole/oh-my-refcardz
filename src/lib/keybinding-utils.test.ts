@@ -130,7 +130,6 @@ describe("keybinding-utils", () => {
         global: [{ id: "global.toggle-help", label: "", combos: [key("1")] }],
         home: [{ id: "home.focus-search", label: "", combos: [key("2")] }],
         sheet: [{ id: "sheet.back-to-home", label: "", combos: [key("3")] }],
-        "sheet-commands": [{ id: "sheet-commands.copy", label: "", combos: [key("4")] }],
         "sheet-layout": [{ id: "sheet-layout.nav-left", label: "", combos: [key("5")] }],
       };
 
@@ -139,7 +138,6 @@ describe("keybinding-utils", () => {
       expect(result.global.find((a) => a.id === "global.toggle-help")!.combos).toEqual([key("1")]);
       expect(result.home.find((a) => a.id === "home.focus-search")!.combos).toEqual([key("2")]);
       expect(result.sheet.find((a) => a.id === "sheet.back-to-home")!.combos).toEqual([key("3")]);
-      expect(result["sheet-commands"].find((a) => a.id === "sheet-commands.copy")!.combos).toEqual([key("4")]);
       expect(result["sheet-layout"].find((a) => a.id === "sheet-layout.nav-left")!.combos).toEqual([key("5")]);
     });
 
@@ -165,7 +163,6 @@ describe("keybinding-utils", () => {
         { id: "home.move-right", label: "Move right", combos: [key("l")] },
       ],
       sheet: [],
-      "sheet-commands": [],
       "sheet-layout": [],
     };
 
@@ -242,7 +239,6 @@ describe("keybinding-utils", () => {
           { id: "home.action2", label: "Action 2", combos: [key("y")] },
         ],
         sheet: [],
-        "sheet-commands": [],
         "sheet-layout": [],
       };
 

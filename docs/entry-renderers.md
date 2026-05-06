@@ -1,6 +1,6 @@
 # Entry Renderers Architecture
 
-The entry-renderers system provides a modular, auto-discovering architecture for rendering cheatsheet entries. Each entry type (command, alias, text, keys, etc.) has its own renderer that self-registers with the central registry.
+The entry-renderers system provides a modular architecture for rendering cheatsheet entries. Each entry type (command, alias, text, keys, etc.) has its own renderer that self-registers with the central registry.
 
 ## Directory Structure
 

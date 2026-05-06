@@ -16,7 +16,6 @@ export function mergeWithDefaults(stored: Partial<KeybindingsConfig>): Keybindin
     global: [],
     home: [],
     sheet: [],
-    "sheet-commands": [],
     "sheet-layout": [],
   };
 

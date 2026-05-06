@@ -85,8 +85,15 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
     showCopyModal({ command });
   }, [showCopyModal]);
 
+  const handleShowDetails = useCallback((data: { title: string; detailedEntries: unknown[] }) => {
+    showDetail({
+      title: data.title,
+      detailedEntries: data.detailedEntries as CheatSheetEntry[],
+    });
+  }, [showDetail]);
+
   useEntryCopy({ modalOpen, onCopyWithPlaceholders: handleCopyWithPlaceholders });
-  useCommandNavigation({ modalOpen });
+  useCommandNavigation({ modalOpen, onShowDetails: handleShowDetails });
 
   return (
     <CommandNavigationContext.Provider value={{ registerModalOpen, showDetail, showCopyModal }}>

@@ -15,27 +15,50 @@ export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopy
   const { isScopeActive } = useKeyboardContext();
   const { matchesAction } = useKeybindings();
 
-  const copyFocusedEntry = useCallback(async () => {
-    const focused = document.querySelector<HTMLElement>("[data-nav-focused='true'][data-copyable]");
-    if (!focused) return false;
+  const copyValue = useCallback(
+    async (value: string, element: HTMLElement) => {
+      if (hasPlaceholders(value) && onCopyWithPlaceholders) {
+        onCopyWithPlaceholders(value);
+        return true;
+      }
 
-    const value = focused.dataset.copyable;
-    if (!value) return false;
+      await navigator.clipboard.writeText(value);
 
-    if (hasPlaceholders(value) && onCopyWithPlaceholders) {
-      onCopyWithPlaceholders(value);
+      element.dataset.copied = "true";
+      setTimeout(() => {
+        delete element.dataset.copied;
+      }, 1500);
+
       return true;
+    },
+    [onCopyWithPlaceholders]
+  );
+
+  const copyFocused = useCallback(async () => {
+    // First check if a copyable is focused
+    const focusedCopyable = document.querySelector<HTMLElement>("[data-copyable][data-nav-focused='true']");
+    if (focusedCopyable) {
+      const value = focusedCopyable.dataset.copyable;
+      if (value) {
+        return copyValue(value, focusedCopyable);
+      }
+      return false;
     }
 
-    await navigator.clipboard.writeText(value);
+    // If an item is focused, copy its first copyable
+    const focusedItem = document.querySelector<HTMLElement>("[data-item][data-nav-focused='true']");
+    if (focusedItem) {
+      const firstCopyable = focusedItem.querySelector<HTMLElement>("[data-copyable]");
+      if (firstCopyable) {
+        const value = firstCopyable.dataset.copyable;
+        if (value) {
+          return copyValue(value, firstCopyable);
+        }
+      }
+    }
 
-    focused.dataset.copied = "true";
-    setTimeout(() => {
-      delete focused.dataset.copied;
-    }, 1500);
-
-    return true;
-  }, [onCopyWithPlaceholders]);
+    return false;
+  }, [copyValue]);
 
   useEffect(() => {
     const onKeyDown = async (e: KeyboardEvent) => {
@@ -47,11 +70,11 @@ export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopy
 
       if (matchesAction(e, ACTION_IDS.COPY_COMMAND)) {
         e.preventDefault();
-        await copyFocusedEntry();
+        await copyFocused();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [modalOpen, isScopeActive, matchesAction, copyFocusedEntry]);
+  }, [modalOpen, isScopeActive, matchesAction, copyFocused]);
 }

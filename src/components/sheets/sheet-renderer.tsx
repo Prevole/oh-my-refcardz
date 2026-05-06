@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
-import { useShowDetail } from "@/components/sheets/sheet-commands-shell";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
 import type { CheatSheetItem, YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import {
@@ -186,35 +185,30 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 }
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
-  const showDetail = useShowDetail();
-
   const hasAliases = item.entries.some(
     (entry) => "alias" in entry || "aliases" in entry
   );
   const hasDetailedEntries = item.detailedEntries && item.detailedEntries.length > 0;
 
-  function handleShowDetail() {
-    if (!hasDetailedEntries) return;
+  const titleEntry = item.entries.find((entry) => "title" in entry);
+  const title = titleEntry && "title" in titleEntry ? titleEntry.title : "Details";
 
-    const titleEntry = item.entries.find((entry) => "title" in entry);
-    const title = titleEntry && "title" in titleEntry ? titleEntry.title : "Details";
-
-    showDetail({ title, detailedEntries: item.detailedEntries! });
-  }
+  const itemData = hasDetailedEntries
+    ? JSON.stringify({ title, detailedEntries: item.detailedEntries })
+    : undefined;
 
   return (
     <div
       className={cheatsheetStyles.itemEntries}
+      data-item=""
+      data-item-details={itemData}
     >
       <div className={cheatsheetStyles.itemEntriesHeader}>
         {item.entries.map((entry, index) => (
           <EntryRenderer key={index} entry={entry} hasAliases={hasAliases} />
         ))}
         {hasDetailedEntries && (
-          <ItemActions
-            hasExample={true}
-            onShowExample={handleShowDetail}
-          />
+          <ItemActions hasExample={true} />
         )}
       </div>
     </div>

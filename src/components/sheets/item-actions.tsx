@@ -4,16 +4,10 @@ import styles from "./cheatsheet-rendering.module.css";
 
 type ItemActionsProps = {
   hasExample: boolean;
-  onShowExample: () => void;
 };
 
-export function ItemActions({ hasExample, onShowExample }: ItemActionsProps) {
+export function ItemActions({ hasExample }: ItemActionsProps) {
   if (!hasExample) return null;
-
-  function handleShowExample(e: React.MouseEvent) {
-    e.stopPropagation();
-    onShowExample();
-  }
 
   return (
     <div className={styles.itemActions} data-item-actions>
@@ -22,7 +16,7 @@ export function ItemActions({ hasExample, onShowExample }: ItemActionsProps) {
         className={styles.itemInfoButton}
         aria-label="Details"
         title="Details"
-        onClick={handleShowExample}
+        data-show-details-button
       >
         i
       </button>
