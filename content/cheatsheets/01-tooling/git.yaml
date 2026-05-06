@@ -11,12 +11,12 @@ sections:
         items:
           - entries:
               - title: Status
-              - command: git status
               - aliases:
                   - s
                   - st
                   - sta
                   - stat
+              - command: git status
               - text: Show the current branch state together with staged changes,
                   unstaged edits, and untracked files before taking action.
 
@@ -24,17 +24,17 @@ sections:
         items:
           - entries:
               - title: Diff
-              - command: git diff
               - aliases:
                   - d
+              - command: git diff
               - text: Review unstaged changes in the working tree before deciding what to
                   stage.
 
           - entries:
               - title: Cached Diff
-              - command: git diff --cached
               - aliases:
                   - dc
+              - command: git diff --cached
               - text: Review the exact staged diff that will be included in the next
                   commit.
 
@@ -44,18 +44,18 @@ sections:
         items:
           - entries:
               - title: Checkout
-              - command: git checkout
               - aliases:
                   - co
+              - command: git checkout
               - text: Short alias for the older `checkout` workflow, useful on setups
                   that still rely on it for branch switching or file restore
                   operations.
 
           - entries:
               - title: Branch
-              - command: git branch
               - aliases:
                   - b
+              - command: git branch
               - text: Short alias for listing, creating, or deleting branches depending
                   on the flags you add.
 
@@ -63,25 +63,25 @@ sections:
         items:
           - entries:
               - title: Add All
-              - command: git add .
               - aliases:
                   - a
+              - command: git add .
               - text: Stage every tracked and untracked change under the current
                   directory, not necessarily the whole repository.
 
           - entries:
               - title: Commit Message
-              - command: git commit -m
               - aliases:
                   - ci
+              - command: git commit -m
               - text: Create a commit with a message passed directly on the command line
                   for quick save points.
 
           - entries:
               - title: Amend Commit
-              - command: git commit --amend
               - aliases:
                   - ca
+              - command: git commit --amend
               - text: Rewrite the most recent commit to adjust its message or include
                   newly staged changes.
 
@@ -91,27 +91,27 @@ sections:
         items:
           - entries:
               - title: Graph Log
-              - command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
-                  %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
               - aliases:
                   - g
+              - command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
+                  %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
               - text: Show a compact branch graph with decoration, relative dates, and
                   author names for recent history inspection.
 
           - entries:
               - title: Graph Log All
-              - command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
-                  %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all"
               - aliases:
                   - ga
+              - command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
+                  %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all"
               - text: Extend the same graph view to every local and remote ref so
                   diverging branches are easier to spot.
 
           - entries:
               - title: Oneline Graph All
-              - command: git log --oneline --graph --decorate --all
               - aliases:
                   - graph
+              - command: git log --oneline --graph --decorate --all
               - text: Use a simpler one-line graph when you want an overview of all
                   branches without the custom pretty format.
 
@@ -119,18 +119,18 @@ sections:
         items:
           - entries:
               - title: Show Local Git Config
-              - command: cat .git/config
               - aliases:
                   - info
                   - i
+              - command: cat .git/config
               - text: Print the repository-local config file exactly as stored on disk,
                   which is handy when checking remotes or branch tracking.
 
           - entries:
               - title: Edit Local Git Config
-              - command: '!$EDITOR .git/config'
               - aliases:
                   - ei
+              - command: '!$EDITOR .git/config'
               - text: Open `.git/config` in the current editor to tweak
                   repository-specific settings directly.
 
@@ -140,25 +140,25 @@ sections:
         items:
           - entries:
               - title: Push and Track HEAD
-              - command: git push -u origin HEAD
               - aliases:
                   - fp
+              - command: git push -u origin HEAD
               - text: Push the current branch to `origin` and create upstream tracking in
                   one step, especially useful for a first push.
 
           - entries:
               - title: Force Push With Lease
-              - command: git push --force-with-lease
               - aliases:
                   - pf
+              - command: git push --force-with-lease
               - text: Force-push more safely by refusing to overwrite remote work you
                   have not fetched yet.
 
           - entries:
               - title: Pull Rebase
-              - command: git pull --rebase
               - aliases:
                   - pull
+              - command: git pull --rebase
               - text: Update from the remote while replaying local commits on top,
                   keeping history linear.
 
@@ -166,19 +166,19 @@ sections:
         items:
           - entries:
               - title: List Cleanable Branches
-              - command: '!f() { git fetch --prune && git branch --merged | grep -Ev
-                  "(^\\*|master|main|dev)"; }; f'
               - aliases:
                   - lcb
+              - command: '!f() { git fetch --prune && git branch --merged | grep -Ev
+                  "(^\\*|master|main|dev)"; }; f'
               - text: Fetch and prune first, then list merged local branches while
                   excluding the current branch and a few protected names.
 
           - entries:
               - title: Delete Cleanable Branches
-              - command: '!f() { git fetch --prune && git branch --merged | grep -Ev
-                  "(^\\*|master|main|dev)" | xargs git branch -d; }; f'
               - aliases:
                   - cb
+              - command: '!f() { git fetch --prune && git branch --merged | grep -Ev
+                  "(^\\*|master|main|dev)" | xargs git branch -d; }; f'
               - text: Delete the merged branches returned by the previous helper, keeping
                   the protected branch names untouched.
 

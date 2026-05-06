@@ -117,13 +117,18 @@
 }
 
 .commandBlockLabel {
-  margin: 0.45rem 0 0.2rem;
+  margin: 0.35rem 0 0;
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(237, 242, 244, 0.55);
+}
+
+.commandBlockLabel + .commandTerminal,
+.commandBlockLabel + .commandAliasTerminal {
+  margin-top: 0;
 }
 
 .commandDescription {

@@ -2,10 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
-import { SheetAppSettings } from "@/components/sheets/sheet-app-settings";
-import { SheetCommand } from "@/components/sheets/sheet-command";
-import { SheetConfig } from "@/components/sheets/sheet-config";
-import { SheetShortcut } from "@/components/sheets/sheet-shortcut";
+import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
 import type { CheatSheetItem, YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import {
@@ -187,42 +184,15 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 }
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
-  if (item.type === "command") {
-    return (
-      <SheetCommand
-        title={item.title}
-        command={item.command}
-        aliases={item.aliases}
-        description={item.description}
-        example={item.examples?.[0]}
-      />
-    );
-  }
+  const hasAliases = item.entries.some(
+    (entry) => "alias" in entry || "aliases" in entry
+  );
 
-  if (item.type === "shortcut") {
-    return <SheetShortcut keys={item.keys} description={item.description} />;
-  }
-
-  if (item.type === "config") {
-    return (
-      <SheetConfig
-        title={item.title}
-        file={item.file}
-        context={item.context}
-        content={item.content}
-        description={item.description}
-      />
-    );
-  }
-
-  if (item.type === "app settings") {
-    return (
-      <SheetAppSettings
-        title={item.title}
-        entries={item.entries}
-      />
-    );
-  }
-
-  return null;
+  return (
+    <div className={cheatsheetStyles.itemEntries}>
+      {item.entries.map((entry, index) => (
+        <EntryRenderer key={index} entry={entry} hasAliases={hasAliases} />
+      ))}
+    </div>
+  );
 }
