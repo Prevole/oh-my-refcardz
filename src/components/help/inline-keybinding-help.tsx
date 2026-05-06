@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ActionKeybinding } from "@/components/settings/keybinding-display";
+import { ActionInlineBinding } from "@/components/settings/keybinding-display";
 import { ACTION_IDS } from "@/lib/keybindings";
 
 type InlineKeybindingProps = {
@@ -10,7 +10,7 @@ type InlineKeybindingProps = {
 };
 
 export function InlineKeybinding({ actionId, maxCombos = 1 }: InlineKeybindingProps) {
-  return <ActionKeybinding actionId={actionId} variant="inline" maxCombos={maxCombos} />;
+  return <ActionInlineBinding actionId={actionId} maxCombos={maxCombos} className="underline decoration-dashed underline-offset-3 text-[#f8c94a]" separatorClassName="mx-1 text-white/40" />;
 }
 
 export function HomeInlineHelp() {
@@ -47,7 +47,7 @@ export function SheetInlineHelp() {
       <InlineKeybinding actionId={ACTION_IDS.MOVE_RIGHT} />
       <span>, copy with</span>
       <InlineKeybinding actionId={ACTION_IDS.COPY_COMMAND} />
-      <span>, example with</span>
+      <span>, details with</span>
       <InlineKeybinding actionId={ACTION_IDS.SHOW_EXAMPLE} />
       <span>.</span>
     </p>

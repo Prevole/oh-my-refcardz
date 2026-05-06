@@ -4,6 +4,9 @@ import { useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
+import { InlineCodeText } from "@/components/sheets/inline-code-text";
+import { ActionInlineBinding } from "@/components/settings/keybinding-display";
+import { getCopyablePayload, type CopyablePayload } from "./copyable";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
 import { hasPlaceholders } from "@/lib/placeholder-parser";
@@ -16,7 +19,7 @@ type ItemDetailModalProps = {
   detailedEntries: CheatSheetEntry[];
   accentColor: string | null;
   onClose: () => void;
-  onCopyWithPlaceholders?: (command: string) => void;
+  onCopyWithPlaceholders?: (payload: CopyablePayload) => void;
 };
 
 export function ItemDetailModal({
@@ -74,15 +77,15 @@ export function ItemDetailModal({
     if (index < 0 || index >= items.length) return;
 
     const item = items[index];
-    const value = item.dataset.copyable;
-    if (!value) return;
+    const payload = getCopyablePayload(item);
+    if (!payload) return;
 
-    if (hasPlaceholders(value) && onCopyWithPlaceholders) {
-      onCopyWithPlaceholders(value);
+    if (hasPlaceholders(payload.value) && onCopyWithPlaceholders) {
+      onCopyWithPlaceholders(payload);
       return;
     }
 
-    await navigator.clipboard.writeText(value);
+    await navigator.clipboard.writeText(payload.value);
     item.dataset.copied = "true";
     setTimeout(() => {
       delete item.dataset.copied;
@@ -138,7 +141,7 @@ export function ItemDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         <button type="button" className={dialogStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
-        <h3 className={sheetCommandStyles.modalTitle}>{title}</h3>
+        <h3 className={sheetCommandStyles.modalTitle}><InlineCodeText text={title} /></h3>
 
         <div ref={contentRef} className={sheetCommandStyles.modalEntries}>
           {detailedEntries.map((entry, index) => (
@@ -147,8 +150,9 @@ export function ItemDetailModal({
         </div>
 
         <p className={sheetCommandStyles.modalFooter}>
-          <span className={sheetCommandStyles.modalFooterBinding}>j/k</span> navigate,{" "}
-          <span className={sheetCommandStyles.modalFooterBinding}>y</span> copy,{" "}
+          <ActionInlineBinding actionId={ACTION_IDS.MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
+          <ActionInlineBinding actionId={ACTION_IDS.MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate,{" "}
+          <ActionInlineBinding actionId={ACTION_IDS.COPY_COMMAND} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> copy,{" "}
           <span className={sheetCommandStyles.modalFooterBinding}>Esc</span> close.
         </p>
       </div>

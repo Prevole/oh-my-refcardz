@@ -10,11 +10,11 @@ src/components/sheets/entry-renderers/
 ├── entry-renderer.tsx     # Main component + auto-discovery via require.context
 ├── index.ts               # Public exports
 ├── title-entry.tsx        # Renders: title
-├── command-entry.tsx      # Renders: command, alias, aliases, example, examples
+├── command-entry.tsx      # Renders: command, alias, aliases, commandExample, commandExamples
 ├── path-entry.tsx         # Renders: file, where
 ├── text-entry.tsx         # Renders: text
 ├── keys-entry.tsx         # Renders: keys (keyboard shortcuts)
-├── content-entry.tsx      # Renders: content (code blocks)
+├── content-entry.tsx      # Renders: content, contentExample (code/config blocks)
 └── settings-entry.tsx     # Renders: settings (bullet lists)
 ```
 
@@ -118,11 +118,12 @@ This allows handlers to adapt their rendering based on sibling entries. For exam
 | `command` | `string` | `CommandLike` | Shell command |
 | `alias` | `string` | `AliasesEntry` | Single alias |
 | `aliases` | `string[]` | `AliasesEntry` | Multiple aliases (displayed as `(a\|b\|c)`) |
-| `example` | `string` | `CommandLike` | Command example |
-| `examples` | `string[]` | `CommandLike` | Multiple examples |
+| `commandExample` | `string` | `CommandLike` | Command example |
+| `commandExamples` | `string[]` | `CommandLike` | Multiple command examples |
 | `text` | `string` | `TextEntry` | Description text (supports inline code) |
 | `keys` | `string[]` | `KeysEntry` | Keyboard shortcuts |
 | `file` | `string` | `PathLike` | File path |
 | `where` | `string` | `PathLike` | Location in app |
-| `content` | `string` | `ContentEntry` | Code block |
+| `content` | `string` | `ContentEntry` | Code/config block |
+| `contentExample` | `string` | `ContentExampleEntry` | Example-style code/config block |
 | `settings` | `string[]` | `SettingsEntry` | Settings list |

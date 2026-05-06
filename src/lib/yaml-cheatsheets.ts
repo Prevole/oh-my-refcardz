@@ -41,17 +41,17 @@ const titleEntrySchema = z.object({ title: z.string().min(1) });
 const commandEntrySchema = z.object({ command: z.string().min(1) });
 const aliasEntrySchema = z.object({ alias: z.string().min(1) });
 const aliasesEntrySchema = z.object({ aliases: z.array(z.string().min(1)).min(1) });
-const exampleEntrySchema = z.object({ example: z.string().min(1) });
-const examplesEntrySchema = z.object({ examples: z.array(z.string().min(1)).min(1) });
+const commandExampleEntrySchema = z.object({ commandExample: z.string().min(1) });
+const commandExamplesEntrySchema = z.object({ commandExamples: z.array(z.string().min(1)).min(1) });
 const textEntrySchema = z.object({ text: z.string().min(1) });
 const keysEntrySchema = z.object({ keys: z.array(z.string().min(1)).min(1) });
 const fileEntrySchema = z.object({ file: z.string().min(1) });
 const whereEntrySchema = z.object({ where: z.string().min(1) });
-const contentEntrySchema = z.object({
-  content: z.string().refine((value) => value.trim().length > 0, {
-    message: "Content cannot be empty",
-  }),
+const contentValueSchema = z.string().refine((value) => value.trim().length > 0, {
+  message: "Content cannot be empty",
 });
+const contentEntrySchema = z.object({ content: contentValueSchema });
+const contentExampleEntrySchema = z.object({ contentExample: contentValueSchema });
 const settingsEntrySchema = z.object({ settings: z.array(z.string().min(1)).min(1) });
 
 const entrySchema = z.union([
@@ -59,13 +59,14 @@ const entrySchema = z.union([
   commandEntrySchema,
   aliasEntrySchema,
   aliasesEntrySchema,
-  exampleEntrySchema,
-  examplesEntrySchema,
+  commandExampleEntrySchema,
+  commandExamplesEntrySchema,
   textEntrySchema,
   keysEntrySchema,
   fileEntrySchema,
   whereEntrySchema,
   contentEntrySchema,
+  contentExampleEntrySchema,
   settingsEntrySchema,
 ]);
 
@@ -102,13 +103,14 @@ export type TitleEntry = z.infer<typeof titleEntrySchema>;
 export type CommandEntry = z.infer<typeof commandEntrySchema>;
 export type AliasEntry = z.infer<typeof aliasEntrySchema>;
 export type AliasesEntry = z.infer<typeof aliasesEntrySchema>;
-export type ExampleEntry = z.infer<typeof exampleEntrySchema>;
-export type ExamplesEntry = z.infer<typeof examplesEntrySchema>;
+export type CommandExampleEntry = z.infer<typeof commandExampleEntrySchema>;
+export type CommandExamplesEntry = z.infer<typeof commandExamplesEntrySchema>;
 export type TextEntry = z.infer<typeof textEntrySchema>;
 export type KeysEntry = z.infer<typeof keysEntrySchema>;
 export type FileEntry = z.infer<typeof fileEntrySchema>;
 export type WhereEntry = z.infer<typeof whereEntrySchema>;
 export type ContentEntry = z.infer<typeof contentEntrySchema>;
+export type ContentExampleEntry = z.infer<typeof contentExampleEntrySchema>;
 export type SettingsEntry = z.infer<typeof settingsEntrySchema>;
 
 export type CheatSheetEntry = z.infer<typeof entrySchema>;

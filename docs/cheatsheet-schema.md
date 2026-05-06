@@ -79,7 +79,7 @@ items:
       - command: git status
     detailedEntries:
       - text: Shows working tree status
-      - example: git status -s
+      - commandExample: git status -s
 ```
 
 ## Entry Types
@@ -92,8 +92,8 @@ Each entry is an object with exactly one key that determines its type.
 - command: git status              # terminal command
 - alias: s                         # single alias
 - aliases: [s, st, sta, stat]      # multiple aliases (grouped display)
-- example: git status -s           # usage example (dashed border style)
-- examples:                        # multiple examples
+- commandExample: git status -s    # usage example (dashed border style)
+- commandExamples:                 # multiple examples
     - git log --oneline
     - git log --graph
 ```
@@ -127,6 +127,9 @@ Commands support placeholders for user input. See [placeholders.md](./placeholde
     [alias]
       s = status
       co = checkout
+- contentExample: |-               # example-style code/config block
+    [include]
+      path = ~/.gitconfig.local
 - settings:                        # settings list
     - Auto Fetch = enabled
     - Prune on Fetch = enabled
@@ -158,7 +161,7 @@ Both use the same entry types, but serve different UI purposes.
 │ Alias: $ git (d|di|dif)         │  ← entries (always visible)
 │ Command: $ git diff        [i]  │  ← info button when detailedEntries exist
 │ ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
-│ │ Example: $ git diff HEAD  │   │  ← example entry (dashed border)
+│ │ Example: $ git diff HEAD  │   │  ← commandExample entry (dashed border)
 │ └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
 └─────────────────────────────────┘
 
@@ -192,14 +195,14 @@ items:
   - entries:
       - aliases: [d, di, dif]
       - command: git diff
-      - example: git diff HEAD
+      - commandExample: git diff HEAD
     detailedEntries:
       - text: >
           Shows changes between working directory and staging area.
           Use --staged to see what will be committed.
-      - example: git diff --stat
-      - example: git diff --name-only
-      - example: git diff HEAD~3..HEAD
+      - commandExample: git diff --stat
+      - commandExample: git diff --name-only
+      - commandExample: git diff HEAD~3..HEAD
 ```
 
 ## Validation

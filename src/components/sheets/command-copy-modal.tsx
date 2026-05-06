@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
+import { InlineCodeText } from "@/components/sheets/inline-code-text";
+import { ActionInlineBinding } from "@/components/settings/keybinding-display";
+import { useKeybindings } from "@/hooks/use-keybindings";
+import { ACTION_IDS, matchesCombo } from "@/lib/keybindings";
 import {
   parsePlaceholders,
   buildCommand,
@@ -13,19 +17,21 @@ import dialogStyles from "@/components/ui/modal.module.css";
 
 type CommandCopyModalProps = {
   title: string;
-  command: string;
+  value: string;
+  previewPrefix?: string;
   accentColor: string | null;
   onClose: () => void;
 };
 
-export function CommandCopyModal({ title, command, accentColor, onClose }: CommandCopyModalProps) {
+export function CommandCopyModal({ title, value, previewPrefix = "", accentColor, onClose }: CommandCopyModalProps) {
   const registerModalOpen = useRegisterModalOpen();
-  const placeholders = parsePlaceholders(command);
+  const { getAction } = useKeybindings();
+  const firstInputRef = useRef<HTMLInputElement>(null);
+  const placeholders = parsePlaceholders(value);
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(placeholders.map((p) => [p.raw, ""]))
   );
   const [copied, setCopied] = useState(false);
-  const firstInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const unregister = registerModalOpen();
@@ -37,18 +43,54 @@ export function CommandCopyModal({ title, command, accentColor, onClose }: Comma
   }, []);
 
   useEffect(() => {
+    function moveFocus(direction: "up" | "down") {
+      const root = firstInputRef.current?.form;
+      const inputs = root
+        ? Array.from(root.querySelectorAll<HTMLInputElement>("[data-copy-modal-input='true']"))
+        : [];
+      if (inputs.length === 0) {
+        return;
+      }
+
+      const currentIndex = inputs.findIndex((input) => input === document.activeElement);
+      if (currentIndex === -1) {
+        inputs[0]?.focus();
+        return;
+      }
+
+      const nextIndex = direction === "down"
+        ? Math.min(currentIndex + 1, inputs.length - 1)
+        : Math.max(currentIndex - 1, 0);
+
+      inputs[nextIndex]?.focus();
+    }
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onClose();
+        return;
+      }
+
+      const moveUpAction = getAction(ACTION_IDS.MOVE_UP);
+      if (moveUpAction && moveUpAction.combos[0] && matchesCombo(e, moveUpAction.combos[0])) {
+        e.preventDefault();
+        moveFocus("up");
+        return;
+      }
+
+      const moveDownAction = getAction(ACTION_IDS.MOVE_DOWN);
+      if (moveDownAction && moveDownAction.combos[0] && matchesCombo(e, moveDownAction.combos[0])) {
+        e.preventDefault();
+        moveFocus("down");
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, [getAction, onClose]);
 
   async function handleCopy() {
-    const resolved = buildCommand(command, values);
+    const resolved = buildCommand(value, values);
     await navigator.clipboard.writeText(resolved);
     setCopied(true);
     setTimeout(() => {
@@ -62,7 +104,7 @@ export function CommandCopyModal({ title, command, accentColor, onClose }: Comma
     handleCopy();
   }
 
-  const preview = `$ ${buildCommand(command, values)}`;
+  const preview = `${previewPrefix}${buildCommand(value, values)}`;
 
   const style: CSSProperties | undefined = accentColor
     ? { "--sheet-accent": accentColor } as CSSProperties
@@ -76,11 +118,11 @@ export function CommandCopyModal({ title, command, accentColor, onClose }: Comma
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={`Copy command: ${title}`}
+        aria-label={`Copy value: ${title}`}
     >
       <div className={sheetCommandStyles.modal} onClick={(e) => e.stopPropagation()}>
         <button type="button" className={dialogStyles.dismiss} onClick={onClose} aria-label="Close">✕</button>
-        <h3 className={sheetCommandStyles.modalTitle}>{title}</h3>
+        <h3 className={sheetCommandStyles.modalTitle}><InlineCodeText text={title} /></h3>
 
         <form onSubmit={handleSubmit} className={sheetCommandStyles.modalForm}>
           {placeholders.map((placeholder, index) => (
@@ -95,17 +137,25 @@ export function CommandCopyModal({ title, command, accentColor, onClose }: Comma
 
           <div className={sheetCommandStyles.modalPreviewWrap}>
             <p className={sheetCommandStyles.modalSectionLabel}>Preview</p>
-            <p className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalPreview}`}>{preview}</p>
+            <pre className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalPreview}`}>{preview}</pre>
           </div>
 
-          <div className={sheetCommandStyles.modalActions}>
-            <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
-              Cancel <kbd>Esc</kbd>
-            </button>
-            <button type="submit" className={sheetCommandStyles.modalSubmitButton}>
-              {copied ? "Copied!" : "Copy"}
-              {!copied && <kbd>↩</kbd>}
-            </button>
+          <div className={sheetCommandStyles.modalFooterActionRow}>
+            <p className={sheetCommandStyles.modalFooter}>
+              <ActionInlineBinding actionId={ACTION_IDS.MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
+              <ActionInlineBinding actionId={ACTION_IDS.MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate, {" "}
+              <span className={sheetCommandStyles.modalFooterBinding}>↩</span> copy, {" "}
+              <span className={sheetCommandStyles.modalFooterBinding}>Esc</span> close.
+            </p>
+            <div className={sheetCommandStyles.modalActions}>
+              <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
+                Cancel <kbd>Esc</kbd>
+              </button>
+              <button type="submit" className={sheetCommandStyles.modalSubmitButton}>
+                {copied ? "Copied!" : "Copy"}
+                {!copied && <kbd>↩</kbd>}
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -146,6 +196,7 @@ function PlaceholderInput({ placeholder, value, onChange, inputRef }: Placeholde
         placeholder={placeholder.name}
         value={value}
         onChange={handleChange}
+        data-copy-modal-input="true"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"

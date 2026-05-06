@@ -46,7 +46,7 @@ sections:
             title: Do something
             command: mytool run
             description: What it does.
-            examples:  # optional
+            commandExamples:  # optional
               - mytool run --verbose
 
           - type: shortcut

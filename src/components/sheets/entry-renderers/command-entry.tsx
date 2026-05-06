@@ -7,7 +7,7 @@ import { hasPlaceholders, formatDisplayValue } from "@/lib/placeholder-parser";
 import styles from "../sheet-commands.module.css";
 
 type CommandLikeProps = {
-  type: "command" | "example";
+  type: "command" | "commandExample";
   value: string;
   showLabel?: boolean;
 };
@@ -79,7 +79,7 @@ function Terminal({ value, displayOverride, variant = "default" }: TerminalProps
     e.stopPropagation();
     
     if (withPlaceholders) {
-      showCopyModal({ command: value });
+      showCopyModal({ title: "Copy Command", value, previewPrefix: "$ " });
       return;
     }
 
@@ -102,6 +102,8 @@ function Terminal({ value, displayOverride, variant = "default" }: TerminalProps
     <div
       className={className}
       data-copyable={value}
+      data-copy-title="Copy Command"
+      data-copy-preview-prefix="$ "
       data-copied={copied ? "true" : undefined}
       onClick={handleSelect}
     >
@@ -122,7 +124,7 @@ function Terminal({ value, displayOverride, variant = "default" }: TerminalProps
 
 export function CommandLike({ type, value, showLabel }: CommandLikeProps) {
   const label = type === "command" ? "Command" : "Example";
-  const variant = type === "example" ? "example" : "default";
+  const variant = type === "commandExample" ? "example" : "default";
 
   return (
     <>
@@ -159,14 +161,14 @@ registerHandler("alias", (value) => <AliasesEntry aliases={[value]} />);
 
 registerHandler("aliases", (value) => <AliasesEntry aliases={value} />);
 
-registerHandler("example", (value) => (
-  <CommandLike type="example" value={value} showLabel={true} />
+registerHandler("commandExample", (value) => (
+  <CommandLike type="commandExample" value={value} showLabel={true} />
 ));
 
-registerHandler("examples", (values) => (
+registerHandler("commandExamples", (values) => (
   <>
     {values.map((value, index) => (
-      <CommandLike key={index} type="example" value={value} showLabel={index === 0} />
+      <CommandLike key={index} type="commandExample" value={value} showLabel={index === 0} />
     ))}
   </>
 ));

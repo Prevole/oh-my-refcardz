@@ -5,10 +5,11 @@ import { useKeyboardContext } from "./use-keyboard-context";
 import { useKeybindings } from "./use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
 import { hasPlaceholders } from "@/lib/placeholder-parser";
+import { getCopyablePayload, type CopyablePayload } from "@/components/sheets/copyable";
 
 type UseEntryCopyOptions = {
   modalOpen: boolean;
-  onCopyWithPlaceholders?: (command: string) => void;
+  onCopyWithPlaceholders?: (payload: CopyablePayload) => void;
 };
 
 export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopyOptions) {
@@ -18,7 +19,10 @@ export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopy
   const copyValue = useCallback(
     async (value: string, element: HTMLElement) => {
       if (hasPlaceholders(value) && onCopyWithPlaceholders) {
-        onCopyWithPlaceholders(value);
+        const payload = getCopyablePayload(element);
+        if (payload) {
+          onCopyWithPlaceholders(payload);
+        }
         return true;
       }
 
@@ -38,9 +42,9 @@ export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopy
     // First check if a copyable is focused
     const focusedCopyable = document.querySelector<HTMLElement>("[data-copyable][data-nav-focused='true']");
     if (focusedCopyable) {
-      const value = focusedCopyable.dataset.copyable;
-      if (value) {
-        return copyValue(value, focusedCopyable);
+      const payload = getCopyablePayload(focusedCopyable);
+      if (payload) {
+        return copyValue(payload.value, focusedCopyable);
       }
       return false;
     }
@@ -50,9 +54,9 @@ export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopy
     if (focusedItem) {
       const firstCopyable = focusedItem.querySelector<HTMLElement>("[data-copyable]");
       if (firstCopyable) {
-        const value = firstCopyable.dataset.copyable;
-        if (value) {
-          return copyValue(value, firstCopyable);
+        const payload = getCopyablePayload(firstCopyable);
+        if (payload) {
+          return copyValue(payload.value, firstCopyable);
         }
       }
     }

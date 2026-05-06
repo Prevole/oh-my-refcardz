@@ -370,7 +370,26 @@
 }
 
 .modalPreview {
-  word-break: break-all;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.modalFooterActionRow {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modalFooterActionRow .modalFooter {
+  margin: 0;
+  padding-top: 0;
+  border-top: none;
+  flex: 1;
 }
 
 .modalActions {
@@ -378,10 +397,11 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.6rem;
-  margin-top: 0.25rem;
+  flex: none;
 }
 
-.modalActions .modalCloseButton {
+.modalActions .modalCloseButton,
+.modalFooterActionRow .modalCloseButton {
   margin-top: 0;
 }
 
@@ -415,5 +435,6 @@
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.86rem;
   font-weight: 500;
+  line-height: 1.5;
   color: #8ef6d8;
 }

@@ -241,33 +241,33 @@ describe("yamlCheatSheetSchema", () => {
       });
     });
 
-    describe("example entry", () => {
-      it("validates single example entry", () => {
+    describe("commandExample entry", () => {
+      it("validates single commandExample entry", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ example: "docker run nginx" }])
+          makeSheetWithEntries([{ commandExample: "docker run nginx" }])
         );
         expect(result.success).toBe(true);
       });
 
-      it("rejects empty example", () => {
+      it("rejects empty commandExample", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ example: "" }])
+          makeSheetWithEntries([{ commandExample: "" }])
         );
         expect(result.success).toBe(false);
       });
     });
 
-    describe("examples entry", () => {
-      it("validates examples entry", () => {
+    describe("commandExamples entry", () => {
+      it("validates commandExamples entry", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ examples: ["docker run nginx", "docker run -d nginx"] }])
+          makeSheetWithEntries([{ commandExamples: ["docker run nginx", "docker run -d nginx"] }])
         );
         expect(result.success).toBe(true);
       });
 
-      it("rejects empty examples array", () => {
+      it("rejects empty commandExamples array", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ examples: [] }])
+          makeSheetWithEntries([{ commandExamples: [] }])
         );
         expect(result.success).toBe(false);
       });
@@ -369,6 +369,27 @@ describe("yamlCheatSheetSchema", () => {
       it("rejects blank content (whitespace only)", () => {
         const result = yamlCheatSheetSchema.safeParse(
           makeSheetWithEntries([{ content: "   \n  " }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("validates contentExample entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ contentExample: "[user]\n  name = Alex" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty contentExample", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ contentExample: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects contentExample with blank content", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ contentExample: "   \n  " }])
         );
         expect(result.success).toBe(false);
       });

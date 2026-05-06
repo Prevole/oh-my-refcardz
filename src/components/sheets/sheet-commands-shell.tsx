@@ -5,6 +5,7 @@ import { useEntryCopy } from "@/hooks/use-entry-copy";
 import { useCommandNavigation } from "@/hooks/use-command-navigation";
 import { ItemDetailModal } from "./item-detail-modal";
 import { CommandCopyModal } from "./command-copy-modal";
+import type { CopyablePayload } from "./copyable";
 import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
 
 type DetailData = {
@@ -14,7 +15,9 @@ type DetailData = {
 };
 
 type CopyData = {
-  command: string;
+  value: string;
+  title: string;
+  previewPrefix: string;
   accentColor: string | null;
 };
 
@@ -81,8 +84,8 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
 
   const modalOpen = openModalCount > 0 || detailData !== null || copyData !== null;
 
-  const handleCopyWithPlaceholders = useCallback((command: string) => {
-    showCopyModal({ command });
+  const handleCopyWithPlaceholders = useCallback((payload: CopyablePayload) => {
+    showCopyModal(payload);
   }, [showCopyModal]);
 
   const handleShowDetails = useCallback((data: { title: string; detailedEntries: unknown[] }) => {
@@ -111,8 +114,9 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
       )}
       {copyData && (
         <CommandCopyModal
-          title="Copy Command"
-          command={copyData.command}
+          title={copyData.title}
+          value={copyData.value}
+          previewPrefix={copyData.previewPrefix}
           accentColor={copyData.accentColor}
           onClose={closeCopyModal}
         />

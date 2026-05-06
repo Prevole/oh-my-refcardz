@@ -7,6 +7,7 @@ import {
   type ActionId,
   type KeyCombo,
   type KeyDisplayPart,
+  getCombosDisplay,
   getComboSequenceDisplayParts,
   isArrowKey,
   getArrowDirection,
@@ -118,6 +119,68 @@ export function ActionKeybinding({
   }
 
   return <CombosDisplay combos={action.combos} variant={variant} maxCombos={maxCombos} />;
+}
+
+type InlineBindingTextProps = {
+  combos: KeyCombo[];
+  maxCombos?: number;
+  className?: string;
+  separatorClassName?: string;
+};
+
+function formatInlineBindingLabel(label: string) {
+  return label === "esc" ? "Esc" : label;
+}
+
+export function InlineBindingText({
+  combos,
+  maxCombos,
+  className,
+  separatorClassName,
+}: InlineBindingTextProps) {
+  const displayCombos = maxCombos ? combos.slice(0, maxCombos) : combos;
+  const labels = getCombosDisplay(displayCombos).map(formatInlineBindingLabel);
+
+  return (
+    <>
+      {labels.map((label, index) => (
+        <span key={`${label}-${index}`}>
+          {index > 0 ? <span className={separatorClassName}>or</span> : null}
+          <span className={className}>{label}</span>
+        </span>
+      ))}
+    </>
+  );
+}
+
+type ActionInlineBindingProps = {
+  actionId: ActionId;
+  maxCombos?: number;
+  className?: string;
+  separatorClassName?: string;
+};
+
+export function ActionInlineBinding({
+  actionId,
+  maxCombos,
+  className,
+  separatorClassName,
+}: ActionInlineBindingProps) {
+  const { getAction } = useKeybindings();
+  const action = getAction(actionId);
+
+  if (!action || action.combos.length === 0) {
+    return null;
+  }
+
+  return (
+    <InlineBindingText
+      combos={action.combos}
+      maxCombos={maxCombos}
+      className={className}
+      separatorClassName={separatorClassName}
+    />
+  );
 }
 
 type ActionLabelProps = {

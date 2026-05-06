@@ -10,13 +10,14 @@ export type CheatSheetEntryMap = {
   command: string;
   alias: string;
   aliases: string[];
-  example: string;
-  examples: string[];
+  commandExample: string;
+  commandExamples: string[];
   text: string;
   keys: string[];
   file: string;
   where: string;
   content: string;
+  contentExample: string;
   settings: string[];
 };
 

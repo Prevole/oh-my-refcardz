@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { registerHandler } from "./entry-registry";
+import { useShowCopyModal } from "../sheet-commands-shell";
+import { hasPlaceholders, formatDisplayValue } from "@/lib/placeholder-parser";
+import commandStyles from "../sheet-commands.module.css";
 import styles from "../cheatsheet-rendering.module.css";
+
+type CopyableContentBlockProps = {
+  value: string;
+  copyTitle: string;
+  example?: boolean;
+};
 
 function IconCopy() {
   return (
@@ -41,11 +50,30 @@ function IconCheck() {
   );
 }
 
-export function ContentEntry({ value }: { value: string }) {
+function CopyableContentBlock({ value, copyTitle, example = false }: CopyableContentBlockProps) {
   const [copied, setCopied] = useState(false);
+  const showCopyModal = useShowCopyModal();
+  const withPlaceholders = hasPlaceholders(value);
+  const displayValue = formatDisplayValue(value);
+
+  function handleSelect(e: React.MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-copy-button]")) return;
+
+    document.querySelectorAll<HTMLElement>("[data-copyable]").forEach((el) => {
+      el.dataset.navFocused = "false";
+    });
+    (e.currentTarget as HTMLElement).dataset.navFocused = "true";
+  }
 
   async function handleCopy(e: React.MouseEvent) {
     e.stopPropagation();
+
+    if (withPlaceholders) {
+      showCopyModal({ title: copyTitle, value, previewPrefix: "" });
+      return;
+    }
+
     await navigator.clipboard.writeText(value);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -54,10 +82,13 @@ export function ContentEntry({ value }: { value: string }) {
   return (
     <pre
       className={styles.configBlock}
+      data-content-example={example ? "true" : undefined}
       data-copyable={value}
+      data-copy-title={copyTitle}
       data-copied={copied ? "true" : undefined}
+      onClick={handleSelect}
     >
-      <code>{value}</code>
+      <code>{displayValue}</code>
       <button
         type="button"
         className={`${styles.configCopyButton} ${copied ? styles.configCopyButtonCopied : ""}`}
@@ -72,4 +103,19 @@ export function ContentEntry({ value }: { value: string }) {
   );
 }
 
+export function ContentEntry({ value }: { value: string }) {
+  return <CopyableContentBlock value={value} copyTitle="Copy Content" />;
+}
+
+export function ContentExampleEntry({ value }: { value: string }) {
+  return (
+    <>
+      <p className={commandStyles.commandBlockLabel}>Example</p>
+      <CopyableContentBlock value={value} copyTitle="Copy Content Example" example={true} />
+    </>
+  );
+}
+
 registerHandler("content", (value) => <ContentEntry value={value} />);
+
+registerHandler("contentExample", (value) => <ContentExampleEntry value={value} />);

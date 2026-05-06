@@ -1,6 +1,6 @@
-# Command Placeholders
+# Copy Placeholders
 
-Commands and examples in YAML cheatsheets can include placeholders that prompt users for input before copying.
+Commands, command examples, content blocks, and content examples in YAML cheatsheets can include placeholders that prompt users for input before copying.
 
 ## Syntax
 
@@ -52,6 +52,17 @@ Copy modal asks for: `count` (number input)
 
 Copy modal asks for both `commit1` and `commit2` in order.
 
+### Content block placeholder
+
+```yaml
+- entries:
+    - contentExample: |
+        [includeIf "gitdir:<repo-path>"]
+          path = <config-path>
+```
+
+Displays the block with `<repo-path>` and `<config-path>` visible, and prompts for both values before copying.
+
 ### Placeholder with colon in name
 
 Use the last colon as the type separator:
@@ -91,15 +102,15 @@ Only `count` prompts for input.
 1. **Display**: Placeholders show without the `:type` suffix
 2. **Click copy**: Opens modal if placeholders present, direct copy otherwise
 3. **Modal form**: Each placeholder gets an input field with appropriate type
-4. **Preview**: Shows the command with current values substituted
-5. **Empty values**: Kept as `<name>` in the copied command
+4. **Preview**: Shows the copied value with current values substituted
+5. **Empty values**: Kept as `<name>` in the copied output
 6. **Duplicates**: Same placeholder appearing twice shows one input field
 
 ## Implementation
 
 - Parser: `src/lib/placeholder-parser.ts`
 - Modal: `src/components/sheets/command-copy-modal.tsx`
-- Integration: `src/components/sheets/entry-renderers/command-entry.tsx`
+- Integration: `src/components/sheets/entry-renderers/command-entry.tsx`, `src/components/sheets/entry-renderers/content-entry.tsx`
 
 ### Parser API
 
