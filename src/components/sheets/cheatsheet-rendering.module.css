@@ -412,6 +412,12 @@
   padding: 0.75rem 1.25rem;
 }
 
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .cardFooter {
   padding: 0.625rem 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -656,12 +662,6 @@
   font-size: 0.72rem;
   font-weight: 600;
   color: rgba(237, 242, 244, 0.65);
-}
-
-.itemDivider {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  margin: 0.15rem 0;
 }
 
 .itemEntries {

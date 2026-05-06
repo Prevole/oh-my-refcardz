@@ -167,12 +167,11 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
                     activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
                     layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
                   >
-                    {card.items.map((item, itemIndex) => (
-                      <div key={itemIndex}>
-                        {itemIndex > 0 && <hr className={cheatsheetStyles.itemDivider} />}
-                        <SheetItem item={item} />
-                      </div>
-                    ))}
+                    <div className={cheatsheetStyles.itemList}>
+                      {card.items.map((item, itemIndex) => (
+                        <SheetItem key={itemIndex} item={item} />
+                      ))}
+                    </div>
                   </SheetCard>
                 );
               })}
