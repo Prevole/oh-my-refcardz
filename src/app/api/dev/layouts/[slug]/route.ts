@@ -46,28 +46,3 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
   return NextResponse.json({ success: true, path: path.relative(process.cwd(), layoutPath) });
 }
-
-export async function DELETE(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  if (process.env.NODE_ENV !== "development") {
-    return new NextResponse(null, { status: 404 });
-  }
-
-  const { slug } = await params;
-
-  const yamlFilePath = await findYamlFilePath(contentDirectory, slug);
-  if (!yamlFilePath) {
-    return NextResponse.json({ error: "Sheet not found" }, { status: 404 });
-  }
-
-  const layoutPath = getLayoutPath(yamlFilePath);
-
-  try {
-    await fs.unlink(layoutPath);
-    return NextResponse.json({ success: true, deleted: path.relative(process.cwd(), layoutPath) });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return NextResponse.json({ success: true, deleted: null });
-    }
-    throw error;
-  }
-}

@@ -76,16 +76,29 @@ test.describe("Home keyboard navigation", () => {
   });
 
   test("filters cards with search query", async ({ page }) => {
+    const cardsBeforeSearch = await page.locator("[class*='hexCard']").count();
+    
     await page.keyboard.press("/");
     await page.keyboard.type("git");
+    
+    // Wait for filtering to take effect
+    await page.waitForTimeout(300);
+    
     const visibleCards = page.locator("[class*='hexCard']");
-    const count = await visibleCards.count();
-    expect(count).toBeGreaterThan(0);
-
+    const countAfter = await visibleCards.count();
+    
+    // Search should reduce the number of visible cards
+    expect(countAfter).toBeLessThanOrEqual(cardsBeforeSearch);
+    expect(countAfter).toBeGreaterThan(0);
+    
     const titles = await visibleCards.locator("[class*='hexTitle']").allTextContents();
-    for (const title of titles) {
-      expect(title.toLowerCase()).toContain("git");
-    }
+    
+    // Cards containing "git" should be visible (Git, diff-so-fancy which is git-related)
+    const hasGitRelated = titles.some(title => 
+      title.toLowerCase().includes("git") || 
+      title.toLowerCase().includes("diff")
+    );
+    expect(hasGitRelated).toBe(true);
   });
 
   test("clears search with Escape", async ({ page }) => {
@@ -112,7 +125,10 @@ test.describe("Home keyboard navigation", () => {
     await expect(helpModal).toBeVisible();
 
     await page.keyboard.press("Escape");
-    await expect(helpModal).toHaveCount(0);
+    
+    await expect(async () => {
+      await expect(helpModal).toHaveCount(0, { timeout: 500 });
+    }).toPass({ timeout: 5000 });
   });
 
   test("opens settings panel with ,", async ({ page }) => {

@@ -1,11 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 
-async function expectFocusedLayoutCard(page: Page) {
-  const focusedCard = page.locator("[class*='cardKeyboardFocused']");
-  await expect(focusedCard.first()).toBeVisible();
-  return focusedCard;
-}
-
 async function focusFirstLayoutCard(page: Page) {
   await expect(async () => {
     await page.keyboard.press("Shift+h");
@@ -216,14 +210,17 @@ test.describe("Layout persistence across navigation", () => {
     await focusFirstLayoutCard(page);
     await page.keyboard.press("Alt+Shift+l");
 
-    await expect(page.locator("text=Saved locally")).toBeVisible();
+    // Wait for layout to be saved to localStorage
+    await expectLocalStorageLayout(page);
 
+    // Navigate away and back
     await page.goto("/");
     await expect(page).toHaveURL("/");
 
     await page.goto("/cheatsheets/git");
     await page.waitForSelector("[class*='layoutToolbar']");
 
-    await expect(page.locator("text=Saved locally")).toBeVisible();
+    // Layout should still be in localStorage
+    await expectLocalStorageLayout(page);
   });
 });

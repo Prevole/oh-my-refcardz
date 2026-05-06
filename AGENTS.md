@@ -18,6 +18,10 @@ When the user asks a question:
 
 This applies to questions like "how do I...", "can we...", "is it possible to...", "what about...". Direct instructions like "add X" or "fix Y" can proceed without waiting.
 
+## Git Policy
+
+Never perform write operations on git. The user handles all commits, pushes, merges, rebases, and other git write operations. Read-only git commands (status, diff, log, show, branch -l, etc.) are allowed.
+
 ## Product Constraints
 
 - Desktop and laptop only.

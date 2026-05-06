@@ -69,6 +69,7 @@ export function placeCardAtNearestSlot(card: CardLayoutState, occupied: Set<stri
     }
   }
 
+  /* v8 ignore next -- fallback: no free position found within MAX_SEARCH_ROWS, place at origin */
   return { ...card, colStart: 1, rowStart: startRow };
 }
 

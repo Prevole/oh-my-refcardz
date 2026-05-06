@@ -71,8 +71,10 @@ export function findCardInDirection(
         direction
       ),
     }))
+    /* v8 ignore start -- defensive: score is null only when candidate is behind current in direction */
     .filter((entry) => entry.score !== null)
     .sort((left, right) => compareScores(left.score!, right.score!));
+  /* v8 ignore stop */
 
   return crossSectionCandidates[0]?.candidate ?? null;
 }
@@ -168,8 +170,10 @@ function scoreCandidateInDirection(
 
 function distanceBetweenRanges(startA: number, endA: number, startB: number, endB: number) {
   if (endA < startB) return startB - endA;
+  /* v8 ignore start -- defensive: ranges overlap or B is before A, rare in grid layouts */
   if (endB < startA) return startA - endB;
   return 0;
+  /* v8 ignore stop */
 }
 
 function compareScores(

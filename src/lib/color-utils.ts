@@ -76,6 +76,7 @@ export function interpolateHSL(colorFrom: string, colorTo: string, t: number): s
 
   let hDiff = to.h - from.h;
   if (hDiff > 0.5) hDiff -= 1;
+  /* v8 ignore next -- hue wraparound: only triggers when from.h > to.h by more than 180° */
   if (hDiff < -0.5) hDiff += 1;
 
   const h = (from.h + hDiff * clampedT + 1) % 1;

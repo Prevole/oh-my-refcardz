@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { syncLayoutToDev, deleteLayoutFromDev } from "./dev-layout-sync";
+import { syncLayoutToDev } from "./dev-layout-sync";
 import type { SectionLayoutState } from "@/components/sheets/layout/layout-types";
 
 const mockFetch = vi.fn();
@@ -101,60 +101,6 @@ describe("syncLayoutToDev", () => {
 
     expect(consoleWarn).toHaveBeenCalledWith(
       "[dev] Failed to sync layout for git:",
-      expect.any(Error)
-    );
-
-    consoleWarn.mockRestore();
-  });
-});
-
-describe("deleteLayoutFromDev", () => {
-  it("sends DELETE request immediately (no debounce)", () => {
-    deleteLayoutFromDev("git");
-
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith("/api/dev/layouts/git", {
-      method: "DELETE",
-    });
-  });
-
-  it("cancels pending sync for the same slug", () => {
-    syncLayoutToDev("git", sampleLayout);
-    vi.advanceTimersByTime(500);
-
-    deleteLayoutFromDev("git");
-
-    vi.advanceTimersByTime(1000);
-
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith("/api/dev/layouts/git", {
-      method: "DELETE",
-    });
-  });
-
-  it("does not cancel pending sync for different slug", () => {
-    syncLayoutToDev("docker", sampleLayout);
-    vi.advanceTimersByTime(500);
-
-    deleteLayoutFromDev("git");
-
-    vi.advanceTimersByTime(500);
-
-    expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(mockFetch).toHaveBeenCalledWith("/api/dev/layouts/git", { method: "DELETE" });
-    expect(mockFetch).toHaveBeenCalledWith("/api/dev/layouts/docker", expect.objectContaining({ method: "POST" }));
-  });
-
-  it("does not throw when fetch fails", async () => {
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error("Network error"));
-
-    deleteLayoutFromDev("git");
-
-    await vi.runAllTimersAsync();
-
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "[dev] Failed to delete layout for git:",
       expect.any(Error)
     );
 

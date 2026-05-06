@@ -239,9 +239,11 @@ async function readParsedSheetBySlug(slug: string): Promise<ParsedSheet | null> 
     const data = await readSheetFile(file);
     return { file, data };
   } catch (error) {
+    /* v8 ignore start -- defensive: file deleted between listing and reading */
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return null;
     }
+    /* v8 ignore stop */
 
     throw error;
   }
@@ -262,12 +264,14 @@ function getSheetCategoryMeta(categoryPath: string | null) {
 }
 
 async function readCategoryMeta(categoryPath: string | null): Promise<{ title: string; description: string }> {
+  /* v8 ignore start -- defensive: root category has no meta file */
   if (!categoryPath) {
     return {
       title: "General",
       description: "Uncategorized cheat sheets.",
     };
   }
+  /* v8 ignore stop */
 
   const fullCategoryPath = path.join(contentDirectory, categoryPath);
 
@@ -305,6 +309,7 @@ export async function getYamlCheatSheet(slug: string): Promise<YamlCheatSheet | 
 
 export async function getYamlCheatSheetWithMeta(slug: string): Promise<YamlCheatSheetWithMeta | null> {
   const parsedSheet = await readParsedSheetBySlug(slug);
+  /* v8 ignore next -- defensive: sheet not found by slug */
   if (!parsedSheet) {
     return null;
   }

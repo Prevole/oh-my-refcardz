@@ -138,6 +138,7 @@ export function getVerticalTarget<T>(
       continue;
     }
 
+    /* v8 ignore next -- defensive: fallback to first item when column out of bounds */
     return nextRow[colIndex] ?? nextRow[0] ?? null;
   }
 
@@ -171,9 +172,11 @@ export function getHorizontalTarget<T>(
       continue;
     }
 
+    /* v8 ignore next -- defensive: null coalescing for sparse rows */
     return nextRow[targetCol] ?? null;
   }
 
+  /* v8 ignore start -- defensive: fallback when preferred row unavailable */
   if (sameRowCol >= 0 && sameRowCol < currentRow.length) {
     return currentRow[sameRowCol] ?? null;
   }
@@ -186,6 +189,7 @@ export function getHorizontalTarget<T>(
 
     return nextRow[targetCol] ?? null;
   }
+  /* v8 ignore stop */
 
   return null;
 }

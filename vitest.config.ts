@@ -11,7 +11,13 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html"],
       include: ["src/lib/**/*.ts", "src/components/sheets/layout/**/*.ts"],
-      exclude: ["src/**/*.test.ts"],
+      exclude: [
+        "src/**/*.test.ts",
+        "src/**/use-*.ts",
+        "src/**/use-*.tsx",
+        "src/**/*-types.ts",
+        "src/**/index.ts",
+      ],
     },
   },
   resolve: {

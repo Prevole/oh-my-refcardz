@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
-import { syncLayoutToDev, deleteLayoutFromDev } from "@/lib/dev-layout-sync";
+import { syncLayoutToDev } from "@/lib/dev-layout-sync";
 import { buildDefaultSectionLayouts } from "./layout-inference";
 import type { SectionLayoutState } from "./layout-types";
 import {
@@ -82,10 +82,6 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
 
     window.localStorage.removeItem(buildStorageKey(sheetSlug));
     setSectionLayouts(defaultSectionLayouts);
-
-    if (process.env.NODE_ENV === "development") {
-      deleteLayoutFromDev(sheetSlug);
-    }
   }
 
   return {

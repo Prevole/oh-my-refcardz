@@ -21,17 +21,3 @@ export function syncLayoutToDev(slug: string, layouts: SectionLayoutState[]): vo
 
   pendingTimers.set(slug, timer);
 }
-
-export function deleteLayoutFromDev(slug: string): void {
-  const existing = pendingTimers.get(slug);
-  if (existing) {
-    clearTimeout(existing);
-    pendingTimers.delete(slug);
-  }
-
-  fetch(`/api/dev/layouts/${encodeURIComponent(slug)}`, {
-    method: "DELETE",
-  }).catch((err) => {
-    console.warn(`[dev] Failed to delete layout for ${slug}:`, err);
-  });
-}
