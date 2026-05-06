@@ -71,6 +71,7 @@ const entrySchema = z.union([
 
 const itemSchema = z.object({
   entries: z.array(entrySchema).min(1),
+  detailedEntries: z.array(entrySchema).optional(),
 });
 
 const cardSchema = z.object({

@@ -17,7 +17,8 @@ sections:
                   - sta
                   - stat
               - command: git status
-              - text: Show the current branch state together with staged changes,
+              - text:
+                  Show the current branch state together with staged changes,
                   unstaged edits, and untracked files before taking action.
 
       - title: Diff
@@ -27,16 +28,31 @@ sections:
               - aliases:
                   - d
               - command: git diff
-              - text: Review unstaged changes in the working tree before deciding what to
+              - text:
+                  Review unstaged changes in the working tree before deciding what to
                   stage.
+            detailedEntries:
+              - text:
+                  Shows line-by-line differences between the working directory and
+                  the staging area. Without arguments, compares all modified files.
+                  Add a path to focus on specific files or directories.
+              - example: git diff src/components/
+              - example: git diff src/lib/utils.ts
 
           - entries:
               - title: Cached Diff
               - aliases:
                   - dc
               - command: git diff --cached
-              - text: Review the exact staged diff that will be included in the next
+              - text:
+                  Review the exact staged diff that will be included in the next
                   commit.
+            detailedEntries:
+              - text:
+                  Use this to double-check what will be committed before running
+                  git commit. Add a path to inspect only specific staged files.
+              - example: git diff --cached src/app/
+              - example: git diff --cached package.json
 
   - title: Branching and Commits
     cards:
@@ -46,17 +62,27 @@ sections:
               - title: Checkout
               - aliases:
                   - co
-              - command: git checkout
-              - text: Short alias for the older `checkout` workflow, useful on setups
+              - command: git checkout <branch name>
+              - example: git checkout feat/branch
+              - text:
+                  Short alias for the older `checkout` workflow, useful on setups
                   that still rely on it for branch switching or file restore
                   operations.
+            detailedEntries:
+              - text: Use -b to create and switch to a new branch in one command.
+              - command: git checkout -b <branch name>
+              - example: git checkout -b feat/branch
+              - text: Switch branches or restore files.
+              - command: git checkout -- <path to file>
+              - example: git checkout -- src/file.ts
 
           - entries:
               - title: Branch
               - aliases:
                   - b
               - command: git branch
-              - text: Short alias for listing, creating, or deleting branches depending
+              - text:
+                  Short alias for listing, creating, or deleting branches depending
                   on the flags you add.
 
       - title: Stage and Commit
@@ -74,7 +100,8 @@ sections:
               - aliases:
                   - ci
               - command: git commit -m
-              - text: Create a commit with a message passed directly on the command line
+              - text:
+                  Create a commit with a message passed directly on the command line
                   for quick save points.
 
           - entries:
@@ -82,8 +109,18 @@ sections:
               - aliases:
                   - ca
               - command: git commit --amend
-              - text: Rewrite the most recent commit to adjust its message or include
+              - text:
+                  Rewrite the most recent commit to adjust its message or include
                   newly staged changes.
+            detailedEntries:
+              - text: Keep the existing message but include newly staged changes.
+              - command: git commit --amend --no-edit
+              - text: Replace the commit message entirely.
+              - command: 'git commit --amend -m "<message>"'
+              - example: 'git commit --amend -m "fix: correct typo"'
+              - text: Change the author of the commit (useful after misconfigured identity).
+              - command: 'git commit --amend --author="<Name> <<email>>"'
+              - example: 'git commit --amend --author="John Doe <john@example.com>"'
 
   - title: History and Inspection
     cards:
@@ -93,18 +130,29 @@ sections:
               - title: Graph Log
               - aliases:
                   - g
-              - command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
+              - command:
+                  "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
                   %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
-              - text: Show a compact branch graph with decoration, relative dates, and
+              - text:
+                  Show a compact branch graph with decoration, relative dates, and
                   author names for recent history inspection.
+            detailedEntries:
+              - text: Limit output to a specific branch.
+              - command: git g <branch>
+              - example: git g main
+              - text: Show the last n commits from HEAD.
+              - command: git g HEAD~<n:int>
+              - example: git g HEAD~10
 
           - entries:
               - title: Graph Log All
               - aliases:
                   - ga
-              - command: "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
+              - command:
+                  "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset
                   %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all"
-              - text: Extend the same graph view to every local and remote ref so
+              - text:
+                  Extend the same graph view to every local and remote ref so
                   diverging branches are easier to spot.
 
           - entries:
@@ -112,8 +160,16 @@ sections:
               - aliases:
                   - graph
               - command: git log --oneline --graph --decorate --all
-              - text: Use a simpler one-line graph when you want an overview of all
+              - text:
+                  Use a simpler one-line graph when you want an overview of all
                   branches without the custom pretty format.
+            detailedEntries:
+              - text: Compare two branches side by side.
+              - command: git graph <branch1> <branch2>
+              - example: git graph main develop
+              - text: Show commits on current branch not yet pushed to remote.
+              - command: git graph <remote>/<branch>..HEAD
+              - example: git graph origin/main..HEAD
 
       - title: Config
         items:
@@ -123,14 +179,15 @@ sections:
                   - info
                   - i
               - command: cat .git/config
-              - text: Print the repository-local config file exactly as stored on disk,
+              - text:
+                  Print the repository-local config file exactly as stored on disk,
                   which is handy when checking remotes or branch tracking.
 
           - entries:
               - title: Edit Local Git Config
               - aliases:
                   - ei
-              - command: '!$EDITOR .git/config'
+              - command: "!$EDITOR .git/config"
               - text: Open `.git/config` in the current editor to tweak
                   repository-specific settings directly.
 
@@ -143,7 +200,8 @@ sections:
               - aliases:
                   - fp
               - command: git push -u origin HEAD
-              - text: Push the current branch to `origin` and create upstream tracking in
+              - text:
+                  Push the current branch to `origin` and create upstream tracking in
                   one step, especially useful for a first push.
 
           - entries:
@@ -151,7 +209,8 @@ sections:
               - aliases:
                   - pf
               - command: git push --force-with-lease
-              - text: Force-push more safely by refusing to overwrite remote work you
+              - text:
+                  Force-push more safely by refusing to overwrite remote work you
                   have not fetched yet.
 
           - entries:
@@ -159,7 +218,8 @@ sections:
               - aliases:
                   - pull
               - command: git pull --rebase
-              - text: Update from the remote while replaying local commits on top,
+              - text:
+                  Update from the remote while replaying local commits on top,
                   keeping history linear.
 
       - title: Merged Branch Cleanup
@@ -168,18 +228,22 @@ sections:
               - title: List Cleanable Branches
               - aliases:
                   - lcb
-              - command: '!f() { git fetch --prune && git branch --merged | grep -Ev
+              - command:
+                  '!f() { git fetch --prune && git branch --merged | grep -Ev
                   "(^\\*|master|main|dev)"; }; f'
-              - text: Fetch and prune first, then list merged local branches while
+              - text:
+                  Fetch and prune first, then list merged local branches while
                   excluding the current branch and a few protected names.
 
           - entries:
               - title: Delete Cleanable Branches
               - aliases:
                   - cb
-              - command: '!f() { git fetch --prune && git branch --merged | grep -Ev
+              - command:
+                  '!f() { git fetch --prune && git branch --merged | grep -Ev
                   "(^\\*|master|main|dev)" | xargs git branch -d; }; f'
-              - text: Delete the merged branches returned by the previous helper, keeping
+              - text:
+                  Delete the merged branches returned by the previous helper, keeping
                   the protected branch names untouched.
 
   - title: Configuration
@@ -189,14 +253,16 @@ sections:
           - entries:
               - title: Show config with origins
               - command: git config --list --show-origin
-              - text: Print the effective Git configuration together with the source file
+              - text:
+                  Print the effective Git configuration together with the source file
                   for each value, which is useful for understanding layered config
                   overrides.
 
           - entries:
               - title: Show local config only
               - command: git config --list --show-origin --local
-              - text: Restrict config inspection to `.git/config`, which helps isolate
+              - text:
+                  Restrict config inspection to `.git/config`, which helps isolate
                   repository-only overrides from global and included files.
 
       - title: Diff Pager
@@ -204,12 +270,14 @@ sections:
           - entries:
               - title: Use diff-so-fancy as core pager
               - file: ~/.gitconfig
-              - text: Let Git send diff-like output through `diff-so-fancy` before opening
+              - text:
+                  Let Git send diff-like output through `diff-so-fancy` before opening
                   `less`.
               - content: |-
                   [core]
                     pager = diff-so-fancy | less --tabs=4 -RFX
-              - text: Makes regular `git diff`, `git show`, and related commands use the
+              - text:
+                  Makes regular `git diff`, `git show`, and related commands use the
                   prettier pager by default.
 
           - entries:
@@ -226,7 +294,8 @@ sections:
                     old = red bold
                     new = green bold
                     whitespace = red reverse
-              - text: Keeps filenames, hunk headers, and inserted or removed lines easy
+              - text:
+                  Keeps filenames, hunk headers, and inserted or removed lines easy
                   to distinguish in the formatted output.
 
       - title: Conditional Includes
@@ -234,12 +303,14 @@ sections:
           - entries:
               - title: Path-based include with `includeIf`
               - file: ~/.gitconfig
-              - text: Use `includeIf` to load an extra config file only when Git is running
+              - text:
+                  Use `includeIf` to load an extra config file only when Git is running
                   inside repositories under a specific parent path.
               - content: |-
                   [includeIf "gitdir:~/path/to/repos/"]
                     path = ~/.config/git/specific.inc
-              - text: Add this block to `~/.gitconfig`, replace the parent path and
+              - text:
+                  Add this block to `~/.gitconfig`, replace the parent path and
                   included file with your own values, then keep repository-specific
                   identity or signing rules in the included file.
 
@@ -248,7 +319,8 @@ sections:
           - entries:
               - title: Author identity
               - file: ~/.gitconfig
-              - text: Basic identity settings can live directly in your main Git config or in
+              - text:
+                  Basic identity settings can live directly in your main Git config or in
                   an included profile.
               - content: |-
                   [user]
@@ -260,7 +332,8 @@ sections:
           - entries:
               - title: SSH signing with 1Password
               - file: ~/.gitconfig
-              - text: Use Git's SSH signing mode when you want commit signing without a
+              - text:
+                  Use Git's SSH signing mode when you want commit signing without a
                   classic GPG keypair.
               - content: |-
                   [gpg]
@@ -276,14 +349,16 @@ sections:
           - entries:
               - title: GitHub and credential helper
               - file: ~/.gitconfig
-              - text: These options support authentication-related workflows outside of
+              - text:
+                  These options support authentication-related workflows outside of
                   commit authoring itself.
               - content: |-
                   [github]
                     user = "alex-example"
                   [credential]
                     helper = osxkeychain
-              - text: Stores a default GitHub username for CLI integrations and uses the
+              - text:
+                  Stores a default GitHub username for CLI integrations and uses the
                   macOS keychain to cache and retrieve Git credentials.
 
       - title: Aliases
@@ -306,41 +381,47 @@ sections:
           - entries:
               - title: Output and history
               - file: ~/.gitconfig
-              - text: Small global defaults can improve day-to-day readability without
+              - text:
+                  Small global defaults can improve day-to-day readability without
                   changing repository data.
               - content: |-
                   [color]
                     ui = true
                   [branch]
                     sort = -committerdate
-              - text: Enables colored output and sorts local branches by most recent
+              - text:
+                  Enables colored output and sorts local branches by most recent
                   commit activity, which makes branch listings easier to scan.
 
           - entries:
               - title: Sync and pull behavior
               - file: ~/.gitconfig
-              - text: These defaults shape how Git updates your local repository when
+              - text:
+                  These defaults shape how Git updates your local repository when
                   fetching or pulling.
               - content: |-
                   [fetch]
                     prune = true
                   [pull]
                     rebase = true
-              - text: Automatically removes stale remote-tracking refs on fetch and
+              - text:
+                  Automatically removes stale remote-tracking refs on fetch and
                   rebases by default on pull to keep history cleaner and more
                   linear.
 
           - entries:
               - title: Diff and conflict reuse
               - file: ~/.gitconfig
-              - text: Diff and merge settings can reduce friction when reviewing changes or
+              - text:
+                  Diff and merge settings can reduce friction when reviewing changes or
                   resolving repeat conflicts.
               - content: |-
                   [diff]
                     algorithm = histogram
                   [rerere]
                     enabled = true
-              - text: Uses the histogram diff algorithm for more readable diffs and
+              - text:
+                  Uses the histogram diff algorithm for more readable diffs and
                   enables `rerere` so Git can remember and reuse previous conflict
                   resolutions.
 

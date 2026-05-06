@@ -135,3 +135,31 @@ This project uses Zod v4, not v3. Use `.error.issues` (not `.error.errors`) on `
 - Node.js 20.9+ required (v18 not supported by Next.js 16).
 - No `.env` needed — no environment variables in use.
 - `next-env.d.ts` is auto-generated — do not edit.
+
+## Documentation
+
+Documentation lives in `docs/`. After making code changes, review documentation for necessary updates.
+
+### Documentation review checklist
+
+| Changed area | Check these docs |
+|--------------|------------------|
+| YAML schema (`yaml-cheatsheets.ts`) | `docs/cheatsheet-schema.md` |
+| Entry renderers (`entry-renderers/`) | `docs/entry-renderers.md` |
+| Placeholder system | `docs/placeholders.md` |
+| New feature or component | Consider if new doc needed |
+
+### When reviewing docs, check for:
+
+1. **Accuracy**: Does the doc reflect current behavior? Update outdated examples.
+2. **Completeness**: Are all options/types documented? Add missing ones.
+3. **Architecture**: Does the doc explain the "why", not just the "what"?
+4. **Examples**: Are examples realistic and copy-pasteable?
+5. **Cross-references**: Do related docs link to each other?
+
+### After significant changes
+
+Run a quick audit:
+- List files in `docs/` and scan for stale content
+- Check if new concepts need dedicated documentation
+- Verify code examples still work

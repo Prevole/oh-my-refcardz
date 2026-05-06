@@ -4,38 +4,28 @@ import {
   inferCardRowSpan,
   buildDefaultSectionLayouts,
 } from "./layout-inference";
-import type { CheatSheetCard, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetCard, CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 
-function createCard(itemCount: number, types: Array<"command" | "shortcut" | "config" | "app settings"> = []): CheatSheetCard {
-  const items = [];
+type ItemType = "command" | "shortcut" | "content" | "settings";
+
+function createItem(type: ItemType): CheatSheetItem {
+  switch (type) {
+    case "command":
+      return { entries: [{ command: "git status" }] };
+    case "shortcut":
+      return { entries: [{ keys: ["Ctrl", "A"] }] };
+    case "content":
+      return { entries: [{ content: "key = value" }] };
+    case "settings":
+      return { entries: [{ settings: ["Feature = enabled"] }] };
+  }
+}
+
+function createCard(itemCount: number, types: ItemType[] = []): CheatSheetCard {
+  const items: CheatSheetItem[] = [];
   for (let i = 0; i < itemCount; i++) {
     const type = types[i] || "command";
-    if (type === "command") {
-      items.push({
-        type: "command" as const,
-        title: `Command ${i}`,
-        command: `cmd-${i}`,
-      });
-    } else if (type === "shortcut") {
-      items.push({
-        type: "shortcut" as const,
-        keys: ["Ctrl", "A"],
-        description: `Shortcut ${i}`,
-      });
-    } else if (type === "config") {
-      items.push({
-        type: "config" as const,
-        title: `Config ${i}`,
-        file: "~/.config",
-        content: "key = value",
-      });
-    } else if (type === "app settings") {
-      items.push({
-        type: "app settings" as const,
-        title: `App Settings ${i}`,
-        entries: [{ where: "Settings > Developer", settings: ["Feature = enabled"] }],
-      });
-    }
+    items.push(createItem(type));
   }
   return { title: "Test Card", items };
 }
@@ -68,14 +58,14 @@ describe("inferCardColSpan", () => {
     expect(inferCardColSpan(createCard(10))).toBe(8);
   });
 
-  it("returns 8 for card with config item regardless of count", () => {
-    expect(inferCardColSpan(createCard(1, ["config"]))).toBe(8);
-    expect(inferCardColSpan(createCard(2, ["command", "config"]))).toBe(8);
+  it("returns 8 for card with content item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["content"]))).toBe(8);
+    expect(inferCardColSpan(createCard(2, ["command", "content"]))).toBe(8);
   });
 
-  it("returns 8 for card with app settings item regardless of count", () => {
-    expect(inferCardColSpan(createCard(1, ["app settings"]))).toBe(8);
-    expect(inferCardColSpan(createCard(2, ["command", "app settings"]))).toBe(8);
+  it("returns 8 for card with settings item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["settings"]))).toBe(8);
+    expect(inferCardColSpan(createCard(2, ["command", "settings"]))).toBe(8);
   });
 });
 
@@ -100,14 +90,14 @@ describe("inferCardRowSpan", () => {
     expect(inferCardRowSpan(createCard(10))).toBe(8);
   });
 
-  it("returns 8 for card with config item regardless of count", () => {
-    expect(inferCardRowSpan(createCard(1, ["config"]))).toBe(8);
-    expect(inferCardRowSpan(createCard(2, ["command", "config"]))).toBe(8);
+  it("returns 8 for card with content item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["content"]))).toBe(8);
+    expect(inferCardRowSpan(createCard(2, ["command", "content"]))).toBe(8);
   });
 
-  it("returns 8 for card with app settings item regardless of count", () => {
-    expect(inferCardRowSpan(createCard(1, ["app settings"]))).toBe(8);
-    expect(inferCardRowSpan(createCard(2, ["command", "app settings"]))).toBe(8);
+  it("returns 8 for card with settings item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["settings"]))).toBe(8);
+    expect(inferCardRowSpan(createCard(2, ["command", "settings"]))).toBe(8);
   });
 });
 
@@ -160,7 +150,7 @@ describe("buildDefaultSectionLayouts", () => {
 
   it("wraps cards to next row when row is full", () => {
     const sheet = createSheet([
-      { cards: [createCard(5), createCard(5)] }, // Both have colSpan 8
+      { cards: [createCard(5), createCard(5)] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
     expect(result[0].cards[0].colStart).toBe(1);
@@ -169,9 +159,9 @@ describe("buildDefaultSectionLayouts", () => {
     expect(result[0].cards[1].rowStart).toBeGreaterThan(1);
   });
 
-  it("handles config cards with larger dimensions", () => {
+  it("handles content cards with larger dimensions", () => {
     const sheet = createSheet([
-      { cards: [createCard(1, ["config"])] },
+      { cards: [createCard(1, ["content"])] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
     expect(result[0].cards[0].colSpan).toBe(8);

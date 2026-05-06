@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
+import { ItemActions } from "@/components/sheets/item-actions";
+import { useShowDetail } from "@/components/sheets/sheet-commands-shell";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
 import type { CheatSheetItem, YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import {
@@ -184,15 +186,52 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 }
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const showDetail = useShowDetail();
+
   const hasAliases = item.entries.some(
     (entry) => "alias" in entry || "aliases" in entry
   );
+  const hasDetailedEntries = item.detailedEntries && item.detailedEntries.length > 0;
+
+  function handleClick(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest("[data-item-actions]")) return;
+
+    document.querySelectorAll<HTMLElement>("[data-nav-focused]").forEach((el) => {
+      el.dataset.navFocused = "false";
+    });
+    if (ref.current) {
+      ref.current.dataset.navFocused = "true";
+    }
+  }
+
+  function handleShowDetail() {
+    if (!hasDetailedEntries) return;
+
+    const titleEntry = item.entries.find((entry) => "title" in entry);
+    const title = titleEntry && "title" in titleEntry ? titleEntry.title : "Details";
+
+    showDetail({ title, detailedEntries: item.detailedEntries! });
+  }
 
   return (
-    <div className={cheatsheetStyles.itemEntries}>
-      {item.entries.map((entry, index) => (
-        <EntryRenderer key={index} entry={entry} hasAliases={hasAliases} />
-      ))}
+    <div
+      ref={ref}
+      className={cheatsheetStyles.itemEntries}
+      data-nav-focused="false"
+      onClick={handleClick}
+    >
+      <div className={cheatsheetStyles.itemEntriesHeader}>
+        {item.entries.map((entry, index) => (
+          <EntryRenderer key={index} entry={entry} hasAliases={hasAliases} />
+        ))}
+        {hasDetailedEntries && (
+          <ItemActions
+            hasExample={true}
+            onShowExample={handleShowDetail}
+          />
+        )}
+      </div>
     </div>
   );
 }

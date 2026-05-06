@@ -94,15 +94,65 @@
 }
 
 .commandTerminal {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
   margin: 0.35rem 0 0;
   border-radius: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: linear-gradient(180deg, rgba(10, 16, 28, 0.86), rgba(7, 12, 22, 0.92));
-  padding: 0.35rem 0.55rem;
+  padding: 0.4rem 0.4rem 0.4rem 0.55rem;
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.86rem;
   font-weight: 500;
+  line-height: 1.4;
   color: #8ef6d8;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.terminalText {
+  flex: 1;
+  min-width: 0;
+  padding-left: 2.5em;
+  text-indent: -2.5em;
+  word-break: break-word;
+}
+
+.terminalCopyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: transparent;
+  color: rgba(237, 242, 244, 0.3);
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: color 0.12s ease, background 0.12s ease;
+  flex-shrink: 0;
+  align-self: center;
+  opacity: 0;
+}
+
+.commandTerminal:hover .terminalCopyButton {
+  opacity: 1;
+  color: rgba(237, 242, 244, 0.6);
+}
+
+.terminalCopyButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(237, 242, 244, 0.95);
+}
+
+.terminalCopyButtonCopied {
+  opacity: 1;
+  color: #22c55e;
+}
+
+.terminalCopyButtonCopied:hover {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
 }
 
 .commandAliasTerminal {
@@ -116,6 +166,22 @@
   font-weight: 700;
 }
 
+.commandExampleTerminal {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(180deg, rgba(10, 16, 28, 0.5), rgba(7, 12, 22, 0.55));
+  color: rgba(142, 246, 216, 0.7);
+}
+
+.commandTerminal[data-copied="true"],
+.commandAliasTerminal[data-copied="true"],
+.commandExampleTerminal[data-copied="true"] {
+  border-color: #22c55e;
+  border-style: solid;
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  color: #86efac;
+}
+
 .commandBlockLabel {
   margin: 0.35rem 0 0;
   font-family: var(--font-space-grotesk), sans-serif;
@@ -127,7 +193,8 @@
 }
 
 .commandBlockLabel + .commandTerminal,
-.commandBlockLabel + .commandAliasTerminal {
+.commandBlockLabel + .commandAliasTerminal,
+.commandBlockLabel + .commandExampleTerminal {
   margin-top: 0;
 }
 
@@ -153,12 +220,14 @@
 .modal {
   position: relative;
   width: 100%;
-  max-width: 36rem;
+  max-width: 44rem;
   border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid color-mix(in srgb, var(--sheet-accent, var(--accent)) 35%, transparent);
   background: rgba(17, 32, 58, 0.98);
   padding: 1.5rem;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  box-shadow: 
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 10%, transparent);
   color: rgba(237, 242, 244, 0.92);
 }
 
@@ -172,11 +241,11 @@
 }
 
 .modalTitle {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 1.15rem;
   font-weight: 600;
-  color: rgba(237, 242, 244, 0.97);
+  color: var(--sheet-accent, var(--accent));
 }
 
 .modalSection {
@@ -195,6 +264,33 @@
 
 .modalExample {
   color: #ffd47f;
+}
+
+.modalEntries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.modalFooter {
+  margin: 1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.modalFooterBinding {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  color: #f8c94a;
+  font-family: var(--font-jetbrains-mono), monospace;
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: rgba(248, 201, 74, 0.55);
+  text-underline-offset: 0.22rem;
 }
 
 .modalCloseButton {

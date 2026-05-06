@@ -3,7 +3,7 @@ import styles from "../cheatsheet-rendering.module.css";
 
 export function ContentEntry({ value }: { value: string }) {
   return (
-    <pre className={styles.configBlock}>
+    <pre className={styles.configBlock} data-copyable={value}>
       <code>{value}</code>
     </pre>
   );

@@ -1,8 +1,13 @@
 import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
 import { renderEntry, type EntryContext } from "./entry-registry";
 
-const handlersContext = require.context("./", false, /-entry\.tsx$/);
-handlersContext.keys().forEach((key: string) => handlersContext(key));
+import "./command-entry";
+import "./content-entry";
+import "./keys-entry";
+import "./path-entry";
+import "./settings-entry";
+import "./text-entry";
+import "./title-entry";
 
 type EntryRendererProps = {
   entry: CheatSheetEntry;
