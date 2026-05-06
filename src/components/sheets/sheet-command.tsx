@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import { CommandExampleModal } from "@/components/sheets/command-example-modal";
-import { CommandCopyModal } from "@/components/sheets/command-copy-modal";
-import { useKeybindings } from "@/hooks/use-keybindings";
-import { ACTION_IDS } from "@/lib/keybindings";
+// TODO: Re-enable after entry-based copy is implemented
+// import { CommandCopyModal } from "@/components/sheets/command-copy-modal";
+// import { useKeybindings } from "@/hooks/use-keybindings";
+// import { ACTION_IDS } from "@/lib/keybindings";
 import { renderInlineCode } from "./render-inline-code";
 import sheetCommandStyles from "./sheet-commands.module.css";
 
@@ -15,13 +16,6 @@ type SheetCommandProps = {
   description?: string;
   example?: string;
 };
-
-function parsePlaceholders(command: string | undefined): string[] {
-  if (!command) return [];
-  const matches = [...command.matchAll(/<([^>]+)>/g)];
-  const unique = [...new Set(matches.map((m) => m[1]))];
-  return unique;
-}
 
 function IconInfo() {
   return (
@@ -43,72 +37,20 @@ function IconInfo() {
   );
 }
 
-function IconCopy() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
+// TODO: Re-enable after entry-based copy is implemented
+// function IconCopy() { ... }
+// function IconCheck() { ... }
 
 export function SheetCommand({ title, command, aliases, description, example }: SheetCommandProps) {
   const [showExample, setShowExample] = useState(false);
-  const [showCopy, setShowCopy] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // TODO: Re-enable after entry-based copy is implemented
+  // const [showCopy, setShowCopy] = useState(false);
+  // const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { matchesAction } = useKeybindings();
 
-  const placeholders = parsePlaceholders(command);
-  const hasPlaceholders = placeholders.length > 0;
-  const primaryAliasCommand = aliases?.[0];
-  const copyValue = primaryAliasCommand ? `git ${primaryAliasCommand}` : command;
   const aliasDisplayValue = aliases?.length
     ? `git ${aliases.length === 1 ? aliases[0] : `(${aliases.join("|")})`}`
     : null;
-
-  function handleCopyDirect() {
-    navigator.clipboard.writeText(copyValue).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    });
-  }
-
-  function handleCopyAction() {
-    if (hasPlaceholders) {
-      setShowCopy(true);
-    } else {
-      handleCopyDirect();
-    }
-  }
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     if ((e.target as HTMLElement).closest("[data-sheet-command-actions]")) return;
@@ -131,16 +73,7 @@ export function SheetCommand({ title, command, aliases, description, example }: 
         data-nav-focused="false"
         aria-label={title}
         onClick={handleClick}
-        onKeyDown={(e) => {
-          if (matchesAction(e.nativeEvent, ACTION_IDS.COPY_COMMAND)) {
-            e.preventDefault();
-            handleCopyAction();
-          }
-          if (matchesAction(e.nativeEvent, ACTION_IDS.SHOW_EXAMPLE) && example) {
-            e.preventDefault();
-            setShowExample(true);
-          }
-        }}
+        // TODO: Re-enable after entry-based copy/navigation is implemented
       >
         <div className={sheetCommandStyles.commandHeader}>
           <p className={sheetCommandStyles.commandTitle}>{title}</p>
@@ -156,15 +89,7 @@ export function SheetCommand({ title, command, aliases, description, example }: 
                 <IconInfo />
               </button>
             ) : null}
-            <button
-              type="button"
-              className={`${sheetCommandStyles.commandActionButton} ${copied ? sheetCommandStyles.commandActionButtonCopied : ""}`}
-              aria-label={`Copy ${aliases?.length ? "alias" : "command"}: ${title}`}
-              title={hasPlaceholders ? "Fill and copy (y)" : "Copy (y)"}
-              onClick={handleCopyAction}
-            >
-              {copied ? <IconCheck /> : <IconCopy />}
-            </button>
+            {/* TODO: Re-enable copy button after entry-based copy is implemented */}
           </div>
         </div>
         {aliasDisplayValue ? (
@@ -191,14 +116,7 @@ export function SheetCommand({ title, command, aliases, description, example }: 
         />
       ) : null}
 
-      {showCopy && command ? (
-        <CommandCopyModal
-          title={title}
-          command={command}
-          placeholders={placeholders}
-          onClose={() => setShowCopy(false)}
-        />
-      ) : null}
+      {/* TODO: Re-enable after entry-based copy is implemented */}
     </>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
-import { useCommandNavigation } from "@/hooks/use-command-navigation";
+// TODO: Re-enable after entry-based navigation is implemented
+// import { useCommandNavigation } from "@/hooks/use-command-navigation";
 
 type CommandNavigationContextValue = {
   registerModalOpen: () => () => void;
@@ -27,7 +28,9 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
     return () => setOpenModalCount((n) => n - 1);
   }, []);
 
-  useCommandNavigation({ modalOpen: openModalCount > 0 });
+  // TODO: Re-enable after entry-based navigation is implemented
+  // useCommandNavigation({ modalOpen: openModalCount > 0 });
+  void openModalCount;
 
   return (
     <CommandNavigationContext.Provider value={{ registerModalOpen }}>
