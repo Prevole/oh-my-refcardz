@@ -1,0 +1,44 @@
+[
+  {
+    "cards": [
+      {
+        "colStart": 1,
+        "rowStart": 1,
+        "colSpan": 4,
+        "rowSpan": 4
+      },
+      {
+        "colStart": 5,
+        "rowStart": 1,
+        "colSpan": 4,
+        "rowSpan": 4
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 6,
+        "rowSpan": 6,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 6,
+        "rowSpan": 6,
+        "colStart": 7,
+        "rowStart": 1
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 6,
+        "rowSpan": 4,
+        "colStart": 1,
+        "rowStart": 1
+      }
+    ]
+  }
+]

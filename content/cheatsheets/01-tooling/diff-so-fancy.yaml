@@ -23,7 +23,7 @@ sections:
           - entries:
               - title: Unified diff outside Git
               - command: diff -u file_a file_b | diff-so-fancy
-              - text: Format any unified diff stream, not just Git output, when comparing
+              - text: Format any unified diff stream, not just [[git|Git]] output, when comparing
                   two files directly.
 
       - title: Pager
@@ -60,4 +60,4 @@ sections:
               - title: Compare two commits
               - command: git diff --color abc123 def456 | diff-so-fancy | less --tabs=4 -RFX
               - text: Format the exact delta between two revisions while keeping the
-                  command compatible with normal Git diff arguments.
+                  command compatible with normal [[git|Git]] diff arguments.
