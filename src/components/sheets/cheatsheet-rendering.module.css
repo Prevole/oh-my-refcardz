@@ -843,6 +843,9 @@
 
 .configFileCopyable[data-copied="true"] {
   color: var(--success-light);
+  border-color: var(--success);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--success) 15%, transparent), color-mix(in srgb, var(--success) 8%, transparent));
+  box-shadow: 0 0 0 1px var(--success);
 }
 
 .configFileLabel {

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
 import { InlineCodeText } from "@/components/sheets/inline-code-text";
-import { ActionInlineBinding } from "@/components/settings/keybinding-display";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS, matchesCombo } from "@/lib/keybindings";
 import {
@@ -68,6 +67,7 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
+        e.stopImmediatePropagation();
         onClose();
         return;
       }
@@ -75,6 +75,7 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
       const moveUpAction = getAction(ACTION_IDS.MOVE_UP);
       if (moveUpAction && moveUpAction.combos[0] && matchesCombo(e, moveUpAction.combos[0])) {
         e.preventDefault();
+        e.stopImmediatePropagation();
         moveFocus("up");
         return;
       }
@@ -82,11 +83,12 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
       const moveDownAction = getAction(ACTION_IDS.MOVE_DOWN);
       if (moveDownAction && moveDownAction.combos[0] && matchesCombo(e, moveDownAction.combos[0])) {
         e.preventDefault();
+        e.stopImmediatePropagation();
         moveFocus("down");
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [getAction, onClose]);
 
   async function handleCopy() {
@@ -140,22 +142,14 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
             <pre className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalPreview}`}>{preview}</pre>
           </div>
 
-          <div className={sheetCommandStyles.modalFooterActionRow}>
-            <p className={sheetCommandStyles.modalFooter}>
-              <ActionInlineBinding actionId={ACTION_IDS.MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
-              <ActionInlineBinding actionId={ACTION_IDS.MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate, {" "}
-              <span className={sheetCommandStyles.modalFooterBinding}>↩</span> copy, {" "}
-              <span className={sheetCommandStyles.modalFooterBinding}>Esc</span> close.
-            </p>
-            <div className={sheetCommandStyles.modalActions}>
-              <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
-                Cancel <kbd>Esc</kbd>
-              </button>
-              <button type="submit" className={sheetCommandStyles.modalSubmitButton}>
-                {copied ? "Copied!" : "Copy"}
-                {!copied && <kbd>↩</kbd>}
-              </button>
-            </div>
+          <div className={sheetCommandStyles.modalActions}>
+            <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
+              Cancel <kbd>Esc</kbd>
+            </button>
+            <button type="submit" className={sheetCommandStyles.modalSubmitButton}>
+              {copied ? "Copied!" : "Copy"}
+              {!copied && <kbd>↩</kbd>}
+            </button>
           </div>
         </form>
       </div>

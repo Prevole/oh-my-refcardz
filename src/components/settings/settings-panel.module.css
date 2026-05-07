@@ -1,10 +1,7 @@
 .overlay {
-  position: fixed;
-  inset: 0;
+  composes: overlay-backdrop from global;
   z-index: var(--z-toast);
-  background: var(--bg-overlay-dark);
   backdrop-filter: blur(2px);
-  animation: fadeIn 0.2s ease;
 }
 
 .overlay[data-closing="true"] {
@@ -46,21 +43,12 @@
 }
 
 .close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-8);
-  height: var(--space-8);
+  composes: btn-close from global;
   border: none;
-  background: transparent;
-  color: var(--fg-60);
-  cursor: pointer;
   border-radius: var(--radius-md);
-  transition: all var(--transition-normal);
 }
 
 .close:hover {
-  background: var(--bg-overlay-medium);
   color: var(--fg-100);
 }
 
@@ -120,8 +108,7 @@
 }
 
 .buttonGroup {
-  display: flex;
-  flex-wrap: wrap;
+  composes: btn-group from global;
 }
 
 .buttonGroupFull {
@@ -129,17 +116,8 @@
 }
 
 .groupButton {
-  min-height: 2.5rem;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-strong);
-  background: var(--bg-overlay-subtle);
-  color: var(--fg-75);
-  font-size: var(--text-md);
+  composes: btn-group-item from global;
   font-weight: 700;
-  border-radius: 0;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  margin-left: -1px;
 }
 
 .groupButtonFlex {
@@ -169,32 +147,8 @@
   line-height: 1;
 }
 
-.groupButton:first-child {
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
-  margin-left: 0;
-}
-
-.groupButton:last-child {
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-}
-
-.groupButton:hover:not(:disabled) {
-  background: var(--bg-overlay-medium);
-  border-color: var(--border-strong);
-  color: var(--fg-100);
-}
-
 .groupButtonActive {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--background);
-  font-weight: 500;
-}
-
-.groupButtonActive:hover:not(:disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--background);
+  composes: btn-group-active from global;
 }
 
 .toggle {
@@ -243,65 +197,10 @@
 }
 
 .sectionReset {
+  composes: section-footer from global;
   margin-top: var(--space-5);
-  padding-top: 0.9rem;
-  border-top: 1px solid var(--border-light);
 }
 
 .resetButton {
-  width: 100%;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: rgba(239, 68, 68, 0.85);
-  font-size: var(--text-base);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-.resetButton:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.6);
-  color: var(--error);
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
+  composes: btn-danger from global;
 }

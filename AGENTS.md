@@ -125,6 +125,28 @@ Path alias: `@/*` → `./src/*`
 
 No `tailwind.config.js`. Configuration is entirely in `src/app/globals.css` via CSS directives.
 
+## CSS Best Practices
+
+Before writing or modifying CSS:
+
+1. **Check existing design tokens first** — Review `src/app/globals.css` for CSS variables (colors, spacing, radius, transitions, shadows, z-index). Never hardcode values that exist as tokens.
+
+2. **Check utility classes** — Review `src/styles/components.css` for reusable patterns (buttons, overlays, modals, badges, etc.). Use `composes:` from CSS Modules when appropriate.
+
+3. **Use CSS functions over hardcoded colors** — Prefer `color-mix(in srgb, var(--success) 15%, transparent)` over `rgba(34, 197, 94, 0.15)`. This ensures consistency if token values change.
+
+4. **Common tokens to use**:
+   - Colors: `--fg-*`, `--bg-*`, `--border-*`, `--success`, `--success-light`, `--accent`, `--sheet-accent`
+   - Spacing: `--space-1` through `--space-12` (4px increments)
+   - Radius: `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl`, `--radius-full`
+   - Transitions: `--transition-fast`, `--transition-normal`, `--transition-slow`
+   - Shadows: `--shadow-sm`, `--shadow-md`, `--shadow-lg`, `--shadow-xl`
+   - Z-index: `--z-base`, `--z-dropdown`, `--z-sticky`, `--z-overlay`, `--z-modal`
+
+5. **Factor out repeated patterns** — If the same styles appear in multiple places, consider adding a utility class to `components.css`.
+
+6. **Verify before committing** — After CSS changes, visually check the affected components to catch regressions.
+
 ## Comments
 
 - Default to no comment.

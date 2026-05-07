@@ -11,15 +11,11 @@
 }
 
 .contextTitle {
+  composes: section-label-muted from global;
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin: 0;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--fg-50);
 }
 
 .contextTitle::after {
@@ -75,18 +71,9 @@
 }
 
 .comboButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  min-width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  composes: btn-icon from global;
+  border-color: var(--border-strong);
   background: var(--bg-overlay-subtle);
-  cursor: pointer;
-  transition: all var(--transition-normal);
 }
 
 .comboButtonWide {
@@ -105,26 +92,11 @@
   background: rgba(255, 183, 3, 0.15);
 }
 
-.comboButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .comboRemove {
+  composes: btn-danger-sm from global;
   position: absolute;
   top: -0.35rem;
   right: -0.35rem;
-  width: var(--space-4);
-  height: var(--space-4);
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.8);
-  color: white;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
   opacity: 0;
   transition: opacity var(--transition-normal);
 }
@@ -134,35 +106,18 @@
   opacity: 1;
 }
 
-.comboRemove:hover {
-  background: var(--error);
-}
-
 .addButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
+  composes: btn-icon from global;
   border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--fg-50);
   font-size: var(--space-4);
-  cursor: pointer;
-  transition: all var(--transition-normal);
 }
 
 .addButton:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
   background: rgba(255, 183, 3, 0.1);
-}
-
-.addButton:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .actions {
@@ -174,18 +129,10 @@
 }
 
 .resetButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-6);
-  height: var(--space-6);
-  padding: 0;
+  composes: btn-icon-sm from global;
   border: none;
-  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--fg-40);
-  cursor: pointer;
-  transition: all var(--transition-normal);
 }
 
 .resetButton:hover:not(:disabled) {
@@ -195,21 +142,12 @@
 
 .resetButton:disabled {
   opacity: 0.3;
-  cursor: not-allowed;
 }
 
 .keycap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: 100%;
-  padding: 0;
-  font-family: var(--font-jetbrains-mono), monospace;
+  composes: keycap-base from global;
   font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--code-gold);
-  white-space: nowrap;
+  height: 100%;
 }
 
 .comboSequence {
@@ -250,26 +188,13 @@
 }
 
 .footer {
+  composes: section-footer from global;
+  margin-top: 0;
   padding-top: var(--space-3);
-  border-top: 1px solid var(--border-light);
 }
 
 .resetAllButton {
-  width: 100%;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: rgba(239, 68, 68, 0.85);
-  font-size: var(--text-base);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-.resetAllButton:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.6);
-  color: var(--error);
+  composes: btn-danger from global;
 }
 
 .conflict {
@@ -314,49 +239,23 @@
 }
 
 .recordingOverlay {
-  position: fixed;
-  inset: 0;
+  composes: overlay-backdrop-darker from global;
   z-index: var(--z-toast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-overlay-darker);
-  backdrop-filter: blur(4px);
-  animation: fadeIn var(--transition-normal);
 }
 
 .recordingContent {
-  position: relative;
+  composes: modal-panel from global;
   text-align: center;
   padding: var(--space-8);
-  border-radius: var(--radius-xl);
-  background: rgba(17, 31, 53, 0.98);
-  border: 1px solid var(--border-medium);
-  box-shadow: var(--shadow-xl);
+  max-width: none;
+  width: auto;
 }
 
 .recordingClose {
+  composes: btn-close from global;
   position: absolute;
   top: 0.9rem;
   right: 0.9rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-8);
-  height: var(--space-8);
-  padding: 0;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-full);
-  background: var(--bg-overlay-subtle);
-  color: var(--fg-75);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-}
-
-.recordingClose:hover {
-  background: var(--bg-overlay-medium);
-  border-color: var(--border-strong);
-  color: var(--fg-95);
 }
 
 .recordingTitle {
@@ -400,19 +299,5 @@
 }
 
 .recordingFooter {
-  margin: var(--space-4) 0 0;
-  padding-top: 0.9rem;
-  border-top: 1px solid var(--border-light);
-  font-size: var(--text-sm);
-  color: var(--fg-75);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  composes: section-footer from global;
 }

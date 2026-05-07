@@ -42,7 +42,7 @@ export default async function CheatSheetPage({ params }: Props) {
         <SheetLinksProvider knownSlugs={knownSlugs}>
         <main className="relative z-10 mx-auto max-w-7xl">
           <SheetInlineHelp />
-          <div className="mt-3 flex items-center gap-4">
+          <div className="mt-16 flex items-center gap-4">
             <TechIcon
               icon={iconName}
               className={cheatsheetStyles.headerIcon}

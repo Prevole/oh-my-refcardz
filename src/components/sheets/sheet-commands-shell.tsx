@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { useEntryCopy } from "@/hooks/use-entry-copy";
 import { useCommandNavigation } from "@/hooks/use-command-navigation";
 import { ItemDetailModal } from "./item-detail-modal";
@@ -83,6 +83,17 @@ export function SheetCommandsShell({ children }: SheetCommandsShellProps) {
   }, []);
 
   const modalOpen = openModalCount > 0 || detailData !== null || copyData !== null;
+
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
 
   const handleCopyWithPlaceholders = useCallback((payload: CopyablePayload) => {
     showCopyModal(payload);
