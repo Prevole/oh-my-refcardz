@@ -869,6 +869,7 @@
   color: var(--success-light);
   border-color: color-mix(in srgb, var(--success) 40%, transparent);
   background: color-mix(in srgb, var(--success) 15%, transparent);
+  animation: copy-pulse 0.5s ease-out;
 }
 
 .configContext {
@@ -978,6 +979,7 @@
   color: var(--success-light);
   border-color: color-mix(in srgb, var(--success) 40%, transparent);
   background: color-mix(in srgb, var(--success) 15%, transparent);
+  animation: copy-pulse 0.5s ease-out;
 }
 
 .configDescription {
@@ -1180,4 +1182,13 @@
   font-size: var(--text-base);
   color: var(--fg-75);
   line-height: 1.4;
+}
+
+@keyframes copy-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 50%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--success) 0%, transparent);
+  }
 }

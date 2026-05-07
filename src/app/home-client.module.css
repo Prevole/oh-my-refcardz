@@ -4,7 +4,7 @@
   position: relative;
   border: none;
   background: transparent;
-  transition: filter var(--transition-normal);
+  transition: filter var(--transition-normal), transform var(--transition-normal);
 }
 
 .hexCell {
@@ -16,11 +16,13 @@
 }
 
 .hexCard:hover {
-  filter: brightness(1.06);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hex-border-color, var(--accent)) 35%, transparent));
+  transform: scale(1.03);
 }
 
 .hexCard[data-selected="true"] {
-  filter: brightness(1.12);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hex-border-color, var(--accent)) 35%, transparent));
+  transform: scale(1.03);
 }
 
 .hexShape {
@@ -36,11 +38,18 @@
   stroke-width: 2.6;
   stroke-linejoin: round;
   stroke-linecap: round;
+  transition: stroke-width var(--transition-normal), stroke var(--transition-normal), fill var(--transition-normal);
+}
+
+.hexCard:hover .hexShapePath {
+  stroke-width: 3.2;
+  fill: color-mix(in srgb, var(--bg-elevated) 100%, transparent);
 }
 
 .hexCard[data-selected="true"] .hexShapePath {
   fill: rgba(30, 50, 82, 0.95);
   stroke: color-mix(in srgb, var(--hex-border-color, var(--accent)) 82%, white);
+  stroke-width: 3.2;
 }
 
 .hexCardInner {

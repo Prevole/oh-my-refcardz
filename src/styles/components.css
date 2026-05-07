@@ -11,6 +11,15 @@
   to { opacity: 1; }
 }
 
+@keyframes copy-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 70%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--success) 0%, transparent);
+  }
+}
+
 @keyframes fadeOut {
   from { opacity: 1; }
   to { opacity: 0; }
@@ -194,6 +203,7 @@
   color: var(--success-light);
   border-color: color-mix(in srgb, var(--success) 40%, transparent);
   background: color-mix(in srgb, var(--success) 15%, transparent);
+  animation: copy-pulse 0.5s ease-out;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────────
@@ -355,11 +365,13 @@
 .modal-button-secondary {
   composes: modal-button;
   background: var(--bg-overlay-light);
+  border-color: var(--border-strong);
   color: var(--fg-75);
 }
 
 .modal-button-secondary:hover {
   background: var(--bg-overlay-medium);
+  border-color: var(--border-strong);
   color: var(--fg-95);
 }
 

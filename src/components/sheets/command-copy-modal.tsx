@@ -139,14 +139,14 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
 
           <div className={sheetCommandStyles.modalPreviewWrap}>
             <p className={sheetCommandStyles.modalSectionLabel}>Preview</p>
-            <pre className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalPreview}`}>{preview}</pre>
+            <pre className={`${sheetCommandStyles.modalTerminal} ${sheetCommandStyles.modalPreview} ${copied ? sheetCommandStyles.modalPreviewCopied : ""}`}>{preview}</pre>
           </div>
 
           <div className={sheetCommandStyles.modalActions}>
             <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
               Cancel <kbd>Esc</kbd>
             </button>
-            <button type="submit" className={sheetCommandStyles.modalSubmitButton}>
+            <button type="submit" className={`${sheetCommandStyles.modalSubmitButton} ${copied ? sheetCommandStyles.modalSubmitButtonCopied : ""}`}>
               {copied ? "Copied!" : "Copy"}
               {!copied && <kbd>↩</kbd>}
             </button>
