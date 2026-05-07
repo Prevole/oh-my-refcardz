@@ -7,7 +7,6 @@ import {
   type ActionId,
   type KeyCombo,
   type KeyDisplayPart,
-  getCombosDisplay,
   getComboSequenceDisplayParts,
   isArrowKey,
   getArrowDirection,
@@ -128,8 +127,23 @@ type InlineBindingTextProps = {
   separatorClassName?: string;
 };
 
-function formatInlineBindingLabel(label: string) {
-  return label === "esc" ? "Esc" : label;
+function InlineBindingPart({ part, className }: { part: KeyDisplayPart; className?: string }) {
+  if (isArrowKey(part.value)) {
+    const direction = getArrowDirection(part.value);
+    if (direction) {
+      return (
+        <span className={className}>
+          <ArrowGlyph direction={direction} className={keybindingStyles.keycapArrow} />
+        </span>
+      );
+    }
+  }
+
+  if (part.value === "esc") {
+    return <span className={className}>Esc</span>;
+  }
+
+  return <span className={className}>{part.value}</span>;
 }
 
 export function InlineBindingText({
@@ -139,16 +153,29 @@ export function InlineBindingText({
   separatorClassName,
 }: InlineBindingTextProps) {
   const displayCombos = maxCombos ? combos.slice(0, maxCombos) : combos;
-  const labels = getCombosDisplay(displayCombos).map(formatInlineBindingLabel);
 
   return (
     <>
-      {labels.map((label, index) => (
-        <span key={`${label}-${index}`}>
+      {displayCombos.map((combo, index) => {
+        const sequence = getComboSequenceDisplayParts(combo);
+
+        return (
+        <span key={index}>
           {index > 0 ? <span className={separatorClassName}>or</span> : null}
-          <span className={className}>{label}</span>
+          {sequence.map((step, stepIndex) => (
+            <span key={stepIndex}>
+              {stepIndex > 0 ? " " : null}
+              {step.map((part, partIndex) => (
+                <InlineBindingPart
+                  key={`${stepIndex}-${partIndex}-${part.type}-${part.value}`}
+                  part={part}
+                  className={className}
+                />
+              ))}
+            </span>
+          ))}
         </span>
-      ))}
+      )})}
     </>
   );
 }
