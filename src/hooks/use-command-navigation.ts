@@ -488,6 +488,27 @@ export function useCommandNavigation({ modalOpen, onShowDetails }: UseCommandNav
 
     rebuildGraph();
 
+    const observer = new MutationObserver((mutations) => {
+      const shouldRebuild = mutations.some((mutation) => {
+        return Array.from(mutation.addedNodes).some((node) => {
+          if (!(node instanceof HTMLElement)) {
+            return false;
+          }
+
+          return (
+            node.matches("[data-item], [data-copyable]") ||
+            node.querySelector("[data-item], [data-copyable]") !== null
+          );
+        });
+      });
+
+      if (shouldRebuild) {
+        rebuildGraph();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
     const onResize = () => rebuildGraph();
     window.addEventListener("resize", onResize);
     document.addEventListener("click", handleClick);
@@ -535,6 +556,7 @@ export function useCommandNavigation({ modalOpen, onShowDetails }: UseCommandNav
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("click", handleClick);
+      observer.disconnect();
     };
   }, [modalOpen, isScopeActive, matchesAction, rebuildGraph, onShowDetails]);
 }
