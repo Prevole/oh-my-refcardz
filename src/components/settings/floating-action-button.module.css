@@ -9,7 +9,7 @@
   height: 2.5rem;
   border-radius: 50%;
   border: 1px solid var(--border-strong);
-  background: rgba(17, 31, 53, 0.9);
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
   color: var(--fg-75);
   cursor: pointer;
   transition: all 0.2s ease;

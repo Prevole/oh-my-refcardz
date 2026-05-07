@@ -61,7 +61,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--accent);
-  background: rgba(248, 201, 74, 0.15);
+  background: color-mix(in srgb, var(--code-gold) 15%, transparent);
   border-radius: var(--radius-sm);
 }
 

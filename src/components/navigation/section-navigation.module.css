@@ -30,7 +30,7 @@
   border: 1px solid color-mix(in srgb, var(--section-color) 70%, white);
   background: color-mix(in srgb, var(--section-color) 85%, black 15%);
   clip-path: polygon(25% 4%, 75% 4%, 96% 50%, 75% 96%, 25% 96%, 4% 50%);
-  box-shadow: 0 0 0 1px rgba(13, 19, 33, 0.55);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--background) 55%, transparent);
   transition: transform var(--transition-normal), filter var(--transition-normal);
 }
 
@@ -44,7 +44,7 @@
   transform: scale(1.14);
   filter: brightness(1.12);
   box-shadow:
-    0 0 0 1px rgba(13, 19, 33, 0.55),
+    0 0 0 1px color-mix(in srgb, var(--background) 55%, transparent),
     0 0 0 3px color-mix(in srgb, var(--section-color) 35%, transparent);
 }
 
@@ -57,7 +57,7 @@
   opacity: 0;
   border-radius: var(--radius-sm);
   border: 1px solid color-mix(in srgb, var(--section-color) 40%, transparent);
-  background: rgba(13, 19, 33, 0.92);
+  background: color-mix(in srgb, var(--background) 92%, transparent);
   padding: 0.22rem 0.48rem;
   color: var(--fg-88);
   font-size: var(--text-xs);

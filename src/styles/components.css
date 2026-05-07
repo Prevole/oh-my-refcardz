@@ -304,7 +304,11 @@
   position: relative;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-medium);
-  background: linear-gradient(180deg, rgba(10, 16, 28, 0.86), rgba(7, 12, 22, 0.92));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-dark-base) 86%, transparent),
+    color-mix(in srgb, var(--bg-dark-deep) 92%, transparent)
+  );
   padding: var(--space-2);
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: var(--text-base);
@@ -321,7 +325,11 @@
 
 .terminal-block[data-copied="true"] {
   border-color: var(--success);
-  background: linear-gradient(180deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--success) 20%, transparent),
+    color-mix(in srgb, var(--success) 10%, transparent)
+  );
   box-shadow: 0 0 0 1px var(--success);
   color: var(--success-lighter);
 }
@@ -367,7 +375,7 @@
   max-width: 44rem;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-medium);
-  background: rgba(17, 31, 53, 0.98);
+  background: color-mix(in srgb, var(--bg-elevated) 98%, transparent);
   padding: var(--space-6);
   box-shadow: var(--shadow-xl);
   color: var(--fg-88);
@@ -404,7 +412,7 @@
   font-family: var(--font-jetbrains-mono), monospace;
   text-decoration-line: underline;
   text-decoration-style: dashed;
-  text-decoration-color: rgba(248, 201, 74, 0.55);
+  text-decoration-color: color-mix(in srgb, var(--code-gold) 55%, transparent);
   text-underline-offset: 0.22rem;
 }
 
@@ -442,12 +450,12 @@
 
 .badge-accent {
   color: var(--accent);
-  background: rgba(248, 201, 74, 0.15);
+  background: color-mix(in srgb, var(--code-gold) 15%, transparent);
 }
 
 .badge-muted {
   border: 1px solid var(--border-medium);
-  background: rgba(6, 10, 18, 0.82);
+  background: color-mix(in srgb, var(--bg-dark-base) 82%, transparent);
   color: var(--fg-75);
 }
 
@@ -490,11 +498,15 @@
 }
 
 .keycap-violet {
-  border-color: rgba(167, 139, 250, 0.4);
-  background: linear-gradient(180deg, rgba(167, 139, 250, 0.22), rgba(139, 92, 246, 0.12));
+  border-color: color-mix(in srgb, var(--code-violet) 40%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--code-violet) 22%, transparent),
+    color-mix(in srgb, var(--code-violet-dark) 12%, transparent)
+  );
   box-shadow:
     inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-    0 1px 0 rgba(167, 139, 250, 0.15);
+    0 1px 0 color-mix(in srgb, var(--code-violet) 15%, transparent);
   color: var(--code-violet);
 }
 

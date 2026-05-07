@@ -74,7 +74,11 @@
   padding: 0.4rem 2.2rem 0.4rem var(--space-2);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-strong);
-  background: linear-gradient(180deg, rgba(10, 16, 28, 0.92), rgba(7, 12, 22, 0.96));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-dark-base) 92%, transparent),
+    color-mix(in srgb, var(--bg-dark-deep) 96%, transparent)
+  );
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: var(--text-sm);
   color: var(--code-gold);
@@ -135,8 +139,8 @@
   border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 45%, transparent);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 20%, rgba(10, 16, 28, 0.92)),
-    rgba(7, 12, 22, 0.96)
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 20%, color-mix(in srgb, var(--bg-dark-base) 92%, transparent)),
+    color-mix(in srgb, var(--bg-dark-deep) 96%, transparent)
   );
   color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 70%, white);
   font-weight: 700;
@@ -145,16 +149,20 @@
 .commandExampleTerminal {
   border-style: dashed;
   border-color: var(--border-medium);
-  background: linear-gradient(180deg, rgba(10, 16, 28, 0.5), rgba(7, 12, 22, 0.55));
-  color: rgba(142, 246, 216, 0.7);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-dark-base) 50%, transparent),
+    color-mix(in srgb, var(--bg-dark-deep) 55%, transparent)
+  );
+  color: color-mix(in srgb, var(--terminal-text) 70%, transparent);
 }
 
 .commandTerminal[data-nav-focused="true"] {
   border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 65%, var(--border-strong));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, rgba(10, 16, 28, 0.92)),
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 10%, rgba(7, 12, 22, 0.96))
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, color-mix(in srgb, var(--bg-dark-base) 92%, transparent)),
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 10%, color-mix(in srgb, var(--bg-dark-deep) 96%, transparent))
   );
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 20%, var(--border-subtle)),
@@ -165,8 +173,8 @@
   border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 75%, var(--border-strong));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 30%, rgba(10, 16, 28, 0.92)),
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, rgba(7, 12, 22, 0.96))
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 30%, color-mix(in srgb, var(--bg-dark-base) 92%, transparent)),
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, color-mix(in srgb, var(--bg-dark-deep) 96%, transparent))
   );
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 25%, var(--border-subtle)),
@@ -178,8 +186,8 @@
   border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 55%, var(--border-strong));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 12%, rgba(10, 16, 28, 0.5)),
-    color-mix(in srgb, var(--sheet-accent, var(--accent)) 8%, rgba(7, 12, 22, 0.55))
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 12%, color-mix(in srgb, var(--bg-dark-base) 50%, transparent)),
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 8%, color-mix(in srgb, var(--bg-dark-deep) 55%, transparent))
   );
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, var(--border-subtle)),
@@ -194,7 +202,11 @@
 .commandExampleTerminal[data-nav-focused="true"][data-copied="true"] {
   border-color: var(--success);
   border-style: solid;
-  background: linear-gradient(180deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--success) 20%, transparent),
+    color-mix(in srgb, var(--success) 10%, transparent)
+  );
   color: var(--success-lighter);
   box-shadow: 0 0 0 1px var(--success);
 }
@@ -235,7 +247,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(6, 10, 18, 0.6);
+  background: color-mix(in srgb, var(--bg-dark-base) 60%, transparent);
   backdrop-filter: blur(4px);
   padding: var(--space-6);
   overflow-y: auto;
@@ -247,7 +259,7 @@
   max-width: min(36rem, calc(100vw - var(--space-12)));
   border-radius: var(--radius-xl);
   border: 1px solid color-mix(in srgb, var(--sheet-accent, var(--accent)) 35%, var(--border-medium));
-  background: rgba(17, 32, 58, 0.98);
+  background: color-mix(in srgb, var(--bg-elevated) 98%, transparent);
   padding: var(--space-6);
   box-shadow: var(--shadow-xl), 0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, transparent);
   color: var(--fg-88);
@@ -311,7 +323,7 @@
   color: var(--code-gold);
   text-decoration-line: underline;
   text-decoration-style: dashed;
-  text-decoration-color: rgba(248, 201, 74, 0.55);
+  text-decoration-color: color-mix(in srgb, var(--code-gold) 55%, transparent);
   text-underline-offset: 0.22rem;
 }
 
@@ -375,7 +387,7 @@
   padding: 0.4rem 0.65rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-medium);
-  background: rgba(10, 16, 28, 0.7);
+  background: color-mix(in srgb, var(--bg-dark-base) 70%, transparent);
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: var(--text-base);
   color: var(--fg-95);
@@ -459,7 +471,11 @@
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-strong);
-  background: linear-gradient(180deg, rgba(10, 16, 28, 0.92), rgba(7, 12, 22, 0.96));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-dark-base) 92%, transparent),
+    color-mix(in srgb, var(--bg-dark-deep) 96%, transparent)
+  );
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: var(--text-sm);
   color: var(--code-gold);

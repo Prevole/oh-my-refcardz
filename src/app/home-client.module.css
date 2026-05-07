@@ -31,7 +31,7 @@
 }
 
 .hexShapePath {
-  fill: rgba(17, 31, 53, 0.95);
+  fill: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
   stroke: var(--hex-border-color, var(--fg-60));
   stroke-width: 2.6;
   stroke-linejoin: round;
