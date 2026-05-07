@@ -82,6 +82,12 @@ function ConflictNotice({
   conflict: KeybindingConflict;
   onDismiss: () => void;
 }) {
+  const handleDismiss = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.nativeEvent.stopImmediatePropagation();
+    onDismiss();
+  };
+
   return (
     <div className={styles.conflict}>
       <span className={styles.conflictIcon}>⚠</span>
@@ -90,7 +96,7 @@ function ConflictNotice({
       </span>
       <button
         className={styles.conflictDismiss}
-        onClick={onDismiss}
+        onClick={handleDismiss}
         aria-label="Dismiss"
       >
         ×
@@ -417,8 +423,8 @@ export function KeybindingEditor() {
 
   const handleResetAction = useCallback(
     (context: KeybindingContext, actionId: string) => {
-      resetAction(context, actionId);
-      setLastConflict(null);
+      const conflict = resetAction(context, actionId);
+      setLastConflict(conflict);
     },
     [resetAction]
   );

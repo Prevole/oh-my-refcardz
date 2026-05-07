@@ -114,7 +114,7 @@ interface KeybindingsContextValue {
     comboIndex: number
   ) => void;
 
-  resetAction: (context: KeybindingContext, actionId: string) => void;
+  resetAction: (context: KeybindingContext, actionId: string) => KeybindingConflict | null;
   resetAll: () => void;
   checkConflict: (
     context: KeybindingContext,
@@ -347,11 +347,32 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
   );
 
   const resetAction = useCallback(
-    (context: KeybindingContext, actionId: string) => {
+    (context: KeybindingContext, actionId: string): KeybindingConflict | null => {
       const defaultAction = DEFAULT_KEYBINDINGS[context].find((a) => a.id === actionId);
-      if (!defaultAction) return;
+      if (!defaultAction) return null;
 
-      const newConfig = { ...config };
+      let newConfig = { ...config };
+      let firstConflict: KeybindingConflict | null = null;
+
+      for (const combo of defaultAction.combos) {
+        const conflict = findConflict(newConfig, context, actionId, combo);
+        if (conflict) {
+          if (!firstConflict) {
+            firstConflict = conflict;
+          }
+          newConfig = { ...newConfig };
+          newConfig[conflict.context] = newConfig[conflict.context].map((a) => {
+            if (a.id === conflict.existingAction.id) {
+              return {
+                ...a,
+                combos: a.combos.filter((c) => !combosEqual(c, combo)),
+              };
+            }
+            return a;
+          });
+        }
+      }
+
       newConfig[context] = newConfig[context].map((action) => {
         if (action.id === actionId) {
           return { ...action, combos: defaultAction.combos };
@@ -360,6 +381,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       });
 
       saveKeybindings(newConfig);
+      return firstConflict;
     },
     [config]
   );

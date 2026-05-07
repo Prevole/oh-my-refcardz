@@ -876,7 +876,7 @@
 }
 
 .configFileCopyable[data-copied="true"] .configFile {
-  border-bottom-color: rgba(74, 222, 128, 0.9);
+  border-bottom-color: color-mix(in srgb, var(--success) 90%, transparent);
   color: var(--success-light);
 }
 
@@ -911,8 +911,8 @@
 
 .configFileCopyButtonCopied {
   color: var(--success-light);
-  border-color: rgba(74, 222, 128, 0.4);
-  background: rgba(74, 222, 128, 0.15);
+  border-color: color-mix(in srgb, var(--success) 40%, transparent);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
 }
 
 .configContext {
@@ -1029,8 +1029,8 @@
 
 .configCopyButtonCopied {
   color: var(--success-light);
-  border-color: rgba(74, 222, 128, 0.4);
-  background: rgba(74, 222, 128, 0.15);
+  border-color: color-mix(in srgb, var(--success) 40%, transparent);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
 }
 
 .configDescription {
