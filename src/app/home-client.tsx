@@ -456,13 +456,13 @@ export function HomeClient({ categories }: Props) {
             return (
               <div key={category.id} id={buildSectionAnchorId("home-category", category.title, categoryIndex)}>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-[0.7rem] tracking-[0.18em] text-white/45">
+                  <span className="font-mono text-[0.7rem] tracking-[0.18em]" style={{ color: category.color }}>
                     {String(category.order).padStart(2, "0")}
                   </span>
-                  <h2 className="text-lg font-semibold tracking-[0.01em] text-white/95">
+                  <h2 className="text-lg font-semibold tracking-[0.01em]" style={{ color: category.color }}>
                     {category.title}
                   </h2>
-                  <div className="h-px flex-1 bg-white/10" />
+                  <div className="h-px flex-1" style={{ backgroundColor: `color-mix(in srgb, ${category.color} 30%, transparent)` }} />
                 </div>
                 {category.description ? (
                   <p className="mt-2 text-sm text-white/70">{category.description}</p>
