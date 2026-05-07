@@ -1,22 +1,22 @@
 .dismiss {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: var(--space-4);
+  right: var(--space-4);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   background: transparent;
   border: none;
-  color: rgba(237, 242, 244, 0.4);
-  font-size: 0.875rem;
+  color: var(--fg-40);
+  font-size: var(--text-base);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: color var(--transition-normal), background var(--transition-normal);
 }
 
 .dismiss:hover {
-  color: rgba(237, 242, 244, 0.9);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg-88);
+  background: var(--bg-overlay-subtle);
 }

@@ -13,17 +13,17 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: var(--space-4) var(--space-6);
   border: none;
   background: rgba(20, 31, 51, 0.96);
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.95rem;
+  color: var(--fg-88);
+  font-size: var(--text-md);
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
 }
 
 .header:hover:not(:disabled) {
@@ -31,7 +31,7 @@
 }
 
 .itemOpen .header {
-  color: rgba(255, 255, 255, 0.96);
+  color: var(--fg-95);
 }
 
 .header:disabled {
@@ -39,7 +39,7 @@
 }
 
 .chevron {
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--fg-40);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -55,21 +55,21 @@
 }
 
 .badge {
-  padding: 0.2rem 0.5rem;
-  font-size: 0.7rem;
+  padding: 0.2rem var(--space-2);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--accent);
   background: rgba(248, 201, 74, 0.15);
-  border-radius: 0.25rem;
+  border-radius: var(--radius-sm);
 }
 
 .content {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 0.25s ease, opacity 0.2s ease;
+  transition: grid-template-rows var(--transition-slow), opacity 0.2s ease;
 }
 
 .contentOpen {
@@ -79,11 +79,11 @@
 
 .contentInner {
   overflow: hidden;
-  padding: 0 1.5rem;
+  padding: 0 var(--space-6);
   background: rgba(31, 44, 68, 0.94);
 }
 
 .contentOpen .contentInner {
   padding-top: 0.9rem;
-  padding-bottom: 1.25rem;
+  padding-bottom: var(--space-5);
 }

@@ -4,7 +4,7 @@
   position: relative;
   border: none;
   background: transparent;
-  transition: filter 0.15s ease;
+  transition: filter var(--transition-normal);
 }
 
 .hexCell {
@@ -32,7 +32,7 @@
 
 .hexShapePath {
   fill: rgba(17, 31, 53, 0.95);
-  stroke: var(--hex-border-color, rgba(255, 255, 255, 0.6));
+  stroke: var(--hex-border-color, var(--fg-60));
   stroke-width: 2.6;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -45,7 +45,7 @@
 
 .hexCardInner {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
   padding: 0.7rem;
   height: 100%;
   display: flex;
@@ -72,12 +72,12 @@
 
 .hexHalfIcon {
   align-items: flex-end;
-  padding-bottom: 0.25rem;
+  padding-bottom: var(--space-1);
 }
 
 .hexHalfTitle {
   align-items: flex-start;
-  padding-top: 1rem;
+  padding-top: var(--space-4);
 }
 
 .hexIcon {
@@ -92,7 +92,7 @@
 }
 
 .hexTitle {
-  font-size: clamp(0.75rem, 2.5vw, 1.1rem);
+  font-size: clamp(0.75rem, 2.5vw, var(--text-lg));
   font-weight: 600;
   line-height: 1.15;
   max-width: 85%;
@@ -120,7 +120,7 @@
   position: relative;
   width: 100%;
   overflow: visible;
-  padding-bottom: 1rem;
+  padding-bottom: var(--space-4);
 }
 
 .hexCellAbs {
@@ -133,7 +133,7 @@
   }
 
   .hexIcon {
-    width: 2rem;
-    height: 2rem;
+    width: var(--space-8);
+    height: var(--space-8);
   }
 }

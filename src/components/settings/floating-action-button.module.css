@@ -1,16 +1,16 @@
 .button {
   position: fixed;
-  top: 1.5rem;
-  z-index: 100;
+  top: var(--space-6);
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-strong);
   background: rgba(17, 31, 53, 0.9);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--fg-75);
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(8px);
@@ -22,11 +22,11 @@
 }
 
 .help {
-  left: 1.5rem;
+  left: var(--space-6);
 }
 
 .settings {
-  right: 1.5rem;
+  right: var(--space-6);
 }
 
 .settings:hover {

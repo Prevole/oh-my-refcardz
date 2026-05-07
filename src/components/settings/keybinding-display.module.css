@@ -8,7 +8,7 @@
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.82em;
   font-weight: 600;
-  color: #f8c94a;
+  color: var(--code-gold);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
   white-space: nowrap;
 }
@@ -34,7 +34,7 @@
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 1.08em;
   font-weight: 600;
-  color: #f8c94a;
+  color: var(--code-gold);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
@@ -44,7 +44,7 @@
   justify-content: center;
   min-width: 2.35rem;
   height: 2.35rem;
-  border-radius: 0.55rem;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(167, 139, 250, 0.4);
   background: linear-gradient(180deg, rgba(167, 139, 250, 0.22), rgba(139, 92, 246, 0.12));
   box-shadow:
@@ -55,7 +55,7 @@
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 1.08em;
   font-weight: 600;
-  color: #c4b5fd;
+  color: var(--code-violet);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
@@ -76,7 +76,7 @@
 }
 
 .legendTable td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid var(--border-medium);
   padding: 0.6rem 0.4rem;
   vertical-align: middle;
   font-size: 0.98rem;
@@ -93,7 +93,7 @@
 
 .legendTable td:nth-child(2),
 .legendTable td:nth-child(4) {
-  color: rgba(237, 242, 244, 0.92);
+  color: var(--fg-88);
 }
 
 .comboBox,
@@ -108,29 +108,29 @@
   min-width: 1.75rem;
   min-height: 1.75rem;
   padding: 0 0.45rem;
-  border-radius: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
   box-shadow:
     inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-    0 1px 0 rgba(255, 255, 255, 0.08);
+    0 1px 0 var(--border-subtle);
 }
 
 .comboBoxLegend {
   min-width: 2.35rem;
   min-height: 2.35rem;
   padding: 0 0.6rem;
-  border-radius: 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.09));
   box-shadow:
     inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-    0 1px 0 rgba(255, 255, 255, 0.08);
+    0 1px 0 var(--border-subtle);
 }
 
 .comboBox,
 .comboBoxLegend {
-  gap: 0.4rem;
+  gap: var(--space-1);
 }
 
 .comboBox[data-compact-sequence="true"],

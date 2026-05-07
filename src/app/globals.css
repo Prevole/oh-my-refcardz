@@ -1,12 +1,133 @@
 @import "tailwindcss";
 
 :root {
+  /* ═══════════════════════════════════════════════════════════════════════════
+     DESIGN TOKENS — Single source of truth for all visual properties
+     ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     COLOR PALETTE — Base colors
+     ───────────────────────────────────────────────────────────────────────────── */
   --background: #0d1321;
   --foreground: #edf2f4;
   --surface: #1d2d44;
   --surface-soft: #243b56;
   --accent: #ffb703;
   --accent-2: #00d1b2;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     SEMANTIC COLORS — States and feedback
+     ───────────────────────────────────────────────────────────────────────────── */
+  --success: #22c55e;
+  --success-light: #4ade80;
+  --success-lighter: #86efac;
+  --error: #ef4444;
+  --error-light: #f87171;
+  --warning: #fbbf24;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     SYNTAX COLORS — Code highlighting and terminal
+     ───────────────────────────────────────────────────────────────────────────── */
+  --code-gold: #f8c94a;
+  --code-gold-light: #ffd47f;
+  --code-violet: #c4b5fd;
+  --code-violet-medium: #b794f4;
+  --code-violet-dark: #9f7aea;
+  --code-pink: #f472b6;
+  --code-cyan: #22d3ee;
+  --code-blue: #60a5fa;
+  --terminal-text: #8ef6d8;
+  --terminal-text-alt: #c4f1ff;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     FOREGROUND OPACITY — Text with transparency
+     ───────────────────────────────────────────────────────────────────────────── */
+  --fg-100: rgba(237, 242, 244, 1);
+  --fg-95: rgba(237, 242, 244, 0.95);
+  --fg-88: rgba(237, 242, 244, 0.88);
+  --fg-75: rgba(237, 242, 244, 0.75);
+  --fg-60: rgba(237, 242, 244, 0.6);
+  --fg-50: rgba(237, 242, 244, 0.5);
+  --fg-40: rgba(237, 242, 244, 0.4);
+  --fg-30: rgba(237, 242, 244, 0.3);
+  --fg-20: rgba(237, 242, 244, 0.2);
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     BORDER COLORS — Subtle to strong
+     ───────────────────────────────────────────────────────────────────────────── */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.25);
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     BACKGROUND OVERLAYS — Transparent backgrounds
+     ───────────────────────────────────────────────────────────────────────────── */
+  --bg-overlay-subtle: rgba(255, 255, 255, 0.03);
+  --bg-overlay-light: rgba(255, 255, 255, 0.06);
+  --bg-overlay-medium: rgba(255, 255, 255, 0.1);
+  --bg-overlay-strong: rgba(255, 255, 255, 0.15);
+  --bg-overlay-dark: rgba(0, 0, 0, 0.5);
+  --bg-overlay-darker: rgba(0, 0, 0, 0.7);
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     SPACING SCALE — Based on 4px (0.25rem)
+     ───────────────────────────────────────────────────────────────────────────── */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     BORDER RADIUS — Consistent rounding
+     ───────────────────────────────────────────────────────────────────────────── */
+  --radius-sm: 0.25rem;   /* 4px — tight elements */
+  --radius-md: 0.5rem;    /* 8px — buttons, inputs */
+  --radius-lg: 0.75rem;   /* 12px — cards */
+  --radius-xl: 1rem;      /* 16px — modals, panels */
+  --radius-full: 999px;   /* pills, circles */
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     TYPOGRAPHY — Font sizes
+     ───────────────────────────────────────────────────────────────────────────── */
+  --text-xs: 0.7rem;      /* 11.2px — micro labels */
+  --text-sm: 0.8rem;      /* 12.8px — small text */
+  --text-base: 0.875rem;  /* 14px — body text */
+  --text-md: 0.95rem;     /* 15.2px — slightly larger */
+  --text-lg: 1.1rem;      /* 17.6px — headings */
+  --text-xl: 1.25rem;     /* 20px — large headings */
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     TRANSITIONS — Animation timing
+     ───────────────────────────────────────────────────────────────────────────── */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.15s ease;
+  --transition-slow: 0.25s ease;
+  --transition-slower: 0.35s ease;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     SHADOWS — Elevation levels
+     ───────────────────────────────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     Z-INDEX SCALE — Layering
+     ───────────────────────────────────────────────────────────────────────────── */
+  --z-base: 1;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-overlay: 50;
+  --z-modal: 100;
+  --z-popover: 150;
+  --z-toast: 200;
 }
 
 html {
@@ -14,8 +135,16 @@ html {
 }
 
 @theme inline {
+  /* Map CSS variables to Tailwind */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
   --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-jetbrains-mono);
 }
@@ -28,7 +157,7 @@ body {
 
 ::selection {
   background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 65%, black);
-  color: #0a0f1a;
+  color: var(--background);
 }
 
 .small-caps {
