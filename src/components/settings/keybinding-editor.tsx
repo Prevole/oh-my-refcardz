@@ -8,6 +8,8 @@ import {
   type KeybindingAction,
   type KeyCombo,
   type Modifier,
+  key,
+  sequence,
   getComboSequenceDisplayParts,
   type KeyDisplayPart,
   isArrowKey,
@@ -23,6 +25,9 @@ type RecordingState = {
 } | null;
 
 const SEQUENCE_TIMEOUT_MS = 800;
+const EXAMPLE_SEQUENCE = sequence(key("g"), key("g"));
+const ESCAPE_KEY: KeyCombo = key("Escape");
+const BACKSPACE_KEY: KeyCombo = key("Backspace");
 
 function KeycapDisplay({ part }: { part: KeyDisplayPart }) {
   const display = part.value;
@@ -113,12 +118,6 @@ function RecordingOverlay({
         return;
       }
 
-      if (event.key === "Escape" && !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
-        event.preventDefault();
-        onCancel();
-        return;
-      }
-
       event.preventDefault();
 
       const modifiers: Modifier[] = [];
@@ -138,16 +137,40 @@ function RecordingOverlay({
   }, [onCancel, onKeyDown]);
 
   return (
-    <div ref={overlayRef} className={styles.recordingOverlay}>
-      <div className={styles.recordingContent}>
+    <div
+      ref={overlayRef}
+      className={styles.recordingOverlay}
+      data-recording-overlay-root
+      onClick={onCancel}
+    >
+      <div className={styles.recordingContent} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className={styles.recordingClose}
+          onClick={onCancel}
+          aria-label="Close"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
         <p className={styles.recordingTitle}>
           {pendingCombo ? "Press a second key for sequence" : "Press a key combination"}
         </p>
         <p className={styles.recordingHint}>
-          {pendingCombo ? `Waiting ${Math.round(SEQUENCE_TIMEOUT_MS / 1000)}s before saving single key` : "You can type two keys in a row (example: g then g)"}
+          {pendingCombo ? (
+            `Waiting ${Math.round(SEQUENCE_TIMEOUT_MS / 1000)}s before saving single key`
+          ) : (
+            <>
+              You can type two keys in a row, for example <span className={styles.recordingBinding}><ComboDisplay combo={EXAMPLE_SEQUENCE} /></span>.
+            </>
+          )}
         </p>
         <p className={styles.recordingHint}>
-          Press <span className={styles.recordingKey}>Esc</span> to cancel
+          Every key is captured here, including <span className={styles.recordingBinding}><ComboDisplay combo={ESCAPE_KEY} /></span> and <span className={styles.recordingBinding}><ComboDisplay combo={BACKSPACE_KEY} /></span>.
+        </p>
+        <p className={styles.recordingFooter}>
+          Click outside or use the close button to cancel.
         </p>
       </div>
     </div>

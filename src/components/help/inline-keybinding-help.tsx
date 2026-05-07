@@ -39,7 +39,7 @@ export function SheetInlineHelp() {
     <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs text-white/75">
       <Link href="/" className="transition hover:text-white">{"<- Back to grid"}</Link>
       <span>with</span>
-      <InlineKeybinding actionId={ACTION_IDS.BACK_TO_HOME} />
+      <InlineKeybinding actionId={ACTION_IDS.BACK_TO_HOME} maxCombos={2} />
       <span>, navigate with</span>
       <InlineKeybinding actionId={ACTION_IDS.MOVE_LEFT} />
       <InlineKeybinding actionId={ACTION_IDS.MOVE_DOWN} />

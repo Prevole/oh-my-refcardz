@@ -7,6 +7,10 @@
   animation: fadeIn 0.2s ease;
 }
 
+.overlay[data-closing="true"] {
+  animation: fadeOut 0.22s ease forwards;
+}
+
 .panel {
   position: absolute;
   top: 0;
@@ -19,6 +23,10 @@
   background: rgba(17, 31, 53, 0.98);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   animation: slideInRight 0.25s ease;
+}
+
+.panel[data-closing="true"] {
+  animation: slideOutRight 0.22s ease forwards;
 }
 
 .header {
@@ -268,6 +276,16 @@
   }
 }
 
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -275,5 +293,15 @@
 
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeWithDefaults, combosEqual, findConflict } from "./keybinding-utils";
+import { mergeWithDefaults, combosEqual, dedupeCombos, findConflict } from "./keybinding-utils";
 import { DEFAULT_KEYBINDINGS, type KeybindingsConfig, type KeyCombo } from "./keybindings";
 
 function key(k: string, modifiers: string[] = []): KeyCombo {
@@ -64,6 +64,19 @@ describe("keybinding-utils", () => {
       
       expect(combosEqual(seq1, seq2)).toBe(true);
       expect(combosEqual(seq1, seq3)).toBe(false);
+    });
+  });
+
+  describe("dedupeCombos", () => {
+    it("removes duplicate simple combos while preserving order", () => {
+      expect(dedupeCombos([key("a"), key("b"), key("a")])).toEqual([key("a"), key("b")]);
+    });
+
+    it("removes duplicate sequences", () => {
+      expect(dedupeCombos([sequence("g", "g"), sequence("g", "g"), sequence("g", "t")])).toEqual([
+        sequence("g", "g"),
+        sequence("g", "t"),
+      ]);
     });
   });
 

@@ -44,6 +44,20 @@ export function combosEqual(a: KeyCombo, b: KeyCombo): boolean {
   return combosEqual(a.next, b.next);
 }
 
+export function dedupeCombos(combos: KeyCombo[]): KeyCombo[] {
+  const result: KeyCombo[] = [];
+
+  for (const combo of combos) {
+    if (result.some((existing) => combosEqual(existing, combo))) {
+      continue;
+    }
+
+    result.push(combo);
+  }
+
+  return result;
+}
+
 export function findConflict(
   config: KeybindingsConfig,
   context: KeybindingContext,

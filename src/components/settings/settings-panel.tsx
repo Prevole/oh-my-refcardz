@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ColorMode, BorderStyle, GradientDirection, UISettings, AccordionState } from "@/hooks/use-ui-settings";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { AccordionItem } from "./accordion";
@@ -70,17 +70,41 @@ export function SettingsPanel({
   onToggleAccordion,
   onResetModern,
 }: Props) {
+  const CLOSE_ANIMATION_MS = 220;
   const panelRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const closeTimeoutRef = useRef<number | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current !== null) {
+        window.clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const requestClose = useCallback(() => {
+    if (isClosing) {
+      return;
+    }
+
+    setIsClosing(true);
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setIsClosing(false);
+      closeTimeoutRef.current = null;
+      onClose();
+    }, CLOSE_ANIMATION_MS);
+  }, [isClosing, onClose]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        requestClose();
       }
     },
-    [onClose]
+    [requestClose]
   );
 
   useScopedKeyboardHandler("settings", handleKeyDown, [handleKeyDown]);
@@ -145,8 +169,13 @@ export function SettingsPanel({
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-recording-overlay-root]")) {
+        return;
+      }
+
       if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        onClose();
+        requestClose();
       }
     };
 
@@ -158,18 +187,18 @@ export function SettingsPanel({
       clearTimeout(timeoutId);
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, requestClose]);
 
   if (!isOpen) return null;
 
   const showDirectionOptions = settings.modern.border !== "full";
 
   return (
-    <div className={styles.overlay}>
-      <div ref={panelRef} className={styles.panel}>
+    <div className={styles.overlay} data-closing={isClosing ? "true" : undefined}>
+      <div ref={panelRef} className={styles.panel} data-closing={isClosing ? "true" : undefined}>
         <div className={styles.header}>
           <h2 className={styles.title}>Settings</h2>
-          <button onClick={onClose} className={styles.close} aria-label="Close">
+          <button onClick={requestClose} className={styles.close} aria-label="Close">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>

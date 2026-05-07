@@ -154,7 +154,7 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.BACK_TO_HOME,
       label: "Back to grid",
-      combos: [key("Backspace")],
+      combos: [key("Backspace"), key("Escape")],
     },
     {
       id: ACTION_IDS.COPY_COMMAND,

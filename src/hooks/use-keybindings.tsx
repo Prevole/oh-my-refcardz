@@ -21,6 +21,7 @@ import {
 import {
   mergeWithDefaults,
   combosEqual,
+  dedupeCombos,
   findConflict,
   type KeybindingConflict,
 } from "@/lib/keybinding-utils";
@@ -228,15 +229,17 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       actionId: string,
       combos: KeyCombo[]
     ): KeybindingConflict | null => {
+      const uniqueCombos = dedupeCombos(combos);
+
       if (combos.length > 0) {
-        const conflict = findConflict(config, context, actionId, combos[0]);
+        const conflict = findConflict(config, context, actionId, uniqueCombos[0]);
         if (conflict) {
           const newConfig = { ...config };
           newConfig[conflict.context] = newConfig[conflict.context].map((action) => {
             if (action.id === conflict.existingAction.id) {
               return {
                 ...action,
-                combos: action.combos.filter((c) => !combosEqual(c, combos[0])),
+                combos: action.combos.filter((c) => !combosEqual(c, uniqueCombos[0])),
               };
             }
             return action;
@@ -244,7 +247,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
 
           newConfig[context] = newConfig[context].map((action) => {
             if (action.id === actionId) {
-              return { ...action, combos };
+              return { ...action, combos: uniqueCombos };
             }
             return action;
           });
@@ -257,7 +260,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       const newConfig = { ...config };
       newConfig[context] = newConfig[context].map((action) => {
         if (action.id === actionId) {
-          return { ...action, combos };
+          return { ...action, combos: uniqueCombos };
         }
         return action;
       });
@@ -295,7 +298,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
 
       newConfig[context] = newConfig[context].map((a) => {
         if (a.id === actionId) {
-          return { ...a, combos: [...a.combos, combo] };
+          return { ...a, combos: dedupeCombos([...a.combos, combo]) };
         }
         return a;
       });
