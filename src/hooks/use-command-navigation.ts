@@ -483,7 +483,11 @@ export function useCommandNavigation({ modalOpen, onShowDetails }: UseCommandNav
       const item = target.closest<HTMLElement>("[data-item]");
       if (item) {
         setFocused(item);
+        return;
       }
+
+      // Click on non-navigable element: clear focus
+      clearAllFocus();
     }
 
     rebuildGraph();

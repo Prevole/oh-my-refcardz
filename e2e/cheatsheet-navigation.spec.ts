@@ -82,6 +82,25 @@ test.describe("Cheatsheet keyboard navigation", () => {
     }).toPass({ timeout: 5000 });
   });
 
+  test("clears focus when clicking on non-navigable area", async ({ page }) => {
+    // Focus an item first
+    await page.keyboard.press("j");
+    
+    await expect(async () => {
+      const focused = page.locator("[data-nav-focused='true']");
+      await expect(focused).toBeVisible({ timeout: 500 });
+    }).toPass({ timeout: 5000 });
+
+    // Click on the page header (non-navigable area)
+    const header = page.locator("h1");
+    await header.click();
+    
+    await expect(async () => {
+      const stillFocused = await page.locator("[data-nav-focused='true']").count();
+      expect(stillFocused).toBe(0);
+    }).toPass({ timeout: 5000 });
+  });
+
   test("goes back to home with Backspace when no item is focused", async ({ page }) => {
     await page.keyboard.press("Backspace");
     await expect(page).toHaveURL("/");

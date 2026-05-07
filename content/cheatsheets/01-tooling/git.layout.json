@@ -34,16 +34,16 @@
   {
     "cards": [
       {
-        "colStart": 1,
-        "rowStart": 1,
         "colSpan": 6,
-        "rowSpan": 8
+        "rowSpan": 8,
+        "colStart": 1,
+        "rowStart": 1
       },
       {
-        "colStart": 7,
-        "rowStart": 1,
         "colSpan": 6,
-        "rowSpan": 8
+        "rowSpan": 8,
+        "colStart": 7,
+        "rowStart": 1
       }
     ]
   },
