@@ -716,38 +716,7 @@
 }
 
 .itemActionButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-7);
-  height: var(--space-7);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-overlay-light);
-  color: var(--fg-60);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-  border-radius: 0;
-  margin-left: -1px;
-}
-
-.itemActionButton:first-child {
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  margin-left: 0;
-}
-
-.itemActionButton:last-child {
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
-
-.itemActionButton:only-child {
-  border-radius: var(--radius-sm);
-  margin-left: 0;
-}
-
-.itemActionButton:hover {
-  background: var(--bg-overlay-medium);
-  color: var(--fg-95);
-  border-color: var(--border-strong);
+  composes: action-button-group-item from global;
 }
 
 .itemActionButtonCopied {
@@ -885,32 +854,15 @@
 }
 
 .configFileCopyButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-6);
-  height: var(--space-6);
+  composes: btn-copy from global;
   flex: none;
   align-self: center;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-overlay-light);
-  color: var(--fg-50);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--transition-normal), background var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
 }
 
 .configFileCopyable:hover .configFileCopyButton,
 .configFileCopyable[data-nav-focused="true"] .configFileCopyButton,
 .configFileCopyButtonCopied {
   opacity: 1;
-}
-
-.configFileCopyButton:hover {
-  background: var(--bg-overlay-medium);
-  border-color: var(--border-strong);
-  color: var(--fg-88);
 }
 
 .configFileCopyButtonCopied {
@@ -1011,32 +963,15 @@
 }
 
 .configCopyButton {
+  composes: btn-copy from global;
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-6);
-  height: var(--space-6);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-overlay-light);
-  color: var(--fg-50);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--transition-normal), background var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
 }
 
 .configBlock:hover .configCopyButton,
 .configBlock[data-nav-focused="true"] .configCopyButton {
   opacity: 1;
-}
-
-.configCopyButton:hover {
-  background: var(--bg-overlay-medium);
-  border-color: var(--border-strong);
-  color: var(--fg-88);
 }
 
 .configCopyButtonCopied {

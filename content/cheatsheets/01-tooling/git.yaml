@@ -108,7 +108,7 @@ sections:
               - commandExample: 'git commit --amend -m "fix: correct typo"'
               - text: Change the author of the commit (useful after misconfigured identity).
               - command: 'git commit --amend --author="<Name> \<<email>>"'
-              - commandExample: 'git commit --amend --author="John Doe <john@example.com>"'
+              - commandExample: 'git commit --amend --author="John Doe \<john@example.com>"'
 
   - title: History and Inspection
     cards:
