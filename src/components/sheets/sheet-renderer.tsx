@@ -202,13 +202,13 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
       data-item=""
       data-item-details={itemData}
     >
+      {hasDetailedEntries && (
+        <ItemActions hasExample={true} />
+      )}
       <div className={cheatsheetStyles.itemEntriesHeader}>
         {item.entries.map((entry, index) => (
           <EntryRenderer key={index} entry={entry} hasAliases={hasAliases} />
         ))}
-        {hasDetailedEntries && (
-          <ItemActions hasExample={true} />
-        )}
       </div>
     </div>
   );

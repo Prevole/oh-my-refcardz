@@ -669,6 +669,7 @@
 }
 
 .itemEntries {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -711,6 +712,7 @@
   position: absolute;
   top: 0;
   right: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
 }
@@ -731,23 +733,36 @@
   justify-content: center;
   width: var(--space-6);
   height: var(--space-6);
-  border-radius: 50%;
-  border: 1px solid var(--border-strong);
+  border-radius: 0 var(--radius-lg) 0 var(--radius-lg);
+  border: none;
+  border-left: 1px solid var(--border-medium);
+  border-bottom: 1px solid var(--border-medium);
   background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
-  color: var(--fg-60);
+  color: var(--fg-50);
   cursor: pointer;
   transition: all var(--transition-normal);
   flex-shrink: 0;
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 700;
+  font-style: italic;
   line-height: 1;
 }
 
 .itemInfoButton:hover {
-  border-color: var(--fg-40);
   color: var(--fg-88);
   background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  border-color: var(--border-strong);
+}
+
+.itemEntries[data-nav-focused="true"] .itemInfoButton {
+  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 55%, var(--border-strong));
+  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 12%, var(--bg-elevated));
+  color: var(--sheet-accent, var(--accent));
+}
+
+.itemEntries[data-nav-focused="true"] .itemInfoButton:hover {
+  background: color-mix(in srgb, var(--sheet-accent, var(--accent)) 20%, var(--bg-elevated));
 }
 
 .configItem {
