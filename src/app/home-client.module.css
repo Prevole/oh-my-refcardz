@@ -129,7 +129,7 @@
 
 @media (max-width: 640px) {
   .hexBoard {
-    padding-bottom: 0.6rem;
+    padding-bottom: var(--spacing-compact);
   }
 
   .hexIcon {

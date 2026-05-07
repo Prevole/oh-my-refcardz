@@ -9,7 +9,7 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--spacing-compact);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -50,7 +50,7 @@
 
 .label {
   position: absolute;
-  right: calc(100% + 0.6rem);
+  right: calc(100% + var(--spacing-compact));
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;

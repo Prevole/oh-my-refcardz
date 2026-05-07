@@ -88,8 +88,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--space-7);
+  height: var(--space-7);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   background: var(--bg-overlay-light);
@@ -182,8 +182,8 @@
 }
 
 .btn-close-sm {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--space-7);
+  height: var(--space-7);
   border-radius: var(--radius-md);
   border: none;
   background: transparent;
@@ -479,9 +479,9 @@
 }
 
 .keycap-box {
-  min-width: 1.75rem;
-  min-height: 1.75rem;
-  padding: 0 0.45rem;
+  min-width: var(--space-7);
+  min-height: var(--space-7);
+  padding: 0 var(--spacing-tight);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
@@ -493,7 +493,7 @@
 .keycap-box-lg {
   min-width: 2.35rem;
   min-height: 2.35rem;
-  padding: 0 0.6rem;
+  padding: 0 var(--spacing-compact);
   border-radius: var(--radius-md);
 }
 
@@ -522,7 +522,7 @@
 
 .table-data td {
   border-bottom: 1px solid var(--border-medium);
-  padding: 0.6rem 0.4rem;
+  padding: var(--spacing-compact) 0.4rem;
   vertical-align: middle;
   font-size: 0.98rem;
 }

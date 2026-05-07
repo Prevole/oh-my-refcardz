@@ -21,8 +21,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--space-7);
+  height: var(--space-7);
   border: 1px solid var(--border-medium);
   background: var(--bg-overlay-light);
   color: var(--fg-60);
@@ -234,7 +234,7 @@
 }
 
 .commandDescription {
-  margin: 0.45rem 0 0;
+  margin: var(--spacing-tight) 0 0;
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: var(--text-md);
   color: var(--fg-88);
@@ -435,7 +435,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.6rem;
+  gap: var(--spacing-compact);
   flex: none;
 }
 
