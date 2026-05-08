@@ -22,6 +22,13 @@ sections:
               - title: Apply source state
               - command: chezmoi apply
               - text: Render templates and update managed files in the home directory.
+            detailedEntries:
+              - commandExample: chezmoi apply -n
+              - text: Dry-run mode — show what would change without modifying files.
+              - commandExample: chezmoi apply -v
+              - text: Verbose mode — print each file as it is applied.
+              - commandExample: chezmoi apply -n -v
+              - text: Combine both to preview changes in detail.
 
       - title: Navigate and Edit
         items:
@@ -128,6 +135,13 @@ sections:
               - title: Find files not yet managed
               - command: chezmoi unmanaged
               - text: List home-directory files that are outside the current source state when deciding what should be brought under management.
+
+          - entries:
+              - title: Stop managing a file
+              - command: chezmoi forget <path to target file>
+              - text: Remove a file from the source state without deleting it from the target machine.
+            detailedEntries:
+              - commandExample: chezmoi forget ~/.config/some-app/config.json
 
   - title: Machine Setup
     cards:
