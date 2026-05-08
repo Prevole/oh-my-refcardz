@@ -1,0 +1,190 @@
+title: Chezmoi
+summary: Daily dotfile operations, source-state conventions, and a machine bootstrap flow tailored to a 1Password-backed macOS setup.
+color: "#4051B5"
+icon: chezmoi
+
+sections:
+  - title: Daily Workflow
+    cards:
+      - title: Inspect and Apply
+        items:
+          - entries:
+              - title: Check pending target changes
+              - command: chezmoi status
+              - text: Show which managed files differ from the source state before deciding whether to edit, re-add, or apply.
+
+          - entries:
+              - title: Review rendered diff
+              - command: chezmoi diff
+              - text: Inspect exactly what `chezmoi apply` would change on the current machine.
+
+          - entries:
+              - title: Apply source state
+              - command: chezmoi apply
+              - text: Render templates and update managed files in the home directory.
+
+      - title: Navigate and Edit
+        items:
+          - entries:
+              - title: Jump to the source directory
+              - command: chezmoi cd
+              - text: Open the source-state repository where `dot_*`, `private_*`, templates, and scripts live.
+
+          - entries:
+              - title: Edit one managed target file
+              - command: chezmoi edit <path to target file>
+              - text: Open the source file that corresponds to a target path without translating the `chezmoi` naming rules by hand.
+            detailedEntries:
+              - commandExample: chezmoi edit ~/.zshrc
+              - commandExample: chezmoi edit ~/.gitconfig
+              - commandExample: chezmoi edit ~/.config/1Password/ssh/agent.toml
+
+          - entries:
+              - title: Shell alias
+              - text: In this setup, `cm` is a shell alias for `chezmoi`.
+              - commandExample: cm status
+              - commandExample: cm apply
+
+      - title: Update and Sync
+        items:
+          - entries:
+              - title: Pull and apply upstream changes
+              - command: chezmoi update
+              - text: Fetch the source repo, merge/rebase according to config, and apply the resulting source state in one step.
+
+          - entries:
+              - title: Update without applying
+              - command: chezmoi update --apply=false
+              - text: Refresh the source state first, then inspect with `chezmoi status` or `chezmoi diff` before touching the target machine.
+
+  - title: Source State
+    cards:
+      - title: Naming Conventions
+        items:
+          - entries:
+              - title: Common source-state patterns
+              - contentExample: |-
+                  dot_zshrc.tmpl
+                  dot_ssh/config.tmpl
+                  dot_config/private_1Password/private_ssh/private_agent.toml.tmpl
+                  dot_config/direnv/lib/executable_oprc.sh
+                  .chezmoiscripts/run_once_before_01-setup-zsh.sh
+              - text: >-
+                  `dot_` maps to hidden paths, `private_` restricts permissions,
+                  `executable_` preserves the executable bit, and `.tmpl`
+                  means the target is rendered from a template.
+
+          - entries:
+              - title: Profiles and prompted data
+              - file: .chezmoi.yaml.tmpl
+              - text: >-
+                  This setup uses `promptChoiceOnce` to persist the selected
+                  profile and feeds profile-specific templates from
+                  `profiles/work`, `profiles/lp`, and `profiles/sp`.
+
+      - title: Fixups
+        items:
+          - entries:
+              - title: Re-import a changed target file
+              - command: chezmoi re-add <path to target file>
+              - text: Update the source state from a file that was edited directly on disk or regenerated locally.
+            detailedEntries:
+              - commandExample: chezmoi re-add ~/.config/nvim/lazy-lock.json
+
+          - entries:
+              - title: Mark a managed file as a template
+              - command: chezmoi chattr +template <path to target file>
+              - text: Convert an existing managed file to template mode when it needs dynamic data or secret lookups.
+            detailedEntries:
+              - commandExample: chezmoi chattr +template ~/.config/1Password/ssh/agent.toml
+
+          - entries:
+              - title: Find files not yet managed
+              - command: chezmoi unmanaged
+              - text: List home-directory files that are outside the current source state when deciding what should be brought under management.
+
+  - title: Machine Setup
+    cards:
+      - title: Bootstrap
+        items:
+          - entries:
+              - title: Install Apple developer tools
+              - command: xcode-select --install
+              - text: Make `git` available before cloning the bootstrap repository.
+
+          - entries:
+              - title: Clone the bootstrap repo temporarily
+              - command: git clone https://github.com/<your-username>/<this-repo>.git /tmp/chezmoi
+              - text: Clone over HTTPS first because the SSH keys and 1Password agent are not set up yet.
+
+          - entries:
+              - title: Run the machine setup script
+              - command: /tmp/chezmoi/scripts/mac-setup.sh
+              - text: Start the opinionated machine bootstrap flow that installs tooling, prepares secrets, applies dotfiles, and clones repositories.
+
+      - title: 1Password Prerequisites
+        items:
+          - entries:
+              - title: Create the central vault
+              - text: Create a `chezmoi` vault in [[1password|1Password]] before running the machine setup.
+
+          - entries:
+              - title: Git identity item
+              - text: Create a `GitHub Configurations` login item in the `chezmoi` vault so templates can fill Git name, email, username, and org data.
+
+          - entries:
+              - title: Repository inventory item
+              - text: >-
+                  Create one `Git Repositories - <profile>` secure note per
+                  profile in the `chezmoi` vault. Its `notesPlain` field stores
+                  the repository inventory used later by `repos_clone`.
+            detailedEntries:
+              - contentExample: |-
+                  repositories:
+                    work:
+                      - url: git@github.com:org/repo.git
+                    perso:
+                      - name: custom-folder
+                        url: git@github-perso:user/repo.git
+
+      - title: Setup Pipeline
+        items:
+          - entries:
+              - title: What `mac-setup.sh` runs
+              - file: scripts/setup.d/
+              - settings:
+                  - 00-profile.sh = choose and persist the machine profile
+                  - 01-homebrew.sh = install Homebrew
+                  - 02-machine.sh = configure machine identity
+                  - 03-1password.sh = sign in to [[1password|1Password]] and `op`
+                  - 04-ssh-keys.sh = generate and extract temporary SSH keys
+                  - 05-chezmoi.sh = install `chezmoi` and render the Brewfile
+                  - 06-apps.sh = `brew bundle install`
+                  - 07-directories.sh = create expected directories
+                  - 08-dotfiles.sh = `chezmoi init --apply` and restart 1Password
+                  - 09-mise.sh = install global runtimes with `mise`
+                  - 10-repos.sh = clone repositories from 1Password
+                  - 98-ssh-cleanup.sh = delete temporary private keys from disk
+              - text: >-
+                  The setup is intentionally split into sourced steps so the
+                  machine bootstrap stays resumable and easier to reason about.
+
+          - entries:
+              - title: Profile persistence
+              - file: ~/.config/chezmoi/chezmoi.yaml
+              - text: >-
+                  The selected profile is written once and reused on later
+                  `chezmoi apply` runs so `promptChoiceOnce` does not ask
+                  again.
+
+  - title: Contextual Helpers
+    cards:
+      - title: Related Workflows
+        items:
+          - entries:
+              - title: Secrets in templates
+              - text: Secret-backed templates in this setup rely on [[op|op]] and [[1password|1Password]] rather than committed plaintext values.
+
+          - entries:
+              - title: Project-local secrets with direnv
+              - text: Use [[direnv|direnv]] when a project needs runtime environment variables resolved from 1Password instead of host-level dotfiles.
