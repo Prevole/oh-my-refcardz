@@ -67,7 +67,7 @@ describe("pointerToGridPosition", () => {
 
   it("clamps colStart to prevent card overflow beyond grid", () => {
     const colSpan = 4;
-    const result = pointerToGridPosition(2000, 200, mockGridRect, unitSize, colSpan);
+    const result = pointerToGridPosition(4000, 200, mockGridRect, unitSize, colSpan);
     expect(result.colStart).toBe(GRID_COLUMNS - colSpan + 1);
   });
 
@@ -134,19 +134,19 @@ describe("clampCardLayoutToGrid", () => {
   });
 
   it("clamps colSpan to GRID_COLUMNS", () => {
-    const card = { colStart: 1, rowStart: 1, colSpan: 20, rowSpan: 2 };
+    const card = { colStart: 1, rowStart: 1, colSpan: 40, rowSpan: 2 };
     const result = clampCardLayoutToGrid(card);
     expect(result.colSpan).toBe(GRID_COLUMNS);
   });
 
   it("clamps rowSpan to MAX_ROW_SPAN", () => {
-    const card = { colStart: 1, rowStart: 1, colSpan: 2, rowSpan: 50 };
+    const card = { colStart: 1, rowStart: 1, colSpan: 2, rowSpan: 100 };
     const result = clampCardLayoutToGrid(card);
     expect(result.rowSpan).toBe(MAX_ROW_SPAN);
   });
 
   it("clamps colStart so card fits in grid", () => {
-    const card = { colStart: 11, rowStart: 1, colSpan: 4, rowSpan: 2 };
+    const card = { colStart: 40, rowStart: 1, colSpan: 4, rowSpan: 2 };
     const result = clampCardLayoutToGrid(card);
     expect(result.colStart).toBe(GRID_COLUMNS - 4 + 1);
   });
@@ -204,7 +204,7 @@ describe("placeCardAtNearestSlot", () => {
 
   it("respects colSpan when finding slot", () => {
     const occupied = new Set<string>();
-    for (let col = 1; col <= 10; col++) {
+    for (let col = 1; col <= GRID_COLUMNS - 2; col++) {
       occupied.add(`${col}:1`);
     }
     const card = { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 1 };

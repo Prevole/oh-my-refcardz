@@ -10,6 +10,7 @@ import {
   areLayoutsEqual,
   buildStorageKey,
   parseStoredLayouts,
+  serializeStoredLayouts,
 } from "./layout-persistence";
 
 function subscribeToHydration() {
@@ -70,7 +71,7 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
       return;
     }
 
-    window.localStorage.setItem(storageKey, JSON.stringify(sectionLayouts));
+    window.localStorage.setItem(storageKey, serializeStoredLayouts(sectionLayouts));
 
     if (process.env.NODE_ENV === "development") {
       syncLayoutToDev(sheetSlug, sectionLayouts);

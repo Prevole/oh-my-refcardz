@@ -2,68 +2,68 @@
   {
     "cards": [
       {
-        "colStart": 1,
-        "rowStart": 1,
-        "colSpan": 6,
-        "rowSpan": 6
-      },
-      {
-        "colStart": 7,
-        "rowStart": 1,
-        "colSpan": 6,
-        "rowSpan": 6
-      },
-      {
-        "colStart": 1,
-        "rowStart": 7,
-        "colSpan": 6,
-        "rowSpan": 4
-      }
-    ]
-  },
-  {
-    "cards": [
-      {
-        "colSpan": 7,
-        "rowSpan": 6,
+        "colSpan": 18,
+        "rowSpan": 13,
         "colStart": 1,
         "rowStart": 1
       },
       {
-        "colSpan": 5,
-        "rowSpan": 6,
-        "colStart": 8,
+        "colSpan": 18,
+        "rowSpan": 23,
+        "colStart": 19,
         "rowStart": 1
-      }
-    ]
-  },
-  {
-    "cards": [
+      },
       {
-        "colSpan": 6,
+        "colSpan": 18,
         "rowSpan": 10,
         "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 6,
-        "rowSpan": 8,
-        "colStart": 7,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 8,
-        "rowSpan": 8,
-        "colStart": 1,
-        "rowStart": 11
+        "rowStart": 14
       }
     ]
   },
   {
     "cards": [
       {
-        "colSpan": 5,
-        "rowSpan": 3,
+        "colSpan": 20,
+        "rowSpan": 18,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 16,
+        "rowSpan": 18,
+        "colStart": 21,
+        "rowStart": 1
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 18,
+        "rowSpan": 29,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 18,
+        "rowSpan": 29,
+        "colStart": 19,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 24,
+        "rowSpan": 24,
+        "colStart": 1,
+        "rowStart": 31
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 36,
+        "rowSpan": 7,
         "colStart": 1,
         "rowStart": 1
       }

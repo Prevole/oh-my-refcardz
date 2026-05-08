@@ -43,61 +43,61 @@ function createSheet(sections: Array<{ cards: CheatSheetCard[] }>): YamlCheatShe
 }
 
 describe("inferCardColSpan", () => {
-  it("returns 4 for card with 1-2 items", () => {
-    expect(inferCardColSpan(createCard(1))).toBe(4);
-    expect(inferCardColSpan(createCard(2))).toBe(4);
+  it("returns 12 for card with 1-2 items", () => {
+    expect(inferCardColSpan(createCard(1))).toBe(12);
+    expect(inferCardColSpan(createCard(2))).toBe(12);
   });
 
-  it("returns 6 for card with 3-4 items", () => {
-    expect(inferCardColSpan(createCard(3))).toBe(6);
-    expect(inferCardColSpan(createCard(4))).toBe(6);
+  it("returns 18 for card with 3-4 items", () => {
+    expect(inferCardColSpan(createCard(3))).toBe(18);
+    expect(inferCardColSpan(createCard(4))).toBe(18);
   });
 
-  it("returns 8 for card with 5+ items", () => {
-    expect(inferCardColSpan(createCard(5))).toBe(8);
-    expect(inferCardColSpan(createCard(10))).toBe(8);
+  it("returns 24 for card with 5+ items", () => {
+    expect(inferCardColSpan(createCard(5))).toBe(24);
+    expect(inferCardColSpan(createCard(10))).toBe(24);
   });
 
-  it("returns 8 for card with content item regardless of count", () => {
-    expect(inferCardColSpan(createCard(1, ["content"]))).toBe(8);
-    expect(inferCardColSpan(createCard(2, ["command", "content"]))).toBe(8);
+  it("returns 24 for card with content item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["content"]))).toBe(24);
+    expect(inferCardColSpan(createCard(2, ["command", "content"]))).toBe(24);
   });
 
-  it("returns 8 for card with settings item regardless of count", () => {
-    expect(inferCardColSpan(createCard(1, ["settings"]))).toBe(8);
-    expect(inferCardColSpan(createCard(2, ["command", "settings"]))).toBe(8);
+  it("returns 24 for card with settings item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["settings"]))).toBe(24);
+    expect(inferCardColSpan(createCard(2, ["command", "settings"]))).toBe(24);
   });
 });
 
 describe("inferCardRowSpan", () => {
-  it("returns 4 for card with 1-2 items", () => {
-    expect(inferCardRowSpan(createCard(1))).toBe(4);
-    expect(inferCardRowSpan(createCard(2))).toBe(4);
+  it("returns 12 for card with 1-2 items", () => {
+    expect(inferCardRowSpan(createCard(1))).toBe(12);
+    expect(inferCardRowSpan(createCard(2))).toBe(12);
   });
 
-  it("returns 5 for card with 3-4 shortcut items", () => {
-    expect(inferCardRowSpan(createCard(3, ["shortcut", "shortcut", "shortcut"]))).toBe(5);
-    expect(inferCardRowSpan(createCard(4, ["shortcut", "shortcut", "shortcut", "shortcut"]))).toBe(5);
+  it("returns 15 for card with 3-4 shortcut items", () => {
+    expect(inferCardRowSpan(createCard(3, ["shortcut", "shortcut", "shortcut"]))).toBe(15);
+    expect(inferCardRowSpan(createCard(4, ["shortcut", "shortcut", "shortcut", "shortcut"]))).toBe(15);
   });
 
-  it("returns 6 for card with 3-4 command items", () => {
-    expect(inferCardRowSpan(createCard(3, ["command", "command", "command"]))).toBe(6);
-    expect(inferCardRowSpan(createCard(4, ["command", "command", "command", "command"]))).toBe(6);
+  it("returns 18 for card with 3-4 command items", () => {
+    expect(inferCardRowSpan(createCard(3, ["command", "command", "command"]))).toBe(18);
+    expect(inferCardRowSpan(createCard(4, ["command", "command", "command", "command"]))).toBe(18);
   });
 
-  it("returns 8 for card with 5+ items", () => {
-    expect(inferCardRowSpan(createCard(5))).toBe(8);
-    expect(inferCardRowSpan(createCard(10))).toBe(8);
+  it("returns 24 for card with 5+ items", () => {
+    expect(inferCardRowSpan(createCard(5))).toBe(24);
+    expect(inferCardRowSpan(createCard(10))).toBe(24);
   });
 
-  it("returns 8 for card with content item regardless of count", () => {
-    expect(inferCardRowSpan(createCard(1, ["content"]))).toBe(8);
-    expect(inferCardRowSpan(createCard(2, ["command", "content"]))).toBe(8);
+  it("returns 24 for card with content item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["content"]))).toBe(24);
+    expect(inferCardRowSpan(createCard(2, ["command", "content"]))).toBe(24);
   });
 
-  it("returns 8 for card with settings item regardless of count", () => {
-    expect(inferCardRowSpan(createCard(1, ["settings"]))).toBe(8);
-    expect(inferCardRowSpan(createCard(2, ["command", "settings"]))).toBe(8);
+  it("returns 24 for card with settings item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["settings"]))).toBe(24);
+    expect(inferCardRowSpan(createCard(2, ["command", "settings"]))).toBe(24);
   });
 });
 
@@ -130,11 +130,11 @@ describe("buildDefaultSectionLayouts", () => {
       { cards: [createCard(2), createCard(5)] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards[0].colSpan).toBe(4);
-    expect(result[0].cards[0].rowSpan).toBe(4);
+    expect(result[0].cards[0].colSpan).toBe(12);
+    expect(result[0].cards[0].rowSpan).toBe(12);
 
-    expect(result[0].cards[1].colSpan).toBe(8);
-    expect(result[0].cards[1].rowSpan).toBe(8);
+    expect(result[0].cards[1].colSpan).toBe(24);
+    expect(result[0].cards[1].rowSpan).toBe(24);
   });
 
   it("resolves card positions to avoid overlap", () => {
@@ -143,8 +143,8 @@ describe("buildDefaultSectionLayouts", () => {
     ]);
     const result = buildDefaultSectionLayouts(sheet);
     expect(result[0].cards[0].colStart).toBe(1);
-    expect(result[0].cards[1].colStart).toBe(5);
-    expect(result[0].cards[2].colStart).toBe(9);
+    expect(result[0].cards[1].colStart).toBe(13);
+    expect(result[0].cards[2].colStart).toBe(25);
     expect(result[0].cards.every((c) => c.rowStart === 1)).toBe(true);
   });
 
@@ -164,7 +164,7 @@ describe("buildDefaultSectionLayouts", () => {
       { cards: [createCard(1, ["content"])] },
     ]);
     const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards[0].colSpan).toBe(8);
-    expect(result[0].cards[0].rowSpan).toBe(8);
+    expect(result[0].cards[0].colSpan).toBe(24);
+    expect(result[0].cards[0].rowSpan).toBe(24);
   });
 });

@@ -2,31 +2,15 @@
   {
     "cards": [
       {
-        "colStart": 1,
-        "rowStart": 1,
-        "colSpan": 4,
-        "rowSpan": 4
-      },
-      {
-        "colStart": 5,
-        "rowStart": 1,
-        "colSpan": 4,
-        "rowSpan": 4
-      }
-    ]
-  },
-  {
-    "cards": [
-      {
-        "colSpan": 6,
-        "rowSpan": 6,
+        "colSpan": 18,
+        "rowSpan": 10,
         "colStart": 1,
         "rowStart": 1
       },
       {
-        "colSpan": 6,
-        "rowSpan": 6,
-        "colStart": 7,
+        "colSpan": 18,
+        "rowSpan": 10,
+        "colStart": 19,
         "rowStart": 1
       }
     ]
@@ -34,8 +18,24 @@
   {
     "cards": [
       {
-        "colSpan": 6,
-        "rowSpan": 4,
+        "colSpan": 18,
+        "rowSpan": 16,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 18,
+        "rowSpan": 16,
+        "colStart": 19,
+        "rowStart": 1
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 18,
+        "rowSpan": 11,
         "colStart": 1,
         "rowStart": 1
       }

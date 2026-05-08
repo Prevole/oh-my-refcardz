@@ -5,6 +5,7 @@ import {
   isValidStoredLayout,
   mergeStoredLayouts,
   parseStoredLayouts,
+  serializeStoredLayouts,
 } from "./layout-persistence";
 import type { SectionLayoutState } from "./layout-types";
 import type { YamlCheatSheet } from "@/lib/yaml-cheatsheets";
@@ -28,10 +29,10 @@ function createMockSheet(sectionCardCounts: number[]): YamlCheatSheet {
 function createValidLayout(sectionCardCounts: number[]): SectionLayoutState[] {
   return sectionCardCounts.map((cardCount) => ({
     cards: Array.from({ length: cardCount }, (_, i) => ({
-      colStart: 1 + (i % 3) * 4,
-      rowStart: 1 + Math.floor(i / 3) * 2,
-      colSpan: 4,
-      rowSpan: 2,
+      colStart: 1 + (i % 3) * 12,
+      rowStart: 1 + Math.floor(i / 3) * 6,
+      colSpan: 12,
+      rowSpan: 6,
     })),
   }));
 }
@@ -218,9 +219,9 @@ describe("isValidStoredLayout", () => {
       expect(isValidStoredLayout(layout, sheet)).toBe(false);
     });
 
-    it("returns false for colSpan > GRID_COLUMNS (12)", () => {
+    it("returns false for colSpan > GRID_COLUMNS (36)", () => {
       const sheet = createMockSheet([1]);
-      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 13, rowSpan: 2 }] }];
+      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 37, rowSpan: 2 }] }];
 
       expect(isValidStoredLayout(layout, sheet)).toBe(false);
     });
@@ -232,23 +233,23 @@ describe("isValidStoredLayout", () => {
       expect(isValidStoredLayout(layout, sheet)).toBe(false);
     });
 
-    it("returns false for rowSpan > MAX_ROW_SPAN (24)", () => {
+    it("returns false for rowSpan > MAX_ROW_SPAN (72)", () => {
       const sheet = createMockSheet([1]);
-      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 25 }] }];
+      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 73 }] }];
 
       expect(isValidStoredLayout(layout, sheet)).toBe(false);
     });
 
-    it("accepts maximum valid colSpan (12)", () => {
+    it("accepts maximum valid colSpan (36)", () => {
       const sheet = createMockSheet([1]);
-      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 2 }] }];
+      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 }] }];
 
       expect(isValidStoredLayout(layout, sheet)).toBe(true);
     });
 
-    it("accepts maximum valid rowSpan (24)", () => {
+    it("accepts maximum valid rowSpan (72)", () => {
       const sheet = createMockSheet([1]);
-      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 24 }] }];
+      const layout = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 72 }] }];
 
       expect(isValidStoredLayout(layout, sheet)).toBe(true);
     });
@@ -352,12 +353,23 @@ describe("parseStoredLayouts", () => {
   it("returns merged layouts for valid stored data", () => {
     const sheet = createMockSheet([1]);
     const defaults = createValidLayout([1]);
-    const stored = [{ cards: [{ colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 }] }];
+    const stored = [{ cards: [{ colStart: 13, rowStart: 7, colSpan: 18, rowSpan: 12 }] }];
 
-    const result = parseStoredLayouts(JSON.stringify(stored), sheet, defaults);
+    const result = parseStoredLayouts(serializeStoredLayouts(stored), sheet, defaults);
 
     expect(result).not.toBeNull();
-    expect(result![0].cards[0].colStart).toBe(5);
+    expect(result![0].cards[0].colStart).toBe(13);
+  });
+
+  it("migrates legacy array-based layouts to the finer grid", () => {
+    const sheet = createMockSheet([1]);
+    const defaults = createValidLayout([1]);
+    const legacyStored = [{ cards: [{ colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 }] }];
+
+    const result = parseStoredLayouts(JSON.stringify(legacyStored), sheet, defaults);
+
+    expect(result).not.toBeNull();
+    expect(result![0].cards[0]).toEqual({ colStart: 13, rowStart: 7, colSpan: 18, rowSpan: 12 });
   });
 
   it("returns null when section count mismatches", () => {

@@ -56,7 +56,7 @@ export type ResizeState = {
   unitSize: number;
 };
 
-export const MAX_ROW_SPAN = 24;
+export const MAX_ROW_SPAN = 72;
 
 export const FALLBACK_METRICS: SectionMetricsState = {
   columns: GRID_COLUMNS,

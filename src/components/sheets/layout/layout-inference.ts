@@ -2,6 +2,8 @@ import type { CheatSheetCard, CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-
 import { resolveSectionLayout } from "./layout-algorithms";
 import type { SectionLayoutState } from "./layout-types";
 
+const GRID_SCALE_FACTOR = 3;
+
 function hasEntryType(item: CheatSheetItem, types: string[]): boolean {
   return item.entries.some((entry) =>
     types.some((type) => type in entry)
@@ -14,10 +16,10 @@ export function inferCardColSpan(card: CheatSheetCard): number {
     hasEntryType(item, ["settings", "content"])
   );
 
-  if (hasStructuredBlock) return 8;
-  if (itemCount >= 5) return 8;
-  if (itemCount >= 3) return 6;
-  return 4;
+  if (hasStructuredBlock) return 8 * GRID_SCALE_FACTOR;
+  if (itemCount >= 5) return 8 * GRID_SCALE_FACTOR;
+  if (itemCount >= 3) return 6 * GRID_SCALE_FACTOR;
+  return 4 * GRID_SCALE_FACTOR;
 }
 
 export function inferCardRowSpan(card: CheatSheetCard): number {
@@ -29,11 +31,11 @@ export function inferCardRowSpan(card: CheatSheetCard): number {
     hasEntryType(item, ["command"])
   );
 
-  if (hasStructuredBlock) return 8;
-  if (itemCount >= 5) return 8;
-  if (hasCommand && itemCount >= 3) return 6;
-  if (itemCount >= 3) return 5;
-  return 4;
+  if (hasStructuredBlock) return 8 * GRID_SCALE_FACTOR;
+  if (itemCount >= 5) return 8 * GRID_SCALE_FACTOR;
+  if (hasCommand && itemCount >= 3) return 6 * GRID_SCALE_FACTOR;
+  if (itemCount >= 3) return 5 * GRID_SCALE_FACTOR;
+  return 4 * GRID_SCALE_FACTOR;
 }
 
 export function buildDefaultSectionLayouts(sheet: YamlCheatSheet): SectionLayoutState[] {

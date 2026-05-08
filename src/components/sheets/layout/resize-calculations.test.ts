@@ -79,7 +79,7 @@ describe("resize-calculations", () => {
 
       it("clamps rowSpan to MAX_ROW_SPAN", () => {
         const result = calculateResizeBounds(defaultOrigin, 0, 100, "south", gridColumns);
-        expect(result.rowSpan).toBe(24); // MAX_ROW_SPAN
+        expect(result.rowSpan).toBe(72); // MAX_ROW_SPAN
       });
     });
 

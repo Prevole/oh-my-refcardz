@@ -2,15 +2,15 @@
   {
     "cards": [
       {
-        "colSpan": 6,
-        "rowSpan": 5,
+        "colSpan": 18,
+        "rowSpan": 13,
         "colStart": 1,
         "rowStart": 1
       },
       {
-        "colSpan": 6,
-        "rowSpan": 5,
-        "colStart": 7,
+        "colSpan": 18,
+        "rowSpan": 13,
+        "colStart": 19,
         "rowStart": 1
       }
     ]
@@ -18,31 +18,15 @@
   {
     "cards": [
       {
-        "colStart": 1,
-        "rowStart": 1,
-        "colSpan": 6,
-        "rowSpan": 7
-      },
-      {
-        "colStart": 7,
-        "rowStart": 1,
-        "colSpan": 6,
-        "rowSpan": 7
-      }
-    ]
-  },
-  {
-    "cards": [
-      {
-        "colSpan": 6,
-        "rowSpan": 8,
+        "colSpan": 18,
+        "rowSpan": 21,
         "colStart": 1,
         "rowStart": 1
       },
       {
-        "colSpan": 6,
-        "rowSpan": 8,
-        "colStart": 7,
+        "colSpan": 18,
+        "rowSpan": 21,
+        "colStart": 19,
         "rowStart": 1
       }
     ]
@@ -50,15 +34,15 @@
   {
     "cards": [
       {
-        "colSpan": 6,
-        "rowSpan": 7,
+        "colSpan": 18,
+        "rowSpan": 22,
         "colStart": 1,
         "rowStart": 1
       },
       {
-        "colSpan": 6,
-        "rowSpan": 7,
-        "colStart": 7,
+        "colSpan": 18,
+        "rowSpan": 22,
+        "colStart": 19,
         "rowStart": 1
       }
     ]
@@ -66,34 +50,50 @@
   {
     "cards": [
       {
-        "colSpan": 4,
-        "rowSpan": 4,
+        "colSpan": 18,
+        "rowSpan": 21,
         "colStart": 1,
         "rowStart": 1
       },
       {
-        "colSpan": 8,
-        "rowSpan": 7,
-        "colStart": 5,
-        "rowStart": 10
-      },
+        "colSpan": 18,
+        "rowSpan": 21,
+        "colStart": 19,
+        "rowStart": 1
+      }
+    ]
+  },
+  {
+    "cards": [
       {
-        "colSpan": 4,
-        "rowSpan": 4,
+        "colSpan": 12,
+        "rowSpan": 11,
         "colStart": 1,
-        "rowStart": 10
-      },
-      {
-        "colSpan": 8,
-        "rowSpan": 9,
-        "colStart": 5,
         "rowStart": 1
       },
       {
-        "colSpan": 4,
-        "rowSpan": 5,
+        "colSpan": 24,
+        "rowSpan": 19,
+        "colStart": 13,
+        "rowStart": 27
+      },
+      {
+        "colSpan": 12,
+        "rowSpan": 12,
         "colStart": 1,
-        "rowStart": 5
+        "rowStart": 25
+      },
+      {
+        "colSpan": 24,
+        "rowSpan": 26,
+        "colStart": 13,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 12,
+        "rowSpan": 13,
+        "colStart": 1,
+        "rowStart": 12
       }
     ]
   }

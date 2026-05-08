@@ -7,7 +7,7 @@ import type { ResizeHandleDirection } from "./layout";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 export const GRID_GAP_PX = 16;
-export const GRID_COLUMNS = 12;
+export const GRID_COLUMNS = 36;
 
 type SheetGridMetrics = {
   columns: number;
