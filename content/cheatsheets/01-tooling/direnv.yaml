@@ -1,0 +1,152 @@
+title: Direnv
+summary: Per-directory environment loading with explicit trust, quick reloads,
+  and a chezmoi-backed 1Password CLI workflow via `.oprc`.
+color: "#008080"
+icon: direnv
+
+sections:
+  - title: Basics
+    cards:
+      - title: Runtime
+        items:
+          - entries:
+              - title: Inspect current state
+              - command: direnv status
+              - text: Show the active `.envrc`, loaded environment diff, stdlib path, and allow
+                  status when debugging why a directory did or did not load.
+
+      - title: Trust and Reload
+        items:
+          - entries:
+              - title: Allow one `.envrc`
+              - command: direnv allow
+              - text: Mark the current directory's `.envrc` as trusted so `direnv` can load it
+                  automatically when entering the project.
+
+          - entries:
+              - title: Reload now
+              - command: direnv reload
+              - text: Re-evaluate the current `.envrc` immediately instead of leaving and
+                  re-entering the directory.
+
+          - entries:
+              - title: Revoke trust
+              - command: direnv deny
+              - text: Remove approval for the current `.envrc` when a project environment should
+                  stop auto-loading.
+
+  - title: Project Files
+    cards:
+      - title: Local Environment
+        items:
+          - entries:
+              - title: Minimal `.envrc`
+              - file: .envrc
+              - contentExample: |-
+                  export NODE_OPTIONS=--max-old-space-size=4096
+                  export PNPM_HOME="$PWD/.pnpm"
+              - text: Keep project-local exports in `.envrc` so they activate only inside that
+                  repository.
+
+          - entries:
+              - title: Reload on file changes
+              - file: .envrc
+              - contentExample: |-
+                  source_env .envrc.local
+                  watch_file .envrc.local
+              - text: Put this in `.envrc` when your environment depends on another local file.
+                  `direnv` will then re-evaluate the current directory whenever
+                  that watched file changes.
+
+      - title: Ignore Generated State
+        items:
+          - entries:
+              - title: Keep runtime files out of Git
+              - file: ~/.gitignore
+              - text: Add these patterns to a global Git ignore file so local env files and
+                  `direnv` cache files are never proposed by `git status` in
+                  your repositories.
+              - contentExample: |-
+                  .env
+                  .envrc
+                  .direnv/
+              - text: A committed `.envrc.example` remains a good pattern when you want to share
+                  the intended setup without committing local secrets.
+
+  - title: 1Password CLI Integration
+    cards:
+      - title: Setup `oprc` plugin
+        items:
+          - entries:
+              - title: Create the `oprc` direnv plugin
+              - file: ~/.config/direnv/lib/oprc.sh
+              - text: Create a custom `direnv` plugin named `oprc` so any `.envrc` can call `use
+                  oprc`.
+              - content: |-
+                  use_oprc() {
+                    [[ -f .oprc ]] || return 0
+                    direnv_load op run --env-file .oprc --no-masking -- direnv dump
+                  }
+
+                  watch_file .oprc
+
+      - title: Using `oprc`
+        items:
+          - entries:
+              - title: Enable the `oprc` plugin in `.envrc`
+              - file: .envrc
+              - contentExample: |-
+                  use oprc
+              - text: >-
+                  `use oprc` calls the `use_oprc` function from the plugin and
+                  imports environment variables resolved by [[op|op]] from
+                  [[1password|1Password]].
+
+          - entries:
+              - title: Define secret references in `.oprc`
+              - file: .oprc
+              - contentExample: |-
+                  DATABASE_URL=op://app-dev/database/url
+                  GITHUB_TOKEN=op://engineering/github/token
+                  NEXTAUTH_SECRET=op://app-dev/web/nextauth_secret
+              - text: Store only secret references in `.oprc`. The values live in
+                  [[1password|1Password]] and are resolved by [[op|op]] only
+                  when `direnv` loads the directory.
+
+          - entries:
+              - title: Approve the directory once
+              - command: direnv allow
+              - text: After creating `.envrc` and `.oprc`, approve that directory once. On
+                  future `cd` into the project, `direnv` runs [[op|op]] and
+                  [[1password|1Password]] can require desktop approval depending
+                  on your app settings.
+
+      - title: Practical Workflow
+        items:
+          - entries:
+              - title: Create `.envrc`
+              - commandExample: echo "use oprc" > .envrc
+              - text: Start by creating `.envrc` and enabling the custom `oprc` plugin for that
+                  project.
+
+          - entries:
+              - title: Create `.oprc`
+              - command: touch .oprc
+              - text: Then create `.oprc` and add `op://...` references to items stored in
+                  [[1password|1Password]]. Finish by running `direnv allow` once
+                  in the project directory.
+
+          - entries:
+              - title: Scaffold all files with the shell helper
+              - aliases: [es]
+              - command: envsetup
+              - text: Use the custom Oh My Zsh helper when you want `.envrc`, `.envrc.sample`,
+                  and `.oprc` created together with the project's default
+                  starter content.
+
+          - entries:
+              - title: Refresh after secret changes
+              - command: direnv reload
+              - text: Use this after editing `.oprc` or changing the referenced item in
+                  [[1password|1Password]] so the current shell picks up the
+                  latest resolved values.
