@@ -10,12 +10,13 @@ src/components/sheets/entry-renderers/
 ├── entry-renderer.tsx     # Main component + auto-discovery via require.context
 ├── index.ts               # Public exports
 ├── title-entry.tsx        # Renders: title
-├── command-entry.tsx      # Renders: command, alias, aliases, commandExample, commandExamples
+├── command-entry.tsx      # Renders: command, alias, commandExample, commandExamples
 ├── path-entry.tsx         # Renders: file, where
 ├── text-entry.tsx         # Renders: text
 ├── keys-entry.tsx         # Renders: keys (keyboard shortcuts)
 ├── content-entry.tsx      # Renders: content, contentExample (code/config blocks)
-└── settings-entry.tsx     # Renders: settings (bullet lists)
+├── settings-entry.tsx     # Renders: settings (bullet lists)
+└── table-entry.tsx        # Renders: table (data tables)
 ```
 
 ## How It Works
@@ -116,8 +117,7 @@ This allows handlers to adapt their rendering based on sibling entries. For exam
 |-----|------------|----------|-------------|
 | `title` | `string` | `TitleEntry` | Item title |
 | `command` | `string` | `CommandLike` | Shell command |
-| `alias` | `string` | `AliasesEntry` | Single alias |
-| `aliases` | `string[]` | `AliasesEntry` | Multiple aliases (displayed as `(a\|b\|c)`) |
+| `alias` | `{ content: string, copy?: string }` | `AliasEntry` | Shortcut alias with display text and optional copy value |
 | `commandExample` | `string` | `CommandLike` | Command example |
 | `commandExamples` | `string[]` | `CommandLike` | Multiple command examples |
 | `text` | `string` | `TextEntry` | Description text (supports inline code) |
@@ -127,3 +127,4 @@ This allows handlers to adapt their rendering based on sibling entries. For exam
 | `content` | `string` | `ContentEntry` | Code/config block |
 | `contentExample` | `string` | `ContentExampleEntry` | Example-style code/config block |
 | `settings` | `string[]` | `SettingsEntry` | Settings list |
+| `table` | `{ headers?: string[], rows: { cols: string[] }[] }` | `TableEntry` | Data table with optional headers |

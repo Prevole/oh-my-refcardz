@@ -28,7 +28,7 @@ sections:
           - entries:
               - title: Jump to the source directory
               - command: chezmoi cd
-              - text: Open the source-state repository where `dot_*`, `private_*`, templates, and scripts live.
+              - text: Open the source-state repository where `dot_*`, `private_*`, `templates`, and `scripts` live.
 
           - entries:
               - title: Edit one managed target file
@@ -41,7 +41,9 @@ sections:
 
           - entries:
               - title: Shell alias
-              - text: In this setup, `cm` is a shell alias for `chezmoi`.
+              - alias:
+                  content: cm <args>
+              - text: The `cm` alias aims to reduce `chezmoi` command to type.
               - commandExample: cm status
               - commandExample: cm apply
 
@@ -62,17 +64,41 @@ sections:
       - title: Naming Conventions
         items:
           - entries:
-              - title: Common source-state patterns
-              - contentExample: |-
-                  dot_zshrc.tmpl
-                  dot_ssh/config.tmpl
-                  dot_config/private_1Password/private_ssh/private_agent.toml.tmpl
-                  dot_config/direnv/lib/executable_oprc.sh
-                  .chezmoiscripts/run_once_before_01-setup-zsh.sh
-              - text: >-
-                  `dot_` maps to hidden paths, `private_` restricts permissions,
-                  `executable_` preserves the executable bit, and `.tmpl`
-                  means the target is rendered from a template.
+              - title: Source-state prefixes and suffixes
+              - table:
+                  headers:
+                    - Prefix/Suffix
+                    - Effect
+                    - Example
+                  rows:
+                    - cols:
+                        - "`dot_`"
+                        - Maps to hidden path
+                        - "`dot_zshrc` → `.zshrc`"
+                    - cols:
+                        - "`private_`"
+                        - Restricts permissions (removes group/world)
+                        - "`private_ssh/` → `ssh/`"
+                    - cols:
+                        - "`executable_`"
+                        - Preserves executable bit
+                        - "`executable_oprc.sh` → `oprc.sh`"
+                    - cols:
+                        - "`.tmpl`"
+                        - Renders as template
+                        - "`dot_zshrc.tmpl` → `.zshrc`"
+                    - cols:
+                        - "`run_`"
+                        - Executes as script
+                        - "`run_install.sh`"
+                    - cols:
+                        - "`once_`"
+                        - Runs only once (with `run_`)
+                        - "`run_once_setup.sh`"
+                    - cols:
+                        - "`before_` / `after_`"
+                        - Script execution order
+                        - "`run_once_before_01-setup.sh`"
 
           - entries:
               - title: Profiles and prompted data

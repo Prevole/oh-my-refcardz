@@ -75,7 +75,9 @@ Items are the atomic units within a card. Each item has:
 ```yaml
 items:
   - entries:
-      - aliases: [s, st, sta, stat]
+      - alias:
+          content: "git (s|st|sta|stat)"
+          copy: git s
       - command: git status
     detailedEntries:
       - text: Shows working tree status
@@ -90,13 +92,16 @@ Each entry is an object with exactly one key that determines its type.
 
 ```yaml
 - command: git status              # terminal command
-- alias: s                         # single alias
-- aliases: [s, st, sta, stat]      # multiple aliases (grouped display)
+- alias:                           # shortcut alias
+    content: "git (s|st|sta|stat)" # displayed text
+    copy: git s                    # copied value (optional, defaults to content)
 - commandExample: git status -s    # usage example (dashed border style)
 - commandExamples:                 # multiple examples
     - git log --oneline
     - git log --graph
 ```
+
+The `alias` entry displays a shortcut alias. Use `content` for what appears on screen (e.g., `cm <args>` or `git (s|st)`), and optionally `copy` to specify what gets copied to clipboard (defaults to `content` if omitted).
 
 Commands support placeholders for user input. See [placeholders.md](./placeholders.md) for syntax and escaping.
 
@@ -138,6 +143,30 @@ Text and titles support inline code with backticks and cross-sheet references wi
     - Auto Fetch = enabled
     - Prune on Fetch = enabled
 ```
+
+### Table entries
+
+```yaml
+- table:
+    headers:                       # optional column headers
+      - Prefix
+      - Effect
+      - Example
+    rows:
+      - cols:
+          - "`dot_`"
+          - Maps to hidden path
+          - "`dot_zshrc` → `.zshrc`"
+      - cols:
+          - "`private_`"
+          - Restricts permissions
+          - "`private_ssh/` → `ssh/`"
+```
+
+Tables support:
+- Optional `headers` array for column titles
+- Required `rows` array with `cols` for each row
+- Inline formatting in cells (backticks for code, `[[slug]]` for cross-references)
 
 ## entries vs detailedEntries
 
@@ -197,7 +226,9 @@ Both use the same entry types, but serve different UI purposes.
 ```yaml
 items:
   - entries:
-      - aliases: [d, di, dif]
+      - alias:
+          content: "git (d|di|dif)"
+          copy: git d
       - command: git diff
       - commandExample: git diff HEAD
     detailedEntries:

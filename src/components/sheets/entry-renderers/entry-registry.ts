@@ -8,8 +8,7 @@ export type EntryContext = {
 export type CheatSheetEntryMap = {
   title: string;
   command: string;
-  alias: string;
-  aliases: string[];
+  alias: { content: string; copy?: string };
   commandExample: string;
   commandExamples: string[];
   text: string;
@@ -19,6 +18,7 @@ export type CheatSheetEntryMap = {
   content: string;
   contentExample: string;
   settings: string[];
+  table: { headers?: string[]; rows: { cols: string[] }[] };
 };
 
 type EntryHandler<K extends keyof CheatSheetEntryMap> = {

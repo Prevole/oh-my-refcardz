@@ -12,8 +12,9 @@ type CommandLikeProps = {
   showLabel?: boolean;
 };
 
-type AliasesProps = {
-  aliases: string[];
+type AliasProps = {
+  content: string;
+  copy?: string;
 };
 
 type TerminalProps = {
@@ -134,19 +135,15 @@ export function CommandLike({ type, value, showLabel }: CommandLikeProps) {
   );
 }
 
-export function AliasesEntry({ aliases }: AliasesProps) {
-  const aliasDisplay = aliases.length === 1
-    ? aliases[0]
-    : `(${aliases.join("|")})`;
-
-  const copyValue = `git ${aliases[0]}`;
+export function AliasEntry({ content, copy }: AliasProps) {
+  const copyValue = copy ?? content;
 
   return (
     <>
       <p className={styles.commandBlockLabel}>Alias</p>
       <Terminal
         value={copyValue}
-        displayOverride={`$ git ${aliasDisplay}`}
+        displayOverride={`$ ${content}`}
         variant="alias"
       />
     </>
@@ -157,9 +154,7 @@ registerHandler("command", (value, { hasAliases }) => (
   <CommandLike type="command" value={value} showLabel={hasAliases} />
 ));
 
-registerHandler("alias", (value) => <AliasesEntry aliases={[value]} />);
-
-registerHandler("aliases", (value) => <AliasesEntry aliases={value} />);
+registerHandler("alias", (value) => <AliasEntry content={value.content} copy={value.copy} />);
 
 registerHandler("commandExample", (value) => (
   <CommandLike type="commandExample" value={value} showLabel={true} />

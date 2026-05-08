@@ -203,39 +203,37 @@ describe("yamlCheatSheetSchema", () => {
     });
 
     describe("alias entry", () => {
-      it("validates single alias entry", () => {
+      it("validates alias entry with content only", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ alias: "s" }])
+          makeSheetWithEntries([{ alias: { content: "git s" } }])
         );
         expect(result.success).toBe(true);
       });
 
-      it("rejects empty alias", () => {
+      it("validates alias entry with content and copy", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ alias: "" }])
-        );
-        expect(result.success).toBe(false);
-      });
-    });
-
-    describe("aliases entry", () => {
-      it("validates aliases entry", () => {
-        const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ aliases: ["s", "st", "sta"] }])
+          makeSheetWithEntries([{ alias: { content: "git (s|st|sta)", copy: "git s" } }])
         );
         expect(result.success).toBe(true);
       });
 
-      it("rejects empty aliases array", () => {
+      it("rejects empty alias content", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ aliases: [] }])
+          makeSheetWithEntries([{ alias: { content: "" } }])
         );
         expect(result.success).toBe(false);
       });
 
-      it("rejects aliases with empty string", () => {
+      it("rejects empty alias copy", () => {
         const result = yamlCheatSheetSchema.safeParse(
-          makeSheetWithEntries([{ aliases: ["s", ""] }])
+          makeSheetWithEntries([{ alias: { content: "git s", copy: "" } }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects alias without content", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ alias: {} }])
         );
         expect(result.success).toBe(false);
       });
@@ -418,6 +416,82 @@ describe("yamlCheatSheetSchema", () => {
       });
     });
 
+    describe("table entry", () => {
+      it("validates table with headers and rows", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            table: {
+              headers: ["Prefix", "Effect", "Example"],
+              rows: [
+                { cols: ["`dot_`", "Maps to hidden path", "`dot_zshrc` → `.zshrc`"] },
+              ],
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("validates table without headers", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            table: {
+              rows: [
+                { cols: ["Value 1", "Value 2"] },
+                { cols: ["Value 3", "Value 4"] },
+              ],
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects table with empty rows array", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            table: {
+              headers: ["Header"],
+              rows: [],
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects table row with empty cols array", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            table: {
+              rows: [{ cols: [] }],
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects table with empty header string", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            table: {
+              headers: ["Valid", ""],
+              rows: [{ cols: ["a", "b"] }],
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("allows empty string in table cell", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            table: {
+              rows: [{ cols: ["Value", ""] }],
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+    });
+
     describe("item validation", () => {
       it("rejects item without entries", () => {
         const sheet = {
@@ -443,7 +517,7 @@ describe("yamlCheatSheetSchema", () => {
           makeSheetWithEntries([
             { title: "Status" },
             { command: "git status" },
-            { aliases: ["s", "st"] },
+            { alias: { content: "git (s|st)", copy: "git s" } },
             { text: "Show the current branch state" },
           ])
         );

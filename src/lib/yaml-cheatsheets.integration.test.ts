@@ -114,17 +114,17 @@ describe("yaml-cheatsheets integration", () => {
       expect(settingsEntry?.settings.length).toBeGreaterThan(0);
     });
 
-    it("parses aliases entries correctly", async () => {
+    it("parses alias entries correctly", async () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
       const allEntries = sheet!.sections.flatMap((s) =>
         s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
       );
-      const aliasesEntry = findEntryWithKey(allEntries, "aliases");
+      const aliasEntry = findEntryWithKey(allEntries, "alias");
 
-      expect(aliasesEntry).toBeDefined();
-      expect(aliasesEntry?.aliases.length).toBeGreaterThan(0);
+      expect(aliasEntry).toBeDefined();
+      expect(aliasEntry?.alias.content).toBeDefined();
     });
 
     it("includes optional icon field when present", async () => {

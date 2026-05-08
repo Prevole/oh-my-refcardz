@@ -6,6 +6,7 @@ import "./content-entry";
 import "./keys-entry";
 import "./path-entry";
 import "./settings-entry";
+import "./table-entry";
 import "./text-entry";
 import "./title-entry";
 

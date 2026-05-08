@@ -39,8 +39,12 @@ export type CheatSheetCategory = {
 // Entry schemas - each entry has exactly one key that defines its type
 const titleEntrySchema = z.object({ title: z.string().min(1) });
 const commandEntrySchema = z.object({ command: z.string().min(1) });
-const aliasEntrySchema = z.object({ alias: z.string().min(1) });
-const aliasesEntrySchema = z.object({ aliases: z.array(z.string().min(1)).min(1) });
+const aliasEntrySchema = z.object({
+  alias: z.object({
+    content: z.string().min(1),
+    copy: z.string().min(1).optional(),
+  }),
+});
 const commandExampleEntrySchema = z.object({ commandExample: z.string().min(1) });
 const commandExamplesEntrySchema = z.object({ commandExamples: z.array(z.string().min(1)).min(1) });
 const textEntrySchema = z.object({ text: z.string().min(1) });
@@ -53,12 +57,18 @@ const contentValueSchema = z.string().refine((value) => value.trim().length > 0,
 const contentEntrySchema = z.object({ content: contentValueSchema });
 const contentExampleEntrySchema = z.object({ contentExample: contentValueSchema });
 const settingsEntrySchema = z.object({ settings: z.array(z.string().min(1)).min(1) });
+const tableRowSchema = z.object({ cols: z.array(z.string()).min(1) });
+const tableEntrySchema = z.object({
+  table: z.object({
+    headers: z.array(z.string().min(1)).optional(),
+    rows: z.array(tableRowSchema).min(1),
+  }),
+});
 
 const entrySchema = z.union([
   titleEntrySchema,
   commandEntrySchema,
   aliasEntrySchema,
-  aliasesEntrySchema,
   commandExampleEntrySchema,
   commandExamplesEntrySchema,
   textEntrySchema,
@@ -68,6 +78,7 @@ const entrySchema = z.union([
   contentEntrySchema,
   contentExampleEntrySchema,
   settingsEntrySchema,
+  tableEntrySchema,
 ]);
 
 const itemSchema = z.object({
@@ -102,7 +113,6 @@ export const categoryMetaSchema = z.object({
 export type TitleEntry = z.infer<typeof titleEntrySchema>;
 export type CommandEntry = z.infer<typeof commandEntrySchema>;
 export type AliasEntry = z.infer<typeof aliasEntrySchema>;
-export type AliasesEntry = z.infer<typeof aliasesEntrySchema>;
 export type CommandExampleEntry = z.infer<typeof commandExampleEntrySchema>;
 export type CommandExamplesEntry = z.infer<typeof commandExamplesEntrySchema>;
 export type TextEntry = z.infer<typeof textEntrySchema>;
@@ -112,6 +122,8 @@ export type WhereEntry = z.infer<typeof whereEntrySchema>;
 export type ContentEntry = z.infer<typeof contentEntrySchema>;
 export type ContentExampleEntry = z.infer<typeof contentExampleEntrySchema>;
 export type SettingsEntry = z.infer<typeof settingsEntrySchema>;
+export type TableRow = z.infer<typeof tableRowSchema>;
+export type TableEntry = z.infer<typeof tableEntrySchema>;
 
 export type CheatSheetEntry = z.infer<typeof entrySchema>;
 export type CheatSheetItem = z.infer<typeof itemSchema>;

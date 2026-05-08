@@ -572,37 +572,6 @@
   stroke-linejoin: round;
 }
 
-.content table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.content thead {
-  display: none;
-}
-
-.content tbody td {
-  border-bottom: 1px solid var(--border-light);
-  padding: var(--space-2) var(--space-2);
-  vertical-align: middle;
-}
-
-.content tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.content tbody td:first-child {
-  width: 40%;
-  font-family: var(--font-jetbrains-mono), monospace;
-  color: var(--accent);
-}
-
-.content tbody td:first-child:last-child {
-  width: auto;
-  font-family: var(--font-space-grotesk), sans-serif;
-  color: var(--fg-95);
-}
-
 .section {
   margin-top: 2.75rem;
   padding-top: var(--space-1);

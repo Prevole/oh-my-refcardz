@@ -138,7 +138,8 @@ sections:
 
           - entries:
               - title: Scaffold all files with the shell helper
-              - aliases: [es]
+              - alias:
+                  content: es
               - command: envsetup
               - text: Use the custom Oh My Zsh helper when you want `.envrc`, `.envrc.sample`,
                   and `.oprc` created together with the project's default
