@@ -168,6 +168,35 @@ Tables support:
 - Required `rows` array with `cols` for each row
 - Inline formatting in cells (backticks for code, `[[slug]]` for cross-references)
 
+### Step entries
+
+```yaml
+- step: Install                    # labeled workflow step
+- step: Configure
+- step: Run
+```
+
+Steps display as uppercase badges with an accent-colored dot. Use them to visually structure sequential workflows within a card.
+
+### Link entries
+
+```yaml
+- link:
+    type: github                   # github, docs, or website
+    url: https://github.com/user/repo
+    label: user/repo               # optional, inferred from URL if omitted
+```
+
+Links display as styled buttons with type-specific icons and colors:
+
+| Type | Icon | Style | Use case |
+|------|------|-------|----------|
+| `github` | GitHub logo | Dark theme | Repository links |
+| `docs` | Book icon | Cyan accent | Documentation links |
+| `website` | External link | Blue accent | General web links |
+
+The `label` is optional — for GitHub links, it defaults to `owner/repo`; for others, to the hostname.
+
 ## entries vs detailedEntries
 
 Both use the same entry types, but serve different UI purposes.

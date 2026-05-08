@@ -19,6 +19,8 @@ export type CheatSheetEntryMap = {
   contentExample: string;
   settings: string[];
   table: { headers?: string[]; rows: { cols: string[] }[] };
+  step: string;
+  link: { type: "github" | "docs" | "website"; url: string; label?: string };
 };
 
 type EntryHandler<K extends keyof CheatSheetEntryMap> = {

@@ -16,7 +16,9 @@ src/components/sheets/entry-renderers/
 ├── keys-entry.tsx         # Renders: keys (keyboard shortcuts)
 ├── content-entry.tsx      # Renders: content, contentExample (code/config blocks)
 ├── settings-entry.tsx     # Renders: settings (bullet lists)
-└── table-entry.tsx        # Renders: table (data tables)
+├── table-entry.tsx        # Renders: table (data tables)
+├── step-entry.tsx         # Renders: step (labeled workflow steps)
+└── link-entry.tsx         # Renders: link (external links with type variants)
 ```
 
 ## How It Works
@@ -128,3 +130,5 @@ This allows handlers to adapt their rendering based on sibling entries. For exam
 | `contentExample` | `string` | `ContentExampleEntry` | Example-style code/config block |
 | `settings` | `string[]` | `SettingsEntry` | Settings list |
 | `table` | `{ headers?: string[], rows: { cols: string[] }[] }` | `TableEntry` | Data table with optional headers |
+| `step` | `string` | `StepEntry` | Labeled workflow step (uppercase badge with accent dot) |
+| `link` | `{ type, url, label? }` | `LinkEntry` | External link (types: `github`, `docs`, `website`) |

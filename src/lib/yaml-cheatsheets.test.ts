@@ -492,6 +492,132 @@ describe("yamlCheatSheetSchema", () => {
       });
     });
 
+    describe("step entry", () => {
+      it("validates step entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ step: "Install" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects empty step", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ step: "" }])
+        );
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe("link entry", () => {
+      it("validates link entry with github type", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "github",
+              url: "https://github.com/user/repo",
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("validates link entry with docs type", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "docs",
+              url: "https://docs.example.com/guide",
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("validates link entry with website type", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "website",
+              url: "https://example.com",
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("validates link entry with optional label", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "github",
+              url: "https://github.com/user/repo",
+              label: "My Repo",
+            },
+          }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects link with invalid type", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "invalid",
+              url: "https://example.com",
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects link with invalid URL", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "github",
+              url: "not-a-valid-url",
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects link with empty label", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "github",
+              url: "https://github.com/user/repo",
+              label: "",
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects link without type", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              url: "https://example.com",
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects link without url", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{
+            link: {
+              type: "github",
+            },
+          }])
+        );
+        expect(result.success).toBe(false);
+      });
+    });
+
     describe("item validation", () => {
       it("rejects item without entries", () => {
         const sheet = {

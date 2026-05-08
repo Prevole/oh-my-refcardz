@@ -1,0 +1,141 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--spacing-tight) 0 0;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-medium);
+  background: linear-gradient(
+    180deg,
+    var(--bg-overlay-subtle),
+    transparent
+  );
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg-88);
+  text-decoration: none;
+  transition:
+    border-color var(--transition-normal),
+    background var(--transition-normal),
+    color var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.link:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-overlay-light);
+  color: var(--fg-95);
+}
+
+.linkIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+  opacity: 0.85;
+  transition: opacity var(--transition-normal);
+}
+
+.link:hover .linkIcon {
+  opacity: 1;
+}
+
+.linkLabel {
+  flex: 1;
+}
+
+.linkArrow {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
+  opacity: 0.5;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.link:hover .linkArrow {
+  opacity: 0.85;
+  transform: translate(1px, -1px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VARIANT: GitHub
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.link--github {
+  --link-color: #f0f6fc;
+  --link-bg: #161b22;
+  --link-border: #30363d;
+  --link-border-hover: #8b949e;
+
+  border-color: var(--link-border);
+  background: linear-gradient(180deg, rgba(22, 27, 34, 0.9), rgba(13, 17, 23, 0.9));
+  color: var(--link-color);
+}
+
+.link--github:hover {
+  border-color: var(--link-border-hover);
+  background: linear-gradient(180deg, rgba(33, 38, 45, 0.95), rgba(22, 27, 34, 0.95));
+}
+
+.link--github .linkIcon {
+  color: var(--link-color);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VARIANT: Docs
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.link--docs {
+  --link-color: var(--code-cyan);
+
+  border-color: color-mix(in srgb, var(--link-color) 30%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--link-color) 12%, transparent),
+    color-mix(in srgb, var(--link-color) 6%, transparent)
+  );
+  color: var(--link-color);
+}
+
+.link--docs:hover {
+  border-color: color-mix(in srgb, var(--link-color) 50%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--link-color) 18%, transparent),
+    color-mix(in srgb, var(--link-color) 10%, transparent)
+  );
+}
+
+.link--docs .linkIcon {
+  color: var(--link-color);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VARIANT: Website
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.link--website {
+  --link-color: var(--code-blue);
+
+  border-color: color-mix(in srgb, var(--link-color) 30%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--link-color) 12%, transparent),
+    color-mix(in srgb, var(--link-color) 6%, transparent)
+  );
+  color: var(--link-color);
+}
+
+.link--website:hover {
+  border-color: color-mix(in srgb, var(--link-color) 50%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--link-color) 18%, transparent),
+    color-mix(in srgb, var(--link-color) 10%, transparent)
+  );
+}
+
+.link--website .linkIcon {
+  color: var(--link-color);
+}

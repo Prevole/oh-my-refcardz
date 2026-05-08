@@ -64,6 +64,15 @@ const tableEntrySchema = z.object({
     rows: z.array(tableRowSchema).min(1),
   }),
 });
+const stepEntrySchema = z.object({ step: z.string().min(1) });
+const linkTypeSchema = z.enum(["github", "docs", "website"]);
+const linkEntrySchema = z.object({
+  link: z.object({
+    type: linkTypeSchema,
+    url: z.string().url(),
+    label: z.string().min(1).optional(),
+  }),
+});
 
 const entrySchema = z.union([
   titleEntrySchema,
@@ -79,6 +88,8 @@ const entrySchema = z.union([
   contentExampleEntrySchema,
   settingsEntrySchema,
   tableEntrySchema,
+  stepEntrySchema,
+  linkEntrySchema,
 ]);
 
 const itemSchema = z.object({
@@ -124,6 +135,8 @@ export type ContentExampleEntry = z.infer<typeof contentExampleEntrySchema>;
 export type SettingsEntry = z.infer<typeof settingsEntrySchema>;
 export type TableRow = z.infer<typeof tableRowSchema>;
 export type TableEntry = z.infer<typeof tableEntrySchema>;
+export type StepEntry = z.infer<typeof stepEntrySchema>;
+export type LinkEntry = z.infer<typeof linkEntrySchema>;
 
 export type CheatSheetEntry = z.infer<typeof entrySchema>;
 export type CheatSheetItem = z.infer<typeof itemSchema>;

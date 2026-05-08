@@ -101,12 +101,12 @@ sections:
                         - "`run_once_before_01-setup.sh`"
 
           - entries:
-              - title: Profiles and prompted data
+              - title: Prompted data
               - file: .chezmoi.yaml.tmpl
               - text: >-
-                  This setup uses `promptChoiceOnce` to persist the selected
-                  profile and feeds profile-specific templates from
-                  `profiles/work`, `profiles/lp`, and `profiles/sp`.
+                  Use `promptString`, `promptBool`, or `promptChoice` to ask the user
+                  for values during `chezmoi init`. Add the `Once` suffix to persist
+                  answers in `chezmoi.yaml` and skip future prompts.
 
       - title: Fixups
         items:
@@ -134,19 +134,25 @@ sections:
       - title: Bootstrap
         items:
           - entries:
-              - title: Install Apple developer tools
+              - step: Install
               - command: xcode-select --install
-              - text: Make `git` available before cloning the bootstrap repository.
-
-          - entries:
-              - title: Clone the bootstrap repo temporarily
-              - command: git clone https://github.com/<your-username>/<this-repo>.git /tmp/chezmoi
-              - text: Clone over HTTPS first because the SSH keys and 1Password agent are not set up yet.
-
-          - entries:
-              - title: Run the machine setup script
+              - text: Install Apple developer tools to make `git` available.
+              - step: 1Password
+              - text: >-
+                  Prepare a `chezmoi` vault in [[1password|1Password]] with the required items:
+                  `GitHub Configurations` (login) and `Git Repositories - <profile>` (secure note).
+              - step: Clone
+              - command: git clone https://github.com/Prevole/chezmoi.git /tmp/chezmoi
+              - text: Clone over HTTPS into `/tmp` — SSH keys are not set up yet.
+              - step: Run
               - command: /tmp/chezmoi/scripts/mac-setup.sh
-              - text: Start the opinionated machine bootstrap flow that installs tooling, prepares secrets, applies dotfiles, and clones repositories.
+              - text: >-
+                  Start the bootstrap flow: profile selection, Homebrew, 1Password CLI,
+                  SSH keys, dotfiles, runtimes, and repository cloning.
+              - link:
+                  type: github
+                  url: https://github.com/Prevole/chezmoi
+                  label: Prevole/chezmoi
 
       - title: 1Password Prerequisites
         items:
