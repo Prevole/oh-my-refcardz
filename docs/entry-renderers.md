@@ -9,6 +9,7 @@ src/components/sheets/entry-renderers/
 ├── entry-registry.ts      # Core registry + registerHandler() + renderEntry()
 ├── entry-renderer.tsx     # Main component + auto-discovery via require.context
 ├── index.ts               # Public exports
+├── anchor-entry.tsx       # Renders: anchor
 ├── title-entry.tsx        # Renders: title
 ├── command-entry.tsx      # Renders: command, alias, commandExample, commandExamples
 ├── path-entry.tsx         # Renders: file, where
@@ -123,6 +124,7 @@ This allows handlers to adapt their rendering based on sibling entries. For exam
 | `commandExample` | `string` | `CommandLike` | Command example |
 | `commandExamples` | `string[]` | `CommandLike` | Multiple command examples |
 | `text` | `string` | `TextEntry` | Description text (supports inline code) |
+| `anchor` | `string` | `AnchorEntry` | Invisible item anchor for in-page references |
 | `keys` | `string[]` | `KeysEntry` | Keyboard shortcuts |
 | `file` | `string` | `PathLike` | File path |
 | `where` | `string` | `PathLike` | Location in app |

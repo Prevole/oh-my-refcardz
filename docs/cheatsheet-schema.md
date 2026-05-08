@@ -78,6 +78,7 @@ items:
       - alias:
           content: "git (s|st|sta|stat)"
           copy: git s
+      - anchor: working-tree-status
       - command: git status
     detailedEntries:
       - text: Shows working tree status
@@ -112,9 +113,28 @@ Commands support placeholders for user input. See [placeholders.md](./placeholde
 - text: Explanatory paragraph      # plain text description
 - text: Use [[1password]] for SSH signing
 - text: Configure [[1password|1Password]] first
+- text: Jump to [[#working-tree-status|status setup]]
+- text: Open [[git#working-tree-status|Git status setup]]
 ```
 
-Text and titles support inline code with backticks and cross-sheet references with `[[slug]]` or `[[slug|label]]`.
+Text and titles support inline code with backticks and references using:
+
+- `[[slug]]` or `[[slug|label]]` for another cheatsheet
+- `[[#anchor]]` or `[[#anchor|label]]` for an in-page anchor
+- `[[slug#anchor]]` or `[[slug#anchor|label]]` for a specific anchor in another cheatsheet
+
+### Anchor entries
+
+```yaml
+- anchor: working-tree-status
+```
+
+Anchor entries attach an `id` to the current item so inline references can link to it. Anchors must be explicit, lowercase kebab-case identifiers.
+
+Rules:
+- Use at most one `anchor` entry per item
+- `anchor` is only supported in `entries`, not `detailedEntries`
+- Place it near the top of the item for readability
 
 ### Keyboard entries
 

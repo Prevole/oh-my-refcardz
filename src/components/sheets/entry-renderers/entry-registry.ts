@@ -12,6 +12,7 @@ export type CheatSheetEntryMap = {
   commandExample: string;
   commandExamples: string[];
   text: string;
+  anchor: string;
   keys: string[];
   file: string;
   where: string;

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
 import { z } from "zod";
+import { anchorIdPattern } from "./anchors";
 import { getCategoryPrimaryColor, getCategoryGradientPair } from "./color-palette";
 
 export type SavedCardLayout = {
@@ -48,6 +49,7 @@ const aliasEntrySchema = z.object({
 const commandExampleEntrySchema = z.object({ commandExample: z.string().min(1) });
 const commandExamplesEntrySchema = z.object({ commandExamples: z.array(z.string().min(1)).min(1) });
 const textEntrySchema = z.object({ text: z.string().min(1) });
+const anchorEntrySchema = z.object({ anchor: z.string().regex(anchorIdPattern) });
 const keysEntrySchema = z.object({ keys: z.array(z.string().min(1)).min(1) });
 const fileEntrySchema = z.object({ file: z.string().min(1) });
 const whereEntrySchema = z.object({ where: z.string().min(1) });
@@ -81,6 +83,7 @@ const entrySchema = z.union([
   commandExampleEntrySchema,
   commandExamplesEntrySchema,
   textEntrySchema,
+  anchorEntrySchema,
   keysEntrySchema,
   fileEntrySchema,
   whereEntrySchema,
@@ -92,10 +95,30 @@ const entrySchema = z.union([
   linkEntrySchema,
 ]);
 
-const itemSchema = z.object({
-  entries: z.array(entrySchema).min(1),
-  detailedEntries: z.array(entrySchema).optional(),
-});
+const itemSchema = z
+  .object({
+    entries: z.array(entrySchema).min(1),
+    detailedEntries: z.array(entrySchema).optional(),
+  })
+  .superRefine((item, context) => {
+    const anchorCount = item.entries.filter((entry) => "anchor" in entry).length;
+
+    if (anchorCount > 1) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["entries"],
+        message: "Items can define at most one anchor entry",
+      });
+    }
+
+    if (item.detailedEntries?.some((entry) => "anchor" in entry)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["detailedEntries"],
+        message: "Anchor entries are not supported in detailedEntries",
+      });
+    }
+  });
 
 const cardSchema = z.object({
   title: z.string().min(1),
@@ -127,6 +150,7 @@ export type AliasEntry = z.infer<typeof aliasEntrySchema>;
 export type CommandExampleEntry = z.infer<typeof commandExampleEntrySchema>;
 export type CommandExamplesEntry = z.infer<typeof commandExamplesEntrySchema>;
 export type TextEntry = z.infer<typeof textEntrySchema>;
+export type AnchorEntry = z.infer<typeof anchorEntrySchema>;
 export type KeysEntry = z.infer<typeof keysEntrySchema>;
 export type FileEntry = z.infer<typeof fileEntrySchema>;
 export type WhereEntry = z.infer<typeof whereEntrySchema>;

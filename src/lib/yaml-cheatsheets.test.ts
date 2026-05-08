@@ -287,6 +287,22 @@ describe("yamlCheatSheetSchema", () => {
       });
     });
 
+    describe("anchor entry", () => {
+      it("validates anchor entry", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ anchor: "working-tree-status" }, { command: "git status" }])
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it("rejects anchor entry with invalid format", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ anchor: "Working Tree Status" }, { command: "git status" }])
+        );
+        expect(result.success).toBe(false);
+      });
+    });
+
     describe("keys entry", () => {
       it("validates keys entry", () => {
         const result = yamlCheatSheetSchema.safeParse(
@@ -641,6 +657,7 @@ describe("yamlCheatSheetSchema", () => {
       it("accepts item with multiple entries", () => {
         const result = yamlCheatSheetSchema.safeParse(
           makeSheetWithEntries([
+            { anchor: "status" },
             { title: "Status" },
             { command: "git status" },
             { alias: { content: "git (s|st)", copy: "git s" } },
@@ -648,6 +665,36 @@ describe("yamlCheatSheetSchema", () => {
           ])
         );
         expect(result.success).toBe(true);
+      });
+
+      it("rejects items with multiple anchor entries", () => {
+        const result = yamlCheatSheetSchema.safeParse(
+          makeSheetWithEntries([{ anchor: "status" }, { anchor: "status-details" }, { command: "git status" }])
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects anchor entries in detailedEntries", () => {
+        const result = yamlCheatSheetSchema.safeParse({
+          ...validSheet,
+          sections: [
+            {
+              title: "Section",
+              cards: [
+                {
+                  title: "Card",
+                  items: [
+                    {
+                      entries: [{ command: "git status" }],
+                      detailedEntries: [{ anchor: "status-details" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        expect(result.success).toBe(false);
       });
     });
 

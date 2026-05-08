@@ -177,7 +177,7 @@ sections:
               - text: Clone over HTTPS into `/tmp` — SSH keys are not set up yet.
               - step: Run install script
               - command: /tmp/chezmoi/scripts/mac-setup.sh
-              - text: Start the bootstrap flow, see related card.
+              - text: Start the bootstrap flow, see [[#setup-pipeline|setup pipeline]].
               - link:
                   type: github
                   url: https://github.com/Prevole/chezmoi
@@ -186,6 +186,7 @@ sections:
       - title: Setup Pipeline
         items:
           - entries:
+              - anchor: setup-pipeline
               - title: What `mac-setup.sh` runs
               - file: scripts/setup.d/
               - table:

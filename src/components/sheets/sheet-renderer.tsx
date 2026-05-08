@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
+import { getItemAnchorId } from "@/lib/anchors";
 import { buildSectionAnchorId } from "@/lib/section-navigation";
 import type { CheatSheetItem, YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import {
@@ -48,6 +49,33 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
   const layoutMetrics = sectionMetrics[0] ?? FALLBACK_METRICS;
+
+  useEffect(() => {
+    function syncAnchorTargetState() {
+      const currentTarget = document.querySelector<HTMLElement>("[data-anchor-target='true']");
+      currentTarget?.removeAttribute("data-anchor-target");
+
+      const currentCard = document.querySelector<HTMLElement>("[data-anchor-target-card='true']");
+      currentCard?.removeAttribute("data-anchor-target-card");
+
+      const hash = window.location.hash;
+      if (!hash.startsWith("#") || hash.length <= 1) {
+        return;
+      }
+
+      const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (!target?.matches("[data-item]")) {
+        return;
+      }
+
+      target.setAttribute("data-anchor-target", "true");
+      target.closest("article")?.setAttribute("data-anchor-target-card", "true");
+    }
+
+    syncAnchorTargetState();
+    window.addEventListener("hashchange", syncAnchorTargetState);
+    return () => window.removeEventListener("hashchange", syncAnchorTargetState);
+  }, []);
 
   function updateSectionMetrics(sectionIndex: number, nextMetrics: SectionMetricsState) {
     setSectionMetrics((currentMetrics) => {
@@ -184,6 +212,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 }
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
+  const anchorId = getItemAnchorId(item.entries);
   const hasAliases = item.entries.some(
     (entry) => "alias" in entry || "aliases" in entry
   );
@@ -198,6 +227,7 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
 
   return (
     <div
+      id={anchorId ?? undefined}
       className={cheatsheetStyles.itemEntries}
       data-item=""
       data-item-details={itemData}

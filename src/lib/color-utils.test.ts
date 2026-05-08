@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  deriveAnchorAccentColor,
   hexToHSL,
   hslToHex,
   interpolateHSL,
@@ -264,6 +265,30 @@ describe("interpolateHSL", () => {
       expect(resultHSL.l).toBeGreaterThan(darkHSL.l);
       expect(resultHSL.l).toBeLessThan(lightHSL.l);
     });
+  });
+});
+
+describe("deriveAnchorAccentColor", () => {
+  it("returns a valid hex color", () => {
+    expect(deriveAnchorAccentColor("#4ECDC4")).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
+  it("derives a color distinct from the source accent", () => {
+    expect(deriveAnchorAccentColor("#4ECDC4").toLowerCase()).not.toBe("#4ecdc4");
+  });
+
+  it("keeps derived colors in a readable lightness range", () => {
+    const derived = hexToHSL(deriveAnchorAccentColor("#F97316"));
+
+    expect(derived.l).toBeGreaterThanOrEqual(0.52);
+    expect(derived.l).toBeLessThanOrEqual(0.62);
+  });
+
+  it("works for low saturation colors", () => {
+    const derived = hexToHSL(deriveAnchorAccentColor("#808080"));
+
+    expect(derived.s).toBeGreaterThanOrEqual(0.5);
+    expect(derived.s).toBeLessThanOrEqual(0.72);
   });
 });
 

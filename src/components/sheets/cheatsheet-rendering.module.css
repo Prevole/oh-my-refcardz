@@ -643,6 +643,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  scroll-margin-top: calc(var(--space-8) + var(--space-4));
   padding: var(--space-1) var(--space-2);
   margin: 0 calc(-1 * var(--space-2));
   border-radius: var(--radius-lg);
@@ -658,6 +659,21 @@
   border-color: var(--border-light);
 }
 
+.itemEntries:target,
+.itemEntries[data-anchor-target="true"] {
+  border-color: color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 32%, var(--border-subtle));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 12%, rgba(14, 28, 32, 0.6)),
+    color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 8%, rgba(16, 24, 30, 0.42))
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 14%, var(--border-subtle)),
+    0 0 0 1px color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 16%, transparent),
+    0 0 1rem color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 12%, transparent);
+  animation: item-target-pulse 1.4s ease-out;
+}
+
 .itemEntries[data-nav-focused="true"] {
   border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 55%, var(--border-strong));
   background: linear-gradient(
@@ -669,6 +685,45 @@
     inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, var(--border-subtle)),
     0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 25%, transparent),
     0 0 1rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, transparent);
+}
+
+.itemEntries[data-nav-focused="true"]:target,
+.itemEntries[data-nav-focused="true"][data-anchor-target="true"] {
+  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 55%, var(--border-strong));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 12%, rgba(14, 28, 32, 0.6)),
+    color-mix(in srgb, var(--sheet-accent, var(--accent)) 8%, rgba(16, 24, 30, 0.42))
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, var(--border-subtle)),
+    0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 25%, transparent),
+    0 0 1rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 15%, transparent);
+  animation: none;
+}
+
+.card:has(.itemEntries:target),
+.card[data-anchor-target-card="true"] {
+  border-color: color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 28%, var(--border-medium));
+  background: color-mix(in srgb, var(--bg-dark-base) 94%, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 7%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 12%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 12%, transparent),
+    0 0 1.25rem color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 10%, transparent);
+}
+
+.card:has(.itemEntries:target)::before,
+.card[data-anchor-target-card="true"]::before {
+  opacity: 1;
+}
+
+.card:has(.itemEntries:target) .cardHeader,
+.card[data-anchor-target-card="true"] .cardHeader {
+  background: color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 14%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 12%, var(--border-subtle)),
+    inset 0 -1px 0 color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 10%, transparent);
 }
 
 .itemEntriesHeader {
@@ -1123,6 +1178,11 @@
   transition: color var(--transition-fast), text-decoration-color var(--transition-fast), opacity var(--transition-fast);
 }
 
+.inlineAnchorLink {
+  color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 68%, white 32%);
+  text-decoration-style: dashed;
+}
+
 .inlineSheetLinkIcon {
   width: 1.4em;
   height: 1.4em;
@@ -1135,6 +1195,18 @@
   transform: translateY(0.02em);
 }
 
+.inlineAnchorLinkIcon {
+  width: 0.88em;
+  height: 0.88em;
+  flex: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.82;
+  transform: translateY(0.01em);
+}
+
 .inlineSheetLink:hover {
   color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 92%, white 8%);
   text-decoration-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 92%, transparent);
@@ -1142,6 +1214,10 @@
 
 .inlineSheetLink:hover .inlineSheetLinkIcon {
   opacity: 0.95;
+}
+
+.inlineSheetLink:hover .inlineAnchorLinkIcon {
+  opacity: 1;
 }
 
 .shortcut {
@@ -1175,5 +1251,20 @@
   }
   100% {
     box-shadow: 0 0 0 5px color-mix(in srgb, var(--success) 0%, transparent);
+  }
+}
+
+@keyframes item-target-pulse {
+  0% {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 18%, var(--border-subtle)),
+      0 0 0 1px color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 20%, transparent),
+      0 0 0 0.32rem color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 14%, transparent);
+  }
+  100% {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 14%, var(--border-subtle)),
+      0 0 0 1px color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 16%, transparent),
+      0 0 0 0.12rem color-mix(in srgb, var(--sheet-anchor-accent, var(--sheet-accent, var(--accent))) 12%, transparent);
   }
 }

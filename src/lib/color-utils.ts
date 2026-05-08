@@ -1,5 +1,9 @@
 type HSL = { h: number; s: number; l: number };
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
 export function hexToHSL(hex: string): HSL {
   let normalizedHex = hex.replace("#", "");
   if (normalizedHex.length === 3) {
@@ -95,4 +99,14 @@ export function getGridInterpolationFactor(
   const maxSum = maxRow + maxCol;
   if (maxSum === 0) return 0;
   return (rowIndex + colIndex) / maxSum;
+}
+
+export function deriveAnchorAccentColor(hex: string): string {
+  const { h, s, l } = hexToHSL(hex);
+
+  return hslToHex({
+    h: (h + 0.46) % 1,
+    s: clamp(Math.max(s * 0.78, 0.54), 0.54, 0.72),
+    l: clamp(Math.max(l, 0.52), 0.52, 0.62),
+  });
 }

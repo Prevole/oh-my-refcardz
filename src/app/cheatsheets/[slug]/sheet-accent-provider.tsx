@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode, type CSSProperties } from "react";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useSelectedSheetAccent } from "@/hooks/use-selected-sheet-accent";
+import { deriveAnchorAccentColor } from "@/lib/color-utils";
 
 type Props = {
   sheetColor: string;
@@ -33,6 +34,7 @@ export function SheetAccentProvider({ sheetColor, sheetColorFrom, children }: Pr
   const style: CSSProperties = {
     "--accent": accentColor,
     "--sheet-accent": accentColor,
+    "--sheet-anchor-accent": deriveAnchorAccentColor(accentColor),
   } as CSSProperties;
 
   return (

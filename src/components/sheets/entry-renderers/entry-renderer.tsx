@@ -1,6 +1,7 @@
 import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
 import { renderEntry, type EntryContext } from "./entry-registry";
 
+import "./anchor-entry";
 import "./command-entry";
 import "./content-entry";
 import "./keys-entry";
