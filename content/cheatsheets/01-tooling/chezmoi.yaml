@@ -134,69 +134,87 @@ sections:
       - title: Bootstrap
         items:
           - entries:
-              - step: Install
+              - step: Install Developer Tools
               - command: xcode-select --install
               - text: Install Apple developer tools to make `git` available.
-              - step: 1Password
+              - step: Configure 1Password
+              - text: 1. Create `chezmoi` vault in [[1password|1Password]]
+              - text: 2. Create the `GitHub Configuration` note
+              - settings:
+                  - username
+                  - email
+                  - name
+                  - organisation
               - text: >-
-                  Prepare a `chezmoi` vault in [[1password|1Password]] with the required items:
-                  `GitHub Configurations` (login) and `Git Repositories - <profile>` (secure note).
-              - step: Clone
+                  Remark: `name` and `organisation` are required for pro setup
+              - text: 3. Create the `Git Repositories - <profile>` note
+              - contentExample: |-
+                  repositories:
+                    perso:
+                      - url: git@github.com:Prevole/gs-download.git
+                      ...
+                    work:
+                      - name: ...
+                        url: ...
+                      ...
+              - text: The listed repositories will be cloned during the `chezmoi` setup and install
+              - step: Clone chezmoi repository
               - command: git clone https://github.com/Prevole/chezmoi.git /tmp/chezmoi
               - text: Clone over HTTPS into `/tmp` — SSH keys are not set up yet.
-              - step: Run
+              - step: Run install script
               - command: /tmp/chezmoi/scripts/mac-setup.sh
-              - text: >-
-                  Start the bootstrap flow: profile selection, Homebrew, 1Password CLI,
-                  SSH keys, dotfiles, runtimes, and repository cloning.
+              - text: Start the bootstrap flow, see related card.
               - link:
                   type: github
                   url: https://github.com/Prevole/chezmoi
                   label: Prevole/chezmoi
-
-      - title: 1Password Prerequisites
-        items:
-          - entries:
-              - title: Create the central vault
-              - text: Create a `chezmoi` vault in [[1password|1Password]] before running the machine setup.
-
-          - entries:
-              - title: Git identity item
-              - text: Create a `GitHub Configurations` login item in the `chezmoi` vault so templates can fill Git name, email, username, and org data.
-
-          - entries:
-              - title: Repository inventory item
-              - text: >-
-                  Create one `Git Repositories - <profile>` secure note per
-                  profile in the `chezmoi` vault. Its `notesPlain` field stores
-                  the repository inventory used later by `repos_clone`.
-            detailedEntries:
-              - contentExample: |-
-                  repositories:
-                    work:
-                      - url: git@github.com:org/repo.git
-                    perso:
-                      - name: custom-folder
-                        url: git@github-perso:user/repo.git
 
       - title: Setup Pipeline
         items:
           - entries:
               - title: What `mac-setup.sh` runs
               - file: scripts/setup.d/
-              - settings:
-                  - 00-profile.sh = choose and persist the machine profile
-                  - 01-homebrew.sh = install Homebrew
-                  - 02-machine.sh = configure machine identity
-                  - 03-1password.sh = sign in to [[1password|1Password]] and `op`
-                  - 04-ssh-keys.sh = generate and extract temporary SSH keys
-                  - 05-chezmoi.sh = install `chezmoi` and render the Brewfile
-                  - 06-apps.sh = `brew bundle install`
-                  - 07-directories.sh = create expected directories
-                  - 08-dotfiles.sh = `chezmoi init --apply` and restart 1Password
-                  - 09-mise.sh = install global runtimes with `mise`
-                  - 10-repos.sh = clone repositories from 1Password
-                  - 98-ssh-cleanup.sh = delete temporary private keys from disk
+              - table:
+                  headers:
+                    - Script
+                    - Role
+                  rows:
+                    - cols:
+                        - "`00-profile.sh`"
+                        - Choose and persist the machine profile
+                    - cols:
+                        - "`01-homebrew.sh`"
+                        - Install Homebrew
+                    - cols:
+                        - "`02-machine.sh`"
+                        - Configure machine identity
+                    - cols:
+                        - "`03-1password.sh`"
+                        - Sign in to [[1password|1Password]] and `op`
+                    - cols:
+                        - "`04-ssh-keys.sh`"
+                        - Generate and extract temporary SSH keys
+                    - cols:
+                        - "`05-chezmoi.sh`"
+                        - Install `chezmoi` and render the Brewfile
+                    - cols:
+                        - "`06-apps.sh`"
+                        - Run `brew bundle install`
+                    - cols:
+                        - "`07-directories.sh`"
+                        - Create expected directories
+                    - cols:
+                        - "`08-dotfiles.sh`"
+                        - Run `chezmoi init --apply` and restart 1Password
+                    - cols:
+                        - "`09-mise.sh`"
+                        - Install global runtimes with `mise`
+                    - cols:
+                        - "`10-repos.sh`"
+                        - Clone repositories from 1Password
+                    - cols:
+                        - "`98-ssh-cleanup.sh`"
+                        - Delete temporary private keys from disk
               - text: >-
                   The setup is intentionally split into sourced steps so the
                   machine bootstrap stays resumable and easier to reason about.
@@ -219,4 +237,4 @@ sections:
 
           - entries:
               - title: Project-local secrets with direnv
-              - text: Use [[direnv|direnv]] when a project needs runtime environment variables resolved from 1Password instead of host-level dotfiles.
+              - text: Use [[direnv|direnv]] when a project needs runtime environment variables resolved from [[1password|1Password]] instead of host-level dotfiles.

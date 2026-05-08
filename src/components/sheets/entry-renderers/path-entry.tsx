@@ -11,8 +11,12 @@ type PathLikeProps = {
   value: string;
 };
 
+function getFileLabel(value: string): string {
+  return value.endsWith("/") ? "Folder" : "File";
+}
+
 export function PathLike({ type, value }: PathLikeProps) {
-  const label = type === "file" ? "File" : "Where";
+  const label = type === "file" ? getFileLabel(value) : "Where";
   const lineClass = type === "file" ? styles.configFileLine : styles.appSettingsLocationLine;
   const labelClass = type === "file" ? styles.configFileLabel : styles.appSettingsLocationLabel;
   const valueClass = type === "file" ? styles.configFile : styles.appSettingsLocation;
@@ -91,6 +95,7 @@ type CopyableFilePathProps = {
 function CopyableFilePath({ label, value, lineClass, labelClass, valueClass }: CopyableFilePathProps) {
   const [copied, setCopied] = useState(false);
   const showCopyModal = useShowCopyModal();
+  const copyTitle = value.endsWith("/") ? "Copy Folder" : "Copy File";
 
   function handleSelect(e: React.MouseEvent) {
     const target = e.target as HTMLElement;
@@ -106,7 +111,8 @@ function CopyableFilePath({ label, value, lineClass, labelClass, valueClass }: C
     e.stopPropagation();
 
     if (hasPlaceholders(value)) {
-      showCopyModal({ title: "Copy File", value, previewPrefix: "" });
+      const copyLabel = value.endsWith("/") ? "Copy Folder" : "Copy File";
+      showCopyModal({ title: copyLabel, value, previewPrefix: "" });
       return;
     }
 
@@ -121,7 +127,7 @@ function CopyableFilePath({ label, value, lineClass, labelClass, valueClass }: C
       <div
         className={styles.configFileCopyable}
         data-copyable={value}
-        data-copy-title="Copy File"
+        data-copy-title={copyTitle}
         data-copied={copied ? "true" : undefined}
         onClick={handleSelect}
       >
