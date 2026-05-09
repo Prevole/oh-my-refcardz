@@ -46,7 +46,9 @@ export function buildHexRows<T>(items: T[], columns: number): HexRows<T> {
   const oddCount = Math.max(1, columns - 1);
   const rows: HexRows<T> = [];
 
-  if (items.length > 1 && items.length <= evenCount) {
+  const pairCapacity = evenCount + oddCount;
+
+  if (items.length <= pairCapacity) {
     const firstRowCount = Math.min(evenCount, Math.ceil(items.length / 2));
     return [items.slice(0, firstRowCount), items.slice(firstRowCount)].filter(
       (row) => row.length > 0
@@ -54,14 +56,27 @@ export function buildHexRows<T>(items: T[], columns: number): HexRows<T> {
   }
 
   let cursor = 0;
-  let rowIndex = 0;
 
   while (cursor < items.length) {
-    const targetCount = rowIndex % 2 === 0 ? evenCount : oddCount;
-    const count = Math.min(targetCount, items.length - cursor);
-    rows.push(items.slice(cursor, cursor + count));
-    cursor += count;
-    rowIndex += 1;
+    const remainingItems = items.length - cursor;
+
+    if (remainingItems <= pairCapacity) {
+      const firstRowCount = Math.min(evenCount, Math.ceil(remainingItems / 2));
+      rows.push(items.slice(cursor, cursor + firstRowCount));
+      cursor += firstRowCount;
+
+      if (cursor < items.length) {
+        rows.push(items.slice(cursor, items.length));
+      }
+
+      break;
+    }
+
+    rows.push(items.slice(cursor, cursor + evenCount));
+    cursor += evenCount;
+
+    rows.push(items.slice(cursor, cursor + oddCount));
+    cursor += oddCount;
   }
 
   return rows;

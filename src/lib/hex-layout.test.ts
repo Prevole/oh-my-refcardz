@@ -102,13 +102,14 @@ describe("buildHexRows", () => {
     expect(rows).toEqual([["a", "b"], ["c"]]);
   });
 
-  it("fills even rows with full column count", () => {
+  it("balances remaining items across the next zigzag pair", () => {
     const items = ["a", "b", "c", "d", "e", "f", "g"];
     const rows = buildHexRows(items, 3);
 
     expect(rows[0]).toEqual(["a", "b", "c"]);
     expect(rows[1]).toEqual(["d", "e"]);
-    expect(rows[2]).toEqual(["f", "g"]);
+    expect(rows[2]).toEqual(["f"]);
+    expect(rows[3]).toEqual(["g"]);
   });
 
   it("odd rows have columns - 1 items", () => {
@@ -117,6 +118,77 @@ describe("buildHexRows", () => {
 
     expect(rows[0].length).toBe(3);
     expect(rows[1].length).toBe(2);
+  });
+
+  it("balances the first two rows before starting a third row", () => {
+    const items = ["a", "b", "c", "d", "e", "f"];
+    const rows = buildHexRows(items, 5);
+
+    expect(rows).toEqual([
+      ["a", "b", "c"],
+      ["d", "e", "f"],
+    ]);
+  });
+
+  it("keeps filling the first two rows until their combined capacity is reached", () => {
+    const items = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
+    const rows = buildHexRows(items, 5);
+
+    expect(rows).toEqual([
+      ["a", "b", "c", "d", "e"],
+      ["f", "g", "h", "i"],
+    ]);
+  });
+
+  it("starts a third row only after the first zigzag pair is full", () => {
+    const items = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
+    const rows = buildHexRows(items, 5);
+
+    expect(rows).toEqual([
+      ["a", "b", "c", "d", "e"],
+      ["f", "g", "h", "i"],
+      ["j"],
+    ]);
+  });
+
+  it("balances the final zigzag pair instead of leaving a sparse last row", () => {
+    const items = [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+    ];
+    const rows = buildHexRows(items, 5);
+
+    expect(rows).toEqual([
+      ["a", "b", "c", "d", "e"],
+      ["f", "g", "h", "i"],
+      ["j", "k", "l", "m", "n"],
+      ["o", "p", "q", "r"],
+      ["s", "t", "u", "v"],
+      ["w", "x", "y"],
+    ]);
   });
 
   it("handles columns = 1", () => {
