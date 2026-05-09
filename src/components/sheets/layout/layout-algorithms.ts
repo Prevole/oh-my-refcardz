@@ -1,5 +1,12 @@
 import { GRID_COLUMNS, GRID_GAP_PX } from "../sheet-grid";
-import { MAX_ROW_SPAN, type CardLayoutState } from "./layout-types";
+import { MAX_ROW_SPAN, type BlockLayoutState } from "./layout-types";
+
+type GridPlacement = {
+  colStart: number;
+  rowStart: number;
+  colSpan: number;
+  rowSpan: number;
+};
 
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -22,7 +29,7 @@ export function pointerToGridPosition(
   };
 }
 
-export function hasCollision(occupied: Set<string>, card: CardLayoutState): boolean {
+export function hasCollision(occupied: Set<string>, card: GridPlacement): boolean {
   for (let row = card.rowStart; row < card.rowStart + card.rowSpan; row++) {
     for (let col = card.colStart; col < card.colStart + card.colSpan; col++) {
       if (occupied.has(`${col}:${row}`)) {
@@ -34,7 +41,7 @@ export function hasCollision(occupied: Set<string>, card: CardLayoutState): bool
   return false;
 }
 
-export function markOccupied(occupied: Set<string>, card: CardLayoutState): void {
+export function markOccupied(occupied: Set<string>, card: GridPlacement): void {
   for (let row = card.rowStart; row < card.rowStart + card.rowSpan; row++) {
     for (let col = card.colStart; col < card.colStart + card.colSpan; col++) {
       occupied.add(`${col}:${row}`);
@@ -42,7 +49,7 @@ export function markOccupied(occupied: Set<string>, card: CardLayoutState): void
   }
 }
 
-export function clampCardLayoutToGrid(card: CardLayoutState): CardLayoutState {
+export function clampCardLayoutToGrid(card: GridPlacement): GridPlacement {
   const colSpan = clamp(card.colSpan, 1, GRID_COLUMNS);
   const rowSpan = clamp(card.rowSpan, 1, MAX_ROW_SPAN);
 
@@ -56,7 +63,7 @@ export function clampCardLayoutToGrid(card: CardLayoutState): CardLayoutState {
 
 const MAX_SEARCH_ROWS = 200;
 
-export function placeCardAtNearestSlot(card: CardLayoutState, occupied: Set<string>): CardLayoutState {
+export function placeCardAtNearestSlot(card: GridPlacement, occupied: Set<string>): GridPlacement {
   const startCol = clamp(card.colStart, 1, GRID_COLUMNS - card.colSpan + 1);
   const startRow = Math.max(1, card.rowStart);
 
@@ -73,28 +80,51 @@ export function placeCardAtNearestSlot(card: CardLayoutState, occupied: Set<stri
   return { ...card, colStart: 1, rowStart: startRow };
 }
 
-export function resolveSectionLayout(
-  cards: CardLayoutState[],
-  pinnedIndex?: number,
-  pinnedLayout?: CardLayoutState
-): CardLayoutState[] {
-  const nextCards = cards.map((card) => ({ ...card }));
+export function resolveBlockLayout(
+  blocks: BlockLayoutState[],
+  pinnedBlockId?: string,
+  pinnedLayout?: GridPlacement
+): BlockLayoutState[] {
+  const nextBlocks = blocks.map((block) => ({ ...block }));
   const occupied = new Set<string>();
+  const pinnedBlock = pinnedBlockId ? nextBlocks.find((block) => block.id === pinnedBlockId) : null;
 
-  if (pinnedIndex !== undefined && pinnedLayout) {
-    const pinned = clampCardLayoutToGrid(pinnedLayout);
-    nextCards[pinnedIndex] = pinned;
-    markOccupied(occupied, pinned);
+  // Headings keep their position during card reflow so card editing does not
+  // unexpectedly rewrite the visual structure and anchor targets.
+  for (let index = 0; index < nextBlocks.length; index++) {
+    const block = nextBlocks[index];
+    if (block.id === pinnedBlockId) continue;
+    if (block.kind !== "heading") continue;
+
+    const placedHeading = clampCardLayoutToGrid(block);
+    nextBlocks[index] = { ...block, ...placedHeading };
+    markOccupied(occupied, placedHeading);
   }
 
-  for (let index = 0; index < nextCards.length; index++) {
-    if (index === pinnedIndex) continue;
+  if (pinnedBlockId && pinnedLayout) {
+    const pinned = clampCardLayoutToGrid(pinnedLayout);
+    const pinnedIndex = nextBlocks.findIndex((block) => block.id === pinnedBlockId);
 
-    const preferred = clampCardLayoutToGrid(nextCards[index]);
+    if (pinnedIndex !== -1) {
+      const resolvedPinned =
+        pinnedBlock?.kind === "heading" || !hasCollision(occupied, pinned)
+          ? pinned
+          : placeCardAtNearestSlot(pinned, occupied);
+
+      nextBlocks[pinnedIndex] = { ...nextBlocks[pinnedIndex], ...resolvedPinned };
+      markOccupied(occupied, resolvedPinned);
+    }
+  }
+
+  for (let index = 0; index < nextBlocks.length; index++) {
+    if (nextBlocks[index].id === pinnedBlockId) continue;
+    if (nextBlocks[index].kind === "heading") continue;
+
+    const preferred = clampCardLayoutToGrid(nextBlocks[index]);
     const placed = placeCardAtNearestSlot(preferred, occupied);
-    nextCards[index] = placed;
+    nextBlocks[index] = { ...nextBlocks[index], ...placed };
     markOccupied(occupied, placed);
   }
 
-  return nextCards;
+  return nextBlocks;
 }

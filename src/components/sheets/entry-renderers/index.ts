@@ -1,7 +1,7 @@
 export { EntryRenderer } from "./entry-renderer";
 export { registerHandler, renderEntry, type EntryContext, type CheatSheetEntryMap } from "./entry-registry";
 export { TitleEntry } from "./title-entry";
-export { CommandLike, AliasesEntry } from "./command-entry";
+export { CommandLike, AliasEntry } from "./command-entry";
 export { PathLike } from "./path-entry";
 export { TextEntry } from "./text-entry";
 export { KeysEntry } from "./keys-entry";

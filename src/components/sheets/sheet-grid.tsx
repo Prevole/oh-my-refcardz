@@ -63,6 +63,7 @@ export function SheetGrid({ children, editMode = false, onMetricsChange }: Sheet
 }
 
 type SheetCardProps = {
+  id?: string;
   title: string;
   badge?: ReactNode;
   footer?: ReactNode;
@@ -78,14 +79,14 @@ type SheetCardProps = {
   dimmed?: boolean;
   keyboardFocused?: boolean;
   manipulating?: boolean;
-  sectionIndex?: number;
-  cardIndex?: number;
+  blockId?: string;
   onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onResizePointerDown?: (direction: ResizeHandleDirection, event: ReactPointerEvent<HTMLDivElement>) => void;
   activeResizeDirection?: ResizeHandleDirection | null;
 };
 
 export function SheetCard({
+  id,
   title,
   badge,
   footer,
@@ -101,8 +102,7 @@ export function SheetCard({
   dimmed = false,
   keyboardFocused = false,
   manipulating = false,
-  sectionIndex,
-  cardIndex,
+  blockId,
   onHeaderPointerDown,
   onResizePointerDown,
   activeResizeDirection = null,
@@ -120,10 +120,10 @@ export function SheetCard({
 
   return (
     <article
+      id={id}
       className={classNames}
-      data-layout-card={sectionIndex !== undefined && cardIndex !== undefined ? "true" : undefined}
-      data-layout-section-index={sectionIndex}
-      data-layout-card-index={cardIndex}
+      data-layout-card={blockId ? "true" : undefined}
+      data-layout-block-id={blockId}
       style={{
         ["--card-col-start" as string]: String(colStart),
         ["--card-row-start" as string]: String(rowStart),
@@ -198,6 +198,137 @@ export function SheetCard({
       ) : null}
       <div className={cheatsheetStyles.cardBody}>{children}</div>
       {footer ? <div className={cheatsheetStyles.cardFooter}>{footer}</div> : null}
+    </article>
+  );
+}
+
+type SheetHeadingBlockProps = {
+  id?: string;
+  title: string;
+  text?: string;
+  colStart?: number;
+  rowStart?: number;
+  colSpan?: number;
+  rowSpan?: number;
+  editMode?: boolean;
+  layoutLabel?: string;
+  dragging?: boolean;
+  dimmed?: boolean;
+  keyboardFocused?: boolean;
+  manipulating?: boolean;
+  blockId?: string;
+  onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onResizePointerDown?: (direction: ResizeHandleDirection, event: ReactPointerEvent<HTMLDivElement>) => void;
+  activeResizeDirection?: ResizeHandleDirection | null;
+};
+
+export function SheetHeadingBlock({
+  id,
+  title,
+  text,
+  colStart = 1,
+  rowStart = 1,
+  colSpan = 36,
+  rowSpan = 2,
+  editMode = false,
+  layoutLabel,
+  dragging = false,
+  dimmed = false,
+  keyboardFocused = false,
+  manipulating = false,
+  blockId,
+  onHeaderPointerDown,
+  onResizePointerDown,
+  activeResizeDirection = null,
+}: SheetHeadingBlockProps) {
+  const classNames = [
+    cheatsheetStyles.headingBlock,
+    editMode ? cheatsheetStyles.headingBlockEditMode : "",
+    dragging ? cheatsheetStyles.headingBlockDragging : "",
+    dimmed ? cheatsheetStyles.headingBlockDimmed : "",
+    keyboardFocused ? cheatsheetStyles.headingBlockKeyboardFocused : "",
+    manipulating ? cheatsheetStyles.headingBlockManipulating : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <article
+      id={id}
+      className={classNames}
+      data-layout-card={blockId ? "true" : undefined}
+      data-layout-block-id={blockId}
+      style={{
+        ["--card-col-start" as string]: String(colStart),
+        ["--card-row-start" as string]: String(rowStart),
+        ["--card-col-span" as string]: String(colSpan),
+        ["--card-row-span" as string]: String(rowSpan),
+      }}
+    >
+      {editMode ? (
+        <div className={cheatsheetStyles.cardLayoutBadgeRow}>
+          <div className={cheatsheetStyles.cardLayoutBadge}>{layoutLabel ?? `${colSpan}x${rowSpan}`}</div>
+        </div>
+      ) : null}
+      <div
+        className={`${cheatsheetStyles.headingBlockHeader} ${onHeaderPointerDown ? cheatsheetStyles.headingBlockHeaderDraggable : ""}`}
+        onPointerDown={onHeaderPointerDown}
+      >
+        <h2 className={cheatsheetStyles.headingBlockTitle}>{title}</h2>
+        {text ? <p className={cheatsheetStyles.headingBlockText}>{text}</p> : null}
+      </div>
+      {onResizePointerDown ? (
+        <>
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleNorth}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "north" || activeResizeDirection === "north-east" || activeResizeDirection === "north-west"}
+            onPointerDown={(event) => onResizePointerDown("north", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleNorthEast}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "north-east"}
+            onPointerDown={(event) => onResizePointerDown("north-east", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleEast}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "east" || activeResizeDirection === "north-east" || activeResizeDirection === "south-east"}
+            onPointerDown={(event) => onResizePointerDown("east", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleSouth}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "south" || activeResizeDirection === "south-east" || activeResizeDirection === "south-west"}
+            onPointerDown={(event) => onResizePointerDown("south", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleSouthEast}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "south-east"}
+            onPointerDown={(event) => onResizePointerDown("south-east", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleSouthWest}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "south-west"}
+            onPointerDown={(event) => onResizePointerDown("south-west", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleWest}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "west" || activeResizeDirection === "north-west" || activeResizeDirection === "south-west"}
+            onPointerDown={(event) => onResizePointerDown("west", event)}
+          />
+          <div
+            className={`${cheatsheetStyles.cardResizeHandle} ${cheatsheetStyles.cardResizeHandleNorthWest}`}
+            data-card-resize-handle
+            data-active={activeResizeDirection === "north-west"}
+            onPointerDown={(event) => onResizePointerDown("north-west", event)}
+          />
+        </>
+      ) : null}
     </article>
   );
 }

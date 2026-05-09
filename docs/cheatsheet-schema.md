@@ -1,6 +1,6 @@
 # Cheatsheet Schema
 
-YAML cheatsheets follow a hierarchical structure: Sheet → Sections → Cards → Items → Entries.
+YAML cheatsheets follow a hierarchical structure: Sheet → Blocks → Items → Entries.
 
 ## Structure Overview
 
@@ -10,9 +10,13 @@ Sheet
 ├── summary: string
 ├── color: hex color (#RRGGBB)
 ├── icon?: string (optional)
-└── sections[]
-    ├── title: string
-    └── cards[]
+└── blocks[]
+    ├── heading
+    │   ├── id: kebab-case string (unique within file)
+    │   ├── title: string
+    │   └── text?: string
+    └── card
+        ├── id: kebab-case string (unique within file)
         ├── title: string
         └── items[]
             ├── entries[] (required, min 1)
@@ -37,27 +41,42 @@ icon: git  # optional, for home page display
 | `color` | Yes | Hex color for accent theming |
 | `icon` | No | Icon identifier for home page card |
 
-## Sections
+## Blocks
 
-Sections group related cards under a common heading.
+Blocks are flat, ordered elements. The current block types are `heading` and `card`.
 
 ```yaml
-sections:
-  - title: Basics
-    cards:
-      - title: Status
-        items: [...]
-      - title: Staging
-        items: [...]
+blocks:
+  - heading:
+      id: basics
+      title: Basics
+  - card:
+      id: status
+      title: Status
+      items: [...]
+  - card:
+      id: staging
+      title: Staging
+      items: [...]
 ```
+
+Rules:
+
+- Every heading requires an `id`
+- Every card requires an `id`
+- IDs must be lowercase kebab-case
+- IDs must be unique across the whole file, not just within their own type
+
+Cards must appear after a heading block.
 
 ## Cards
 
 Cards are visual containers with a title and list of items.
 
 ```yaml
-cards:
-  - title: Viewing Changes
+- card:
+    id: viewing-changes
+    title: Viewing Changes
     items:
       - entries:
           - command: git diff

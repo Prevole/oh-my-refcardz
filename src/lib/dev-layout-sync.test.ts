@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { syncLayoutToDev } from "./dev-layout-sync";
-import type { SectionLayoutState } from "@/components/sheets/layout/layout-types";
+import type { BlockLayoutState } from "@/components/sheets/layout/layout-types";
 
 const mockFetch = vi.fn();
 
@@ -16,8 +16,9 @@ afterEach(() => {
   mockFetch.mockReset();
 });
 
-const sampleLayout: SectionLayoutState[] = [
-  { cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }] },
+const sampleLayout: BlockLayoutState[] = [
+  { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+  { id: "card", kind: "card", colStart: 1, rowStart: 3, colSpan: 4, rowSpan: 2 },
 ];
 
 describe("syncLayoutToDev", () => {
@@ -58,8 +59,9 @@ describe("syncLayoutToDev", () => {
     syncLayoutToDev("git", sampleLayout);
     vi.advanceTimersByTime(500);
 
-    const updatedLayout: SectionLayoutState[] = [
-      { cards: [{ colStart: 5, rowStart: 1, colSpan: 6, rowSpan: 3 }] },
+    const updatedLayout: BlockLayoutState[] = [
+      { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "card", kind: "card", colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 3 },
     ];
     syncLayoutToDev("git", updatedLayout);
 

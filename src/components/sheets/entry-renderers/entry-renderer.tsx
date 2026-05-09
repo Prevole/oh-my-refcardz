@@ -1,4 +1,4 @@
-import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetEntry } from "@/lib/cheatsheet-shared";
 import { renderEntry, type EntryContext } from "./entry-registry";
 
 import "./anchor-entry";

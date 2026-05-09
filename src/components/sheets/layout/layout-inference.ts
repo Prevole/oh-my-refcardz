@@ -1,8 +1,9 @@
-import type { CheatSheetCard, CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
-import { resolveSectionLayout } from "./layout-algorithms";
-import type { SectionLayoutState } from "./layout-types";
+import { getRenderableBlocks, type CheatSheetCard, type CheatSheetItem, type YamlCheatSheet } from "@/lib/cheatsheet-shared";
+import { resolveBlockLayout } from "./layout-algorithms";
+import type { BlockLayoutState } from "./layout-types";
 
 const GRID_SCALE_FACTOR = 3;
+const HEADING_ROW_SPAN = 2;
 
 function hasEntryType(item: CheatSheetItem, types: string[]): boolean {
   return item.entries.some((entry) =>
@@ -38,17 +39,28 @@ export function inferCardRowSpan(card: CheatSheetCard): number {
   return 4 * GRID_SCALE_FACTOR;
 }
 
-export function buildDefaultSectionLayouts(sheet: YamlCheatSheet): SectionLayoutState[] {
-  return sheet.sections.map((section) => {
-    const cards = section.cards.map((card) => ({
-      colStart: 1,
-      rowStart: 1,
-      colSpan: inferCardColSpan(card),
-      rowSpan: inferCardRowSpan(card),
-    }));
+export function buildDefaultBlockLayouts(sheet: YamlCheatSheet): BlockLayoutState[] {
+  const blocks = getRenderableBlocks(sheet).map<BlockLayoutState>((block) => {
+    if (block.kind === "heading") {
+      return {
+        id: block.id,
+        kind: "heading",
+        colStart: 1,
+        rowStart: 1,
+        colSpan: 36,
+        rowSpan: HEADING_ROW_SPAN,
+      };
+    }
 
     return {
-      cards: resolveSectionLayout(cards),
+      id: block.id,
+      kind: "card",
+      colStart: 1,
+      rowStart: 1,
+      colSpan: inferCardColSpan(block),
+      rowSpan: inferCardRowSpan(block),
     };
   });
+
+  return resolveBlockLayout(blocks);
 }

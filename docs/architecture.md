@@ -130,15 +130,15 @@ See: [cheatsheet-schema.md](./cheatsheet-schema.md)
 ┌─────────────────────────────────────────┐
 │ Header: Title, Back, Settings, Help     │
 ├─────────────────────────────────────────┤
-│ Sections                                │
-│ ├── Section Title                       │
-│ │   ├── Card (draggable, resizable)     │
-│ │   │   ├── Item                        │
-│ │   │   │   ├── Entry (command)         │
-│ │   │   │   └── Entry (text)            │
-│ │   │   └── Item                        │
-│ │   └── Card                            │
-│ └── Section                             │
+│ Blocks                                  │
+│ ├── Heading                             │
+│ ├── Card (draggable, resizable)         │
+│ │   ├── Item                            │
+│ │   │   ├── Entry (command)             │
+│ │   │   └── Entry (text)                │
+│ │   └── Item                            │
+│ ├── Card                                │
+│ └── Heading                             │
 └─────────────────────────────────────────┘
 ```
 

@@ -1,56 +1,82 @@
 [
   {
-    "cards": [
-      {
-        "colSpan": 11,
-        "rowSpan": 12,
-        "colStart": 26,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 25,
-        "rowSpan": 12,
-        "colStart": 1,
-        "rowStart": 1
-      }
-    ]
+    "id": "basics",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
-    "cards": [
-      {
-        "colStart": 1,
-        "rowStart": 1,
-        "colSpan": 25,
-        "rowSpan": 15
-      },
-      {
-        "colStart": 26,
-        "rowStart": 1,
-        "colSpan": 11,
-        "rowSpan": 15
-      }
-    ]
+    "id": "runtime",
+    "kind": "card",
+    "colSpan": 11,
+    "rowSpan": 12,
+    "colStart": 26,
+    "rowStart": 3
   },
   {
-    "cards": [
-      {
-        "colSpan": 22,
-        "rowSpan": 10,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 22,
-        "rowSpan": 20,
-        "colStart": 1,
-        "rowStart": 11
-      },
-      {
-        "colSpan": 14,
-        "rowSpan": 23,
-        "colStart": 23,
-        "rowStart": 1
-      }
-    ]
+    "id": "trust-and-reload",
+    "kind": "card",
+    "colSpan": 25,
+    "rowSpan": 12,
+    "colStart": 1,
+    "rowStart": 3
+  },
+  {
+    "id": "project-files",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "local-environment",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 25,
+    "rowSpan": 15
+  },
+  {
+    "id": "ignore-generated-state",
+    "kind": "card",
+    "colStart": 26,
+    "rowStart": 3,
+    "colSpan": 11,
+    "rowSpan": 15
+  },
+  {
+    "id": "onepassword-cli-integration",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "setup-oprc-plugin",
+    "kind": "card",
+    "colSpan": 22,
+    "rowSpan": 10,
+    "colStart": 1,
+    "rowStart": 3
+  },
+  {
+    "id": "using-oprc",
+    "kind": "card",
+    "colSpan": 22,
+    "rowSpan": 20,
+    "colStart": 1,
+    "rowStart": 13
+  },
+  {
+    "id": "practical-workflow",
+    "kind": "card",
+    "colSpan": 14,
+    "rowSpan": 23,
+    "colStart": 23,
+    "rowStart": 3
   }
 ]

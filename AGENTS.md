@@ -75,6 +75,8 @@ npm run validate:cheatsheets  # Validate YAML cheatsheets against Zod schema
 | `src/lib/yaml-cheatsheets.ts` (schema) | `npm run validate:cheatsheets && npm run test` |
 | `docs/**/*.md`, `README.md` | Review for consistency and accuracy |
 
+Also run `npm run build` whenever a change may affect Next.js client/server boundaries, shared imports, bundling behavior, or runtime module placement. This especially applies to changes under `src/app/`, `src/components/`, and shared modules in `src/lib/` that can be imported by client components.
+
 ---
 
 ## Testing

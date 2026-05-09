@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST } from "./route";
-import type { SectionLayoutState } from "@/components/sheets/layout/layout-types";
+import type { BlockLayoutState } from "@/components/sheets/layout/layout-types";
 
 vi.mock("node:fs/promises", () => ({
   default: {
     readdir: vi.fn(),
+    readFile: vi.fn(),
     writeFile: vi.fn(),
   },
 }));
@@ -12,6 +13,7 @@ vi.mock("node:fs/promises", () => ({
 import fs from "node:fs/promises";
 
 const mockReaddir = vi.mocked(fs.readdir);
+const mockReadFile = vi.mocked(fs.readFile);
 const mockWriteFile = vi.mocked(fs.writeFile);
 
 const originalNodeEnv = process.env.NODE_ENV;
@@ -37,9 +39,25 @@ function createMockParams(slug: string): Promise<{ slug: string }> {
   return Promise.resolve({ slug });
 }
 
-const sampleLayout: SectionLayoutState[] = [
-  { cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }] },
+const sampleLayout: BlockLayoutState[] = [
+  { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+  { id: "status", kind: "card", colStart: 1, rowStart: 3, colSpan: 4, rowSpan: 2 },
 ];
+
+const sampleSheetYaml = `title: Git
+summary: Test
+color: "#F1502F"
+blocks:
+  - heading:
+      id: inspect-and-diff
+      title: Inspect and Diff
+  - card:
+      id: status
+      title: Status
+      items:
+        - entries:
+            - command: git status
+`;
 
 describe("POST /api/dev/layouts/[slug]", () => {
   it("returns 404 when not in development", async () => {
@@ -77,6 +95,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
       }
       return [];
     });
+    mockReadFile.mockResolvedValue(sampleSheetYaml);
     mockWriteFile.mockResolvedValue(undefined);
 
     const request = createMockRequest(sampleLayout);
@@ -114,6 +133,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
       }
       return [];
     });
+    mockReadFile.mockResolvedValue(sampleSheetYaml);
     mockWriteFile.mockResolvedValue(undefined);
 
     const request = createMockRequest(sampleLayout);

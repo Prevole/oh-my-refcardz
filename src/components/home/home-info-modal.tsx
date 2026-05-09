@@ -3,7 +3,7 @@
 import { useCallback, type CSSProperties } from "react";
 import { Modal } from "@/components/ui/modal";
 import { TechIcon } from "@/components/ui/tech-icon";
-import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetMeta } from "@/lib/cheatsheet-shared";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import styles from "./home-info-modal.module.css";
 

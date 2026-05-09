@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getHeadingGroups, type CheatSheetEntry } from "./cheatsheet-shared";
 import {
   getYamlCheatSheet,
   getYamlCheatSheetWithMeta,
   getAllCheatSheetsMeta,
-  type CheatSheetEntry,
 } from "./yaml-cheatsheets";
 
 // ---------------------------------------------------------------------------
@@ -28,6 +28,12 @@ function findEntryWithKey<K extends keyof CheatSheetEntry>(
     | undefined;
 }
 
+function getAllEntries(sheet: NonNullable<Awaited<ReturnType<typeof getYamlCheatSheet>>>) {
+  return getHeadingGroups(sheet).flatMap((group) =>
+    group.cards.flatMap((card) => card.items.flatMap((item) => item.entries))
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Integration tests using real content files
 // ---------------------------------------------------------------------------
@@ -41,7 +47,7 @@ describe("yaml-cheatsheets integration", () => {
       expect(sheet?.title).toBe("Git");
       expect(sheet?.summary).toContain("aliases");
       expect(sheet?.color).toMatch(/^#[0-9a-fA-F]{6}$/);
-      expect(sheet?.sections.length).toBeGreaterThan(0);
+      expect(sheet?.blocks.length).toBeGreaterThan(0);
     });
 
     it("returns null for non-existent slug", async () => {
@@ -54,9 +60,7 @@ describe("yaml-cheatsheets integration", () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
-      const allEntries = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
-      );
+      const allEntries = getAllEntries(sheet!);
       const commandEntry = findEntryWithKey(allEntries, "command");
 
       expect(commandEntry).toBeDefined();
@@ -67,9 +71,7 @@ describe("yaml-cheatsheets integration", () => {
       const sheet = await getYamlCheatSheet("diff-so-fancy");
 
       expect(sheet).not.toBeNull();
-      const allEntries = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
-      );
+      const allEntries = getAllEntries(sheet!);
       const commandEntries = allEntries.filter((e) => "command" in e);
 
       expect(commandEntries.length).toBeGreaterThan(1);
@@ -79,9 +81,7 @@ describe("yaml-cheatsheets integration", () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
-      const allEntries = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
-      );
+      const allEntries = getAllEntries(sheet!);
       const contentEntry = findEntryWithKey(allEntries, "content");
 
       expect(contentEntry).toBeDefined();
@@ -92,9 +92,7 @@ describe("yaml-cheatsheets integration", () => {
       const sheet = await getYamlCheatSheet("1password");
 
       expect(sheet).not.toBeNull();
-      const allEntries = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
-      );
+      const allEntries = getAllEntries(sheet!);
       const whereEntry = findEntryWithKey(allEntries, "where");
 
       expect(whereEntry).toBeDefined();
@@ -105,9 +103,7 @@ describe("yaml-cheatsheets integration", () => {
       const sheet = await getYamlCheatSheet("1password");
 
       expect(sheet).not.toBeNull();
-      const allEntries = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
-      );
+      const allEntries = getAllEntries(sheet!);
       const settingsEntry = findEntryWithKey(allEntries, "settings");
 
       expect(settingsEntry).toBeDefined();
@@ -118,9 +114,7 @@ describe("yaml-cheatsheets integration", () => {
       const sheet = await getYamlCheatSheet("git");
 
       expect(sheet).not.toBeNull();
-      const allEntries = sheet!.sections.flatMap((s) =>
-        s.cards.flatMap((c) => c.items.flatMap((i) => i.entries))
-      );
+      const allEntries = getAllEntries(sheet!);
       const aliasEntry = findEntryWithKey(allEntries, "alias");
 
       expect(aliasEntry).toBeDefined();
@@ -236,7 +230,7 @@ describe("yaml-cheatsheets edge cases", () => {
         `title: Git Duplicate
 summary: A duplicate sheet
 color: "#000000"
-sections: []
+blocks: []
 `
       );
 
@@ -267,7 +261,7 @@ description: Testing invalid sheets
         path.join(fixtureDir, "invalid-sheet.yaml"),
         `title: Invalid
 summary: Missing color field
-sections: []
+blocks: []
 `
       );
 
@@ -280,13 +274,16 @@ sections: []
         `title: Invalid Item
 summary: Has invalid entry type
 color: "#FF0000"
-sections:
-  - title: Section
-    cards:
-      - title: Card
-        items:
-          - entries:
-              - unknownKey: bar
+blocks:
+  - heading:
+      id: section
+      title: Section
+  - card:
+      id: card
+      title: Card
+      items:
+        - entries:
+            - unknownKey: bar
 `
       );
 
@@ -298,7 +295,7 @@ sections:
         path.join(fixtureDir, "invalid-for-all.yaml"),
         `title: Invalid For All
 summary: Missing color in getAllCheatSheetsMeta
-sections: []
+blocks: []
 `
       );
 
@@ -320,7 +317,7 @@ sections: []
         `title: Test Sheet
 summary: A test sheet in category without meta
 color: "#123456"
-sections: []
+blocks: []
 `
       );
 
@@ -346,7 +343,7 @@ sections: []
         `title: Sheet
 summary: A sheet
 color: "#AABBCC"
-sections: []
+blocks: []
 `
       );
 
@@ -377,7 +374,7 @@ description: A custom test category
         `title: Custom Sheet
 summary: Test
 color: "#ABCDEF"
-sections: []
+blocks: []
 `
       );
 
@@ -409,7 +406,7 @@ description: A category without numeric prefix
         `title: Sheet
 summary: Test
 color: "#AABBCC"
-sections: []
+blocks: []
 `
       );
 
@@ -442,7 +439,7 @@ description: First category with prefix 50
         `title: Sheet A
 summary: Test
 color: "#111111"
-sections: []
+blocks: []
 `
       );
 
@@ -457,7 +454,7 @@ description: Second category with prefix 50
         `title: Sheet B
 summary: Test
 color: "#222222"
-sections: []
+blocks: []
 `
       );
 
@@ -470,7 +467,7 @@ sections: []
     });
   });
 
-  describe("savedLayout loading", () => {
+  describe("savedBlockLayout loading", () => {
     const fixtureDir = path.join(contentDir, "96-layout-test");
 
     beforeEach(async () => {
@@ -487,9 +484,24 @@ description: Testing layout loading
       await fs.rm(fixtureDir, { recursive: true, force: true });
     });
 
-    it("returns savedLayout when .layout.json exists", async () => {
+    it("returns savedBlockLayout when .layout.json exists", async () => {
       const savedLayout = [
-        { cards: [{ colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 }] },
+        {
+          id: "section",
+          kind: "heading",
+          colStart: 1,
+          rowStart: 1,
+          colSpan: 36,
+          rowSpan: 2,
+        },
+        {
+          id: "card",
+          kind: "card",
+          colStart: 5,
+          rowStart: 5,
+          colSpan: 6,
+          rowSpan: 4,
+        },
       ];
 
       await fs.writeFile(
@@ -497,14 +509,17 @@ description: Testing layout loading
         `title: With Layout
 summary: A sheet with saved layout
 color: "#AABBCC"
-sections:
-  - title: Section
-    cards:
-      - title: Card
-        items:
-          - entries:
-              - title: Test
-              - command: test
+blocks:
+  - heading:
+      id: section
+      title: Section
+  - card:
+      id: card
+      title: Card
+      items:
+        - entries:
+            - title: Test
+            - command: test
 `
       );
       await fs.writeFile(
@@ -515,46 +530,52 @@ sections:
       const sheet = await getYamlCheatSheetWithMeta("with-layout");
 
       expect(sheet).not.toBeNull();
-      expect(sheet?.savedLayout).toEqual(savedLayout);
+      expect(sheet?.savedBlockLayout).toEqual(savedLayout);
     });
 
-    it("returns undefined savedLayout when .layout.json does not exist", async () => {
+    it("returns undefined savedBlockLayout when .layout.json does not exist", async () => {
       await fs.writeFile(
         path.join(fixtureDir, "no-layout.yaml"),
         `title: No Layout
 summary: A sheet without saved layout
 color: "#DDEEFF"
-sections:
-  - title: Section
-    cards:
-      - title: Card
-        items:
-          - entries:
-              - title: Test
-              - command: test
+blocks:
+  - heading:
+      id: section
+      title: Section
+  - card:
+      id: card
+      title: Card
+      items:
+        - entries:
+            - title: Test
+            - command: test
 `
       );
 
       const sheet = await getYamlCheatSheetWithMeta("no-layout");
 
       expect(sheet).not.toBeNull();
-      expect(sheet?.savedLayout).toBeUndefined();
+      expect(sheet?.savedBlockLayout).toBeUndefined();
     });
 
-    it("returns undefined savedLayout when .layout.json is invalid JSON", async () => {
+    it("returns undefined savedBlockLayout when .layout.json is invalid JSON", async () => {
       await fs.writeFile(
         path.join(fixtureDir, "invalid-layout.yaml"),
         `title: Invalid Layout
 summary: A sheet with invalid layout JSON
 color: "#112233"
-sections:
-  - title: Section
-    cards:
-      - title: Card
-        items:
-          - entries:
-              - title: Test
-              - command: test
+blocks:
+  - heading:
+      id: section
+      title: Section
+  - card:
+      id: card
+      title: Card
+      items:
+        - entries:
+            - title: Test
+            - command: test
 `
       );
       await fs.writeFile(
@@ -565,12 +586,27 @@ sections:
       const sheet = await getYamlCheatSheetWithMeta("invalid-layout");
 
       expect(sheet).not.toBeNull();
-      expect(sheet?.savedLayout).toBeUndefined();
+      expect(sheet?.savedBlockLayout).toBeUndefined();
     });
 
-    it("includes colorFrom and categoryId alongside savedLayout", async () => {
+    it("includes colorFrom and categoryId alongside savedBlockLayout", async () => {
       const savedLayout = [
-        { cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }] },
+        {
+          id: "section",
+          kind: "heading",
+          colStart: 1,
+          rowStart: 1,
+          colSpan: 36,
+          rowSpan: 2,
+        },
+        {
+          id: "card",
+          kind: "card",
+          colStart: 1,
+          rowStart: 3,
+          colSpan: 4,
+          rowSpan: 2,
+        },
       ];
 
       await fs.writeFile(
@@ -578,14 +614,17 @@ sections:
         `title: Full Meta
 summary: A sheet with all metadata
 color: "#445566"
-sections:
-  - title: Section
-    cards:
-      - title: Card
-        items:
-          - entries:
-              - title: Test
-              - command: test
+blocks:
+  - heading:
+      id: section
+      title: Section
+  - card:
+      id: card
+      title: Card
+      items:
+        - entries:
+            - title: Test
+            - command: test
 `
       );
       await fs.writeFile(
@@ -596,7 +635,7 @@ sections:
       const sheet = await getYamlCheatSheetWithMeta("full-meta");
 
       expect(sheet).not.toBeNull();
-      expect(sheet?.savedLayout).toEqual(savedLayout);
+      expect(sheet?.savedBlockLayout).toEqual(savedLayout);
       expect(sheet?.colorFrom).toBeDefined();
       expect(sheet?.categoryId).toBe("96-layout-test");
     });

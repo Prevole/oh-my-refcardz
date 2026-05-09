@@ -1,19 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { SheetGrid, SheetCard } from "@/components/sheets/sheet-grid";
+import { useEffect, useState } from "react";
+import { SheetGrid, SheetCard, SheetHeadingBlock } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
 import { getItemAnchorId } from "@/lib/anchors";
-import { buildSectionAnchorId } from "@/lib/section-navigation";
-import type { CheatSheetItem, YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
+import { getRenderableBlocks, type CheatSheetItem, type YamlCheatSheetWithMeta } from "@/lib/cheatsheet-shared";
+import { buildBlockAnchorId } from "@/lib/anchor-navigation";
 import {
   useLayoutPersistence,
   useCardDrag,
   useCardResize,
   useCardKeyboard,
   FALLBACK_METRICS,
-  type SectionMetricsState,
+  type GridMetricsState,
 } from "./layout";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
@@ -23,32 +23,25 @@ type Props = {
 };
 
 export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
-  const [sectionMetrics, setSectionMetrics] = useState<SectionMetricsState[]>(() =>
-    sheet.sections.map(() => FALLBACK_METRICS)
-  );
+  const blocks = getRenderableBlocks(sheet);
+  const [gridMetrics, setGridMetrics] = useState<GridMetricsState>(FALLBACK_METRICS);
 
-  const { sectionLayouts, setSectionLayouts, hydrated, hasSavedLayout, resetLayout } = useLayoutPersistence(
+  const { blockLayouts, setBlockLayouts, hydrated, hasSavedLayout, resetLayout } = useLayoutPersistence(
     sheetSlug,
     sheet
   );
 
-  const { dragState, startCardDrag } = useCardDrag(sectionLayouts, setSectionLayouts, sectionMetrics);
-  const { resizeState, startCardResize } = useCardResize(sectionLayouts, setSectionLayouts, sectionMetrics);
-
-  const getCardCount = useCallback(
-    (sectionIndex: number) => sheet.sections[sectionIndex]?.cards.length ?? 0,
-    [sheet.sections]
-  );
+  const { dragState, startBlockDrag } = useCardDrag(blockLayouts, setBlockLayouts, gridMetrics);
+  const { resizeState, startBlockResize } = useCardResize(blockLayouts, setBlockLayouts, gridMetrics);
 
   const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboard({
-    sectionLayouts,
-    setSectionLayouts,
-    sectionCount: sheet.sections.length,
-    getCardCount,
+    blockLayouts,
+    setBlockLayouts,
   });
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
-  const layoutMetrics = sectionMetrics[0] ?? FALLBACK_METRICS;
+  const layoutMetrics = gridMetrics;
+  const blockLayoutsById = new Map(blockLayouts.map((layout) => [layout.id, layout]));
 
   useEffect(() => {
     function syncAnchorTargetState() {
@@ -77,34 +70,28 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     return () => window.removeEventListener("hashchange", syncAnchorTargetState);
   }, []);
 
-  function updateSectionMetrics(sectionIndex: number, nextMetrics: SectionMetricsState) {
-    setSectionMetrics((currentMetrics) => {
-      const previous = currentMetrics[sectionIndex];
-      if (previous && previous.columns === nextMetrics.columns && previous.unitSize === nextMetrics.unitSize) {
+  function updateGridMetrics(nextMetrics: GridMetricsState) {
+    setGridMetrics((currentMetrics) => {
+      if (currentMetrics.columns === nextMetrics.columns && currentMetrics.unitSize === nextMetrics.unitSize) {
         return currentMetrics;
       }
 
-      return currentMetrics.map((metrics, currentIndex) => (currentIndex === sectionIndex ? nextMetrics : metrics));
+      return nextMetrics;
     });
   }
 
-  function handleHeaderPointerDown(
-    sectionIndex: number,
-    cardIndex: number,
-    event: React.PointerEvent<HTMLElement>
-  ) {
+  function handleHeaderPointerDown(blockId: string, event: React.PointerEvent<HTMLElement>) {
     setFocusedCard(null);
-    startCardDrag(sectionIndex, cardIndex, event);
+    startBlockDrag(blockId, event);
   }
 
   function handleResizePointerDown(
-    sectionIndex: number,
-    cardIndex: number,
+    blockId: string,
     direction: "north" | "east" | "south" | "west" | "north-east" | "south-east" | "south-west" | "north-west",
     event: React.PointerEvent<HTMLElement>
   ) {
     setFocusedCard(null);
-    startCardResize(sectionIndex, cardIndex, direction, event);
+    startBlockResize(blockId, direction, event);
   }
 
   return (
@@ -131,82 +118,82 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         </div>
       </div>
 
-      {sheet.sections.map((section, sectionIndex) => {
-        return (
-          <section
-            key={section.title}
-            id={buildSectionAnchorId("sheet-section", section.title, sectionIndex)}
-            className={cheatsheetStyles.section}
-          >
-            <div className={cheatsheetStyles.sectionHeaderRow}>
-              <h2 className={cheatsheetStyles.sectionTitle}>{section.title}</h2>
-            </div>
+      <SheetGrid editMode={isLayoutActive} onMetricsChange={updateGridMetrics}>
+        {blocks.map((block) => {
+          const baseLayout = blockLayoutsById.get(block.id);
+          if (!baseLayout) return null;
 
-            <SheetGrid editMode={isLayoutActive} onMetricsChange={(nextMetrics) => updateSectionMetrics(sectionIndex, nextMetrics)}>
-              {section.cards.map((card, cardIndex) => {
-                const baseLayout = sectionLayouts[sectionIndex]?.cards[cardIndex];
-                if (!baseLayout) return null;
+          const isDragging = Boolean(dragState && dragState.blockId === block.id);
+          const isResizing = Boolean(resizeState && resizeState.blockId === block.id);
+          const isKeyboardFocused = Boolean(focusedCard && focusedCard.blockId === block.id);
+          const isDimmed = Boolean(dragState || resizeState || focusedCard) && !isDragging && !isResizing && !isKeyboardFocused;
+          const previewLayout = isDragging && dragState
+            ? {
+                colStart: dragState.colStart,
+                rowStart: dragState.rowStart,
+                colSpan: dragState.colSpan,
+                rowSpan: dragState.rowSpan,
+              }
+            : isResizing && resizeState
+              ? {
+                  colStart: resizeState.colStart,
+                  rowStart: resizeState.rowStart,
+                  colSpan: resizeState.colSpan,
+                  rowSpan: resizeState.rowSpan,
+                }
+              : baseLayout;
 
-                const isDragging = Boolean(
-                  dragState && dragState.sectionIndex === sectionIndex && dragState.cardIndex === cardIndex
-                );
-                const isResizing = Boolean(
-                  resizeState && resizeState.sectionIndex === sectionIndex && resizeState.cardIndex === cardIndex
-                );
-                const isKeyboardFocused = Boolean(
-                  focusedCard && focusedCard.sectionIndex === sectionIndex && focusedCard.cardIndex === cardIndex
-                );
-                const isDimmed = Boolean(dragState || resizeState || focusedCard) && !isDragging && !isResizing && !isKeyboardFocused;
-                const previewLayout = isDragging && dragState
-                    ? {
-                        colStart: dragState.colStart,
-                        rowStart: dragState.rowStart,
-                        colSpan: dragState.colSpan,
-                        rowSpan: dragState.rowSpan,
-                      }
-                    : isResizing && resizeState
-                      ? {
-                          colStart: resizeState.colStart,
-                          rowStart: resizeState.rowStart,
-                          colSpan: resizeState.colSpan,
-                          rowSpan: resizeState.rowSpan,
-                        }
-                      : baseLayout;
-
-                return (
-                  <SheetCard
-                    key={card.title}
-                    title={card.title}
-                    colStart={previewLayout.colStart}
-                    rowStart={previewLayout.rowStart}
-                    colSpan={previewLayout.colSpan}
-                    rowSpan={previewLayout.rowSpan}
-                    editMode={isLayoutActive}
-                    dragging={isDragging || isResizing}
-                    dimmed={isDimmed}
-                    keyboardFocused={isKeyboardFocused}
-                    manipulating={isKeyboardFocused && isManipulating}
-                    sectionIndex={sectionIndex}
-                    cardIndex={cardIndex}
-                    onHeaderPointerDown={(event) => handleHeaderPointerDown(sectionIndex, cardIndex, event)}
-                    onResizePointerDown={(direction, event) =>
-                      handleResizePointerDown(sectionIndex, cardIndex, direction, event)
-                    }
-                    activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
-                    layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
-                  >
-                    <div className={cheatsheetStyles.itemList}>
-                      {card.items.map((item, itemIndex) => (
-                        <SheetItem key={itemIndex} item={item} />
-                      ))}
-                    </div>
-                  </SheetCard>
-                );
-              })}
-            </SheetGrid>
-          </section>
-        );
-      })}
+          return (
+            block.kind === "heading" ? (
+              <SheetHeadingBlock
+                key={block.id}
+                id={buildBlockAnchorId("sheet-heading", block.id)}
+                title={block.title}
+                text={block.text}
+                colStart={previewLayout.colStart}
+                rowStart={previewLayout.rowStart}
+                colSpan={previewLayout.colSpan}
+                rowSpan={previewLayout.rowSpan}
+                editMode={isLayoutActive}
+                dragging={isDragging || isResizing}
+                dimmed={isDimmed}
+                keyboardFocused={isKeyboardFocused}
+                manipulating={isKeyboardFocused && isManipulating}
+                blockId={block.id}
+                onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
+                onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
+                activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
+                layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
+              />
+            ) : (
+              <SheetCard
+                key={block.id}
+                title={block.title}
+                colStart={previewLayout.colStart}
+                rowStart={previewLayout.rowStart}
+                colSpan={previewLayout.colSpan}
+                rowSpan={previewLayout.rowSpan}
+                editMode={isLayoutActive}
+                dragging={isDragging || isResizing}
+                dimmed={isDimmed}
+                keyboardFocused={isKeyboardFocused}
+                manipulating={isKeyboardFocused && isManipulating}
+                blockId={block.id}
+                onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
+                onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
+                activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
+                layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
+              >
+                <div className={cheatsheetStyles.itemList}>
+                  {block.items.map((item, itemIndex) => (
+                    <SheetItem key={itemIndex} item={item} />
+                  ))}
+                </div>
+              </SheetCard>
+            )
+          );
+        })}
+      </SheetGrid>
     </>
   );
 }

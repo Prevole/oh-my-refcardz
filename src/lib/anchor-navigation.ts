@@ -6,6 +6,10 @@ function slugifyAnchorSegment(value: string): string {
     .replace(/^-+|-+$/g, "") || "section";
 }
 
-export function buildSectionAnchorId(prefix: string, label: string, index: number): string {
+export function buildIndexedAnchorId(prefix: string, label: string, index: number): string {
   return `${prefix}-${slugifyAnchorSegment(label)}-${index + 1}`;
+}
+
+export function buildBlockAnchorId(prefix: string, blockId: string): string {
+  return `${prefix}-${slugifyAnchorSegment(blockId)}`;
 }

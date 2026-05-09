@@ -1,9 +1,9 @@
-import type { SectionLayoutState } from "@/components/sheets/layout/layout-types";
+import type { BlockLayoutState } from "@/components/sheets/layout/layout-types";
 
 const pendingTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const DEBOUNCE_MS = 1000;
 
-export function syncLayoutToDev(slug: string, layouts: SectionLayoutState[]): void {
+export function syncLayoutToDev(slug: string, layouts: BlockLayoutState[]): void {
   const existing = pendingTimers.get(slug);
   if (existing) clearTimeout(existing);
 

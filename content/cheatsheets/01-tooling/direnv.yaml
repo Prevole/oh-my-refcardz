@@ -4,19 +4,25 @@ summary: Per-directory environment loading with explicit trust, quick reloads,
 color: "#008080"
 icon: direnv
 
-sections:
-  - title: Basics
-    cards:
-      - title: Runtime
-        items:
+blocks:
+  - heading:
+      id: basics
+      title: Basics
+
+  - card:
+      id: runtime
+      title: Runtime
+      items:
           - entries:
               - title: Inspect current state
               - command: direnv status
               - text: Show the active `.envrc`, loaded environment diff, stdlib path, and allow
                   status when debugging why a directory did or did not load.
 
-      - title: Trust and Reload
-        items:
+  - card:
+      id: trust-and-reload
+      title: Trust and Reload
+      items:
           - entries:
               - title: Allow one `.envrc`
               - command: direnv allow
@@ -35,10 +41,14 @@ sections:
               - text: Remove approval for the current `.envrc` when a project environment should
                   stop auto-loading.
 
-  - title: Project Files
-    cards:
-      - title: Local Environment
-        items:
+  - heading:
+      id: project-files
+      title: Project Files
+
+  - card:
+      id: local-environment
+      title: Local Environment
+      items:
           - entries:
               - title: Minimal `.envrc`
               - file: .envrc
@@ -58,8 +68,10 @@ sections:
                   `direnv` will then re-evaluate the current directory whenever
                   that watched file changes.
 
-      - title: Ignore Generated State
-        items:
+  - card:
+      id: ignore-generated-state
+      title: Ignore Generated State
+      items:
           - entries:
               - title: Keep runtime files out of Git
               - file: ~/.gitignore
@@ -73,10 +85,14 @@ sections:
               - text: A committed `.envrc.example` remains a good pattern when you want to share
                   the intended setup without committing local secrets.
 
-  - title: 1Password CLI Integration
-    cards:
-      - title: Setup `oprc` plugin
-        items:
+  - heading:
+      id: onepassword-cli-integration
+      title: 1Password CLI Integration
+
+  - card:
+      id: setup-oprc-plugin
+      title: Setup `oprc` plugin
+      items:
           - entries:
               - title: Create the `oprc` direnv plugin
               - file: ~/.config/direnv/lib/oprc.sh
@@ -90,8 +106,10 @@ sections:
 
                   watch_file .oprc
 
-      - title: Using `oprc`
-        items:
+  - card:
+      id: using-oprc
+      title: Using `oprc`
+      items:
           - entries:
               - title: Enable the `oprc` plugin in `.envrc`
               - file: .envrc
@@ -121,8 +139,10 @@ sections:
                   [[1password|1Password]] can require desktop approval depending
                   on your app settings.
 
-      - title: Practical Workflow
-        items:
+  - card:
+      id: practical-workflow
+      title: Practical Workflow
+      items:
           - entries:
               - title: Create `.envrc`
               - commandExample: echo "use oprc" > .envrc

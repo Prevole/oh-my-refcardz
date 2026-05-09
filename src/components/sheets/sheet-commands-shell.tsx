@@ -6,7 +6,7 @@ import { useCommandNavigation } from "@/hooks/use-command-navigation";
 import { ItemDetailModal } from "./item-detail-modal";
 import { CommandCopyModal } from "./command-copy-modal";
 import type { CopyablePayload } from "./copyable";
-import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetEntry } from "@/lib/cheatsheet-shared";
 
 type DetailData = {
   title: string;

@@ -10,7 +10,7 @@ import { getCopyablePayload, type CopyablePayload } from "./copyable";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
 import { hasPlaceholders } from "@/lib/placeholder-parser";
-import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetEntry } from "@/lib/cheatsheet-shared";
 import sheetCommandStyles from "./sheet-commands.module.css";
 import dialogStyles from "@/components/ui/modal.module.css";
 

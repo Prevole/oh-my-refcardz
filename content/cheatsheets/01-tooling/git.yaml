@@ -4,11 +4,15 @@ summary: Practical Git aliases and configuration patterns, from quick command
 color: "#F1502F"
 icon: git
 
-sections:
-  - title: Inspect and Diff
-    cards:
-      - title: Status
-        items:
+blocks:
+  - heading:
+      id: inspect-and-diff
+      title: Inspect and Diff
+
+  - card:
+      id: status
+      title: Status
+      items:
           - entries:
               - title: Status
               - alias:
@@ -18,8 +22,10 @@ sections:
               - text: Show the current branch state together with staged changes, unstaged
                   edits, and untracked files before taking action.
 
-      - title: Diff
-        items:
+  - card:
+      id: diff
+      title: Diff
+      items:
           - entries:
               - title: Diff
               - alias:
@@ -45,10 +51,14 @@ sections:
               - commandExample: git diff --cached src/app/
               - commandExample: git diff --cached package.json
 
-  - title: Branching and Commits
-    cards:
-      - title: Branch Moves
-        items:
+  - heading:
+      id: branching-and-commits
+      title: Branching and Commits
+
+  - card:
+      id: branch-moves
+      title: Branch Moves
+      items:
           - entries:
               - title: Checkout
               - alias:
@@ -73,8 +83,10 @@ sections:
               - text: Short alias for listing, creating, or deleting branches depending on the
                   flags you add.
 
-      - title: Stage and Commit
-        items:
+  - card:
+      id: stage-and-commit
+      title: Stage and Commit
+      items:
           - entries:
               - title: Add All
               - alias:
@@ -108,10 +120,14 @@ sections:
               - command: 'git commit --amend --author="<Name> \<<email>>"'
               - commandExample: 'git commit --amend --author="John Doe \<john@example.com>"'
 
-  - title: History and Inspection
-    cards:
-      - title: Log Views
-        items:
+  - heading:
+      id: history-and-inspection
+      title: History and Inspection
+
+  - card:
+      id: log-views
+      title: Log Views
+      items:
           - entries:
               - title: Graph Log
               - alias:
@@ -153,8 +169,10 @@ sections:
               - command: git graph <remote>/<branch>..HEAD
               - commandExample: git graph origin/main..HEAD
 
-      - title: Config
-        items:
+  - card:
+      id: config
+      title: Config
+      items:
           - entries:
               - title: Show Local Git Config
               - alias:
@@ -172,10 +190,14 @@ sections:
               - text: Open `.git/config` in the current editor to tweak repository-specific
                   settings directly.
 
-  - title: Remote and Cleanup
-    cards:
-      - title: Sync and Push
-        items:
+  - heading:
+      id: remote-and-cleanup
+      title: Remote and Cleanup
+
+  - card:
+      id: sync-and-push
+      title: Sync and Push
+      items:
           - entries:
               - title: Push and Track HEAD
               - alias:
@@ -200,8 +222,10 @@ sections:
               - text: Update from the remote while replaying local commits on top, keeping
                   history linear.
 
-      - title: Merged Branch Cleanup
-        items:
+  - card:
+      id: merged-branch-cleanup
+      title: Merged Branch Cleanup
+      items:
           - entries:
               - title: List Cleanable Branches
               - alias:
@@ -220,10 +244,14 @@ sections:
               - text: Delete the merged branches returned by the previous helper, keeping the
                   protected branch names untouched.
 
-  - title: Configuration
-    cards:
-      - title: Inspect Config
-        items:
+  - heading:
+      id: configuration
+      title: Configuration
+
+  - card:
+      id: inspect-config
+      title: Inspect Config
+      items:
           - entries:
               - title: Show config with origins
               - command: git config --list --show-origin
@@ -237,8 +265,10 @@ sections:
               - text: Restrict config inspection to `.git/config`, which helps isolate
                   repository-only overrides from global and included files.
 
-      - title: Diff Pager
-        items:
+  - card:
+      id: diff-pager
+      title: Diff Pager
+      items:
           - entries:
               - title: Use diff-so-fancy as core pager
               - file: ~/.gitconfig
@@ -267,8 +297,10 @@ sections:
               - text: Keeps filenames, hunk headers, and inserted or removed lines easy to
                   distinguish in the formatted output.
 
-      - title: Conditional Includes
-        items:
+  - card:
+      id: conditional-includes
+      title: Conditional Includes
+      items:
           - entries:
               - title: Path-based include with `includeIf`
               - file: ~/.gitconfig
@@ -285,8 +317,10 @@ sections:
                   [includeIf "gitdir:~/path/to/repos/"]
                     path = ~/.config/git/specific.inc
 
-      - title: Identity and Signing
-        items:
+  - card:
+      id: identity-and-signing
+      title: Identity and Signing
+      items:
           - entries:
               - title: Author identity
               - file: ~/.gitconfig
@@ -339,8 +373,10 @@ sections:
                   [credential]
                     helper = osxkeychain
 
-      - title: Aliases
-        items:
+  - card:
+      id: aliases
+      title: Aliases
+      items:
           - entries:
               - title: Command aliases
               - file: ~/.gitconfig
@@ -354,8 +390,10 @@ sections:
                   commands, for example `git st` for a compact status view or
                   `git lg` for a readable history graph.
 
-      - title: Global Defaults
-        items:
+  - card:
+      id: global-defaults
+      title: Global Defaults
+      items:
           - entries:
               - title: Output and history
               - file: ~/.gitconfig

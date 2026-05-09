@@ -2,12 +2,13 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { SheetShortcuts } from "@/app/cheatsheets/[slug]/sheet-shortcuts";
 import { SheetAccentProvider } from "@/app/cheatsheets/[slug]/sheet-accent-provider";
-import { SheetSectionNavigation } from "@/app/cheatsheets/[slug]/sheet-section-navigation";
+import { SheetHeadingNavigation } from "@/app/cheatsheets/[slug]/sheet-heading-navigation";
 import { SheetLinksProvider } from "@/components/sheets/sheet-links-context";
 import { SheetCommandsShell } from "@/components/sheets/sheet-commands-shell";
 import { YamlSheetRenderer } from "@/components/sheets/sheet-renderer";
 import { TechIcon } from "@/components/ui/tech-icon";
 import { SheetInlineHelp } from "@/components/help/inline-keybinding-help";
+import { getRenderableBlocks } from "@/lib/cheatsheet-shared";
 import { getAllCheatSheetsMeta, getYamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import cheatsheetStyles from "@/components/sheets/cheatsheet-rendering.module.css";
 
@@ -33,6 +34,7 @@ export default async function CheatSheetPage({ params }: Props) {
 
   const iconName = sheet.icon ?? "default";
   const knownSlugs = categories.flatMap((category) => category.sheets.map((entry) => entry.slug));
+  const headings = getRenderableBlocks(sheet).filter((block) => block.kind === "heading");
 
   return (
     <div className="relative min-h-screen overflow-hidden px-6 py-10 md:px-12">
@@ -59,7 +61,7 @@ export default async function CheatSheetPage({ params }: Props) {
             </SheetCommandsShell>
           </div>
         </main>
-        <SheetSectionNavigation sections={sheet.sections} sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom} />
+        <SheetHeadingNavigation sections={headings} sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom} />
         </SheetLinksProvider>
       </SheetAccentProvider>
     </div>

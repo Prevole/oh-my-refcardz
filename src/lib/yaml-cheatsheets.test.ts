@@ -10,23 +10,27 @@ describe("yamlCheatSheetSchema", () => {
     title: "Docker",
     summary: "Container management commands",
     color: "#2496ED",
-    sections: [
+    blocks: [
       {
-        title: "Containers",
-        cards: [
-          {
-            title: "Lifecycle",
-            items: [
-              {
-                entries: [
-                  { title: "Run container" },
-                  { command: "docker run" },
-                  { text: "Run a container from an image" },
-                ],
-              },
-            ],
-          },
-        ],
+        heading: {
+          id: "containers",
+          title: "Containers",
+        },
+      },
+      {
+        card: {
+          id: "lifecycle",
+          title: "Lifecycle",
+          items: [
+            {
+              entries: [
+                { title: "Run container" },
+                { command: "docker run" },
+                { text: "Run a container from an image" },
+              ],
+            },
+          ],
+        },
       },
     ],
   };
@@ -114,27 +118,37 @@ describe("yamlCheatSheetSchema", () => {
     });
   });
 
-  describe("sections validation", () => {
-    it("requires at least sections array (can be empty)", () => {
-      const result = yamlCheatSheetSchema.safeParse({ ...validSheet, sections: [] });
+  describe("blocks validation", () => {
+    it("requires at least blocks array (can be empty)", () => {
+      const result = yamlCheatSheetSchema.safeParse({ ...validSheet, blocks: [] });
       expect(result.success).toBe(true);
     });
 
-    it("validates section title is required", () => {
-      const invalidSection = {
+    it("validates heading title is required", () => {
+      const invalidHeading = {
         ...validSheet,
-        sections: [{ cards: [] }],
+        blocks: [{ heading: { id: "containers" } }],
       };
-      const result = yamlCheatSheetSchema.safeParse(invalidSection);
+      const result = yamlCheatSheetSchema.safeParse(invalidHeading);
       expect(result.success).toBe(false);
     });
 
-    it("validates section title is not empty", () => {
-      const invalidSection = {
+    it("validates heading title is not empty", () => {
+      const invalidHeading = {
         ...validSheet,
-        sections: [{ title: "", cards: [] }],
+        blocks: [{ heading: { id: "containers", title: "" } }],
       };
-      const result = yamlCheatSheetSchema.safeParse(invalidSection);
+      const result = yamlCheatSheetSchema.safeParse(invalidHeading);
+      expect(result.success).toBe(false);
+    });
+
+    it("requires heading ids", () => {
+      const invalidHeading = {
+        ...validSheet,
+        blocks: [{ heading: { title: "Containers" } }],
+      };
+
+      const result = yamlCheatSheetSchema.safeParse(invalidHeading);
       expect(result.success).toBe(false);
     });
   });
@@ -143,7 +157,7 @@ describe("yamlCheatSheetSchema", () => {
     it("validates card title is required", () => {
       const invalidCard = {
         ...validSheet,
-        sections: [{ title: "Section", cards: [{ items: [] }] }],
+        blocks: [{ heading: { id: "section", title: "Section" } }, { card: { id: "card", items: [] } }],
       };
       const result = yamlCheatSheetSchema.safeParse(invalidCard);
       expect(result.success).toBe(false);
@@ -152,9 +166,32 @@ describe("yamlCheatSheetSchema", () => {
     it("validates card items array is required", () => {
       const invalidCard = {
         ...validSheet,
-        sections: [{ title: "Section", cards: [{ title: "Card" }] }],
+        blocks: [{ heading: { id: "section", title: "Section" } }, { card: { id: "card", title: "Card" } }],
       };
       const result = yamlCheatSheetSchema.safeParse(invalidCard);
+      expect(result.success).toBe(false);
+    });
+
+    it("requires card ids", () => {
+      const invalidCard = {
+        ...validSheet,
+        blocks: [{ heading: { id: "section", title: "Section" } }, { card: { title: "Card", items: [] } }],
+      };
+
+      const result = yamlCheatSheetSchema.safeParse(invalidCard);
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects duplicate block ids across sections and cards", () => {
+      const invalidSheet = {
+        ...validSheet,
+        blocks: [
+          { heading: { id: "shared-id", title: "Section" } },
+          { card: { id: "shared-id", title: "Card", items: [{ entries: [{ command: "docker run" }] }] } },
+        ],
+      };
+
+      const result = yamlCheatSheetSchema.safeParse(invalidSheet);
       expect(result.success).toBe(false);
     });
   });
@@ -162,11 +199,9 @@ describe("yamlCheatSheetSchema", () => {
   describe("entry validation", () => {
     const makeSheetWithEntries = (entries: unknown[]) => ({
       ...validSheet,
-      sections: [
-        {
-          title: "Section",
-          cards: [{ title: "Card", items: [{ entries }] }],
-        },
+      blocks: [
+        { heading: { id: "section", title: "Section" } },
+        { card: { id: "card", title: "Card", items: [{ entries }] } },
       ],
     });
 
@@ -638,11 +673,9 @@ describe("yamlCheatSheetSchema", () => {
       it("rejects item without entries", () => {
         const sheet = {
           ...validSheet,
-          sections: [
-            {
-              title: "Section",
-              cards: [{ title: "Card", items: [{}] }],
-            },
+          blocks: [
+            { heading: { id: "section", title: "Section" } },
+            { card: { id: "card", title: "Card", items: [{}] } },
           ],
         };
         const result = yamlCheatSheetSchema.safeParse(sheet);
@@ -677,20 +710,19 @@ describe("yamlCheatSheetSchema", () => {
       it("rejects anchor entries in detailedEntries", () => {
         const result = yamlCheatSheetSchema.safeParse({
           ...validSheet,
-          sections: [
+          blocks: [
+            { heading: { id: "section", title: "Section" } },
             {
-              title: "Section",
-              cards: [
-                {
-                  title: "Card",
-                  items: [
-                    {
-                      entries: [{ command: "git status" }],
-                      detailedEntries: [{ anchor: "status-details" }],
-                    },
-                  ],
-                },
-              ],
+              card: {
+                id: "card",
+                title: "Card",
+                items: [
+                  {
+                    entries: [{ command: "git status" }],
+                    detailedEntries: [{ anchor: "status-details" }],
+                  },
+                ],
+              },
             },
           ],
         });

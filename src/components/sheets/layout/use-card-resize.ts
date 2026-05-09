@@ -3,25 +3,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, PointerEvent as ReactPointerEvent, SetStateAction } from "react";
 import { GRID_GAP_PX, GRID_COLUMNS } from "../sheet-grid";
-import { resolveSectionLayout } from "./layout-algorithms";
+import { resolveBlockLayout } from "./layout-algorithms";
 import { calculateResizeBounds, boundsEqual } from "./resize-calculations";
-import type { ResizeHandleDirection, ResizeState, SectionLayoutState, SectionMetricsState } from "./layout-types";
+import type { BlockLayoutState, GridMetricsState, ResizeHandleDirection, ResizeState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
 
 export type UseCardResizeResult = {
   resizeState: ResizeState | null;
-  startCardResize: (
-    sectionIndex: number,
-    cardIndex: number,
+  startBlockResize: (
+    blockId: string,
     direction: ResizeHandleDirection,
     event: ReactPointerEvent<HTMLElement>
   ) => void;
 };
 
 export function useCardResize(
-  sectionLayouts: SectionLayoutState[],
-  setSectionLayouts: Dispatch<SetStateAction<SectionLayoutState[]>>,
-  sectionMetrics: SectionMetricsState[]
+  blockLayouts: BlockLayoutState[],
+  setBlockLayouts: Dispatch<SetStateAction<BlockLayoutState[]>>,
+  gridMetrics: GridMetricsState
 ): UseCardResizeResult {
   const [resizeState, setResizeState] = useState<ResizeState | null>(null);
   const resizeStateRef = useRef<ResizeState | null>(null);
@@ -49,7 +48,6 @@ export function useCardResize(
       };
 
       const nextBounds = calculateResizeBounds(origin, deltaCols, deltaRows, active.direction, GRID_COLUMNS);
-
       const currentBounds = {
         colStart: active.colStart,
         rowStart: active.rowStart,
@@ -61,28 +59,19 @@ export function useCardResize(
         return;
       }
 
-      setResizeState({
-        ...active,
-        ...nextBounds,
-      });
+      setResizeState({ ...active, ...nextBounds });
     }
 
     function handlePointerUp() {
       const active = resizeStateRef.current;
       if (!active) return;
 
-      setSectionLayouts((currentLayouts) =>
-        currentLayouts.map((sectionLayout, sectionIndex) => {
-          if (sectionIndex !== active.sectionIndex) return sectionLayout;
-
-          return {
-            cards: resolveSectionLayout(sectionLayout.cards, active.cardIndex, {
-              colStart: active.colStart,
-              rowStart: active.rowStart,
-              colSpan: active.colSpan,
-              rowSpan: active.rowSpan,
-            }),
-          };
+      setBlockLayouts((currentLayouts) =>
+        resolveBlockLayout(currentLayouts, active.blockId, {
+          colStart: active.colStart,
+          rowStart: active.rowStart,
+          colSpan: active.colSpan,
+          rowSpan: active.rowSpan,
         })
       );
 
@@ -96,40 +85,35 @@ export function useCardResize(
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [resizeState, setSectionLayouts]);
+  }, [resizeState, setBlockLayouts]);
 
-  function startCardResize(
-    sectionIndex: number,
-    cardIndex: number,
-    direction: ResizeHandleDirection,
-    event: ReactPointerEvent<HTMLElement>
-  ) {
-    const metrics = sectionMetrics[sectionIndex] ?? FALLBACK_METRICS;
-    const cardLayout = sectionLayouts[sectionIndex].cards[cardIndex];
+  function startBlockResize(blockId: string, direction: ResizeHandleDirection, event: ReactPointerEvent<HTMLElement>) {
+    const metrics = gridMetrics ?? FALLBACK_METRICS;
+    const blockLayout = blockLayouts.find((layout) => layout.id === blockId);
+    if (!blockLayout) return;
 
     event.preventDefault();
     event.stopPropagation();
 
     setResizeState({
-      sectionIndex,
-      cardIndex,
+      blockId,
       direction,
-      colStart: cardLayout.colStart,
-      rowStart: cardLayout.rowStart,
-      colSpan: cardLayout.colSpan,
-      rowSpan: cardLayout.rowSpan,
+      colStart: blockLayout.colStart,
+      rowStart: blockLayout.rowStart,
+      colSpan: blockLayout.colSpan,
+      rowSpan: blockLayout.rowSpan,
       startClientX: event.clientX,
       startClientY: event.clientY,
-      originColStart: cardLayout.colStart,
-      originRowStart: cardLayout.rowStart,
-      originColSpan: cardLayout.colSpan,
-      originRowSpan: cardLayout.rowSpan,
+      originColStart: blockLayout.colStart,
+      originRowStart: blockLayout.rowStart,
+      originColSpan: blockLayout.colSpan,
+      originRowSpan: blockLayout.rowSpan,
       unitSize: metrics.unitSize,
     });
   }
 
   return {
     resizeState,
-    startCardResize,
+    startBlockResize,
   };
 }

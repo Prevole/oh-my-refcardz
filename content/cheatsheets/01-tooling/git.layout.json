@@ -1,100 +1,154 @@
 [
   {
-    "cards": [
-      {
-        "colSpan": 18,
-        "rowSpan": 13,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 18,
-        "rowSpan": 13,
-        "colStart": 19,
-        "rowStart": 1
-      }
-    ]
+    "id": "inspect-and-diff",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
-    "cards": [
-      {
-        "colSpan": 18,
-        "rowSpan": 21,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 18,
-        "rowSpan": 21,
-        "colStart": 19,
-        "rowStart": 1
-      }
-    ]
+    "id": "status",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 13
   },
   {
-    "cards": [
-      {
-        "colSpan": 18,
-        "rowSpan": 22,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 18,
-        "rowSpan": 22,
-        "colStart": 19,
-        "rowStart": 1
-      }
-    ]
+    "id": "diff",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 13
   },
   {
-    "cards": [
-      {
-        "colSpan": 18,
-        "rowSpan": 21,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 18,
-        "rowSpan": 21,
-        "colStart": 19,
-        "rowStart": 1
-      }
-    ]
+    "id": "branching-and-commits",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 16,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
-    "cards": [
-      {
-        "colSpan": 12,
-        "rowSpan": 11,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 24,
-        "rowSpan": 19,
-        "colStart": 13,
-        "rowStart": 27
-      },
-      {
-        "colSpan": 12,
-        "rowSpan": 12,
-        "colStart": 1,
-        "rowStart": 25
-      },
-      {
-        "colSpan": 24,
-        "rowSpan": 26,
-        "colStart": 13,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 12,
-        "rowSpan": 13,
-        "colStart": 1,
-        "rowStart": 12
-      }
-    ]
+    "id": "branch-moves",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 18,
+    "colSpan": 18,
+    "rowSpan": 21
+  },
+  {
+    "id": "stage-and-commit",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 18,
+    "colSpan": 18,
+    "rowSpan": 21
+  },
+  {
+    "id": "history-and-inspection",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 39,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "log-views",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 41,
+    "colSpan": 18,
+    "rowSpan": 22
+  },
+  {
+    "id": "config",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 41,
+    "colSpan": 18,
+    "rowSpan": 22
+  },
+  {
+    "id": "remote-and-cleanup",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 63,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "sync-and-push",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 65,
+    "colSpan": 18,
+    "rowSpan": 21
+  },
+  {
+    "id": "merged-branch-cleanup",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 65,
+    "colSpan": 18,
+    "rowSpan": 21
+  },
+  {
+    "id": "configuration",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 86,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "inspect-config",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 88,
+    "colSpan": 12,
+    "rowSpan": 11
+  },
+  {
+    "id": "diff-pager",
+    "kind": "card",
+    "colStart": 13,
+    "rowStart": 114,
+    "colSpan": 24,
+    "rowSpan": 19
+  },
+  {
+    "id": "conditional-includes",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 112,
+    "colSpan": 12,
+    "rowSpan": 12
+  },
+  {
+    "id": "identity-and-signing",
+    "kind": "card",
+    "colStart": 13,
+    "rowStart": 88,
+    "colSpan": 24,
+    "rowSpan": 26
+  },
+  {
+    "id": "aliases",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 99,
+    "colSpan": 12,
+    "rowSpan": 13
+  },
+  {
+    "id": "global-defaults",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 133,
+    "colSpan": 36,
+    "rowSpan": 31
   }
 ]

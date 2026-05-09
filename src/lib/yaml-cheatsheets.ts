@@ -2,29 +2,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
 import { z } from "zod";
+import {
+  migrateSectionLayoutsToBlockLayouts,
+  type CheatSheetMeta,
+  type CheatSheetBlock as SharedCheatSheetBlock,
+  type CheatSheetCard as SharedCheatSheetCard,
+  type CheatSheetEntry as SharedCheatSheetEntry,
+  type CheatSheetHeading as SharedCheatSheetHeading,
+  type CheatSheetItem as SharedCheatSheetItem,
+  type SavedBlockLayout,
+  type SavedCardLayout,
+  type SavedSectionLayout,
+  type YamlCheatSheet as SharedYamlCheatSheet,
+  type YamlCheatSheetWithMeta as SharedYamlCheatSheetWithMeta,
+} from "./cheatsheet-shared";
 import { anchorIdPattern } from "./anchors";
 import { getCategoryPrimaryColor, getCategoryGradientPair } from "./color-palette";
-
-export type SavedCardLayout = {
-  colStart: number;
-  rowStart: number;
-  colSpan: number;
-  rowSpan: number;
-};
-
-export type SavedSectionLayout = {
-  cards: SavedCardLayout[];
-};
-
-export type CheatSheetMeta = {
-  slug: string;
-  title: string;
-  summary: string;
-  color: string;
-  colorFrom: string;
-  categoryId: string;
-  icon?: string;
-};
 
 export type CheatSheetCategory = {
   id: string;
@@ -75,6 +68,7 @@ const linkEntrySchema = z.object({
     label: z.string().min(1).optional(),
   }),
 });
+const blockIdSchema = z.string().regex(anchorIdPattern);
 
 const entrySchema = z.union([
   titleEntrySchema,
@@ -121,58 +115,80 @@ const itemSchema = z
   });
 
 const cardSchema = z.object({
+  id: blockIdSchema,
   title: z.string().min(1),
   items: z.array(itemSchema),
 });
 
-const sectionSchema = z.object({
+const headingSchema = z.object({
+  id: blockIdSchema,
   title: z.string().min(1),
-  cards: z.array(cardSchema),
+  text: z.string().min(1).optional(),
 });
 
-export const yamlCheatSheetSchema = z.object({
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  color: z.string().regex(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
-  icon: z.string().optional(),
-  sections: z.array(sectionSchema),
-});
+const headingBlockSchema = z.object({ heading: headingSchema });
+const cardBlockSchema = z.object({ card: cardSchema });
+const blockSchema = z.union([headingBlockSchema, cardBlockSchema]);
+
+export const yamlCheatSheetSchema = z
+  .object({
+    title: z.string().min(1),
+    summary: z.string().min(1),
+    color: z.string().regex(/^#(?:[0-9a-fA-F]{3}){1,2}$/),
+    icon: z.string().optional(),
+    blocks: z.array(blockSchema),
+  })
+  .superRefine((sheet, context) => {
+    const seenIds = new Map<string, string>();
+    let headingCount = 0;
+
+    sheet.blocks.forEach((block, blockIndex) => {
+      if ("heading" in block) {
+        headingCount += 1;
+
+        const headingPath = `blocks.${blockIndex}.heading.id`;
+        const previousHeadingPath = seenIds.get(block.heading.id);
+        if (previousHeadingPath) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["blocks", blockIndex, "heading", "id"],
+            message: `Duplicate block id \"${block.heading.id}\" already used at ${previousHeadingPath}`,
+          });
+          return;
+        }
+
+        seenIds.set(block.heading.id, headingPath);
+        return;
+      }
+
+      if (headingCount === 0) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["blocks", blockIndex, "card"],
+          message: "Card blocks must appear after a heading block",
+        });
+      }
+
+      const cardPath = `blocks.${blockIndex}.card.id`;
+      const previousCardPath = seenIds.get(block.card.id);
+
+      if (previousCardPath) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["blocks", blockIndex, "card", "id"],
+          message: `Duplicate block id \"${block.card.id}\" already used at ${previousCardPath}`,
+        });
+        return;
+      }
+
+      seenIds.set(block.card.id, cardPath);
+    });
+  });
 
 export const categoryMetaSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
 });
-
-// Entry types
-export type TitleEntry = z.infer<typeof titleEntrySchema>;
-export type CommandEntry = z.infer<typeof commandEntrySchema>;
-export type AliasEntry = z.infer<typeof aliasEntrySchema>;
-export type CommandExampleEntry = z.infer<typeof commandExampleEntrySchema>;
-export type CommandExamplesEntry = z.infer<typeof commandExamplesEntrySchema>;
-export type TextEntry = z.infer<typeof textEntrySchema>;
-export type AnchorEntry = z.infer<typeof anchorEntrySchema>;
-export type KeysEntry = z.infer<typeof keysEntrySchema>;
-export type FileEntry = z.infer<typeof fileEntrySchema>;
-export type WhereEntry = z.infer<typeof whereEntrySchema>;
-export type ContentEntry = z.infer<typeof contentEntrySchema>;
-export type ContentExampleEntry = z.infer<typeof contentExampleEntrySchema>;
-export type SettingsEntry = z.infer<typeof settingsEntrySchema>;
-export type TableRow = z.infer<typeof tableRowSchema>;
-export type TableEntry = z.infer<typeof tableEntrySchema>;
-export type StepEntry = z.infer<typeof stepEntrySchema>;
-export type LinkEntry = z.infer<typeof linkEntrySchema>;
-
-export type CheatSheetEntry = z.infer<typeof entrySchema>;
-export type CheatSheetItem = z.infer<typeof itemSchema>;
-export type CheatSheetCard = z.infer<typeof cardSchema>;
-export type CheatSheetSection = z.infer<typeof sectionSchema>;
-export type YamlCheatSheet = z.infer<typeof yamlCheatSheetSchema>;
-
-export type YamlCheatSheetWithMeta = YamlCheatSheet & {
-  colorFrom: string;
-  categoryId: string;
-  savedLayout?: SavedSectionLayout[];
-};
 
 const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
 
@@ -191,8 +207,29 @@ type SheetFile = {
 
 type ParsedSheet = {
   file: SheetFile;
-  data: YamlCheatSheet;
+  data: SharedYamlCheatSheet;
 };
+
+export type YamlCheatSheet = SharedYamlCheatSheet;
+export type YamlCheatSheetWithMeta = SharedYamlCheatSheetWithMeta;
+
+// Compile-time guards to keep the shared client-safe types aligned with the
+// server-side Zod schema.
+type AssertExact<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
+type Assert<T extends true> = T;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertEntryType = Assert<AssertExact<z.infer<typeof entrySchema>, SharedCheatSheetEntry>>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertItemType = Assert<AssertExact<z.infer<typeof itemSchema>, SharedCheatSheetItem>>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertCardType = Assert<AssertExact<z.infer<typeof cardSchema>, SharedCheatSheetCard>>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertHeadingType = Assert<AssertExact<z.infer<typeof headingSchema>, SharedCheatSheetHeading>>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertBlockType = Assert<AssertExact<z.infer<typeof blockSchema>, SharedCheatSheetBlock>>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _AssertSheetType = Assert<AssertExact<z.infer<typeof yamlCheatSheetSchema>, SharedYamlCheatSheet>>;
 
 function parseFolderName(folderName: string): ParsedFolderName {
   const match = folderName.match(/^(\d+)[-_ ]?(.*)$/);
@@ -246,7 +283,7 @@ function assertUniqueSlugs(files: SheetFile[]) {
   }
 }
 
-function parseYamlCheatSheet(raw: string, fileLabel: string): YamlCheatSheet {
+function parseYamlCheatSheet(raw: string, fileLabel: string): SharedYamlCheatSheet {
   const parsed = yamlCheatSheetSchema.safeParse(load(raw));
   if (!parsed.success) {
     throw new Error(
@@ -265,16 +302,86 @@ async function getSheetFileBySlug(slug: string): Promise<SheetFile | null> {
   return files.find((file) => file.slug === slug) ?? null;
 }
 
-async function readSheetFile(file: SheetFile): Promise<YamlCheatSheet> {
+async function readSheetFile(file: SheetFile): Promise<SharedYamlCheatSheet> {
   const raw = await fs.readFile(file.filePath, "utf8");
   return parseYamlCheatSheet(raw, path.relative(contentDirectory, file.filePath));
 }
 
-async function readLayoutFile(yamlFilePath: string): Promise<SavedSectionLayout[] | null> {
+function isSavedCardLayout(value: unknown): value is SavedCardLayout {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  if (
+    !("colStart" in value) ||
+    !("rowStart" in value) ||
+    !("colSpan" in value) ||
+    !("rowSpan" in value)
+  ) {
+    return false;
+  }
+
+  return Boolean(
+      typeof value.colStart === "number" &&
+      typeof value.rowStart === "number" &&
+      typeof value.colSpan === "number" &&
+      typeof value.rowSpan === "number"
+  );
+}
+
+function isSavedSectionLayout(value: unknown): value is SavedSectionLayout {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "cards" in value &&
+      Array.isArray(value.cards) &&
+      value.cards.every((card) => isSavedCardLayout(card))
+  );
+}
+
+function isSavedBlockLayout(value: unknown): value is SavedBlockLayout {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  if (!("id" in value) || !("kind" in value)) {
+    return false;
+  }
+
+  return Boolean(
+      typeof value.id === "string" &&
+      (value.kind === "heading" || value.kind === "card") &&
+      isSavedCardLayout(value)
+  );
+}
+
+function isLegacySavedSectionLayouts(value: unknown): value is SavedSectionLayout[] {
+  return Array.isArray(value) && value.every((section) => isSavedSectionLayout(section));
+}
+
+function isSavedBlockLayouts(value: unknown): value is SavedBlockLayout[] {
+  return Array.isArray(value) && value.every((block) => isSavedBlockLayout(block));
+}
+
+
+async function readLayoutFile(
+  yamlFilePath: string,
+  sheet: SharedYamlCheatSheet
+): Promise<SavedBlockLayout[] | null> {
   const layoutPath = yamlFilePath.replace(/\.yaml$/, ".layout.json");
   try {
     const raw = await fs.readFile(layoutPath, "utf8");
-    return JSON.parse(raw) as SavedSectionLayout[];
+    const parsed = JSON.parse(raw);
+
+    if (isSavedBlockLayouts(parsed)) {
+      return parsed;
+    }
+
+    if (isLegacySavedSectionLayouts(parsed)) {
+      return migrateSectionLayoutsToBlockLayouts(sheet, parsed);
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -354,11 +461,11 @@ async function readCategoryMeta(categoryPath: string | null): Promise<{ title: s
   };
 }
 
-export async function getYamlCheatSheet(slug: string): Promise<YamlCheatSheet | null> {
+export async function getYamlCheatSheet(slug: string): Promise<SharedYamlCheatSheet | null> {
   return (await readParsedSheetBySlug(slug))?.data ?? null;
 }
 
-export async function getYamlCheatSheetWithMeta(slug: string): Promise<YamlCheatSheetWithMeta | null> {
+export async function getYamlCheatSheetWithMeta(slug: string): Promise<SharedYamlCheatSheetWithMeta | null> {
   const parsedSheet = await readParsedSheetBySlug(slug);
   /* v8 ignore next -- defensive: sheet not found by slug */
   if (!parsedSheet) {
@@ -366,13 +473,13 @@ export async function getYamlCheatSheetWithMeta(slug: string): Promise<YamlCheat
   }
 
   const { categoryId, categoryColor } = getSheetCategoryMeta(parsedSheet.file.categoryPath);
-  const savedLayout = await readLayoutFile(parsedSheet.file.filePath);
+  const savedBlockLayout = await readLayoutFile(parsedSheet.file.filePath, parsedSheet.data);
 
   return {
     ...parsedSheet.data,
     colorFrom: categoryColor,
     categoryId,
-    ...(savedLayout && { savedLayout }),
+    ...(savedBlockLayout && { savedBlockLayout }),
   };
 }
 

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { load } from "js-yaml";
+import type { BlockLayoutState } from "@/components/sheets/layout/layout-types";
+import { yamlCheatSheetSchema } from "@/lib/yaml-cheatsheets";
 
 const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
 
@@ -28,6 +31,21 @@ function getLayoutPath(yamlFilePath: string): string {
   return yamlFilePath.replace(/\.yaml$/, ".layout.json");
 }
 
+async function readSheetAtPath(yamlFilePath: string) {
+  const raw = await fs.readFile(yamlFilePath, "utf8");
+  const parsed = yamlCheatSheetSchema.safeParse(load(raw));
+
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid YAML cheatsheet ${path.relative(contentDirectory, yamlFilePath)}: ${parsed.error.issues
+        .map((issue) => `${issue.path.join(".") || "root"} — ${issue.message}`)
+        .join(", ")}`
+    );
+  }
+
+  return parsed.data;
+}
+
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   if (process.env.NODE_ENV !== "development") {
     return new NextResponse(null, { status: 404 });
@@ -41,8 +59,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     return NextResponse.json({ error: "Sheet not found" }, { status: 404 });
   }
 
+  await readSheetAtPath(yamlFilePath);
   const layoutPath = getLayoutPath(yamlFilePath);
-  await fs.writeFile(layoutPath, JSON.stringify(body, null, 2) + "\n", "utf8");
+  await fs.writeFile(layoutPath, JSON.stringify(body as BlockLayoutState[], null, 2) + "\n", "utf8");
 
   return NextResponse.json({ success: true, path: path.relative(process.cwd(), layoutPath) });
 }

@@ -6,7 +6,7 @@ import {
   markOccupied,
   clampCardLayoutToGrid,
   placeCardAtNearestSlot,
-  resolveSectionLayout,
+  resolveBlockLayout,
 } from "./layout-algorithms";
 import { GRID_COLUMNS, GRID_GAP_PX } from "../sheet-grid";
 import { MAX_ROW_SPAN } from "./layout-types";
@@ -214,54 +214,93 @@ describe("placeCardAtNearestSlot", () => {
   });
 });
 
-describe("resolveSectionLayout", () => {
-  it("places non-overlapping cards without changes", () => {
+describe("resolveBlockLayout", () => {
+  it("places non-overlapping blocks without changes", () => {
     const cards = [
-      { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
-      { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
+      { id: "a", kind: "card", colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
+      { id: "b", kind: "card", colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
     ];
-    const result = resolveSectionLayout(cards);
+    const result = resolveBlockLayout(cards);
     expect(result[0]).toEqual(cards[0]);
     expect(result[1]).toEqual(cards[1]);
   });
 
-  it("repositions overlapping cards", () => {
+  it("repositions overlapping blocks", () => {
     const cards = [
-      { colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
-      { colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
+      { id: "a", kind: "card", colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
+      { id: "b", kind: "card", colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
     ];
-    const result = resolveSectionLayout(cards);
+    const result = resolveBlockLayout(cards);
     expect(result[0].colStart).toBe(1);
     expect(result[0].rowStart).toBe(1);
     expect(result[1].colStart).toBe(7);
     expect(result[1].rowStart).toBe(1);
   });
 
-  it("respects pinned card position", () => {
+  it("respects pinned block position", () => {
     const cards = [
-      { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
-      { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
+      { id: "a", kind: "card", colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
+      { id: "b", kind: "card", colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
     ];
     const pinnedLayout = { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 };
-    const result = resolveSectionLayout(cards, 1, pinnedLayout);
+    const result = resolveBlockLayout(cards, "b", pinnedLayout);
     expect(result[1].colStart).toBe(1);
     expect(result[1].rowStart).toBe(1);
     expect(result[0].colStart).toBe(5);
   });
 
-  it("handles empty cards array", () => {
-    const result = resolveSectionLayout([]);
+  it("handles empty block array", () => {
+    const result = resolveBlockLayout([]);
     expect(result).toEqual([]);
   });
 
-  it("clamps invalid card positions during resolution", () => {
+  it("clamps invalid block positions during resolution", () => {
     const cards = [
-      { colStart: -5, rowStart: -2, colSpan: 100, rowSpan: 100 },
+      { id: "a", kind: "card", colStart: -5, rowStart: -2, colSpan: 100, rowSpan: 100 },
     ];
-    const result = resolveSectionLayout(cards);
+    const result = resolveBlockLayout(cards);
     expect(result[0].colStart).toBeGreaterThanOrEqual(1);
     expect(result[0].rowStart).toBeGreaterThanOrEqual(1);
     expect(result[0].colSpan).toBeLessThanOrEqual(GRID_COLUMNS);
     expect(result[0].rowSpan).toBeLessThanOrEqual(MAX_ROW_SPAN);
+  });
+
+  it("keeps headings fixed when a card is reflowed", () => {
+    const blocks = [
+      { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
+      { id: "card-b", kind: "card", colStart: 13, rowStart: 3, colSpan: 12, rowSpan: 4 },
+    ] as const;
+
+    const result = resolveBlockLayout([...blocks], "card-a", {
+      colStart: 1,
+      rowStart: 1,
+      colSpan: 12,
+      rowSpan: 4,
+    });
+
+    expect(result.find((block) => block.id === "heading")).toMatchObject({
+      colStart: 1,
+      rowStart: 1,
+      colSpan: 36,
+      rowSpan: 2,
+    });
+    expect(result.find((block) => block.id === "card-a")?.rowStart).toBeGreaterThanOrEqual(3);
+  });
+
+  it("allows a pinned heading to move when the heading itself is manipulated", () => {
+    const blocks = [
+      { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
+    ] as const;
+
+    const result = resolveBlockLayout([...blocks], "heading", {
+      colStart: 1,
+      rowStart: 5,
+      colSpan: 36,
+      rowSpan: 2,
+    });
+
+    expect(result.find((block) => block.id === "heading")).toMatchObject({ rowStart: 5 });
   });
 });

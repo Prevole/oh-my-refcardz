@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import styles from "./section-navigation.module.css";
+import styles from "./anchor-navigation.module.css";
 
 type SectionNavigationItem = {
   id: string;
@@ -14,7 +14,7 @@ type Props = {
   ariaLabel: string;
 };
 
-export function SectionNavigation({ items, ariaLabel }: Props) {
+export function AnchorNavigation({ items, ariaLabel }: Props) {
   const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null);
 
   useEffect(() => {

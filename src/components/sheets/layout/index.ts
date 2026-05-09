@@ -1,7 +1,8 @@
 export type {
   CardLayoutState,
-  SectionLayoutState,
-  SectionMetricsState,
+  BlockLayoutState,
+  GridMetricsState,
+  LayoutBlockKind,
   DragState,
   ResizeHandleDirection,
   ResizeState,
@@ -15,13 +16,13 @@ export {
   markOccupied,
   clampCardLayoutToGrid,
   placeCardAtNearestSlot,
-  resolveSectionLayout,
+  resolveBlockLayout,
 } from "./layout-algorithms";
 
 export {
   inferCardColSpan,
   inferCardRowSpan,
-  buildDefaultSectionLayouts,
+  buildDefaultBlockLayouts,
 } from "./layout-inference";
 
 export { useLayoutPersistence } from "./use-layout-persistence";

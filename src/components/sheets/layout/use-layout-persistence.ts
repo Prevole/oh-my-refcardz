@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import type { YamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
+import type { YamlCheatSheetWithMeta } from "@/lib/cheatsheet-shared";
 import { syncLayoutToDev } from "@/lib/dev-layout-sync";
-import { buildDefaultSectionLayouts } from "./layout-inference";
-import type { SectionLayoutState } from "./layout-types";
+import { buildDefaultBlockLayouts } from "./layout-inference";
+import type { BlockLayoutState } from "./layout-types";
 import {
   areLayoutsEqual,
   buildStorageKey,
@@ -27,8 +27,8 @@ function getServerSnapshot() {
 }
 
 export type UseLayoutPersistenceResult = {
-  sectionLayouts: SectionLayoutState[];
-  setSectionLayouts: Dispatch<SetStateAction<SectionLayoutState[]>>;
+  blockLayouts: BlockLayoutState[];
+  setBlockLayouts: Dispatch<SetStateAction<BlockLayoutState[]>>;
   hydrated: boolean;
   hasSavedLayout: boolean;
   resetLayout: () => void;
@@ -37,60 +37,60 @@ export type UseLayoutPersistenceResult = {
 export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWithMeta): UseLayoutPersistenceResult {
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot);
 
-  const defaultSectionLayouts = useMemo(() => {
-    const inferredLayouts = buildDefaultSectionLayouts(sheet);
+  const defaultBlockLayouts = useMemo(() => {
+    const inferredLayouts = buildDefaultBlockLayouts(sheet);
 
-    if (sheet.savedLayout) {
-      return mergeStoredLayouts(sheet.savedLayout, inferredLayouts);
+    if (sheet.savedBlockLayout) {
+      return mergeStoredLayouts(sheet.savedBlockLayout, inferredLayouts);
     }
     return inferredLayouts;
   }, [sheet]);
 
-  const [sectionLayouts, setSectionLayouts] = useState(defaultSectionLayouts);
+  const [blockLayouts, setBlockLayouts] = useState(defaultBlockLayouts);
   const [storageHydrated, setStorageHydrated] = useState(false);
   const didHydrateStorage = useRef(false);
 
-  const hasSavedLayout = storageHydrated && !areLayoutsEqual(sectionLayouts, defaultSectionLayouts);
+  const hasSavedLayout = storageHydrated && !areLayoutsEqual(blockLayouts, defaultBlockLayouts);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(buildStorageKey(sheetSlug));
-    const savedLayouts = parseStoredLayouts(raw, sheet, defaultSectionLayouts);
-    const nextLayouts = savedLayouts ?? defaultSectionLayouts;
+    const savedLayouts = parseStoredLayouts(raw, sheet, defaultBlockLayouts);
+    const nextLayouts = savedLayouts ?? defaultBlockLayouts;
 
     queueMicrotask(() => {
-      setSectionLayouts(nextLayouts);
+      setBlockLayouts(nextLayouts);
       setStorageHydrated(true);
       didHydrateStorage.current = true;
     });
-  }, [defaultSectionLayouts, sheet, sheetSlug]);
+  }, [defaultBlockLayouts, sheet, sheetSlug]);
 
   useEffect(() => {
     if (!didHydrateStorage.current) return;
 
     const storageKey = buildStorageKey(sheetSlug);
 
-    if (areLayoutsEqual(sectionLayouts, defaultSectionLayouts)) {
+    if (areLayoutsEqual(blockLayouts, defaultBlockLayouts)) {
       window.localStorage.removeItem(storageKey);
       return;
     }
 
-    window.localStorage.setItem(storageKey, serializeStoredLayouts(sectionLayouts));
+    window.localStorage.setItem(storageKey, serializeStoredLayouts(blockLayouts));
 
     if (process.env.NODE_ENV === "development") {
-      syncLayoutToDev(sheetSlug, sectionLayouts);
+      syncLayoutToDev(sheetSlug, blockLayouts);
     }
-  }, [defaultSectionLayouts, sectionLayouts, sheetSlug]);
+  }, [blockLayouts, defaultBlockLayouts, sheetSlug]);
 
   function resetLayout() {
     if (!hydrated) return;
 
     window.localStorage.removeItem(buildStorageKey(sheetSlug));
-    setSectionLayouts(defaultSectionLayouts);
+    setBlockLayouts(defaultBlockLayouts);
   }
 
   return {
-    sectionLayouts,
-    setSectionLayouts,
+    blockLayouts,
+    setBlockLayouts,
     hydrated,
     hasSavedLayout,
     resetLayout,

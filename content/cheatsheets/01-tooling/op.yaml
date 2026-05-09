@@ -4,11 +4,15 @@ summary: Developer workflows with the 1Password CLI for secret reads, injected c
 color: "#145FE4"
 icon: 1password
 
-sections:
-  - title: CLI Basics
-    cards:
-      - title: Session
-        items:
+blocks:
+  - heading:
+      id: cli-basics
+      title: CLI Basics
+
+  - card:
+      id: session
+      title: Session
+      items:
           - entries:
               - title: Sign in
               - command: op signin
@@ -21,8 +25,10 @@ sections:
               - text: Confirm which account and user context the CLI is currently using
                   before reading secrets or running automation.
 
-      - title: Item Access
-        items:
+  - card:
+      id: item-access
+      title: Item Access
+      items:
           - entries:
               - title: Read one secret
               - command: op read "op://<vault>/<item>/<field>"
@@ -39,10 +45,14 @@ sections:
             detailedEntries:
               - commandExample: op item get "GitHub" --vault "Engineering"
 
-  - title: Secret Injection
-    cards:
-      - title: Environment Variables
-        items:
+  - heading:
+      id: secret-injection
+      title: Secret Injection
+
+  - card:
+      id: environment-variables
+      title: Environment Variables
+      items:
           - entries:
               - title: ".env template with secret references"
               - file: .env.1password
@@ -61,8 +71,10 @@ sections:
               - text: Launch a process with secrets resolved into environment variables
                   without writing plaintext values into your shell history or local files.
 
-      - title: Config Files
-        items:
+  - card:
+      id: config-files
+      title: Config Files
+      items:
           - entries:
               - title: Config template for op inject
               - file: config.tpl.yaml
@@ -84,10 +96,14 @@ sections:
             detailedEntries:
               - commandExample: op inject -i config.tpl.yaml -o config.yaml
 
-  - title: Automation
-    cards:
-      - title: Safer Scripts
-        items:
+  - heading:
+      id: automation
+      title: Automation
+
+  - card:
+      id: safer-scripts
+      title: Safer Scripts
+      items:
           - entries:
               - title: Use a secret inside a script
               - commandExample: export GH_TOKEN="$(op read 'op://engineering/github/token')"

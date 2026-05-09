@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   inferCardColSpan,
   inferCardRowSpan,
-  buildDefaultSectionLayouts,
+  buildDefaultBlockLayouts,
 } from "./layout-inference";
-import type { CheatSheetCard, CheatSheetItem, YamlCheatSheet } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetCard, CheatSheetItem, YamlCheatSheet } from "@/lib/cheatsheet-shared";
 
 type ItemType = "command" | "shortcut" | "content" | "settings";
 
@@ -27,7 +27,7 @@ function createCard(itemCount: number, types: ItemType[] = []): CheatSheetCard {
     const type = types[i] || "command";
     items.push(createItem(type));
   }
-  return { title: "Test Card", items };
+  return { id: "test-card", title: "Test Card", items };
 }
 
 function createSheet(sections: Array<{ cards: CheatSheetCard[] }>): YamlCheatSheet {
@@ -35,10 +35,20 @@ function createSheet(sections: Array<{ cards: CheatSheetCard[] }>): YamlCheatShe
     title: "Test Sheet",
     summary: "Test summary",
     color: "#FF0000",
-    sections: sections.map((s, i) => ({
-      title: `Section ${i}`,
-      cards: s.cards,
-    })),
+    blocks: sections.flatMap((section, sectionIndex) => [
+      {
+        heading: {
+          id: `section-${sectionIndex}`,
+          title: `Section ${sectionIndex}`,
+        },
+      },
+      ...section.cards.map((card, cardIndex) => ({
+        card: {
+          ...card,
+          id: `card-${sectionIndex}-${cardIndex}`,
+        },
+      })),
+    ]),
   };
 }
 
@@ -101,70 +111,83 @@ describe("inferCardRowSpan", () => {
   });
 });
 
-describe("buildDefaultSectionLayouts", () => {
-  it("returns empty array for sheet with no sections", () => {
+describe("buildDefaultBlockLayouts", () => {
+  it("returns empty array for sheet with no blocks", () => {
     const sheet = createSheet([]);
-    const result = buildDefaultSectionLayouts(sheet);
+    const result = buildDefaultBlockLayouts(sheet);
     expect(result).toEqual([]);
   });
 
-  it("creates layout for each section", () => {
+  it("creates layout for each heading and card", () => {
     const sheet = createSheet([
       { cards: [createCard(2)] },
       { cards: [createCard(3)] },
     ]);
-    const result = buildDefaultSectionLayouts(sheet);
-    expect(result).toHaveLength(2);
+    const result = buildDefaultBlockLayouts(sheet);
+    expect(result).toHaveLength(4);
   });
 
-  it("creates layout for each card in section", () => {
+  it("creates layout entries for all cards", () => {
     const sheet = createSheet([
       { cards: [createCard(2), createCard(3), createCard(5)] },
     ]);
-    const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards).toHaveLength(3);
+    const result = buildDefaultBlockLayouts(sheet);
+    expect(result.filter((block) => block.kind === "card")).toHaveLength(3);
+  });
+
+  it("infers heading size deterministically", () => {
+    const sheet = createSheet([{ cards: [createCard(2)] }]);
+    const result = buildDefaultBlockLayouts(sheet);
+
+    expect(result[0]).toMatchObject({ kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 });
   });
 
   it("infers colSpan and rowSpan from card content", () => {
     const sheet = createSheet([
       { cards: [createCard(2), createCard(5)] },
     ]);
-    const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards[0].colSpan).toBe(12);
-    expect(result[0].cards[0].rowSpan).toBe(12);
+    const result = buildDefaultBlockLayouts(sheet);
+    const cards = result.filter((block) => block.kind === "card");
+    expect(cards[0].colSpan).toBe(12);
+    expect(cards[0].rowSpan).toBe(12);
 
-    expect(result[0].cards[1].colSpan).toBe(24);
-    expect(result[0].cards[1].rowSpan).toBe(24);
+    expect(cards[1].colSpan).toBe(24);
+    expect(cards[1].rowSpan).toBe(24);
   });
 
-  it("resolves card positions to avoid overlap", () => {
+  it("places cards after the heading without overlap", () => {
     const sheet = createSheet([
       { cards: [createCard(2), createCard(2), createCard(2)] },
     ]);
-    const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards[0].colStart).toBe(1);
-    expect(result[0].cards[1].colStart).toBe(13);
-    expect(result[0].cards[2].colStart).toBe(25);
-    expect(result[0].cards.every((c) => c.rowStart === 1)).toBe(true);
+    const result = buildDefaultBlockLayouts(sheet);
+    const cards = result.filter((block) => block.kind === "card");
+
+    expect(cards[0].colStart).toBe(1);
+    expect(cards[1].colStart).toBe(13);
+    expect(cards[2].colStart).toBe(25);
+    expect(cards.every((card) => card.rowStart >= 3)).toBe(true);
   });
 
   it("wraps cards to next row when row is full", () => {
     const sheet = createSheet([
       { cards: [createCard(5), createCard(5)] },
     ]);
-    const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards[0].colStart).toBe(1);
-    expect(result[0].cards[0].rowStart).toBe(1);
-    expect(result[0].cards[1].colStart).toBe(1);
-    expect(result[0].cards[1].rowStart).toBeGreaterThan(1);
+    const result = buildDefaultBlockLayouts(sheet);
+    const cards = result.filter((block) => block.kind === "card");
+
+    expect(cards[0].colStart).toBe(1);
+    expect(cards[0].rowStart).toBe(3);
+    expect(cards[1].colStart).toBe(1);
+    expect(cards[1].rowStart).toBeGreaterThan(3);
   });
 
   it("handles content cards with larger dimensions", () => {
     const sheet = createSheet([
       { cards: [createCard(1, ["content"])] },
     ]);
-    const result = buildDefaultSectionLayouts(sheet);
-    expect(result[0].cards[0].colSpan).toBe(24);
-    expect(result[0].cards[0].rowSpan).toBe(24);
+    const result = buildDefaultBlockLayouts(sheet);
+    const [card] = result.filter((block) => block.kind === "card");
+    expect(card.colSpan).toBe(24);
+    expect(card.rowSpan).toBe(24);
   });
 });

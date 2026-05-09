@@ -1,28 +1,42 @@
 [
   {
-    "cards": [
-      {
-        "colSpan": 18,
-        "rowSpan": 14,
-        "colStart": 1,
-        "rowStart": 1
-      },
-      {
-        "colSpan": 18,
-        "rowSpan": 14,
-        "colStart": 19,
-        "rowStart": 1
-      }
-    ]
+    "id": "basics",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
-    "cards": [
-      {
-        "colStart": 1,
-        "rowStart": 1,
-        "colSpan": 36,
-        "rowSpan": 12
-      }
-    ]
+    "id": "what-it-is",
+    "kind": "card",
+    "colSpan": 18,
+    "rowSpan": 14,
+    "colStart": 1,
+    "rowStart": 3
+  },
+  {
+    "id": "pager",
+    "kind": "card",
+    "colSpan": 18,
+    "rowSpan": 14,
+    "colStart": 19,
+    "rowStart": 3
+  },
+  {
+    "id": "daily-review-flow",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "common-commands",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 36,
+    "rowSpan": 12
   }
 ]

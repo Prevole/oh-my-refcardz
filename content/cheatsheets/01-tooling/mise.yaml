@@ -4,11 +4,15 @@ summary: Project-local runtime versions with `.tool-versions`, plus a
 color: "#8B2252"
 icon: mise
 
-sections:
-  - title: Basics
-    cards:
-      - title: Inspect Active Versions
-        items:
+blocks:
+  - heading:
+      id: basics
+      title: Basics
+
+  - card:
+      id: inspect-active-versions
+      title: Inspect Active Versions
+      items:
           - entries:
               - title: Show active tool versions
               - command: mise current
@@ -28,8 +32,10 @@ sections:
               - text: Run a quick diagnosis when `mise` behaves unexpectedly or a tool is not
                   activating as expected.
 
-      - title: Install and Resolve
-        items:
+  - card:
+      id: install-and-resolve
+      title: Install and Resolve
+      items:
           - entries:
               - title: Install declared tools
               - command: mise install
@@ -48,10 +54,14 @@ sections:
               - commandExample: mise ls-remote node
               - text: Check which versions exist upstream before pinning or updating one tool.
 
-  - title: Project Versions
-    cards:
-      - title: ".tool-versions"
-        items:
+  - heading:
+      id: project-versions
+      title: Project Versions
+
+  - card:
+      id: tool-versions
+      title: ".tool-versions"
+      items:
           - entries:
               - title: Project source of truth
               - file: .tool-versions
@@ -75,8 +85,10 @@ sections:
               - text: Run this inside the repository after `.tool-versions` changes so the
                   declared runtimes are available locally.
 
-      - title: Resolution Model
-        items:
+  - card:
+      id: resolution-model
+      title: Resolution Model
+      items:
           - entries:
               - title: Prefer local declarations
               - text: When a repository defines `.tool-versions`, those project versions take
@@ -88,8 +100,10 @@ sections:
               - text: Use this after entering a project to confirm that the expected local
                   versions are active.
 
-      - title: "mise.toml"
-        items:
+  - card:
+      id: mise-toml
+      title: "mise.toml"
+      items:
           - entries:
               - title: TOML project format
               - file: mise.toml
@@ -107,10 +121,14 @@ sections:
               - text: Run this in a repository with `mise.toml` to install the tool versions
                   declared in the TOML project file.
 
-  - title: Global Defaults
-    cards:
-      - title: "config.toml"
-        items:
+  - heading:
+      id: global-defaults
+      title: Global Defaults
+
+  - card:
+      id: config-toml
+      title: "config.toml"
+      items:
           - entries:
               - title: Example global config
               - file: ~/.config/mise/config.toml
@@ -131,8 +149,10 @@ sections:
               - text: Outside a project-specific override, `mise install` also installs tools
                   declared in the global config.
 
-      - title: Package Manager Tools
-        items:
+  - card:
+      id: package-manager-tools
+      title: Package Manager Tools
+      items:
           - entries:
               - title: Declare npm-backed tools
               - file: ~/.config/mise/config.toml
@@ -153,8 +173,10 @@ sections:
               - text: The same package-manager syntax also works in `mise.toml` when a project
                   needs a specific CLI tool.
 
-      - title: Chezmoi Workflow
-        items:
+  - card:
+      id: chezmoi-workflow
+      title: Chezmoi Workflow
+      items:
           - entries:
               - step: Edit
               - command: chezmoi edit ~/.config/mise/config.toml
@@ -169,8 +191,10 @@ sections:
               - text: Finish the global update flow by installing the versions declared in the
                   applied config.
 
-      - title: Machine Setup
-        items:
+  - card:
+      id: machine-setup
+      title: Machine Setup
+      items:
           - entries:
               - title: Manage global config with Chezmoi
               - text: In this setup, the global `mise` config is deployed by [[chezmoi|Chezmoi]]
@@ -182,10 +206,14 @@ sections:
                   `~/.config/mise/config.toml` for machine-wide defaults or
                   personal tooling.
 
-  - title: Maintenance
-    cards:
-      - title: Update Tools
-        items:
+  - heading:
+      id: maintenance
+      title: Maintenance
+
+  - card:
+      id: update-tools
+      title: Update Tools
+      items:
           - entries:
               - title: Show outdated tool versions
               - command: mise outdated
@@ -198,8 +226,10 @@ sections:
               - text: Upgrade installed tool versions non-interactively, which fits the personal
                   update helper in this setup.
 
-      - title: Daily Flow
-        items:
+  - card:
+      id: daily-flow
+      title: Daily Flow
+      items:
           - entries:
               - step: Enter project
               - text: Open a repository that already contains a `.tool-versions` file.

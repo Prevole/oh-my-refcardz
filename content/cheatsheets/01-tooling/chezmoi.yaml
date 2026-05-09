@@ -3,11 +3,15 @@ summary: Daily dotfile operations, source-state conventions, and a machine boots
 color: "#4051B5"
 icon: chezmoi
 
-sections:
-  - title: Daily Workflow
-    cards:
-      - title: Inspect and Apply
-        items:
+blocks:
+  - heading:
+      id: daily-workflow
+      title: Daily Workflow
+
+  - card:
+      id: inspect-and-apply
+      title: Inspect and Apply
+      items:
           - entries:
               - title: Check pending target changes
               - command: chezmoi status
@@ -30,8 +34,10 @@ sections:
               - commandExample: chezmoi apply -n -v
               - text: Combine both to preview changes in detail.
 
-      - title: Navigate and Edit
-        items:
+  - card:
+      id: navigate-and-edit
+      title: Navigate and Edit
+      items:
           - entries:
               - title: Jump to the source directory
               - command: chezmoi cd
@@ -54,8 +60,10 @@ sections:
               - commandExample: cm status
               - commandExample: cm apply
 
-      - title: Update and Sync
-        items:
+  - card:
+      id: update-and-sync
+      title: Update and Sync
+      items:
           - entries:
               - title: Pull and apply upstream changes
               - command: chezmoi update
@@ -66,10 +74,14 @@ sections:
               - command: chezmoi update --apply=false
               - text: Refresh the source state first, then inspect with `chezmoi status` or `chezmoi diff` before touching the target machine.
 
-  - title: Source State
-    cards:
-      - title: Naming Conventions
-        items:
+  - heading:
+      id: source-state
+      title: Source State
+
+  - card:
+      id: naming-conventions
+      title: Naming Conventions
+      items:
           - entries:
               - title: Source-state prefixes and suffixes
               - table:
@@ -115,8 +127,10 @@ sections:
                   for values during `chezmoi init`. Add the `Once` suffix to persist
                   answers in `chezmoi.yaml` and skip future prompts.
 
-      - title: Fixups
-        items:
+  - card:
+      id: fixups
+      title: Fixups
+      items:
           - entries:
               - title: Re-import a changed target file
               - command: chezmoi re-add <path to target file>
@@ -143,10 +157,14 @@ sections:
             detailedEntries:
               - commandExample: chezmoi forget ~/.config/some-app/config.json
 
-  - title: Machine Setup
-    cards:
-      - title: Bootstrap
-        items:
+  - heading:
+      id: machine-setup
+      title: Machine Setup
+
+  - card:
+      id: bootstrap
+      title: Bootstrap
+      items:
           - entries:
               - step: Install Developer Tools
               - command: xcode-select --install
@@ -183,8 +201,10 @@ sections:
                   url: https://github.com/Prevole/chezmoi
                   label: Prevole/chezmoi
 
-      - title: Setup Pipeline
-        items:
+  - card:
+      id: setup-pipeline
+      title: Setup Pipeline
+      items:
           - entries:
               - anchor: setup-pipeline
               - title: What `mac-setup.sh` runs
@@ -242,10 +262,14 @@ sections:
                   `chezmoi apply` runs so `promptChoiceOnce` does not ask
                   again.
 
-  - title: Contextual Helpers
-    cards:
-      - title: Related Workflows
-        items:
+  - heading:
+      id: contextual-helpers
+      title: Contextual Helpers
+
+  - card:
+      id: related-workflows
+      title: Related Workflows
+      items:
           - entries:
               - title: Secrets in templates
               - text: Secret-backed templates in this setup rely on [[op|op]] and [[1password|1Password]] rather than committed plaintext values.

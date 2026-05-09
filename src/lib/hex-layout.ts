@@ -1,4 +1,4 @@
-import type { CheatSheetMeta } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetMeta } from "@/lib/cheatsheet-shared";
 import {
   HEX_CARD_RATIO,
   HEX_SHAPE_HEIGHT_RATIO,

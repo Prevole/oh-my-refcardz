@@ -95,6 +95,119 @@
   transition: border-color var(--transition-normal), background var(--transition-normal);
 }
 
+.headingBlock {
+  position: relative;
+  grid-column: var(--card-col-start, 1) / span var(--card-col-span, 1);
+  grid-row: var(--card-row-start, 1) / span var(--card-row-span, 1);
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--sheet-accent, var(--accent)) 18%, var(--border-subtle));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--sheet-accent, var(--accent)) 8%, rgba(8, 12, 22, 0.92)), rgba(5, 9, 18, 0.94)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 10%, var(--bg-overlay-subtle)),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: clip;
+  transition: border-color var(--transition-normal), background var(--transition-normal), box-shadow var(--transition-normal), opacity var(--transition-normal);
+}
+
+.headingBlock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--sheet-accent, var(--accent)) 22%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.headingBlockEditMode::before,
+.headingBlockDragging::before,
+.headingBlockKeyboardFocused::before,
+.headingBlock:hover::before {
+  opacity: 1;
+}
+
+.headingBlockEditMode {
+  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 30%, var(--border-medium));
+}
+
+.headingBlockDragging {
+  z-index: var(--z-sticky);
+  opacity: 0.96;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sheet-accent, var(--accent)) 14%, var(--bg-overlay-subtle)),
+    0 1rem 1.8rem rgba(0, 0, 0, 0.18);
+}
+
+.headingBlockDimmed {
+  opacity: 0.42;
+}
+
+.headingBlockKeyboardFocused {
+  z-index: var(--z-dropdown);
+  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 65%, var(--border-strong));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 24%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--sheet-accent, var(--accent)) 45%, transparent),
+    0 0 1.5rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 18%, transparent);
+}
+
+.headingBlockManipulating {
+  transition: none;
+}
+
+.headingBlockHeader {
+  display: grid;
+  align-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.9rem 1.15rem 1rem;
+}
+
+.headingBlockHeaderDraggable {
+  cursor: grab;
+  user-select: none;
+}
+
+.headingBlockHeaderDraggable:active {
+  cursor: grabbing;
+}
+
+.headingBlockTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--fg-95);
+}
+
+.headingBlockTitle::before {
+  content: "";
+  width: 0.34rem;
+  height: 1.15rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(180deg, var(--sheet-accent, var(--accent)), color-mix(in srgb, var(--sheet-accent, var(--accent)) 55%, white));
+  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 30%, transparent);
+  flex: none;
+}
+
+.headingBlockText {
+  margin: 0;
+  padding-left: calc(0.34rem + var(--space-3));
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--fg-60);
+}
+
 .card:hover {
   border-color: var(--border-medium);
   background: rgba(0, 0, 0, 0.45);
@@ -392,7 +505,7 @@
 .cardTitle {
   font-size: var(--text-lg);
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.15;
   margin: 0;
   color: var(--sheet-accent, var(--accent));
   letter-spacing: 0.01em;
@@ -571,59 +684,6 @@
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.section {
-  margin-top: 2.75rem;
-  padding-top: var(--space-1);
-}
-
-.section:first-child {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-.sectionHeaderRow {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  margin-bottom: var(--space-4);
-  width: 100%;
-}
-
-.sectionTitle {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  margin: 0;
-  padding: 0.7rem 0.9rem;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(8, 12, 22, 0.88), rgba(5, 9, 18, 0.94));
-  border: 1px solid var(--border-subtle);
-  box-shadow: inset 0 1px 0 var(--bg-overlay-subtle);
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--fg-75);
-  letter-spacing: 0.01em;
-}
-
-.sectionTitle::before {
-  content: "";
-  width: 0.3rem;
-  height: var(--text-lg);
-  border-radius: var(--radius-full);
-  background: linear-gradient(180deg, var(--sheet-accent, var(--accent)), color-mix(in srgb, var(--sheet-accent, var(--accent)) 55%, white));
-  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 30%, transparent);
-  flex: none;
-}
-
-.sectionTitle::after {
-  content: "";
-  flex: 1;
-  min-width: var(--space-6);
-  border-top: 1px solid var(--border-light);
 }
 
 .sectionLayoutLabel {

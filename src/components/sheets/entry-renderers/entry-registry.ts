@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { CheatSheetEntry } from "@/lib/yaml-cheatsheets";
+import type { CheatSheetEntry } from "@/lib/cheatsheet-shared";
 
 export type EntryContext = {
   hasAliases: boolean;

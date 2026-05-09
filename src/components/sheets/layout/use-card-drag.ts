@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Dispatch, SetStateAction, PointerEvent as ReactPointerEvent } from "react";
+import type { Dispatch, PointerEvent as ReactPointerEvent, SetStateAction } from "react";
 import { GRID_GAP_PX } from "../sheet-grid";
-import { pointerToGridPosition, resolveSectionLayout } from "./layout-algorithms";
-import type { DragState, SectionLayoutState, SectionMetricsState } from "./layout-types";
+import { pointerToGridPosition, resolveBlockLayout } from "./layout-algorithms";
+import type { BlockLayoutState, DragState, GridMetricsState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
 
 export type UseCardDragResult = {
   dragState: DragState | null;
-  startCardDrag: (sectionIndex: number, cardIndex: number, event: ReactPointerEvent<HTMLElement>) => void;
+  startBlockDrag: (blockId: string, event: ReactPointerEvent<HTMLElement>) => void;
 };
 
 export function useCardDrag(
-  sectionLayouts: SectionLayoutState[],
-  setSectionLayouts: Dispatch<SetStateAction<SectionLayoutState[]>>,
-  sectionMetrics: SectionMetricsState[]
+  blockLayouts: BlockLayoutState[],
+  setBlockLayouts: Dispatch<SetStateAction<BlockLayoutState[]>>,
+  gridMetrics: GridMetricsState
 ): UseCardDragResult {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -50,18 +50,12 @@ export function useCardDrag(
       const active = dragStateRef.current;
       if (!active) return;
 
-      setSectionLayouts((currentLayouts) =>
-        currentLayouts.map((sectionLayout, sectionIndex) => {
-          if (sectionIndex !== active.sectionIndex) return sectionLayout;
-
-          return {
-            cards: resolveSectionLayout(sectionLayout.cards, active.cardIndex, {
-              colStart: active.colStart,
-              rowStart: active.rowStart,
-              colSpan: active.colSpan,
-              rowSpan: active.rowSpan,
-            }),
-          };
+      setBlockLayouts((currentLayouts) =>
+        resolveBlockLayout(currentLayouts, active.blockId, {
+          colStart: active.colStart,
+          rowStart: active.rowStart,
+          colSpan: active.colSpan,
+          rowSpan: active.rowSpan,
         })
       );
 
@@ -75,37 +69,38 @@ export function useCardDrag(
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [dragState, setSectionLayouts]);
+  }, [dragState, setBlockLayouts]);
 
-  function startCardDrag(sectionIndex: number, cardIndex: number, event: ReactPointerEvent<HTMLElement>) {
+  function startBlockDrag(blockId: string, event: ReactPointerEvent<HTMLElement>) {
     if ((event.target as HTMLElement).closest("[data-card-layout-controls]")) return;
     if ((event.target as HTMLElement).closest("[data-card-resize-handle]")) return;
 
     const grid = event.currentTarget.closest("[data-sheet-grid]");
     if (!(grid instanceof HTMLElement)) return;
 
-    const metrics = sectionMetrics[sectionIndex] ?? FALLBACK_METRICS;
-    const cardLayout = sectionLayouts[sectionIndex].cards[cardIndex];
+    const metrics = gridMetrics ?? FALLBACK_METRICS;
+    const blockLayout = blockLayouts.find((layout) => layout.id === blockId);
+    if (!blockLayout) return;
+
     const gridRect = grid.getBoundingClientRect();
 
     event.preventDefault();
 
     setDragState({
-      sectionIndex,
-      cardIndex,
-      colStart: cardLayout.colStart,
-      rowStart: cardLayout.rowStart,
-      colSpan: cardLayout.colSpan,
-      rowSpan: cardLayout.rowSpan,
+      blockId,
+      colStart: blockLayout.colStart,
+      rowStart: blockLayout.rowStart,
+      colSpan: blockLayout.colSpan,
+      rowSpan: blockLayout.rowSpan,
       gridRect,
       unitSize: metrics.unitSize,
-      pointerOffsetX: event.clientX - (gridRect.left + (cardLayout.colStart - 1) * (metrics.unitSize + GRID_GAP_PX)),
-      pointerOffsetY: event.clientY - (gridRect.top + (cardLayout.rowStart - 1) * (metrics.unitSize + GRID_GAP_PX)),
+      pointerOffsetX: event.clientX - (gridRect.left + (blockLayout.colStart - 1) * (metrics.unitSize + GRID_GAP_PX)),
+      pointerOffsetY: event.clientY - (gridRect.top + (blockLayout.rowStart - 1) * (metrics.unitSize + GRID_GAP_PX)),
     });
   }
 
   return {
     dragState,
-    startCardDrag,
+    startBlockDrag,
   };
 }
