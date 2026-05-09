@@ -18,16 +18,16 @@
   {
     "cards": [
       {
-        "colSpan": 25,
-        "rowSpan": 15,
         "colStart": 1,
-        "rowStart": 1
+        "rowStart": 1,
+        "colSpan": 25,
+        "rowSpan": 15
       },
       {
-        "colSpan": 11,
-        "rowSpan": 15,
         "colStart": 26,
-        "rowStart": 1
+        "rowStart": 1,
+        "colSpan": 11,
+        "rowSpan": 15
       }
     ]
   },

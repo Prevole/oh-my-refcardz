@@ -317,6 +317,36 @@ describe("mergeStoredLayouts", () => {
     expect(result[0].cards[0].colStart).toBe(2);
     expect(result[1].cards[0].colStart).toBe(6);
   });
+
+  it("fills in missing cards from defaults", () => {
+    const stored: SectionLayoutState[] = [
+      { cards: [{ colStart: 2, rowStart: 2, colSpan: 3, rowSpan: 3 }] },
+    ];
+    const defaults: SectionLayoutState[] = [
+      {
+        cards: [
+          { colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
+          { colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
+        ],
+      },
+    ];
+
+    const result = mergeStoredLayouts(stored, defaults);
+
+    expect(result[0].cards[0]).toEqual({ colStart: 2, rowStart: 2, colSpan: 3, rowSpan: 3 });
+    expect(result[0].cards[1]).toEqual({ colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 });
+  });
+
+  it("falls back to defaults for invalid stored card values", () => {
+    const stored = [{ cards: [{ colStart: 2, rowStart: 2, colSpan: 99, rowSpan: 3 }] }];
+    const defaults: SectionLayoutState[] = [
+      { cards: [{ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 }] },
+    ];
+
+    const result = mergeStoredLayouts(stored, defaults);
+
+    expect(result[0].cards[0]).toEqual({ colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 });
+  });
 });
 
 describe("parseStoredLayouts", () => {
@@ -372,19 +402,26 @@ describe("parseStoredLayouts", () => {
     expect(result![0].cards[0]).toEqual({ colStart: 13, rowStart: 7, colSpan: 18, rowSpan: 12 });
   });
 
-  it("returns null when section count mismatches", () => {
+  it("merges versioned layouts even when section count mismatches", () => {
     const sheet = createMockSheet([2, 3]);
     const defaults = createValidLayout([2, 3]);
-    const stored = createValidLayout([2]); // Missing second section
+    const stored = { version: 2, sections: createValidLayout([2]) }; // Missing second section
 
-    expect(parseStoredLayouts(JSON.stringify(stored), sheet, defaults)).toBeNull();
+    const result = parseStoredLayouts(JSON.stringify(stored), sheet, defaults);
+
+    expect(result).not.toBeNull();
+    expect(result![0]).toEqual(defaults[0]);
+    expect(result![1]).toEqual(defaults[1]);
   });
 
-  it("returns null when card values are out of range", () => {
+  it("falls back to defaults for invalid versioned card values", () => {
     const sheet = createMockSheet([1]);
     const defaults = createValidLayout([1]);
-    const stored = [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 99, rowSpan: 2 }] }];
+    const stored = { version: 2, sections: [{ cards: [{ colStart: 1, rowStart: 1, colSpan: 99, rowSpan: 2 }] }] };
 
-    expect(parseStoredLayouts(JSON.stringify(stored), sheet, defaults)).toBeNull();
+    const result = parseStoredLayouts(JSON.stringify(stored), sheet, defaults);
+
+    expect(result).not.toBeNull();
+    expect(result![0].cards[0]).toEqual(defaults[0].cards[0]);
   });
 });

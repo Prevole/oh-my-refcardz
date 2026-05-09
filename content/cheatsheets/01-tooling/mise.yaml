@@ -1,0 +1,219 @@
+title: Mise
+summary: Project-local runtime versions with `.tool-versions`, plus a
+  chezmoi-managed global `config.toml` workflow for machine-wide defaults.
+color: "#8B2252"
+icon: mise
+
+sections:
+  - title: Basics
+    cards:
+      - title: Inspect Active Versions
+        items:
+          - entries:
+              - title: Show active tool versions
+              - command: mise current
+              - text: Display the currently resolved version for each active tool in the current
+                  directory.
+
+          - entries:
+              - title: Resolve one executable
+              - command: mise which <tool>
+              - commandExample: mise which node
+              - text: Show which executable path `mise` resolves for a given tool when debugging
+                  PATH or version mismatches.
+
+          - entries:
+              - title: Check installation health
+              - command: mise doctor
+              - text: Run a quick diagnosis when `mise` behaves unexpectedly or a tool is not
+                  activating as expected.
+
+      - title: Install and Resolve
+        items:
+          - entries:
+              - title: Install declared tools
+              - command: mise install
+              - text: Install every tool version declared by the current project or global
+                  config files.
+
+          - entries:
+              - title: List installed versions
+              - command: mise ls
+              - text: Show installed versions per tool so you can see what is already available
+                  locally.
+
+          - entries:
+              - title: Browse available versions
+              - command: mise ls-remote <tool>
+              - commandExample: mise ls-remote node
+              - text: Check which versions exist upstream before pinning or updating one tool.
+
+  - title: Project Versions
+    cards:
+      - title: ".tool-versions"
+        items:
+          - entries:
+              - title: Project source of truth
+              - file: .tool-versions
+              - contentExample: |-
+                  node 22.14.0
+                  python 3.12.9
+                  terraform 1.11.4
+              - text: Keep project runtime requirements in `.tool-versions` so everyone in the
+                  repository resolves the same versions.
+
+          - entries:
+              - title: Add or change one project version
+              - command: mise use <tool>@<version>
+              - commandExample: mise use node@22
+              - text: Update `.tool-versions` for the current repository and make the chosen
+                  version the local default there.
+
+          - entries:
+              - title: Install after cloning or pulling
+              - command: mise install
+              - text: Run this inside the repository after `.tool-versions` changes so the
+                  declared runtimes are available locally.
+
+      - title: Resolution Model
+        items:
+          - entries:
+              - title: Prefer local declarations
+              - text: When a repository defines `.tool-versions`, those project versions take
+                  precedence over matching tools declared in the global `mise` config.
+
+          - entries:
+              - title: Verify what won
+              - command: mise current
+              - text: Use this after entering a project to confirm that the expected local
+                  versions are active.
+
+      - title: "mise.toml"
+        items:
+          - entries:
+              - title: TOML project format
+              - file: mise.toml
+              - contentExample: |-
+                  [tools]
+                  node = "22"
+                  python = "3.12"
+                  terraform = "1.11"
+              - text: Use `mise.toml` when you want project tool versions declared in a richer
+                  Mise-native TOML format instead of `.tool-versions`.
+
+          - entries:
+              - title: Install TOML-declared tools
+              - command: mise install
+              - text: Run this in a repository with `mise.toml` to install the tool versions
+                  declared in the TOML project file.
+
+  - title: Global Defaults
+    cards:
+      - title: "config.toml"
+        items:
+          - entries:
+              - title: Example global config
+              - file: ~/.config/mise/config.toml
+              - contentExample: |-
+                  [tools]
+                  node = "latest"
+                  python = "latest"
+                  terraform = "latest"
+
+                  [settings]
+                  ruby.compile = false
+              - text: Use the global `mise` TOML config as a machine-level fallback or
+                  convenience layer outside individual repositories.
+
+          - entries:
+              - title: Install global declarations
+              - command: mise install
+              - text: Outside a project-specific override, `mise install` also installs tools
+                  declared in the global config.
+
+      - title: Package Manager Tools
+        items:
+          - entries:
+              - title: Declare npm-backed tools
+              - file: ~/.config/mise/config.toml
+              - contentExample: |-
+                  [tools]
+                  "npm:prettier" = "latest"
+                  "npm:typescript" = "latest"
+                  "npm:pnpm" = "latest"
+              - text: Use the `npm:` prefix when a tool should be installed from the npm
+                  registry instead of a runtime plugin.
+
+          - entries:
+              - title: Same syntax in project TOML
+              - file: mise.toml
+              - contentExample: |-
+                  [tools]
+                  "npm:pnpm" = "latest"
+              - text: The same package-manager syntax also works in `mise.toml` when a project
+                  needs a specific CLI tool.
+
+      - title: Chezmoi Workflow
+        items:
+          - entries:
+              - step: Edit
+              - command: chezmoi edit ~/.config/mise/config.toml
+              - text: Update the source-managed global `mise` config instead of editing the
+                  rendered file by hand.
+              - step: Apply
+              - command: chezmoi apply
+              - text: Render and deploy the changed `mise` config to the machine before
+                  installing new tool versions.
+              - step: Install
+              - command: mise install
+              - text: Finish the global update flow by installing the versions declared in the
+                  applied config.
+
+      - title: Machine Setup
+        items:
+          - entries:
+              - title: Manage global config with Chezmoi
+              - text: In this setup, the global `mise` config is deployed by [[chezmoi|Chezmoi]]
+                  as part of machine bootstrap and dotfile sync.
+
+          - entries:
+              - title: Keep global and local roles separate
+              - text: Use project `.tool-versions` for repository requirements, and keep
+                  `~/.config/mise/config.toml` for machine-wide defaults or
+                  personal tooling.
+
+  - title: Maintenance
+    cards:
+      - title: Update Tools
+        items:
+          - entries:
+              - title: Show outdated tool versions
+              - command: mise outdated
+              - text: Review which installed tools have newer versions available before deciding
+                  to upgrade them.
+
+          - entries:
+              - title: Upgrade installed tools
+              - command: mise upgrade --yes
+              - text: Upgrade installed tool versions non-interactively, which fits the personal
+                  update helper in this setup.
+
+      - title: Daily Flow
+        items:
+          - entries:
+              - step: Enter project
+              - text: Open a repository that already contains a `.tool-versions` file.
+              - step: Install
+              - command: mise install
+              - text: Install the declared runtimes for that project.
+              - step: Verify
+              - command: mise current
+              - text: Confirm the expected versions are active in the current directory.
+
+          - entries:
+              - step: Change version
+              - command: mise use <tool>@<version>
+              - text: Update the local runtime pin when the repository moves to a new version.
+              - step: Reinstall
+              - command: mise install
+              - text: Install the newly declared version if it is not already present locally.

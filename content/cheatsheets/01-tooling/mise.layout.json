@@ -1,0 +1,84 @@
+[
+  {
+    "cards": [
+      {
+        "colStart": 1,
+        "rowStart": 1,
+        "colSpan": 18,
+        "rowSpan": 16
+      },
+      {
+        "colStart": 19,
+        "rowStart": 1,
+        "colSpan": 18,
+        "rowSpan": 16
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 18,
+        "rowSpan": 19,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 18,
+        "rowSpan": 9,
+        "colStart": 19,
+        "rowStart": 15
+      },
+      {
+        "colSpan": 18,
+        "rowSpan": 14,
+        "colStart": 19,
+        "rowStart": 1
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 13,
+        "rowSpan": 16,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 23,
+        "rowSpan": 16,
+        "colStart": 14,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 23,
+        "rowSpan": 13,
+        "colStart": 14,
+        "rowStart": 17
+      },
+      {
+        "colSpan": 13,
+        "rowSpan": 9,
+        "colStart": 1,
+        "rowStart": 17
+      }
+    ]
+  },
+  {
+    "cards": [
+      {
+        "colSpan": 17,
+        "rowSpan": 10,
+        "colStart": 1,
+        "rowStart": 1
+      },
+      {
+        "colSpan": 19,
+        "rowSpan": 19,
+        "colStart": 18,
+        "rowStart": 1
+      }
+    ]
+  }
+]

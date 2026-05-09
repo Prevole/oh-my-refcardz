@@ -9,6 +9,7 @@ import type { SectionLayoutState } from "./layout-types";
 import {
   areLayoutsEqual,
   buildStorageKey,
+  mergeStoredLayouts,
   parseStoredLayouts,
   serializeStoredLayouts,
 } from "./layout-persistence";
@@ -37,10 +38,12 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot);
 
   const defaultSectionLayouts = useMemo(() => {
+    const inferredLayouts = buildDefaultSectionLayouts(sheet);
+
     if (sheet.savedLayout) {
-      return sheet.savedLayout as SectionLayoutState[];
+      return mergeStoredLayouts(sheet.savedLayout, inferredLayouts);
     }
-    return buildDefaultSectionLayouts(sheet);
+    return inferredLayouts;
   }, [sheet]);
 
   const [sectionLayouts, setSectionLayouts] = useState(defaultSectionLayouts);

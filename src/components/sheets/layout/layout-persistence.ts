@@ -1,6 +1,6 @@
 import type { YamlCheatSheet } from "@/lib/yaml-cheatsheets";
 import { GRID_COLUMNS } from "../sheet-grid";
-import { MAX_ROW_SPAN, type SectionLayoutState } from "./layout-types";
+import { MAX_ROW_SPAN, type CardLayoutState, type SectionLayoutState } from "./layout-types";
 
 const STORAGE_VERSION = 2;
 const LEGACY_GRID_COLUMNS = 12;
@@ -82,16 +82,54 @@ export function isValidStoredLayout(value: unknown, sheet: YamlCheatSheet): valu
   return isValidLayout(value, sheet, GRID_COLUMNS, MAX_ROW_SPAN);
 }
 
+function isValidCardLayoutValue(
+  value: unknown,
+  maxColumns: number = GRID_COLUMNS,
+  maxRowSpan: number = MAX_ROW_SPAN
+): value is CardLayoutState {
+  if (!value || typeof value !== "object") return false;
+  if (
+    !("colStart" in value) ||
+    !("rowStart" in value) ||
+    !("colSpan" in value) ||
+    !("rowSpan" in value)
+  ) {
+    return false;
+  }
+
+  return (
+    typeof value.colStart === "number" &&
+    typeof value.rowStart === "number" &&
+    typeof value.colSpan === "number" &&
+    typeof value.rowSpan === "number" &&
+    Number.isInteger(value.colStart) &&
+    Number.isInteger(value.rowStart) &&
+    Number.isInteger(value.colSpan) &&
+    Number.isInteger(value.rowSpan) &&
+    value.colStart >= 1 &&
+    value.rowStart >= 1 &&
+    value.colSpan >= 1 &&
+    value.colSpan <= maxColumns &&
+    value.rowSpan >= 1 &&
+    value.rowSpan <= maxRowSpan
+  );
+}
+
 export function mergeStoredLayouts(
-  storedLayouts: SectionLayoutState[],
-  defaultLayouts: SectionLayoutState[]
+  storedLayouts: unknown,
+  defaultLayouts: SectionLayoutState[],
+  maxColumns: number = GRID_COLUMNS,
+  maxRowSpan: number = MAX_ROW_SPAN
 ): SectionLayoutState[] {
   return defaultLayouts.map((defaultSection, sectionIndex) => ({
     cards: defaultSection.cards.map((defaultCard, cardIndex) => ({
-      colStart: storedLayouts[sectionIndex].cards[cardIndex]?.colStart ?? defaultCard.colStart,
-      rowStart: storedLayouts[sectionIndex].cards[cardIndex]?.rowStart ?? defaultCard.rowStart,
-      colSpan: storedLayouts[sectionIndex].cards[cardIndex]?.colSpan ?? defaultCard.colSpan,
-      rowSpan: storedLayouts[sectionIndex].cards[cardIndex]?.rowSpan ?? defaultCard.rowSpan,
+      ...(isValidCardLayoutValue(
+        (storedLayouts as SectionLayoutState[] | undefined)?.[sectionIndex]?.cards?.[cardIndex],
+        maxColumns,
+        maxRowSpan
+      )
+        ? (storedLayouts as SectionLayoutState[])[sectionIndex].cards[cardIndex]
+        : defaultCard),
     })),
   }));
 }
@@ -112,7 +150,7 @@ export function parseStoredLayouts(
       "version" in parsed &&
       parsed.version === STORAGE_VERSION &&
       "sections" in parsed &&
-      isValidStoredLayout(parsed.sections, sheet)
+      Array.isArray(parsed.sections)
     ) {
       return mergeStoredLayouts(parsed.sections, defaultSectionLayouts);
     }
