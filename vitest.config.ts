@@ -13,6 +13,7 @@ export default defineConfig({
       include: ["src/lib/**/*.ts", "src/components/sheets/layout/**/*.ts"],
       exclude: [
         "src/**/*.test.ts",
+        "src/**/*.tsx", // React components are tested via E2E
         "src/**/use-*.ts",
         "src/**/use-*.tsx",
         "src/**/*-types.ts",

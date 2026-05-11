@@ -77,7 +77,7 @@ test.describe("Drag & drop and layout persistence", () => {
 
     await focusFirstLayoutBlock(page);
     const focusedBlock = page.locator("article[data-layout-card='true'][class*='KeyboardFocused']").first();
-    await expect(focusedBlock).toHaveAttribute("data-layout-block-id", "inspect-and-diff");
+    await expect(focusedBlock).toHaveAttribute("data-layout-block-id", "sheet-heading-inspect-and-diff");
   });
 
   test("keyboard navigation can move from a heading to another block", async ({ page }) => {
@@ -91,7 +91,7 @@ test.describe("Drag & drop and layout persistence", () => {
       const focusedBlock = page.locator("article[data-layout-card='true'][class*='KeyboardFocused']").first();
       await expect(focusedBlock).toBeVisible();
       const currentBlockId = await focusedBlock.getAttribute("data-layout-block-id");
-      expect(currentBlockId).not.toBe("inspect-and-diff");
+      expect(currentBlockId).not.toBe("sheet-heading-inspect-and-diff");
     }).toPass({ timeout: 3000 });
   });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SheetGrid, SheetCard, SheetHeadingBlock } from "@/components/sheets/sheet-grid";
+import { SheetGrid } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
 import { getItemAnchorId } from "@/lib/anchors";
@@ -12,6 +12,7 @@ import {
   useCardDrag,
   useCardResize,
   useCardKeyboard,
+  BlockRenderer,
   FALLBACK_METRICS,
   type GridMetricsState,
 } from "./layout";
@@ -144,53 +145,34 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               : baseLayout;
 
           return (
-            block.kind === "heading" ? (
-              <SheetHeadingBlock
-                key={block.id}
-                id={buildBlockAnchorId("sheet-heading", block.id)}
-                title={block.title}
-                text={block.text}
-                colStart={previewLayout.colStart}
-                rowStart={previewLayout.rowStart}
-                colSpan={previewLayout.colSpan}
-                rowSpan={previewLayout.rowSpan}
-                editMode={isLayoutActive}
-                dragging={isDragging || isResizing}
-                dimmed={isDimmed}
-                keyboardFocused={isKeyboardFocused}
-                manipulating={isKeyboardFocused && isManipulating}
-                blockId={block.id}
-                onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
-                onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
-                activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
-                layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
-              />
-            ) : (
-              <SheetCard
-                key={block.id}
-                title={block.title}
-                colStart={previewLayout.colStart}
-                rowStart={previewLayout.rowStart}
-                colSpan={previewLayout.colSpan}
-                rowSpan={previewLayout.rowSpan}
-                editMode={isLayoutActive}
-                dragging={isDragging || isResizing}
-                dimmed={isDimmed}
-                keyboardFocused={isKeyboardFocused}
-                manipulating={isKeyboardFocused && isManipulating}
-                blockId={block.id}
-                onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
-                onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
-                activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
-                layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
-              >
+            <BlockRenderer
+              key={block.id}
+              kind={block.kind}
+              id={buildBlockAnchorId(block.kind === "heading" ? "sheet-heading" : "sheet-card", block.id)}
+              title={block.title}
+              text={block.kind === "heading" ? block.text : undefined}
+              colStart={previewLayout.colStart}
+              rowStart={previewLayout.rowStart}
+              colSpan={previewLayout.colSpan}
+              rowSpan={previewLayout.rowSpan}
+              editMode={isLayoutActive}
+              dragging={isDragging || isResizing}
+              dimmed={isDimmed}
+              keyboardFocused={isKeyboardFocused}
+              manipulating={isKeyboardFocused && isManipulating}
+              onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
+              onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
+              activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
+              layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
+            >
+              {block.kind === "card" ? (
                 <div className={cheatsheetStyles.itemList}>
                   {block.items.map((item, itemIndex) => (
                     <SheetItem key={itemIndex} item={item} />
                   ))}
                 </div>
-              </SheetCard>
-            )
+              ) : null}
+            </BlockRenderer>
           );
         })}
       </SheetGrid>

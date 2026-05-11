@@ -1,5 +1,8 @@
 import { GRID_COLUMNS } from "../sheet-grid";
 
+// Re-export types from block-types for backwards compatibility
+export type { LayoutBlockKind, ResizeHandleDirection } from "./block-types";
+
 export type CardLayoutState = {
   colStart: number;
   rowStart: number;
@@ -7,11 +10,9 @@ export type CardLayoutState = {
   rowSpan: number;
 };
 
-export type LayoutBlockKind = "heading" | "card";
-
 export type BlockLayoutState = CardLayoutState & {
   id: string;
-  kind: LayoutBlockKind;
+  kind: import("./block-types").LayoutBlockKind;
 };
 
 export type GridMetricsState = {
@@ -31,23 +32,13 @@ export type DragState = {
   pointerOffsetY: number;
 };
 
-export type ResizeHandleDirection =
-  | "north"
-  | "east"
-  | "south"
-  | "west"
-  | "north-east"
-  | "south-east"
-  | "south-west"
-  | "north-west";
-
 export type ResizeState = {
   blockId: string;
   colStart: number;
   rowStart: number;
   colSpan: number;
   rowSpan: number;
-  direction: ResizeHandleDirection;
+  direction: import("./block-types").ResizeHandleDirection;
   startClientX: number;
   startClientY: number;
   originColStart: number;

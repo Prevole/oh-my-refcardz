@@ -1,6 +1,5 @@
 import { clamp } from "./layout-algorithms";
-import { MAX_ROW_SPAN } from "./layout-types";
-import type { ResizeHandleDirection } from "./layout-types";
+import type { BlockConstraints, ResizeHandleDirection } from "./block-types";
 
 export type CardBounds = {
   colStart: number;
@@ -13,12 +12,13 @@ export type ResizeResult = CardBounds;
 
 /**
  * Calculate the new card bounds after resizing in a given direction.
- * 
+ *
  * @param origin - The original card bounds before resize started
  * @param deltaCols - The number of columns to move (positive = right, negative = left)
  * @param deltaRows - The number of rows to move (positive = down, negative = up)
  * @param direction - The resize handle direction
  * @param gridColumns - Total columns in the grid
+ * @param constraints - Block-specific resize constraints
  * @returns The new card bounds after resize
  */
 export function calculateResizeBounds(
@@ -26,35 +26,41 @@ export function calculateResizeBounds(
   deltaCols: number,
   deltaRows: number,
   direction: ResizeHandleDirection,
-  gridColumns: number
+  gridColumns: number,
+  constraints: BlockConstraints
 ): ResizeResult {
   let nextColStart = origin.colStart;
   let nextRowStart = origin.rowStart;
   let nextColSpan = origin.colSpan;
   let nextRowSpan = origin.rowSpan;
 
+  const { minColSpan, maxColSpan, minRowSpan, maxRowSpan } = constraints;
+
   // East edge: increase width
   if (direction === "east" || direction === "north-east" || direction === "south-east") {
-    nextColSpan = clamp(origin.colSpan + deltaCols, 1, gridColumns - origin.colStart + 1);
+    const maxWidth = Math.min(maxColSpan, gridColumns - origin.colStart + 1);
+    nextColSpan = clamp(origin.colSpan + deltaCols, minColSpan, maxWidth);
   }
 
   // South edge: increase height
   if (direction === "south" || direction === "south-east" || direction === "south-west") {
-    nextRowSpan = clamp(origin.rowSpan + deltaRows, 1, MAX_ROW_SPAN);
+    nextRowSpan = clamp(origin.rowSpan + deltaRows, minRowSpan, maxRowSpan);
   }
 
   // West edge: decrease colStart, adjust width
   if (direction === "west" || direction === "north-west" || direction === "south-west") {
-    const maxColStart = origin.colStart + origin.colSpan - 1;
+    const maxColStart = origin.colStart + origin.colSpan - minColSpan;
     nextColStart = clamp(origin.colStart + deltaCols, 1, maxColStart);
-    nextColSpan = clamp(origin.colSpan + (origin.colStart - nextColStart), 1, gridColumns);
+    const rawColSpan = origin.colSpan + (origin.colStart - nextColStart);
+    nextColSpan = clamp(rawColSpan, minColSpan, Math.min(maxColSpan, gridColumns));
   }
 
   // North edge: decrease rowStart, adjust height
   if (direction === "north" || direction === "north-east" || direction === "north-west") {
-    const maxRowStart = origin.rowStart + origin.rowSpan - 1;
+    const maxRowStart = origin.rowStart + origin.rowSpan - minRowSpan;
     nextRowStart = clamp(origin.rowStart + deltaRows, 1, maxRowStart);
-    nextRowSpan = clamp(origin.rowSpan + (origin.rowStart - nextRowStart), 1, MAX_ROW_SPAN);
+    const rawRowSpan = origin.rowSpan + (origin.rowStart - nextRowStart);
+    nextRowSpan = clamp(rawRowSpan, minRowSpan, maxRowSpan);
   }
 
   return {

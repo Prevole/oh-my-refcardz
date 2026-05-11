@@ -51,7 +51,7 @@
     "id": "image-registry",
     "kind": "card",
     "colStart": 1,
-    "rowStart": 35,
+    "rowStart": 73,
     "colSpan": 18,
     "rowSpan": 18
   },
@@ -67,7 +67,7 @@
     "id": "inspection",
     "kind": "heading",
     "colStart": 1,
-    "rowStart": 53,
+    "rowStart": 52,
     "colSpan": 36,
     "rowSpan": 2
   },
@@ -98,7 +98,7 @@
   {
     "id": "volume-query",
     "kind": "card",
-    "colStart": 1,
+    "colStart": 19,
     "rowStart": 85,
     "colSpan": 18,
     "rowSpan": 11
@@ -106,7 +106,7 @@
   {
     "id": "volume-lifecycle",
     "kind": "card",
-    "colStart": 1,
+    "colStart": 19,
     "rowStart": 73,
     "colSpan": 18,
     "rowSpan": 12
@@ -131,15 +131,15 @@
     "id": "network-query",
     "kind": "card",
     "colStart": 19,
-    "rowStart": 85,
+    "rowStart": 96,
     "colSpan": 18,
     "rowSpan": 11
   },
   {
     "id": "network-lifecycle",
     "kind": "card",
-    "colStart": 19,
-    "rowStart": 73,
+    "colStart": 1,
+    "rowStart": 115,
     "colSpan": 18,
     "rowSpan": 12
   },
@@ -147,7 +147,7 @@
     "id": "network-connection",
     "kind": "card",
     "colStart": 19,
-    "rowStart": 96,
+    "rowStart": 115,
     "colSpan": 18,
     "rowSpan": 17
   },
@@ -163,7 +163,7 @@
     "id": "system-cleanup",
     "kind": "card",
     "colStart": 1,
-    "rowStart": 115,
+    "rowStart": 132,
     "colSpan": 36,
     "rowSpan": 18
   }

@@ -6,10 +6,10 @@ import { useKeyboardContext } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
 import { GRID_COLUMNS } from "../sheet-grid";
+import { getBlockConstraints } from "./block-types";
 import { clamp, resolveBlockLayout } from "./layout-algorithms";
 import { getAllCards, findCardInDirection, findFirstCard, validateFocus, type CardFocus } from "./card-navigation";
 import type { BlockLayoutState } from "./layout-types";
-import { MAX_ROW_SPAN } from "./layout-types";
 
 export type { CardFocus } from "./card-navigation";
 
@@ -137,22 +137,25 @@ export function useCardKeyboard({ blockLayouts, setBlockLayouts }: UseCardKeyboa
       const currentLayout = blockLayouts.find((layout) => layout.id === validFocus.blockId);
       if (!currentLayout) return;
 
+      const constraints = getBlockConstraints(currentLayout.kind);
+      const { minColSpan, maxColSpan, minRowSpan, maxRowSpan } = constraints;
+
       let nextLayout: BlockLayoutState;
       switch (direction) {
         case "left":
-          nextLayout = { ...currentLayout, colSpan: clamp(currentLayout.colSpan - 1, 1, GRID_COLUMNS) };
+          nextLayout = { ...currentLayout, colSpan: clamp(currentLayout.colSpan - 1, minColSpan, maxColSpan) };
           break;
         case "right":
-          nextLayout = { ...currentLayout, colSpan: clamp(currentLayout.colSpan + 1, 1, GRID_COLUMNS) };
+          nextLayout = { ...currentLayout, colSpan: clamp(currentLayout.colSpan + 1, minColSpan, maxColSpan) };
           if (nextLayout.colStart + nextLayout.colSpan - 1 > GRID_COLUMNS) {
             nextLayout.colStart = GRID_COLUMNS - nextLayout.colSpan + 1;
           }
           break;
         case "up":
-          nextLayout = { ...currentLayout, rowSpan: clamp(currentLayout.rowSpan - 1, 1, MAX_ROW_SPAN) };
+          nextLayout = { ...currentLayout, rowSpan: clamp(currentLayout.rowSpan - 1, minRowSpan, maxRowSpan) };
           break;
         case "down":
-          nextLayout = { ...currentLayout, rowSpan: clamp(currentLayout.rowSpan + 1, 1, MAX_ROW_SPAN) };
+          nextLayout = { ...currentLayout, rowSpan: clamp(currentLayout.rowSpan + 1, minRowSpan, maxRowSpan) };
           break;
       }
 
