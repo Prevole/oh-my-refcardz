@@ -13,7 +13,7 @@
     "colStart": 1,
     "rowStart": 3,
     "colSpan": 18,
-    "rowSpan": 13
+    "rowSpan": 15
   },
   {
     "id": "navigate-and-edit",
@@ -21,21 +21,21 @@
     "colStart": 19,
     "rowStart": 3,
     "colSpan": 18,
-    "rowSpan": 23
+    "rowSpan": 18
   },
   {
     "id": "update-and-sync",
     "kind": "card",
     "colStart": 1,
-    "rowStart": 16,
+    "rowStart": 18,
     "colSpan": 18,
-    "rowSpan": 10
+    "rowSpan": 12
   },
   {
     "id": "source-state",
     "kind": "heading",
     "colStart": 1,
-    "rowStart": 26,
+    "rowStart": 30,
     "colSpan": 36,
     "rowSpan": 2
   },
@@ -43,23 +43,23 @@
     "id": "naming-conventions",
     "kind": "card",
     "colStart": 1,
-    "rowStart": 48,
-    "colSpan": 20,
+    "rowStart": 32,
+    "colSpan": 21,
     "rowSpan": 18
   },
   {
     "id": "fixups",
     "kind": "card",
-    "colStart": 21,
-    "rowStart": 48,
-    "colSpan": 16,
+    "colStart": 22,
+    "rowStart": 32,
+    "colSpan": 15,
     "rowSpan": 18
   },
   {
     "id": "machine-setup",
     "kind": "heading",
     "colStart": 1,
-    "rowStart": 46,
+    "rowStart": 50,
     "colSpan": 36,
     "rowSpan": 2
   },
@@ -67,23 +67,23 @@
     "id": "bootstrap",
     "kind": "card",
     "colStart": 1,
-    "rowStart": 79,
+    "rowStart": 52,
     "colSpan": 18,
-    "rowSpan": 29
+    "rowSpan": 30
   },
   {
     "id": "setup-pipeline",
     "kind": "card",
     "colStart": 19,
-    "rowStart": 79,
+    "rowStart": 52,
     "colSpan": 18,
-    "rowSpan": 29
+    "rowSpan": 24
   },
   {
     "id": "contextual-helpers",
     "kind": "heading",
     "colStart": 1,
-    "rowStart": 77,
+    "rowStart": 82,
     "colSpan": 36,
     "rowSpan": 2
   },
@@ -91,8 +91,8 @@
     "id": "related-workflows",
     "kind": "card",
     "colStart": 1,
-    "rowStart": 108,
-    "colSpan": 36,
-    "rowSpan": 7
+    "rowStart": 84,
+    "colSpan": 15,
+    "rowSpan": 9
   }
 ]

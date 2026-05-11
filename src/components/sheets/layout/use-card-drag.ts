@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, PointerEvent as ReactPointerEvent, SetStateAction } from "react";
 import { GRID_GAP_PX } from "../sheet-grid";
+import { calculateAutoScrollSpeed } from "./auto-scroll";
 import { pointerToGridPosition, resolveBlockLayout } from "./layout-algorithms";
 import type { BlockLayoutState, DragState, GridMetricsState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
@@ -19,6 +20,8 @@ export function useCardDrag(
 ): UseCardDragResult {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
+  const autoScrollFrameRef = useRef<number | null>(null);
+  const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     dragStateRef.current = dragState;
@@ -27,28 +30,59 @@ export function useCardDrag(
   useEffect(() => {
     if (!dragState) return;
 
-    function handlePointerMove(event: PointerEvent) {
+    function updateDragPosition(clientX: number, clientY: number) {
       const active = dragStateRef.current;
       if (!active) return;
 
+      // Recalculate gridRect to account for scroll changes
+      const grid = document.querySelector("[data-sheet-grid]");
+      if (!(grid instanceof HTMLElement)) return;
+
+      const gridRect = grid.getBoundingClientRect();
+
       const nextPosition = pointerToGridPosition(
-        event.clientX - active.pointerOffsetX,
-        event.clientY - active.pointerOffsetY,
-        active.gridRect,
+        clientX - active.pointerOffsetX,
+        clientY - active.pointerOffsetY,
+        gridRect,
         active.unitSize,
         active.colSpan
       );
 
-      if (nextPosition.colStart === active.colStart && nextPosition.rowStart === active.rowStart) {
-        return;
+      // Always update gridRect even if position hasn't changed (scroll may have moved it)
+      if (
+        nextPosition.colStart !== active.colStart ||
+        nextPosition.rowStart !== active.rowStart ||
+        gridRect.top !== active.gridRect.top
+      ) {
+        setDragState({ ...active, ...nextPosition, gridRect });
+      }
+    }
+
+    function runAutoScroll() {
+      const scrollSpeed = calculateAutoScrollSpeed(lastPointerRef.current.y, window.innerHeight);
+
+      if (scrollSpeed !== 0) {
+        window.scrollBy(0, scrollSpeed);
+        // Update drag position after scroll to keep card following pointer
+        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y);
       }
 
-      setDragState({ ...active, ...nextPosition });
+      autoScrollFrameRef.current = requestAnimationFrame(runAutoScroll);
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      lastPointerRef.current = { x: event.clientX, y: event.clientY };
+      updateDragPosition(event.clientX, event.clientY);
     }
 
     function handlePointerUp() {
       const active = dragStateRef.current;
       if (!active) return;
+
+      if (autoScrollFrameRef.current !== null) {
+        cancelAnimationFrame(autoScrollFrameRef.current);
+        autoScrollFrameRef.current = null;
+      }
 
       setBlockLayouts((currentLayouts) =>
         resolveBlockLayout(currentLayouts, active.blockId, {
@@ -62,10 +96,17 @@ export function useCardDrag(
       setDragState(null);
     }
 
+    // Start auto-scroll loop
+    autoScrollFrameRef.current = requestAnimationFrame(runAutoScroll);
+
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
 
     return () => {
+      if (autoScrollFrameRef.current !== null) {
+        cancelAnimationFrame(autoScrollFrameRef.current);
+        autoScrollFrameRef.current = null;
+      }
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };

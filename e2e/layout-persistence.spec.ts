@@ -166,6 +166,48 @@ test.describe("Drag & drop and layout persistence", () => {
 
     await expectLocalStorageLayout(page);
   });
+
+  test("auto-scrolls page when dragging near viewport edge", async ({ page }) => {
+    await page.goto("/cheatsheets/git");
+    await page.waitForSelector("[class*='layoutToolbar']");
+
+    // Scroll down first to have room to scroll up
+    await page.evaluate(() => window.scrollTo(0, 300));
+    await expect(async () => {
+      const scrollY = await page.evaluate(() => window.scrollY);
+      expect(scrollY).toBeGreaterThanOrEqual(300);
+    }).toPass({ timeout: 2000 });
+
+    const initialScrollY = await page.evaluate(() => window.scrollY);
+
+    // Find a block to drag
+    const blockHeader = page
+      .locator("article[data-layout-card='true'] [class*='cardHeader'], article[data-layout-card='true'] [class*='headingBlockHeader']")
+      .first();
+    await expect(blockHeader).toBeVisible();
+
+    const box = await blockHeader.boundingBox();
+    if (!box) {
+      throw new Error("Block header bounding box not found");
+    }
+
+    // Start dragging
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+
+    // Move to near the top edge of the viewport (within 80px threshold)
+    await page.mouse.move(box.x + box.width / 2, 40, { steps: 5 });
+
+    // Wait for auto-scroll to take effect
+    await page.waitForTimeout(500);
+
+    // Verify page scrolled up
+    const finalScrollY = await page.evaluate(() => window.scrollY);
+    expect(finalScrollY).toBeLessThan(initialScrollY);
+
+    // Release the drag
+    await page.mouse.up();
+  });
 });
 
 test.describe("Layout persistence across navigation", () => {

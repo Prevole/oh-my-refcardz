@@ -80,6 +80,16 @@ export function placeCardAtNearestSlot(card: GridPlacement, occupied: Set<string
   return { ...card, colStart: 1, rowStart: startRow };
 }
 
+/**
+ * Resolves block layouts by placing blocks without collisions.
+ *
+ * Two modes:
+ * - Initial layout (no pinnedBlockId): All blocks are placed sequentially in
+ *   document order. Headings define section boundaries - cards are placed after
+ *   their preceding heading, respecting document structure.
+ * - Reflow (pinnedBlockId provided): Headings keep their position to preserve
+ *   visual structure; only cards are reflowed around the pinned block.
+ */
 export function resolveBlockLayout(
   blocks: BlockLayoutState[],
   pinnedBlockId?: string,
@@ -87,10 +97,49 @@ export function resolveBlockLayout(
 ): BlockLayoutState[] {
   const nextBlocks = blocks.map((block) => ({ ...block }));
   const occupied = new Set<string>();
-  const pinnedBlock = pinnedBlockId ? nextBlocks.find((block) => block.id === pinnedBlockId) : null;
+  const isInitialLayout = !pinnedBlockId;
 
-  // Headings keep their position during card reflow so card editing does not
-  // unexpectedly rewrite the visual structure and anchor targets.
+  // Initial layout mode: place all blocks sequentially in document order
+  // respecting section structure (cards stay under their heading)
+  if (isInitialLayout) {
+    // sectionFloor: the row where the current section starts (cards search from here)
+    // sectionCeiling: the highest row reached in the current section (next heading starts here)
+    let sectionFloor = 1;
+    let sectionCeiling = 1;
+
+    for (let index = 0; index < nextBlocks.length; index++) {
+      const block = nextBlocks[index];
+      const preferred = clampCardLayoutToGrid(block);
+
+      if (block.kind === "heading") {
+        // Headings start a new section at the current ceiling
+        const headingWithRow = { ...preferred, colStart: 1, rowStart: sectionCeiling };
+        const placed = placeCardAtNearestSlot(headingWithRow, occupied);
+        nextBlocks[index] = { ...block, ...placed };
+        markOccupied(occupied, placed);
+        // New section starts after this heading
+        sectionFloor = placed.rowStart + placed.rowSpan;
+        sectionCeiling = sectionFloor;
+      } else {
+        // Cards are placed starting from the section floor
+        const cardWithSectionStart = { ...preferred, rowStart: sectionFloor };
+        const placed = placeCardAtNearestSlot(cardWithSectionStart, occupied);
+        nextBlocks[index] = { ...block, ...placed };
+        markOccupied(occupied, placed);
+        // Update section ceiling if this card extends beyond it
+        const cardEndRow = placed.rowStart + placed.rowSpan;
+        if (cardEndRow > sectionCeiling) {
+          sectionCeiling = cardEndRow;
+        }
+      }
+    }
+    return nextBlocks;
+  }
+
+  // Reflow mode: headings keep their position, cards are reflowed
+  const pinnedBlock = nextBlocks.find((block) => block.id === pinnedBlockId);
+
+  // First pass: place headings (they keep their position during reflow)
   for (let index = 0; index < nextBlocks.length; index++) {
     const block = nextBlocks[index];
     if (block.id === pinnedBlockId) continue;
@@ -101,7 +150,8 @@ export function resolveBlockLayout(
     markOccupied(occupied, placedHeading);
   }
 
-  if (pinnedBlockId && pinnedLayout) {
+  // Second pass: place the pinned block
+  if (pinnedLayout) {
     const pinned = clampCardLayoutToGrid(pinnedLayout);
     const pinnedIndex = nextBlocks.findIndex((block) => block.id === pinnedBlockId);
 
@@ -116,6 +166,7 @@ export function resolveBlockLayout(
     }
   }
 
+  // Third pass: place remaining cards
   for (let index = 0; index < nextBlocks.length; index++) {
     if (nextBlocks[index].id === pinnedBlockId) continue;
     if (nextBlocks[index].kind === "heading") continue;

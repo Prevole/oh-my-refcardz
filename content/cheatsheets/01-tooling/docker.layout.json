@@ -1,0 +1,170 @@
+[
+  {
+    "id": "containers",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "container-lifecycle",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 22
+  },
+  {
+    "id": "container-status",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 11
+  },
+  {
+    "id": "container-rename",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 25,
+    "colSpan": 18,
+    "rowSpan": 8
+  },
+  {
+    "id": "container-interaction",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 14,
+    "colSpan": 18,
+    "rowSpan": 16
+  },
+  {
+    "id": "images",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 33,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "image-registry",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 35,
+    "colSpan": 18,
+    "rowSpan": 18
+  },
+  {
+    "id": "image-lifecycle",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 55,
+    "colSpan": 18,
+    "rowSpan": 15
+  },
+  {
+    "id": "inspection",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 53,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "container-inspection",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 55,
+    "colSpan": 18,
+    "rowSpan": 16
+  },
+  {
+    "id": "image-inspection",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 35,
+    "colSpan": 18,
+    "rowSpan": 8
+  },
+  {
+    "id": "volumes",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 71,
+    "colSpan": 18,
+    "rowSpan": 2
+  },
+  {
+    "id": "volume-query",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 85,
+    "colSpan": 18,
+    "rowSpan": 11
+  },
+  {
+    "id": "volume-lifecycle",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 73,
+    "colSpan": 18,
+    "rowSpan": 12
+  },
+  {
+    "id": "volume-mounting",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 96,
+    "colSpan": 18,
+    "rowSpan": 8
+  },
+  {
+    "id": "networks",
+    "kind": "heading",
+    "colStart": 19,
+    "rowStart": 71,
+    "colSpan": 18,
+    "rowSpan": 2
+  },
+  {
+    "id": "network-query",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 85,
+    "colSpan": 18,
+    "rowSpan": 11
+  },
+  {
+    "id": "network-lifecycle",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 73,
+    "colSpan": 18,
+    "rowSpan": 12
+  },
+  {
+    "id": "network-connection",
+    "kind": "card",
+    "colStart": 19,
+    "rowStart": 96,
+    "colSpan": 18,
+    "rowSpan": 17
+  },
+  {
+    "id": "cleanup",
+    "kind": "heading",
+    "colStart": 1,
+    "rowStart": 113,
+    "colSpan": 36,
+    "rowSpan": 2
+  },
+  {
+    "id": "system-cleanup",
+    "kind": "card",
+    "colStart": 1,
+    "rowStart": 115,
+    "colSpan": 36,
+    "rowSpan": 18
+  }
+]

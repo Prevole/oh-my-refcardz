@@ -303,4 +303,59 @@ describe("resolveBlockLayout", () => {
 
     expect(result.find((block) => block.id === "heading")).toMatchObject({ rowStart: 5 });
   });
+
+  describe("initial layout mode (no pinnedBlockId)", () => {
+    it("places multiple headings sequentially without overlap", () => {
+      const blocks = [
+        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "heading-3", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      ] as const;
+
+      const result = resolveBlockLayout([...blocks]);
+
+      expect(result[0]).toMatchObject({ id: "heading-1", rowStart: 1 });
+      expect(result[1]).toMatchObject({ id: "heading-2", rowStart: 3 });
+      expect(result[2]).toMatchObject({ id: "heading-3", rowStart: 5 });
+    });
+
+    it("places cards under their section heading, not in earlier gaps", () => {
+      const blocks = [
+        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
+        { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
+        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "card-c", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
+      ] as const;
+
+      const result = resolveBlockLayout([...blocks]);
+
+      // First heading at row 1
+      expect(result[0]).toMatchObject({ id: "heading-1", rowStart: 1 });
+      // Cards placed after first heading (row 3+), side by side since 12+12 < 36
+      expect(result[1]).toMatchObject({ id: "card-a", rowStart: 3, colStart: 1 });
+      expect(result[2]).toMatchObject({ id: "card-b", rowStart: 3, colStart: 13 });
+      // Second heading after cards (card-a and card-b span 4 rows from row 3 → ends at row 6)
+      expect(result[3]).toMatchObject({ id: "heading-2", rowStart: 7 });
+      // Card-c MUST be after heading-2, not filling gap in row 3
+      expect(result[4]).toMatchObject({ id: "card-c", rowStart: 9, colStart: 1 });
+    });
+
+    it("respects document order for interleaved headings and cards", () => {
+      const blocks = [
+        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 4 },
+        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 4 },
+      ] as const;
+
+      const result = resolveBlockLayout([...blocks]);
+
+      // Each block should be placed after the previous one
+      expect(result[0].rowStart).toBe(1); // heading-1
+      expect(result[1].rowStart).toBe(3); // card-a (after heading-1 which spans 2 rows)
+      expect(result[2].rowStart).toBe(7); // heading-2 (after card-a which spans 4 rows)
+      expect(result[3].rowStart).toBe(9); // card-b (after heading-2 which spans 2 rows)
+    });
+  });
 });

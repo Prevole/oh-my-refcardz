@@ -1,0 +1,421 @@
+title: Docker
+summary: Essential Docker CLI commands for managing containers, images, volumes,
+  and networks. Excludes Docker Compose and Swarm (separate cheatsheets).
+color: "#1D63ED"
+icon: docker
+
+blocks:
+  - heading:
+      id: containers
+      title: Containers
+
+  - card:
+      id: container-lifecycle
+      title: Container Lifecycle
+      items:
+        - entries:
+            - title: Run a container
+            - command: docker run <image>
+            - commandExample: docker run nginx
+            - text: Create and start a new container from an image.
+          detailedEntries:
+            - text: Run in detached mode (background).
+            - command: docker run -d <image>
+            - commandExample: docker run -d nginx
+            - text: Run with a custom name.
+            - command: docker run --name <name> <image>
+            - commandExample: docker run --name webserver nginx
+            - text: Run interactively with a shell.
+            - command: docker run -it <image> <shell>
+            - commandExample: docker run -it ubuntu bash
+            - text: Auto-remove container when it exits.
+            - command: docker run --rm <image>
+
+        - entries:
+            - title: Stop a container
+            - command: docker stop <container>
+            - commandExample: docker stop webserver
+            - text: Gracefully stop a running container (sends SIGTERM, then SIGKILL
+                after timeout).
+          detailedEntries:
+            - text: Stop multiple containers at once.
+            - commandExample: docker stop web1 web2 web3
+            - text: Stop all running containers.
+            - command: docker stop $(docker ps -q)
+
+        - entries:
+            - title: Start a stopped container
+            - command: docker start <container>
+            - commandExample: docker start webserver
+            - text: Restart a previously stopped container.
+
+        - entries:
+            - title: Remove a container
+            - command: docker rm <container>
+            - commandExample: docker rm webserver
+            - text: Delete a stopped container. Use -f to force remove a running container.
+          detailedEntries:
+            - text: Force remove a running container.
+            - command: docker rm -f <container>
+            - text: Remove all stopped containers.
+            - command: docker rm $(docker ps -aq -f status=exited)
+
+  - card:
+      id: container-status
+      title: Container Status
+      items:
+        - entries:
+            - title: List running containers
+            - command: docker ps
+            - text: Show all currently running containers with their IDs, names, ports,
+                and status.
+          detailedEntries:
+            - text: Show all containers including stopped ones.
+            - command: docker ps -a
+            - text: Show only container IDs (useful for scripting).
+            - command: docker ps -q
+            - commandExample: docker stop $(docker ps -q)
+
+        - entries:
+            - title: View container logs
+            - command: docker logs <container>
+            - commandExample: docker logs webserver
+            - text: Show stdout/stderr output from a container.
+          detailedEntries:
+            - text: Follow logs in real-time.
+            - command: docker logs -f <container>
+            - commandExample: docker logs -f webserver
+            - text: Show last N lines.
+            - command: docker logs --tail <n:number> <container>
+            - commandExample: docker logs --tail 100 webserver
+            - text: Show logs with timestamps.
+            - command: docker logs -t <container>
+            - text: Combine options for debugging.
+            - commandExample: docker logs -f --tail 50 -t webserver
+
+  - card:
+      id: container-rename
+      title: Container Rename
+      items:
+        - entries:
+            - title: Rename a container
+            - command: docker rename <old> <new>
+            - commandExample: docker rename webserver nginx-prod
+            - text: Change a container's name without recreating it.
+
+  - card:
+      id: container-interaction
+      title: Container Interaction
+      items:
+        - entries:
+            - title: Execute command in container
+            - command: docker exec <container> <command>
+            - commandExample: docker exec webserver ls -la
+            - text: Run a command inside a running container.
+          detailedEntries:
+            - text: Open an interactive shell.
+            - command: docker exec -it <container> <shell>
+            - commandExample: docker exec -it webserver bash
+            - commandExample: docker exec -it webserver sh
+            - text: Run as a specific user.
+            - command: docker exec -u <user> <container> <command>
+            - commandExample: docker exec -u root webserver whoami
+
+        - entries:
+            - title: Attach to a container
+            - command: docker attach <container>
+            - commandExample: docker attach webserver
+            - text: Connect terminal to a running container's main process. Use
+                Ctrl+P Ctrl+Q to detach without stopping.
+
+        - entries:
+            - title: Copy files
+            - command: docker cp <src> <dest>
+            - text: Copy files between host and container.
+          detailedEntries:
+            - text: Copy from host to container.
+            - command: docker cp <host-path> <container>:<container-path>
+            - commandExample: docker cp ./config.json webserver:/app/
+            - text: Copy from container to host.
+            - command: docker cp <container>:<container-path> <host-path>
+            - commandExample: docker cp webserver:/var/log/nginx.log ./
+
+  - heading:
+      id: images
+      title: Images
+
+  - card:
+      id: image-registry
+      title: Image Registry
+      items:
+        - entries:
+            - title: Pull an image
+            - command: docker pull <image>
+            - commandExample: docker pull nginx:latest
+            - text: Download an image from a registry (Docker Hub by default).
+          detailedEntries:
+            - text: Pull a specific version.
+            - commandExample: docker pull node:20-alpine
+            - text: Pull from a private registry.
+            - commandExample: docker pull registry.example.com/myapp:v1.2
+
+        - entries:
+            - title: Push an image
+            - command: docker push <image>
+            - commandExample: docker push myuser/myapp:v1.0
+            - text: Upload an image to a registry. Requires docker login first.
+
+        - entries:
+            - title: Tag an image
+            - command: docker tag <source> <target>
+            - commandExample: docker tag myapp:latest myuser/myapp:v1.0
+            - text: Create a new tag pointing to an existing image. Required before
+                pushing to a registry.
+
+  - card:
+      id: image-lifecycle
+      title: Image Lifecycle
+      items:
+        - entries:
+            - title: List images
+            - command: docker images
+            - text: Show all locally available images with their tags and sizes.
+          detailedEntries:
+            - text: Show image IDs only.
+            - command: docker images -q
+            - text: Show all images including intermediates.
+            - command: docker images -a
+            - text: Filter by repository name.
+            - commandExample: docker images nginx
+
+        - entries:
+            - title: Remove an image
+            - command: docker rmi <image>
+            - commandExample: docker rmi nginx:latest
+            - text: Delete a local image. Fails if containers are using it.
+          detailedEntries:
+            - text: Force remove even if in use.
+            - command: docker rmi -f <image>
+            - text: Remove all unused images.
+            - command: docker image prune -a
+
+        - entries:
+            - title: Build an image
+            - command: docker build -t <name> <path>
+            - commandExample: docker build -t myapp:latest .
+            - text: Build an image from a Dockerfile in the specified directory.
+          detailedEntries:
+            - text: Use a specific Dockerfile.
+            - command: docker build -f <dockerfile> -t <name> <path>
+            - commandExample: docker build -f Dockerfile.prod -t myapp:prod .
+            - text: Build with no cache (clean rebuild).
+            - command: docker build --no-cache -t <name> <path>
+
+  - heading:
+      id: inspection
+      title: Inspection
+
+  - card:
+      id: container-inspection
+      title: Container Inspection
+      items:
+        - entries:
+            - title: Inspect a container
+            - command: docker inspect <container>
+            - commandExample: docker inspect webserver
+            - text: Show detailed JSON metadata about a container (config, network,
+                mounts, state).
+          detailedEntries:
+            - text: Extract a specific field with Go template.
+            - command: "docker inspect --format '{{<template>}}' <container>"
+            - commandExample: "docker inspect --format '{{.NetworkSettings.IPAddress}}' webserver"
+            - commandExample: "docker inspect --format '{{.State.Status}}' webserver"
+
+        - entries:
+            - title: View running processes
+            - command: docker top <container>
+            - commandExample: docker top webserver
+            - text: Display the processes running inside a container.
+
+        - entries:
+            - title: Live resource stats
+            - command: docker stats
+            - text: Show real-time CPU, memory, network, and I/O stats for all
+                running containers.
+          detailedEntries:
+            - text: Stats for specific containers.
+            - commandExample: docker stats webserver db
+            - text: Show stats once without streaming.
+            - command: docker stats --no-stream
+
+  - card:
+      id: image-inspection
+      title: Image Inspection
+      items:
+        - entries:
+            - title: Show image layers
+            - command: docker history <image>
+            - commandExample: docker history nginx:latest
+            - text: Display the layers and commands that built an image. Useful for
+                debugging image size.
+
+  - heading:
+      id: volumes
+      title: Volumes
+
+  - card:
+      id: volume-query
+      title: Volume Query
+      items:
+        - entries:
+            - title: List volumes
+            - command: docker volume ls
+            - text: Show all Docker-managed volumes.
+
+        - entries:
+            - title: Inspect a volume
+            - command: docker volume inspect <name>
+            - commandExample: docker volume inspect app-data
+            - text: Show volume details including mount point on host.
+
+  - card:
+      id: volume-lifecycle
+      title: Volume Lifecycle
+      items:
+        - entries:
+            - title: Create a volume
+            - command: docker volume create <name>
+            - commandExample: docker volume create app-data
+            - text: Create a named volume for persistent data.
+
+        - entries:
+            - title: Remove a volume
+            - command: docker volume rm <name>
+            - commandExample: docker volume rm app-data
+            - text: Delete a volume. Fails if in use by a container.
+
+  - card:
+      id: volume-mounting
+      title: Volume Mounting
+      items:
+        - entries:
+            - title: Mount a volume
+            - command: docker run -v <volume>:<container-path> <image>
+            - commandExample: docker run -v app-data:/var/lib/data nginx
+            - text: Attach a named volume to a container.
+          detailedEntries:
+            - text: Mount a host directory (bind mount).
+            - command: docker run -v <host-path>:<container-path> <image>
+            - commandExample: docker run -v $(pwd)/data:/app/data nginx
+            - text: Mount as read-only.
+            - command: docker run -v <volume>:<container-path>:ro <image>
+            - commandExample: docker run -v config:/etc/config:ro nginx
+
+  - heading:
+      id: networks
+      title: Networks
+
+  - card:
+      id: network-query
+      title: Network Query
+      items:
+        - entries:
+            - title: List networks
+            - command: docker network ls
+            - text: Show all Docker networks (bridge, host, none, and custom).
+
+        - entries:
+            - title: Inspect a network
+            - command: docker network inspect <name>
+            - commandExample: docker network inspect app-network
+            - text: Show network details including connected containers.
+
+  - card:
+      id: network-lifecycle
+      title: Network Lifecycle
+      items:
+        - entries:
+            - title: Create a network
+            - command: docker network create <name>
+            - commandExample: docker network create app-network
+            - text: Create a custom bridge network for container communication.
+
+        - entries:
+            - title: Remove a network
+            - command: docker network rm <name>
+            - commandExample: docker network rm app-network
+            - text: Delete a custom network. Fails if containers are connected.
+
+  - card:
+      id: network-connection
+      title: Network Connection
+      items:
+        - entries:
+            - title: Connect a container
+            - command: docker network connect <network> <container>
+            - commandExample: docker network connect app-network webserver
+            - text: Add a running container to a network.
+
+        - entries:
+            - title: Disconnect a container
+            - command: docker network disconnect <network> <container>
+            - commandExample: docker network disconnect app-network webserver
+            - text: Remove a container from a network.
+
+        - entries:
+            - title: Run with network
+            - command: docker run --network <name> <image>
+            - commandExample: docker run --network app-network nginx
+            - text: Start a container attached to a specific network.
+          detailedEntries:
+            - text: Publish ports when using custom network.
+            - command: docker run --network <name> -p <host>:<container> <image>
+            - commandExample: docker run --network app-network -p 8080:80 nginx
+
+  - heading:
+      id: cleanup
+      title: Cleanup
+
+  - card:
+      id: system-cleanup
+      title: System Cleanup
+      items:
+        - entries:
+            - title: System prune
+            - command: docker system prune
+            - text: Remove all stopped containers, unused networks, dangling images,
+                and build cache.
+          detailedEntries:
+            - text: Also remove unused volumes (destructive!).
+            - command: docker system prune --volumes
+            - text: Remove all unused images, not just dangling.
+            - command: docker system prune -a
+            - text: Skip confirmation prompt.
+            - command: docker system prune -f
+
+        - entries:
+            - title: Container prune
+            - command: docker container prune
+            - text: Remove all stopped containers.
+
+        - entries:
+            - title: Image prune
+            - command: docker image prune
+            - text: Remove dangling images (untagged and unreferenced).
+          detailedEntries:
+            - text: Remove all unused images.
+            - command: docker image prune -a
+
+        - entries:
+            - title: Volume prune
+            - command: docker volume prune
+            - text: Remove all unused volumes. Warning - this deletes data!
+
+        - entries:
+            - title: Show disk usage
+            - command: docker system df
+            - text: Display disk space used by images, containers, volumes, and
+                build cache.
+          detailedEntries:
+            - text: Show detailed breakdown.
+            - command: docker system df -v

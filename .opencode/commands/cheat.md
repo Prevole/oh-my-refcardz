@@ -4,6 +4,16 @@ description: Create a personalized cheatsheet based on your actual usage
 
 Create a cheatsheet for: $ARGUMENTS
 
+## User Instructions
+
+Before starting research, ask the user:
+- Any specific focus areas or workflows to prioritize?
+- Commands or patterns to include/exclude?
+- Preferred organization or grouping?
+- Any other guidance?
+
+Wait for user input before proceeding.
+
 ## Research Phase
 
 1. **Local shell history** — Search both:
