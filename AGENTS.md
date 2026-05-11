@@ -65,17 +65,13 @@ npm run validate:cheatsheets  # Validate YAML cheatsheets against Zod schema
 
 ## Validation Rules
 
-**Run these checks automatically after making changes:**
+Validation is automated via `.opencode/plugins/auto-validate.js`. When you finish editing, the plugin runs the appropriate checks based on which files changed.
 
-| Changed files | Run |
-|---------------|-----|
-| `src/**/*.ts`, `src/**/*.tsx` | `npm run lint && npm run test` |
-| `e2e/**/*.ts` | `npm run test:e2e` |
-| `content/cheatsheets/**/*.yaml` | `npm run validate:cheatsheets` |
-| `src/lib/yaml-cheatsheets.ts` (schema) | `npm run validate:cheatsheets && npm run test` |
-| `docs/**/*.md`, `README.md` | Review for consistency and accuracy |
+**Manual validation** is still needed for:
+- `docs/**/*.md`, `README.md` — Review for consistency and accuracy
+- `npm run build` — Run when changes may affect Next.js client/server boundaries, shared imports, bundling behavior, or runtime module placement (especially `src/app/`, `src/components/`, and shared modules in `src/lib/`)
 
-Also run `npm run build` whenever a change may affect Next.js client/server boundaries, shared imports, bundling behavior, or runtime module placement. This especially applies to changes under `src/app/`, `src/components/`, and shared modules in `src/lib/` that can be imported by client components.
+If the auto-validation fails after you finish, fix the issues and verify manually.
 
 ---
 
@@ -86,7 +82,22 @@ Two-tier approach: unit tests (Vitest) for pure logic, E2E tests (Playwright) fo
 - **Unit tests**: Colocate with source as `*.test.ts`. Run with `npm run test`.
 - **E2E tests**: Place in `e2e/` as `*.spec.ts`. Run with `npm run test:e2e`.
 
-Maintain all existing tests. Create new tests when adding features or fixing bugs. If a test fails, fix the code or update the test — never delete a test without discussion.
+### Test Maintenance Policy
+
+**Every code change requires a test review.** When modifying code:
+
+1. **Update existing tests** — If behavior changes, tests must reflect the new behavior
+2. **Add new tests** — New features or bug fixes need corresponding test coverage
+3. **Remove obsolete tests** — If code is deleted, remove tests that no longer apply
+4. **Run tests before finishing** — Verify all tests pass after your changes
+
+Do not consider a task complete until tests are updated and passing. This applies even for "small" changes — if the code changed, the tests should be reviewed.
+
+### Test Guidelines
+
+- Maintain all existing tests unless the tested code is removed
+- If a test fails, fix the code or update the test — never delete a test without discussion
+- Prefer focused, single-assertion tests over large test blocks
 
 ---
 
