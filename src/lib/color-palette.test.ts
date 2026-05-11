@@ -18,21 +18,21 @@ describe("getCategoryPrimaryColor", () => {
       const color = getCategoryPrimaryColor(1);
 
       expect(color).toBe(CATEGORY_PRIMARY_COLORS[0]);
-      expect(color).toBe("#00D4FF");
+      expect(color).toBe("#67E8F9");
     });
 
     it("returns correct color for order 5", () => {
       const color = getCategoryPrimaryColor(5);
 
       expect(color).toBe(CATEGORY_PRIMARY_COLORS[4]);
-      expect(color).toBe("#14B8A6");
+      expect(color).toBe("#5EEAD4");
     });
 
     it("returns last color for order 10", () => {
       const color = getCategoryPrimaryColor(10);
 
       expect(color).toBe(CATEGORY_PRIMARY_COLORS[9]);
-      expect(color).toBe("#F43F5E");
+      expect(color).toBe("#FDA4AF");
     });
   });
 
@@ -84,21 +84,21 @@ describe("getSecondaryColorForColumn", () => {
       const color = getSecondaryColorForColumn(0);
 
       expect(color).toBe(GRADIENT_SECONDARY_COLORS[0]);
-      expect(color).toBe("#FF6B6B");
+      expect(color).toBe("#FECDD3");
     });
 
     it("returns correct color for column 5", () => {
       const color = getSecondaryColorForColumn(5);
 
       expect(color).toBe(GRADIENT_SECONDARY_COLORS[5]);
-      expect(color).toBe("#C4F54A");
+      expect(color).toBe("#A7F3D0");
     });
 
     it("returns last color for column 9", () => {
       const color = getSecondaryColorForColumn(9);
 
       expect(color).toBe(GRADIENT_SECONDARY_COLORS[9]);
-      expect(color).toBe("#FFAB76");
+      expect(color).toBe("#DDD6FE");
     });
   });
 
@@ -144,24 +144,24 @@ describe("getCategoryGradientPair", () => {
       const gradient = getCategoryGradientPair(1);
 
       expect(gradient).toEqual(CATEGORY_GRADIENT_PAIRS[0]);
-      expect(gradient.from).toBe("#4ECDC4");
-      expect(gradient.to).toBe("#FF8C42");
+      expect(gradient.from).toBe("#67E8F9");
+      expect(gradient.to).toBe("#FDBA74");
     });
 
     it("returns correct gradient for order 5", () => {
       const gradient = getCategoryGradientPair(5);
 
       expect(gradient).toEqual(CATEGORY_GRADIENT_PAIRS[4]);
-      expect(gradient.from).toBe("#F472B6");
-      expect(gradient.to).toBe("#38BDF8");
+      expect(gradient.from).toBe("#F9A8D4");
+      expect(gradient.to).toBe("#7DD3FC");
     });
 
     it("returns last gradient for order 10", () => {
       const gradient = getCategoryGradientPair(10);
 
       expect(gradient).toEqual(CATEGORY_GRADIENT_PAIRS[9]);
-      expect(gradient.from).toBe("#A3E635");
-      expect(gradient.to).toBe("#E879F9");
+      expect(gradient.from).toBe("#BEF264");
+      expect(gradient.to).toBe("#F5D0FE");
     });
   });
 

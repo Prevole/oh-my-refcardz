@@ -1,40 +1,40 @@
 export const CATEGORY_PRIMARY_COLORS = [
-  "#00D4FF", // 1 - Cyan electric
-  "#FF00E5", // 2 - Magenta
-  "#8B5CF6", // 3 - Violet
-  "#6366F1", // 4 - Indigo
-  "#14B8A6", // 5 - Teal
-  "#10B981", // 6 - Emerald
-  "#84CC16", // 7 - Lime
-  "#FACC15", // 8 - Yellow
-  "#F97316", // 9 - Orange
-  "#F43F5E", // 10 - Coral red
+  "#67E8F9", // 1 - Cyan pastel
+  "#F9A8D4", // 2 - Pink pastel
+  "#C4B5FD", // 3 - Violet pastel
+  "#A5B4FC", // 4 - Indigo pastel
+  "#5EEAD4", // 5 - Teal pastel
+  "#6EE7B7", // 6 - Emerald pastel
+  "#BEF264", // 7 - Lime pastel
+  "#FCD34D", // 8 - Amber pastel
+  "#FDBA74", // 9 - Orange pastel
+  "#FDA4AF", // 10 - Rose pastel
 ] as const;
 
 export const GRADIENT_SECONDARY_COLORS = [
-  "#FF6B6B", // 0 - Coral red
-  "#FFE66D", // 1 - Sunny yellow
-  "#A3E635", // 2 - Lime green
-  "#FF8C42", // 3 - Tangerine
-  "#FF5E78", // 4 - Watermelon
-  "#C4F54A", // 5 - Electric lime
-  "#FFD93D", // 6 - Golden yellow
-  "#FF7849", // 7 - Burnt orange
-  "#B8F83E", // 8 - Neon green
-  "#FFAB76", // 9 - Peach
+  "#FECDD3", // 0 - Rose mist
+  "#FDE68A", // 1 - Soft amber
+  "#D9F99D", // 2 - Soft lime
+  "#FED7AA", // 3 - Apricot
+  "#FBCFE8", // 4 - Blush pink
+  "#A7F3D0", // 5 - Mint
+  "#FEF08A", // 6 - Butter yellow
+  "#FDBA74", // 7 - Peach
+  "#BAE6FD", // 8 - Sky mist
+  "#DDD6FE", // 9 - Lavender
 ] as const;
 
 export const CATEGORY_GRADIENT_PAIRS = [
-  { from: "#4ECDC4", to: "#FF8C42" }, // 1 - Teal → Orange
-  { from: "#A78BFA", to: "#FB7185" }, // 2 - Violet → Rose
-  { from: "#60A5FA", to: "#FBBF24" }, // 3 - Blue → Amber
-  { from: "#34D399", to: "#F472B6" }, // 4 - Emerald → Pink
-  { from: "#F472B6", to: "#38BDF8" }, // 5 - Pink → Sky
-  { from: "#FBBF24", to: "#A78BFA" }, // 6 - Amber → Violet
-  { from: "#2DD4BF", to: "#FB923C" }, // 7 - Teal → Orange
-  { from: "#818CF8", to: "#4ADE80" }, // 8 - Indigo → Green
-  { from: "#FB7185", to: "#22D3EE" }, // 9 - Rose → Cyan
-  { from: "#A3E635", to: "#E879F9" }, // 10 - Lime → Fuchsia
+  { from: "#67E8F9", to: "#FDBA74" }, // 1 - Cyan → Orange pastel
+  { from: "#C4B5FD", to: "#FDA4AF" }, // 2 - Violet → Rose pastel
+  { from: "#93C5FD", to: "#FCD34D" }, // 3 - Blue → Amber pastel
+  { from: "#6EE7B7", to: "#F9A8D4" }, // 4 - Emerald → Pink pastel
+  { from: "#F9A8D4", to: "#7DD3FC" }, // 5 - Pink → Sky pastel
+  { from: "#FCD34D", to: "#C4B5FD" }, // 6 - Amber → Violet pastel
+  { from: "#5EEAD4", to: "#FDBA74" }, // 7 - Teal → Peach pastel
+  { from: "#A5B4FC", to: "#86EFAC" }, // 8 - Indigo → Green pastel
+  { from: "#FDA4AF", to: "#67E8F9" }, // 9 - Rose → Cyan pastel
+  { from: "#BEF264", to: "#F5D0FE" }, // 10 - Lime → Lavender pastel
 ] as const;
 
 export type SheetGradient = {
