@@ -2,65 +2,81 @@
   {
     "id": "cli-basics",
     "kind": "heading",
-    "colStart": 1,
-    "rowStart": 1,
-    "colSpan": 36,
-    "rowSpan": 2
+    "position": {
+      "x": 0,
+      "y": 0,
+      "w": 36,
+      "h": 2
+    }
   },
   {
     "id": "session",
     "kind": "card",
-    "colStart": 1,
-    "rowStart": 3,
-    "colSpan": 18,
-    "rowSpan": 10
+    "position": {
+      "x": 0,
+      "y": 2,
+      "w": 18,
+      "h": 10
+    }
   },
   {
     "id": "item-access",
     "kind": "card",
-    "colStart": 19,
-    "rowStart": 3,
-    "colSpan": 18,
-    "rowSpan": 10
+    "position": {
+      "x": 18,
+      "y": 2,
+      "w": 18,
+      "h": 10
+    }
   },
   {
     "id": "secret-injection",
     "kind": "heading",
-    "colStart": 1,
-    "rowStart": 13,
-    "colSpan": 36,
-    "rowSpan": 2
+    "position": {
+      "x": 0,
+      "y": 12,
+      "w": 36,
+      "h": 2
+    }
   },
   {
     "id": "environment-variables",
     "kind": "card",
-    "colStart": 1,
-    "rowStart": 15,
-    "colSpan": 18,
-    "rowSpan": 16
+    "position": {
+      "x": 0,
+      "y": 14,
+      "w": 18,
+      "h": 16
+    }
   },
   {
     "id": "config-files",
     "kind": "card",
-    "colStart": 19,
-    "rowStart": 15,
-    "colSpan": 18,
-    "rowSpan": 16
+    "position": {
+      "x": 18,
+      "y": 14,
+      "w": 18,
+      "h": 16
+    }
   },
   {
     "id": "automation",
     "kind": "heading",
-    "colStart": 1,
-    "rowStart": 31,
-    "colSpan": 36,
-    "rowSpan": 2
+    "position": {
+      "x": 0,
+      "y": 30,
+      "w": 36,
+      "h": 2
+    }
   },
   {
     "id": "safer-scripts",
     "kind": "card",
-    "colStart": 1,
-    "rowStart": 33,
-    "colSpan": 18,
-    "rowSpan": 11
+    "position": {
+      "x": 0,
+      "y": 32,
+      "w": 18,
+      "h": 11
+    }
   }
 ]

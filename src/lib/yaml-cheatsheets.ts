@@ -16,6 +16,7 @@ import {
   type YamlCheatSheet as SharedYamlCheatSheet,
   type YamlCheatSheetWithMeta as SharedYamlCheatSheetWithMeta,
 } from "./cheatsheet-shared";
+import { isNewFormatArray, toOldBlockLayouts } from "./layout/migration";
 import { anchorIdPattern } from "./anchors";
 import { getCategoryPrimaryColor, getCategoryGradientPair } from "./color-palette";
 
@@ -373,10 +374,17 @@ async function readLayoutFile(
     const raw = await fs.readFile(layoutPath, "utf8");
     const parsed = JSON.parse(raw);
 
+    // New format: { id, kind, position: { x, y, w, h } }
+    if (isNewFormatArray(parsed)) {
+      return toOldBlockLayouts(parsed);
+    }
+
+    // Old format: { id, kind, colStart, rowStart, colSpan, rowSpan }
     if (isSavedBlockLayouts(parsed)) {
       return parsed;
     }
 
+    // Legacy section-based format
     if (isLegacySavedSectionLayouts(parsed)) {
       return migrateSectionLayoutsToBlockLayouts(sheet, parsed);
     }
