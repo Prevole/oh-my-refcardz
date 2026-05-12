@@ -20,34 +20,6 @@ export type GridMetricsState = {
   unitSize: number;
 };
 
-export type DragState = {
-  blockId: string;
-  colStart: number;
-  rowStart: number;
-  colSpan: number;
-  rowSpan: number;
-  gridRect: DOMRect;
-  unitSize: number;
-  pointerOffsetX: number;
-  pointerOffsetY: number;
-};
-
-export type ResizeState = {
-  blockId: string;
-  colStart: number;
-  rowStart: number;
-  colSpan: number;
-  rowSpan: number;
-  direction: import("./block-types").ResizeHandleDirection;
-  startClientX: number;
-  startClientY: number;
-  originColStart: number;
-  originRowStart: number;
-  originColSpan: number;
-  originRowSpan: number;
-  unitSize: number;
-};
-
 export const MAX_ROW_SPAN = 72;
 
 export const FALLBACK_METRICS: GridMetricsState = {

@@ -21,12 +21,10 @@ export type {
   CardLayoutState,
   BlockLayoutState,
   GridMetricsState,
-  DragState,
-  ResizeState,
 } from "./layout-types";
 export { MAX_ROW_SPAN, FALLBACK_METRICS } from "./layout-types";
 
-// Layout algorithms
+// Layout algorithms (still needed for layout-inference)
 export {
   clamp,
   pointerToGridPosition,
@@ -44,23 +42,15 @@ export {
   buildDefaultBlockLayouts,
 } from "./layout-inference";
 
-// Hooks (V1 - existing)
+// Persistence hook
 export { useLayoutPersistence } from "./use-layout-persistence";
 export type { UseLayoutPersistenceResult } from "./use-layout-persistence";
 
-export { useCardDrag } from "./use-card-drag";
-export type { UseCardDragResult } from "./use-card-drag";
-
-export { useCardResize } from "./use-card-resize";
-export type { UseCardResizeResult } from "./use-card-resize";
-
-export { useCardKeyboard } from "./use-card-keyboard";
-export type { UseCardKeyboardResult, CardFocus } from "./use-card-keyboard";
-
-// Hooks (V2 - new layout system)
+// Layout editor (V2 orchestrator)
 export { useLayoutEditor } from "./use-layout-editor";
 export type { UseLayoutEditorResult, InteractionState } from "./use-layout-editor";
 
+// Interaction hooks (V2)
 export { useCardDragV2 } from "./use-card-drag-v2";
 export type { UseCardDragV2Result, DragStateV2 } from "./use-card-drag-v2";
 

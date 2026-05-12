@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { SheetGrid } from "@/components/sheets/sheet-grid";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { SheetGrid, GRID_COLUMNS } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
 import { getItemAnchorId } from "@/lib/anchors";
 import { getRenderableBlocks, type CheatSheetItem, type YamlCheatSheetWithMeta } from "@/lib/cheatsheet-shared";
 import { buildBlockAnchorId } from "@/lib/anchor-navigation";
+import { migrateBlockLayouts, toOldBlockLayouts } from "@/lib/layout/migration";
+import { LayoutSnapshotProvider } from "@/lib/layout/layout-snapshot-context";
+import type { LayoutBlock, MoveIntent, ResizeIntent } from "@/lib/layout/solver/types";
 import {
   useLayoutPersistence,
-  useCardDrag,
-  useCardResize,
-  useCardKeyboard,
+  useLayoutEditor,
+  useCardDragV2,
+  useCardResizeV2,
+  useCardKeyboardV2,
   BlockRenderer,
   FALLBACK_METRICS,
   type GridMetricsState,
+  type ResizeHandleDirection,
 } from "./layout";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
@@ -27,23 +32,111 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const blocks = getRenderableBlocks(sheet);
   const [gridMetrics, setGridMetrics] = useState<GridMetricsState>(FALLBACK_METRICS);
 
+  // Use existing persistence hook (1-indexed format)
   const { blockLayouts, setBlockLayouts, hydrated, hasSavedLayout, resetLayout } = useLayoutPersistence(
     sheetSlug,
     sheet
   );
 
-  const { dragState, startBlockDrag } = useCardDrag(blockLayouts, setBlockLayouts, gridMetrics);
-  const { resizeState, startBlockResize } = useCardResize(blockLayouts, setBlockLayouts, gridMetrics);
+  // Convert to 0-indexed format for V2 hooks
+  const initialBlocksV2 = useMemo(() => migrateBlockLayouts(blockLayouts), [blockLayouts]);
 
-  const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboard({
-    blockLayouts,
-    setBlockLayouts,
+  // Layout editor hook (orchestrates the editing session)
+  const editor = useLayoutEditor({
+    initialBlocks: initialBlocksV2,
+    gridColumns: GRID_COLUMNS,
+    onCommit: useCallback(
+      (newBlocks: LayoutBlock[]) => {
+        // Convert back to 1-indexed format and persist
+        setBlockLayouts(toOldBlockLayouts(newBlocks));
+      },
+      [setBlockLayouts]
+    ),
+  });
+
+  // Sync from persistence to editor when persistence changes (e.g., hydration or reset)
+  useEffect(() => {
+    const newBlocks = migrateBlockLayouts(blockLayouts);
+    // Only update if different to avoid infinite loops
+    if (JSON.stringify(newBlocks) !== JSON.stringify(editor.committedBlocks)) {
+      editor.setCommittedLayout(newBlocks);
+    }
+  }, [blockLayouts]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Drag hook
+  const { dragState, startBlockDrag } = useCardDragV2({
+    blocks: editor.currentBlocks,
+    gridMetrics,
+    onDragStart: useCallback(
+      (blockId: string) => {
+        editor.startInteraction("drag", blockId);
+      },
+      [editor]
+    ),
+    onDragMove: useCallback(
+      (intent: MoveIntent) => {
+        editor.applyIntent(intent);
+      },
+      [editor]
+    ),
+    onDragEnd: useCallback(() => {
+      editor.commitInteraction();
+    }, [editor]),
+    onDragCancel: useCallback(() => {
+      editor.cancelInteraction();
+    }, [editor]),
+  });
+
+  // Resize hook
+  const { resizeState, startBlockResize } = useCardResizeV2({
+    blocks: editor.currentBlocks,
+    gridMetrics,
+    onResizeStart: useCallback(
+      (blockId: string) => {
+        editor.startInteraction("resize", blockId);
+      },
+      [editor]
+    ),
+    onResizeMove: useCallback(
+      (intent: ResizeIntent) => {
+        editor.applyIntent(intent);
+      },
+      [editor]
+    ),
+    onResizeEnd: useCallback(() => {
+      editor.commitInteraction();
+    }, [editor]),
+    onResizeCancel: useCallback(() => {
+      editor.cancelInteraction();
+    }, [editor]),
+  });
+
+  // Keyboard hook
+  const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboardV2({
+    blocks: editor.currentBlocks,
+    onMoveIntent: useCallback(
+      (intent: MoveIntent) => {
+        editor.applyIntent(intent);
+      },
+      [editor]
+    ),
+    onResizeIntent: useCallback(
+      (intent: ResizeIntent) => {
+        editor.applyIntent(intent);
+      },
+      [editor]
+    ),
   });
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
-  const layoutMetrics = gridMetrics;
-  const blockLayoutsById = new Map(blockLayouts.map((layout) => [layout.id, layout]));
 
+  // Build a map of current blocks by ID for rendering
+  const currentBlocksById = useMemo(
+    () => new Map(editor.currentBlocks.map((block) => [block.id, block])),
+    [editor.currentBlocks]
+  );
+
+  // Anchor target sync effect
   useEffect(() => {
     function syncAnchorTargetState() {
       const currentTarget = document.querySelector<HTMLElement>("[data-anchor-target='true']");
@@ -76,7 +169,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
       if (currentMetrics.columns === nextMetrics.columns && currentMetrics.unitSize === nextMetrics.unitSize) {
         return currentMetrics;
       }
-
       return nextMetrics;
     });
   }
@@ -88,7 +180,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   function handleResizePointerDown(
     blockId: string,
-    direction: "north" | "east" | "south" | "west" | "north-east" | "south-east" | "south-west" | "north-west",
+    direction: ResizeHandleDirection,
     event: React.PointerEvent<HTMLElement>
   ) {
     setFocusedCard(null);
@@ -96,7 +188,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   }
 
   return (
-    <>
+    <LayoutSnapshotProvider snapshot={editor.snapshot}>
       <div className={cheatsheetStyles.layoutToolbar}>
         <div className={cheatsheetStyles.layoutToolbarMeta}>
           <span className={cheatsheetStyles.layoutStorageStatus} suppressHydrationWarning>
@@ -104,7 +196,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           </span>
           {isLayoutActive ? (
             <span className={cheatsheetStyles.sectionLayoutLabel}>
-              {layoutMetrics.columns} cols · {Math.round(layoutMetrics.unitSize)}px
+              {gridMetrics.columns} cols · {Math.round(gridMetrics.unitSize)}px
             </span>
           ) : null}
           <button
@@ -121,28 +213,20 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
       <SheetGrid editMode={isLayoutActive} onMetricsChange={updateGridMetrics}>
         {blocks.map((block) => {
-          const baseLayout = blockLayoutsById.get(block.id);
-          if (!baseLayout) return null;
+          const layoutBlock = currentBlocksById.get(block.id);
+          if (!layoutBlock) return null;
+
+          // Convert 0-indexed position to 1-indexed for BlockRenderer
+          const pos = layoutBlock.position;
+          const colStart = pos.x + 1;
+          const rowStart = pos.y + 1;
+          const colSpan = pos.w;
+          const rowSpan = pos.h;
 
           const isDragging = Boolean(dragState && dragState.blockId === block.id);
           const isResizing = Boolean(resizeState && resizeState.blockId === block.id);
           const isKeyboardFocused = Boolean(focusedCard && focusedCard.blockId === block.id);
           const isDimmed = Boolean(dragState || resizeState || focusedCard) && !isDragging && !isResizing && !isKeyboardFocused;
-          const previewLayout = isDragging && dragState
-            ? {
-                colStart: dragState.colStart,
-                rowStart: dragState.rowStart,
-                colSpan: dragState.colSpan,
-                rowSpan: dragState.rowSpan,
-              }
-            : isResizing && resizeState
-              ? {
-                  colStart: resizeState.colStart,
-                  rowStart: resizeState.rowStart,
-                  colSpan: resizeState.colSpan,
-                  rowSpan: resizeState.rowSpan,
-                }
-              : baseLayout;
 
           return (
             <BlockRenderer
@@ -151,10 +235,10 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               id={buildBlockAnchorId(block.kind === "heading" ? "sheet-heading" : "sheet-card", block.id)}
               title={block.title}
               text={block.kind === "heading" ? block.text : undefined}
-              colStart={previewLayout.colStart}
-              rowStart={previewLayout.rowStart}
-              colSpan={previewLayout.colSpan}
-              rowSpan={previewLayout.rowSpan}
+              colStart={colStart}
+              rowStart={rowStart}
+              colSpan={colSpan}
+              rowSpan={rowSpan}
               editMode={isLayoutActive}
               dragging={isDragging || isResizing}
               dimmed={isDimmed}
@@ -163,7 +247,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
               onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
               activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
-              layoutLabel={`${previewLayout.colStart},${previewLayout.rowStart} · ${previewLayout.colSpan}x${previewLayout.rowSpan}`}
+              layoutLabel={`${colStart},${rowStart} · ${colSpan}x${rowSpan}`}
             >
               {block.kind === "card" ? (
                 <div className={cheatsheetStyles.itemList}>
@@ -176,7 +260,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
-    </>
+    </LayoutSnapshotProvider>
   );
 }
 
