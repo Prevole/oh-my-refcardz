@@ -3,6 +3,7 @@ export {
   registerBlockType,
   getBlockConfig,
   getBlockConstraints,
+  getBlockConstraintsV2,
   getResizeHandles,
   isResizeDirectionEnabled,
   getRegisteredBlockKinds,

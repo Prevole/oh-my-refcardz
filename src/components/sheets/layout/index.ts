@@ -3,6 +3,7 @@ export {
   registerBlockType,
   getBlockConfig,
   getBlockConstraints,
+  getBlockConstraintsV2,
   getResizeHandles,
   isResizeDirectionEnabled,
   getRegisteredBlockKinds,
@@ -43,7 +44,7 @@ export {
   buildDefaultBlockLayouts,
 } from "./layout-inference";
 
-// Hooks
+// Hooks (V1 - existing)
 export { useLayoutPersistence } from "./use-layout-persistence";
 export type { UseLayoutPersistenceResult } from "./use-layout-persistence";
 
@@ -55,3 +56,16 @@ export type { UseCardResizeResult } from "./use-card-resize";
 
 export { useCardKeyboard } from "./use-card-keyboard";
 export type { UseCardKeyboardResult, CardFocus } from "./use-card-keyboard";
+
+// Hooks (V2 - new layout system)
+export { useLayoutEditor } from "./use-layout-editor";
+export type { UseLayoutEditorResult, InteractionState } from "./use-layout-editor";
+
+export { useCardDragV2 } from "./use-card-drag-v2";
+export type { UseCardDragV2Result, DragStateV2 } from "./use-card-drag-v2";
+
+export { useCardResizeV2 } from "./use-card-resize-v2";
+export type { UseCardResizeV2Result, ResizeStateV2 } from "./use-card-resize-v2";
+
+export { useCardKeyboardV2 } from "./use-card-keyboard-v2";
+export type { UseCardKeyboardV2Result, CardFocusV2 } from "./use-card-keyboard-v2";

@@ -148,3 +148,26 @@ export function isResizeDirectionEnabled(kind: LayoutBlockKind, direction: Resiz
 export function getRegisteredBlockKinds(): LayoutBlockKind[] {
   return Array.from(registry.keys());
 }
+
+/**
+ * Gets the resize constraints for a block type in the new solver format.
+ * This is used by the V2 layout system.
+ */
+export function getBlockConstraintsV2(kind: LayoutBlockKind): import("@/lib/layout/solver/types").BlockConstraints {
+  const config = getBlockConfig(kind);
+  const { constraints, resizeHandles } = config;
+
+  // Convert resize handles to allowed directions (excluding diagonals for solver)
+  const allowedResizeDirections = resizeHandles.filter(
+    (h): h is import("@/lib/layout/solver/types").ResizeDirection =>
+      h === "north" || h === "south" || h === "east" || h === "west"
+  );
+
+  return {
+    minW: constraints.minColSpan,
+    minH: constraints.minRowSpan,
+    maxW: constraints.maxColSpan < Infinity ? constraints.maxColSpan : undefined,
+    maxH: constraints.maxRowSpan < Infinity ? constraints.maxRowSpan : undefined,
+    allowedResizeDirections,
+  };
+}
