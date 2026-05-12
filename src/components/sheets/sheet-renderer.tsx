@@ -9,6 +9,7 @@ import { getRenderableBlocks, type CheatSheetItem, type YamlCheatSheetWithMeta }
 import { buildBlockAnchorId } from "@/lib/anchor-navigation";
 import { migrateBlockLayouts, toOldBlockLayouts } from "@/lib/layout/migration";
 import { LayoutSnapshotProvider } from "@/lib/layout/layout-snapshot-context";
+import { DebugRecorderButton, createDebugIdMap } from "@/components/debug";
 import type { LayoutBlock, MoveIntent, ResizeIntent } from "@/lib/layout/solver/types";
 import {
   useLayoutPersistence,
@@ -136,6 +137,12 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     [editor.currentBlocks]
   );
 
+  // Build debug ID map based on committed layout (stable order)
+  const debugIdMap = useMemo(
+    () => createDebugIdMap(editor.committedBlocks),
+    [editor.committedBlocks]
+  );
+
   // Anchor target sync effect
   useEffect(() => {
     function syncAnchorTargetState() {
@@ -228,6 +235,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           const isKeyboardFocused = Boolean(focusedCard && focusedCard.blockId === block.id);
           const isDimmed = Boolean(dragState || resizeState || focusedCard) && !isDragging && !isResizing && !isKeyboardFocused;
 
+          // Get debug ID for this block
+          const debugId = debugIdMap.get(block.id) ?? "?";
+
           return (
             <BlockRenderer
               key={block.id}
@@ -247,7 +257,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
               onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
               activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
-              layoutLabel={`${colStart},${rowStart} · ${colSpan}x${rowSpan}`}
+              layoutLabel={`[${debugId}] ${colStart},${rowStart} · ${colSpan}x${rowSpan}`}
             >
               {block.kind === "card" ? (
                 <div className={cheatsheetStyles.itemList}>
@@ -260,6 +270,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
+      <DebugRecorderButton page={`cheatsheets/${sheetSlug}`} debugIdMap={debugIdMap} />
     </LayoutSnapshotProvider>
   );
 }

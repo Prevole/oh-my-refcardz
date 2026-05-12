@@ -93,6 +93,8 @@ function solveMove(
       layout: blocks,
       accepted: false,
       blockedReason: `Block ${intent.blockId} not found`,
+      pushedIds: new Set(),
+      shrunkIds: new Set(),
     };
   }
 
@@ -116,10 +118,11 @@ function solveMove(
   // Update blocks with the moved block
   let result = replaceBlock(blocks, movedBlock);
 
-  // Push colliding blocks
-  const pushResult = pushBlocksForMove(movedBlock, result, {
+  // Push colliding blocks in the direction of movement
+  const pushResult = pushBlocksForMove(movedBlock, block.position, result, {
     gridColumns,
     constraints,
+    allowShrink: intent.allowShrink ?? true,
   });
 
   if (!pushResult.success) {
@@ -128,6 +131,8 @@ function solveMove(
       layout: blocks, // Return original
       accepted: false,
       blockedReason: pushResult.blockedReason,
+      pushedIds: pushResult.pushedIds,
+      shrunkIds: pushResult.shrunkIds,
     };
   }
 
@@ -140,6 +145,8 @@ function solveMove(
   return {
     layout: result,
     accepted: true,
+    pushedIds: pushResult.pushedIds,
+    shrunkIds: pushResult.shrunkIds,
   };
 }
 
@@ -157,6 +164,8 @@ function solveResize(
   options: SolverOptions
 ): LayoutCandidate {
   const { gridColumns, constraints } = options;
+  const pushedIds = new Set<string>();
+  const shrunkIds = new Set<string>();
 
   // Find the block to resize
   const block = getBlockById(blocks, intent.blockId);
@@ -165,6 +174,8 @@ function solveResize(
       layout: blocks,
       accepted: false,
       blockedReason: `Block ${intent.blockId} not found`,
+      pushedIds,
+      shrunkIds,
     };
   }
 
@@ -176,6 +187,8 @@ function solveResize(
       layout: blocks,
       accepted: false,
       blockedReason: `Resize direction ${intent.direction} not allowed for this block`,
+      pushedIds,
+      shrunkIds,
     };
   }
 
@@ -214,10 +227,14 @@ function solveResize(
         layout: blocks,
         accepted: false,
         blockedReason: pushResult.blockedReason,
+        pushedIds: pushResult.pushedIds,
+        shrunkIds: pushResult.shrunkIds,
       };
     }
 
     result = pushResult.blocks;
+    pushResult.pushedIds.forEach(id => pushedIds.add(id));
+    pushResult.shrunkIds.forEach(id => shrunkIds.add(id));
   }
 
   if (isShrinking && intent.compact) {
@@ -230,7 +247,8 @@ function solveResize(
   return {
     layout: result,
     accepted: true,
-    // Could add partial flag if actualDelta !== intent.delta
+    pushedIds,
+    shrunkIds,
   };
 }
 

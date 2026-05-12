@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LayoutBlock, LayoutIntent, LayoutSnapshot, SolverOptions } from "@/lib/layout/solver/types";
 import { solveLayout } from "@/lib/layout/solver/solve-layout";
 import { createSnapshot } from "@/lib/layout/layout-snapshot-context";
+import { debugRecorder } from "@/lib/debug";
 import { getBlockConstraintsV2 } from "./block-types";
 
 /**
@@ -18,6 +19,10 @@ export type InteractionState = {
   startLayout: LayoutBlock[];
   /** Current candidate layout from the solver */
   candidateLayout: LayoutBlock[];
+  /** Last accepted candidate layout (used when solver blocks) */
+  lastAcceptedLayout: LayoutBlock[];
+  /** Whether the current position is blocked */
+  isBlocked: boolean;
 };
 
 /**
@@ -45,6 +50,12 @@ export type UseLayoutEditorResult = {
    * Whether an interaction is in progress.
    */
   isInteracting: boolean;
+
+  /**
+   * Whether the current intent is blocked.
+   * When true, the UI should indicate that further movement is not possible.
+   */
+  isBlocked: boolean;
 
   /**
    * The current interaction state, if any.
@@ -165,11 +176,20 @@ export function useLayoutEditor({
   // Start a new interaction
   const startInteraction = useCallback(
     (type: InteractionState["type"], blockId: string) => {
+      // Record interaction start
+      debugRecorder.recordInteractionStart({
+        interactionType: type,
+        blockId,
+        startLayout: committedBlocks,
+      });
+
       setInteraction({
         type,
         blockId,
         startLayout: committedBlocks,
         candidateLayout: committedBlocks,
+        lastAcceptedLayout: committedBlocks,
+        isBlocked: false,
       });
     },
     [committedBlocks]
@@ -185,28 +205,66 @@ export function useLayoutEditor({
           blockId: intent.blockId,
           startLayout: committedBlocks,
           candidateLayout: committedBlocks,
+          lastAcceptedLayout: committedBlocks,
+          isBlocked: false,
         };
 
         // Solve from start layout
         const candidate = solveLayout(newInteraction.startLayout, intent, solverOptions);
 
-        // For keyboard, we commit immediately
-        setCommittedBlocks(candidate.layout);
-        onCommitRef.current?.(candidate.layout);
+        // Record the intent for debugging
+        debugRecorder.recordIntent({
+          intent,
+          startLayout: newInteraction.startLayout,
+          resultLayout: candidate.layout,
+          accepted: candidate.accepted,
+          pushedIds: [...candidate.pushedIds],
+          shrunkIds: [...candidate.shrunkIds],
+        });
 
-        return candidate.layout;
+        // For keyboard, we commit immediately (only if accepted)
+        if (candidate.accepted) {
+          setCommittedBlocks(candidate.layout);
+          onCommitRef.current?.(candidate.layout);
+        }
+        // If blocked, don't change anything
+
+        return candidate.accepted ? candidate.layout : committedBlocks;
       }
 
       // Solve from start layout (not from current candidate)
       // This ensures deterministic and reversible behavior
       const candidate = solveLayout(interaction.startLayout, intent, solverOptions);
 
-      setInteraction({
-        ...interaction,
-        candidateLayout: candidate.layout,
+      // Record the intent for debugging
+      debugRecorder.recordIntent({
+        intent,
+        startLayout: interaction.startLayout,
+        resultLayout: candidate.layout,
+        accepted: candidate.accepted,
+        pushedIds: [...candidate.pushedIds],
+        shrunkIds: [...candidate.shrunkIds],
       });
 
-      return candidate.layout;
+      if (candidate.accepted) {
+        // Intent was accepted - update both candidate and lastAccepted
+        setInteraction({
+          ...interaction,
+          candidateLayout: candidate.layout,
+          lastAcceptedLayout: candidate.layout,
+          isBlocked: false,
+        });
+        return candidate.layout;
+      } else {
+        // Intent was blocked - keep the last accepted layout
+        // This makes the UI "freeze" at the last valid position
+        setInteraction({
+          ...interaction,
+          candidateLayout: interaction.lastAcceptedLayout,
+          isBlocked: true,
+        });
+        return interaction.lastAcceptedLayout;
+      }
     },
     [committedBlocks, interaction, solverOptions]
   );
@@ -215,15 +273,32 @@ export function useLayoutEditor({
   const commitInteraction = useCallback(() => {
     if (!interaction) return;
 
-    setCommittedBlocks(interaction.candidateLayout);
+    // Record interaction end
+    debugRecorder.recordInteractionEnd({
+      interactionType: interaction.type,
+      blockId: interaction.blockId,
+      outcome: "commit",
+      finalLayout: interaction.lastAcceptedLayout,
+    });
+
+    // Always commit the last accepted layout (not the blocked candidate)
+    setCommittedBlocks(interaction.lastAcceptedLayout);
     setInteraction(null);
-    onCommitRef.current?.(interaction.candidateLayout);
+    onCommitRef.current?.(interaction.lastAcceptedLayout);
   }, [interaction]);
 
   // Cancel the current interaction
   const cancelInteraction = useCallback(() => {
+    if (interaction) {
+      debugRecorder.recordInteractionEnd({
+        interactionType: interaction.type,
+        blockId: interaction.blockId,
+        outcome: "cancel",
+        finalLayout: interaction.startLayout,
+      });
+    }
     setInteraction(null);
-  }, []);
+  }, [interaction]);
 
   // Update committed layout directly
   const setCommittedLayout = useCallback((blocks: LayoutBlock[]) => {
@@ -236,6 +311,7 @@ export function useLayoutEditor({
     currentBlocks,
     committedBlocks,
     isInteracting: interaction !== null,
+    isBlocked: interaction?.isBlocked ?? false,
     interaction,
     startInteraction,
     applyIntent,

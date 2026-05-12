@@ -102,7 +102,7 @@ export function useCardDragV2({
   // Refs for internal tracking that don't need to trigger re-renders
   const dragStateRef = useRef<DragStateV2 | null>(null);
   const autoScrollFrameRef = useRef<number | null>(null);
-  const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const lastPointerRef = useRef<{ x: number; y: number; altKey: boolean }>({ x: 0, y: 0, altKey: false });
   const callbacksRef = useRef({ onDragStart, onDragMove, onDragEnd, onDragCancel });
 
   // Keep callbacks ref up to date
@@ -119,7 +119,7 @@ export function useCardDragV2({
   useEffect(() => {
     if (!dragState) return;
 
-    function updateDragPosition(clientX: number, clientY: number) {
+    function updateDragPosition(clientX: number, clientY: number, altKey: boolean) {
       const active = dragStateRef.current;
       if (!active) return;
 
@@ -150,6 +150,8 @@ export function useCardDragV2({
           blockId: active.blockId,
           x: coords.x,
           y: coords.y,
+          // Alt+Drag disables shrinking (blocks are only pushed/wrapped)
+          allowShrink: !altKey,
         };
         callbacksRef.current.onDragMove?.(intent);
       }
@@ -159,14 +161,15 @@ export function useCardDragV2({
       const scrollSpeed = calculateAutoScrollSpeed(lastPointerRef.current.y, window.innerHeight);
       if (scrollSpeed !== 0) {
         window.scrollBy(0, scrollSpeed);
-        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y);
+        // Use last known altKey state for auto-scroll updates
+        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y, lastPointerRef.current.altKey);
       }
       autoScrollFrameRef.current = requestAnimationFrame(runAutoScroll);
     }
 
     function handlePointerMove(event: PointerEvent) {
-      lastPointerRef.current = { x: event.clientX, y: event.clientY };
-      updateDragPosition(event.clientX, event.clientY);
+      lastPointerRef.current = { x: event.clientX, y: event.clientY, altKey: event.altKey };
+      updateDragPosition(event.clientX, event.clientY, event.altKey);
     }
 
     function handlePointerUp() {
@@ -187,6 +190,19 @@ export function useCardDragV2({
         setDragState(null);
         callbacksRef.current.onDragCancel?.();
       }
+      // Update altKey state when Alt is pressed/released during drag
+      if (event.key === "Alt") {
+        lastPointerRef.current = { ...lastPointerRef.current, altKey: true };
+        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y, true);
+      }
+    }
+
+    function handleKeyUp(event: KeyboardEvent) {
+      // Update altKey state when Alt is released
+      if (event.key === "Alt") {
+        lastPointerRef.current = { ...lastPointerRef.current, altKey: false };
+        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y, false);
+      }
     }
 
     autoScrollFrameRef.current = requestAnimationFrame(runAutoScroll);
@@ -194,6 +210,7 @@ export function useCardDragV2({
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
     return () => {
       if (autoScrollFrameRef.current !== null) {
@@ -203,6 +220,7 @@ export function useCardDragV2({
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, [dragState]);
 
@@ -243,7 +261,7 @@ export function useCardDragV2({
       };
 
       setDragState(state);
-      lastPointerRef.current = { x: event.clientX, y: event.clientY };
+      lastPointerRef.current = { x: event.clientX, y: event.clientY, altKey: event.altKey };
       callbacksRef.current.onDragStart?.(blockId);
     },
     [blocks, gridMetrics]

@@ -95,6 +95,12 @@ export type MoveIntent = {
   x: number;
   /** Target y position (0-indexed) */
   y: number;
+  /** 
+   * Allow shrinking colliding blocks to make room.
+   * When false (Alt+Drag mode), blocks will only be pushed or wrapped, never shrunk.
+   * Defaults to true if not specified.
+   */
+  allowShrink?: boolean;
 };
 
 /**
@@ -138,6 +144,10 @@ export type LayoutCandidate = {
   accepted: boolean;
   /** Reason why the intent was blocked or partially applied */
   blockedReason?: string;
+  /** IDs of blocks that were pushed during resolution */
+  pushedIds: Set<string>;
+  /** IDs of blocks that were shrunk during resolution */
+  shrunkIds: Set<string>;
 };
 
 // -----------------------------------------------------------------------------
