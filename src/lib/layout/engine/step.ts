@@ -6,7 +6,7 @@
 
 import { computeOperationChain } from "./chain";
 import { computeCompactTranslations } from "./compact";
-import { intersects, isContiguous, isWithinGridX, isWithinGridY, translate } from "./geometry";
+import { intersects, isWithinGridX, isWithinGridY, translate } from "./geometry";
 import type { SessionMemory } from "./session";
 import type {
   BlockConstraints,
@@ -509,9 +509,11 @@ function resolveChainPushStep(
   // Pre-compute their target positions now using the post-push primary position.
   // For vertical axis, members wrap on the opposite side of the primary (axis wrap).
   const wrapTargets = new Map<string, GridPosition>();
-  // Wrappable ids in placement order (farthest-first). Used to resolve residual
-  // collisions deterministically after the main BFS pass.
-  const horizontalWrapOrder: string[] = [];
+  // Wrappable ids in placement order. Used to resolve residual collisions
+  // deterministically after the main BFS pass. Populated for horizontal wraps
+  // up-front (farthest-first per `computeSouthFallbackPlacements`) and for
+  // vertical wraps incrementally as they are applied below (BFS order).
+  const wrapResidualOrder: string[] = [];
   if (direction === "east" || direction === "west") {
     const wrappableInputs: WrappableInput[] = [];
     for (const [id, action] of actions) {
@@ -530,7 +532,7 @@ function resolveChainPushStep(
     });
     for (const p of placements) {
       wrapTargets.set(p.id, p.target);
-      horizontalWrapOrder.push(p.id);
+      wrapResidualOrder.push(p.id);
     }
   }
 
@@ -647,6 +649,7 @@ function resolveChainPushStep(
         }
         wrapTarget = { x: wrapX, y: wrapY, w: restored.w, h: restored.h };
         cause = { kind: "wrap-axis", axis: "y" };
+        wrapResidualOrder.push(id);
       } else {
         // direction === "east" || "west"
         const precomputed = wrapTargets.get(id);
@@ -674,102 +677,136 @@ function resolveChainPushStep(
     previousId = id;
   }
 
-  // Phase 3.6.6b — residual collisions for south-fallback wraps.
+  // Phase 3.6.6b — residual collisions for wrap placements.
   //
-  // After all wrappables have landed on their precomputed targets, some may
-  // overlap with non-chain, non-wrappable blocks already sitting in the south
-  // region. Resolve these collisions by pushing the offending blocks (and their
-  // south-contiguous chain) further south.
+  // After all wrappables have landed on their precomputed targets (south
+  // fallback for horizontal axis, opposite-side baseline for vertical axis),
+  // some may overlap with non-chain, non-wrappable blocks already sitting in
+  // the destination region. Resolve these collisions by pushing each colliding
+  // block south by the minimum dy required to clear the wrappable, then
+  // propagating that push transitively to any block whose original position
+  // overlaps the pusher's new position.
   //
-  // Process wrappables in `horizontalWrapOrder` (farthest-first) so that each
-  // wrappable stabilizes the local state before the next one runs. This is
-  // a no-op for vertical-axis moves and for horizontal moves without wraps.
-  for (const wrappableId of horizontalWrapOrder) {
+  // Each block accumulates its own dy independently of the rest of the group;
+  // a block is only pushed as far as strictly required to resolve its own
+  // collisions. This avoids the "uniform group shift" anti-pattern where a
+  // block far from any obstruction would inherit a large dy from a sibling.
+  //
+  // Process wrappables in `wrapResidualOrder` so that each wrappable stabilizes
+  // the local state before the next one runs.
+  const immovable = new Set<string>();
+  for (const id of actions.keys()) immovable.add(id);
+  for (const id of wrapResidualOrder) immovable.add(id);
+
+  // Per-block accumulated south displacement applied during this residual pass.
+  // Defaults to 0; a block is "pushed" once dy > 0.
+  const residualDy = new Map<string, number>();
+  // Tracks which wrappable initially seeded each pushed block into the cascade.
+  // Used as `sourceId` on the emitted `block.move` events for debugging clarity.
+  const residualSource = new Map<string, string>();
+  const projected = (b: LayoutBlock): GridPosition => ({
+    ...b.position,
+    y: b.position.y + (residualDy.get(b.id) ?? 0),
+  });
+
+  for (const wrappableId of wrapResidualOrder) {
     const wrappable = ctx.blocks.find((b) => b.id === wrappableId);
     /* c8 ignore next -- defensive: wrappable always exists by construction */
     if (!wrappable) continue;
 
-    const pushed = new Set<string>();
-    pushed.add(wrappable.id);
-    for (const id of actions.keys()) pushed.add(id); // chain members are immovable here
-
-    // Find the south-contiguous chain of blocks colliding with the wrappable.
-    // We compute it on the fly, additively including blocks discovered through
-    // transitive south contiguity.
-    const queue: LayoutBlock[] = [];
-    const visited = new Set<string>();
-    for (const other of ctx.blocks) {
-      if (pushed.has(other.id)) continue;
-      if (intersects(wrappable.position, other.position)) {
-        queue.push(other);
-        visited.add(other.id);
-      }
+    // The "obstacles" against which a pushed block must clear: this wrappable
+    // plus any other wrappable already at its final placement. Pushed blocks
+    // must end up south of every obstacle they overlap on the x-axis.
+    const obstacles: LayoutBlock[] = [];
+    obstacles.push(wrappable);
+    for (const otherId of wrapResidualOrder) {
+      if (otherId === wrappableId) continue;
+      const o = ctx.blocks.find((b) => b.id === otherId);
+      /* c8 ignore next -- defensive: wrap order ids come from ctx.blocks */
+      if (!o) continue;
+      obstacles.push(o);
     }
 
-    // BFS south-contiguity to gather the residual push group.
+    const clearObstacles = (block: LayoutBlock): boolean => {
+      // Repeatedly raise residualDy for `block` until its projected position
+      // no longer overlaps any obstacle. Returns true if dy was increased.
+      let changed = false;
+      let safety = obstacles.length + 1;
+      while (safety-- > 0) {
+        const proj = projected(block);
+        let hit: LayoutBlock | null = null;
+        for (const obs of obstacles) {
+          if (intersects(proj, obs.position)) {
+            hit = obs;
+            break;
+          }
+        }
+        if (!hit) break;
+        const requiredDy = hit.position.y + hit.position.h - proj.y;
+        /* c8 ignore next -- defensive: hit implies overlap → requiredDy > 0 */
+        if (requiredDy <= 0) break;
+        residualDy.set(block.id, (residualDy.get(block.id) ?? 0) + requiredDy);
+        if (!residualSource.has(block.id)) residualSource.set(block.id, wrappableId);
+        changed = true;
+      }
+      return changed;
+    };
+
+    // Seed the BFS with blocks directly colliding with the wrappable.
+    const queue: LayoutBlock[] = [];
+    for (const other of ctx.blocks) {
+      if (immovable.has(other.id)) continue;
+      if (!intersects(wrappable.position, projected(other))) continue;
+      if (clearObstacles(other)) queue.push(other);
+    }
+
+    // BFS: a block that has just been pushed may now collide with the projected
+    // position of another block or with an obstacle (wrappable placement). We
+    // propagate the push transitively until no new collisions remain.
     let cursor = 0;
     while (cursor < queue.length) {
-      const current = queue[cursor++];
+      const pusher = queue[cursor++];
+      const pusherProjected = projected(pusher);
       for (const other of ctx.blocks) {
-        if (visited.has(other.id) || pushed.has(other.id)) continue;
-        if (isContiguous(current.position, other.position, "south")) {
-          visited.add(other.id);
-          queue.push(other);
+        if (other.id === pusher.id) continue;
+        if (immovable.has(other.id)) continue;
+        const otherProjected = projected(other);
+        if (!intersects(pusherProjected, otherProjected)) continue;
+        const requiredDy = pusherProjected.y + pusherProjected.h - otherProjected.y;
+        if (requiredDy <= 0) continue;
+        const currentDy = residualDy.get(other.id) ?? 0;
+        residualDy.set(other.id, currentDy + requiredDy);
+        if (!residualSource.has(other.id)) {
+          residualSource.set(other.id, residualSource.get(pusher.id) ?? wrappableId);
         }
+        // After being pushed by `pusher`, `other` may now hit an obstacle.
+        clearObstacles(other);
+        queue.push(other);
       }
     }
+  }
 
-    if (queue.length === 0) continue;
-
-    // Compute the dy required: the group must shift south so that no member
-    // overlaps with the wrappable or with any already-placed wrappable that
-    // shares an x-overlap with the group.
-    //
-    // Each block in the group needs an individual minimum dy to clear its own
-    // overlaps. The whole group then shifts by the maximum of those minima
-    // (preserves group internal structure).
-    let dy = 0;
-    const otherWrappables = ctx.blocks.filter(
-      (b) => b.id !== wrappableId && horizontalWrapOrder.includes(b.id)
-    );
-    for (const member of queue) {
-      // Direct overlap with the wrappable being processed.
-      if (intersects(member.position, wrappable.position)) {
-        dy = Math.max(dy, wrappable.position.y + wrappable.position.h - member.position.y);
-      }
-      // After shifting by current dy, also check overlap with other placed
-      // wrappables (x-overlap is the only relevant axis since dy moves south).
-      for (const w of otherWrappables) {
-        const shifted: GridPosition = {
-          x: member.position.x,
-          y: member.position.y + dy,
-          w: member.position.w,
-          h: member.position.h,
-        };
-        if (intersects(shifted, w.position)) {
-          dy = Math.max(dy, w.position.y + w.position.h - member.position.y);
-        }
-      }
-    }
-
-    /* c8 ignore next -- defensive: queue non-empty implies at least one collision */
+  // Apply the accumulated displacements and emit events.
+  for (const [id, dy] of residualDy) {
+    /* c8 ignore next -- defensive: dy=0 entries are never inserted into the map */
     if (dy <= 0) continue;
-
-    // Apply the shift and emit events.
-    for (const member of queue) {
-      const from = { ...member.position };
-      member.position = { ...member.position, y: member.position.y + dy };
-      ctx.emit({
-        type: "block.move",
-        opId: ctx.opId,
-        stepIndex: ctx.stepIndex,
-        blockId: member.id,
-        from,
-        to: { ...member.position },
-        cause: { kind: "push", sourceId: wrappableId },
-      });
-      affectedMoved.add(member.id);
-    }
+    const member = ctx.blocks.find((b) => b.id === id);
+    /* c8 ignore next -- defensive: ids come from ctx.blocks iteration */
+    if (!member) continue;
+    const from = { ...member.position };
+    member.position = { ...member.position, y: member.position.y + dy };
+    /* c8 ignore next -- defensive: residualSource is populated for every id in residualDy */
+    const sourceId = residualSource.get(id) ?? primary.id;
+    ctx.emit({
+      type: "block.move",
+      opId: ctx.opId,
+      stepIndex: ctx.stepIndex,
+      blockId: member.id,
+      from,
+      to: { ...member.position },
+      cause: { kind: "push", sourceId },
+    });
+    affectedMoved.add(member.id);
   }
 
   return {
