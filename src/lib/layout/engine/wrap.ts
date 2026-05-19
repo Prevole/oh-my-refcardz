@@ -17,6 +17,12 @@ export type WrappableInput = {
   current: GridPosition;
   /** Initial size at the start of the session — used for the wrap target size. */
   restoredSize: { w: number; h: number };
+  /**
+   * Initial X column at the start of the session. Used as the wrap target X
+   * so that a block whose width is restored does not overflow the grid right
+   * edge (which would happen if we reused `current.x` after a shrink chain).
+   */
+  initialX: number;
 };
 
 export type SouthFallbackInput = {
@@ -39,12 +45,14 @@ export type SouthFallbackPlacement = {
  *      every wrappable by `(0, dy)` where `dy = primary.y - that.y`. X is not
  *      modified.
  *   2. Compute euclidean distance from each normalized member's top-left to the
- *      primary's top-left.
+ *      primary's top-left. Distance uses the block's **initial-session X** (the
+ *      column it will land on), not its current shrunk X.
  *   3. Sort descending (farthest first). Ties broken by id ascending.
  *   4. Compute the group translation `dy2` so that the topmost final y equals
  *      `primary.y + primary.h`. The group's internal y-structure is preserved.
- *   5. Return placements with `target = (original x, normalized y + dy2,
- *      restoredSize.w, restoredSize.h)`.
+ *   5. Return placements with `target = (initialX, normalized y + dy2,
+ *      restoredSize.w, restoredSize.h)`. Using `initialX` (not `current.x`)
+ *      prevents grid overflow when the block's width is restored after a shrink.
  */
 export function computeSouthFallbackPlacements(input: SouthFallbackInput): SouthFallbackPlacement[] {
   const { primary, wrappables } = input;
@@ -65,7 +73,7 @@ export function computeSouthFallbackPlacements(input: SouthFallbackInput): South
 
   type Normalized = {
     id: string;
-    originalX: number;
+    initialX: number;
     normalizedY: number;
     restoredSize: { w: number; h: number };
     distance: number;
@@ -75,11 +83,11 @@ export function computeSouthFallbackPlacements(input: SouthFallbackInput): South
     const normalizedY = w.current.y + dy;
     return {
       id: w.id,
-      originalX: w.current.x,
+      initialX: w.initialX,
       normalizedY,
       restoredSize: w.restoredSize,
       distance: euclideanDistance(
-        { x: w.current.x, y: normalizedY },
+        { x: w.initialX, y: normalizedY },
         { x: primary.x, y: primary.y }
       ),
     };
@@ -100,7 +108,7 @@ export function computeSouthFallbackPlacements(input: SouthFallbackInput): South
   return normalized.map((n, i) => ({
     id: n.id,
     target: {
-      x: n.originalX,
+      x: n.initialX,
       y: n.normalizedY + dy2,
       w: n.restoredSize.w,
       h: n.restoredSize.h,

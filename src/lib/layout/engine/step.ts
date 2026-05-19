@@ -383,6 +383,13 @@ function resolveChainPushStep(
   primaryMutation: PrimaryMutation
 ): StepResult {
   const { dx, dy } = deltaForDirection(direction);
+  // Snapshot of every block's position at the START of this step, before any
+  // chain mutation is applied. Used downstream to compute south-contiguity
+  // relations that must be preserved through the residual cascade.
+  const initialPositions = new Map<string, GridPosition>();
+  for (const b of ctx.blocks) {
+    initialPositions.set(b.id, { ...b.position });
+  }
   const chainIds = computeOperationChain(primary.id, direction, ctx.blocks);
   const orderedChain = Array.from(chainIds);
   const chainMembers = orderedChain
@@ -519,10 +526,12 @@ function resolveChainPushStep(
     for (const [id, action] of actions) {
       if (action.kind === "wrap") {
         const member = ctx.blocks.find((b) => b.id === id)!;
+        const initialX = ctx.session.getInitialPosition(id)?.x ?? member.position.x;
         wrappableInputs.push({
           id,
           current: { ...member.position },
           restoredSize: action.restoredSize,
+          initialX,
         });
       }
     }
@@ -709,6 +718,30 @@ function resolveChainPushStep(
     y: b.position.y + (residualDy.get(b.id) ?? 0),
   });
 
+  // Precompute south-contiguity from the INITIAL layout (before chain mutation).
+  // A block Y is south-contiguous to X iff (using initial positions):
+  //   - initial[X].y + initial[X].h === initial[Y].y
+  //   - x-overlap between initial[X] and initial[Y]
+  // This relation is preserved through the cascade: when X is pushed by dy_X,
+  // every Y south-contiguous to X is pushed by at least dy_X, transitively.
+  // This catches the "jump over" case where a large push by X leaves Y at its
+  // initial position without any direct collision but breaks the visual layout.
+  const initialSouthContigs = new Map<string, string[]>();
+  for (const x of ctx.blocks) {
+    const xi = initialPositions.get(x.id)!;
+    const list: string[] = [];
+    for (const y of ctx.blocks) {
+      if (y.id === x.id) continue;
+      const yi = initialPositions.get(y.id)!;
+      const xRight = xi.x + xi.w;
+      const yRight = yi.x + yi.w;
+      const xOverlap = xi.x < yRight && yi.x < xRight;
+      if (!xOverlap) continue;
+      if (xi.y + xi.h === yi.y) list.push(y.id);
+    }
+    initialSouthContigs.set(x.id, list);
+  }
+
   for (const wrappableId of wrapResidualOrder) {
     const wrappable = ctx.blocks.find((b) => b.id === wrappableId);
     /* c8 ignore next -- defensive: wrappable always exists by construction */
@@ -752,6 +785,22 @@ function resolveChainPushStep(
       return changed;
     };
 
+    // Increase the dy of `block` to at least `minDy`, recording the source if
+    // this is the first push. Returns true if dy was raised.
+    const ensureMinDy = (
+      block: LayoutBlock,
+      minDy: number,
+      sourceId: string | undefined
+    ): boolean => {
+      const current = residualDy.get(block.id) ?? 0;
+      if (minDy <= current) return false;
+      residualDy.set(block.id, minDy);
+      if (!residualSource.has(block.id) && sourceId !== undefined) {
+        residualSource.set(block.id, sourceId);
+      }
+      return true;
+    };
+
     // Seed the BFS with blocks directly colliding with the wrappable.
     const queue: LayoutBlock[] = [];
     for (const other of ctx.blocks) {
@@ -763,10 +812,21 @@ function resolveChainPushStep(
     // BFS: a block that has just been pushed may now collide with the projected
     // position of another block or with an obstacle (wrappable placement). We
     // propagate the push transitively until no new collisions remain.
+    //
+    // Two propagation rules:
+    //   (a) Induced collision: if pusherProjected overlaps otherProjected, push
+    //       `other` enough to clear the pusher.
+    //   (b) Initial south-contiguity preserved: every block initially
+    //       south-contiguous to the pusher must have dy >= pusher's dy, even if
+    //       no induced collision exists (the pusher may have "jumped over" it).
     let cursor = 0;
     while (cursor < queue.length) {
       const pusher = queue[cursor++];
+      const pusherDy = residualDy.get(pusher.id) ?? 0;
       const pusherProjected = projected(pusher);
+      const pusherSource = residualSource.get(pusher.id) ?? wrappableId;
+
+      // Rule (a): induced collision with any non-immovable block.
       for (const other of ctx.blocks) {
         if (other.id === pusher.id) continue;
         if (immovable.has(other.id)) continue;
@@ -777,11 +837,24 @@ function resolveChainPushStep(
         const currentDy = residualDy.get(other.id) ?? 0;
         residualDy.set(other.id, currentDy + requiredDy);
         if (!residualSource.has(other.id)) {
-          residualSource.set(other.id, residualSource.get(pusher.id) ?? wrappableId);
+          residualSource.set(other.id, pusherSource);
         }
-        // After being pushed by `pusher`, `other` may now hit an obstacle.
         clearObstacles(other);
         queue.push(other);
+      }
+
+      // Rule (b): initial south-contiguity. Every block initially south-
+      // contiguous to `pusher` must be pushed by at least `pusherDy`.
+      const contigs = initialSouthContigs.get(pusher.id) ?? [];
+      for (const contigId of contigs) {
+        if (immovable.has(contigId)) continue;
+        const other = ctx.blocks.find((b) => b.id === contigId);
+        /* c8 ignore next -- defensive: contigs come from ctx.blocks iteration */
+        if (!other) continue;
+        if (ensureMinDy(other, pusherDy, pusherSource)) {
+          clearObstacles(other);
+          queue.push(other);
+        }
       }
     }
   }

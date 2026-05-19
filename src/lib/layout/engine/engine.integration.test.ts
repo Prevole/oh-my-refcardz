@@ -139,4 +139,197 @@ describe("integration — north move with vertical wrap cascade", () => {
     expect(byId("interaction")).toEqual({ x: 18, y: 14, w: 18, h: 11 }); // dy=1
     expect(byId("rename")).toEqual({ x: 0, y: 36, w: 18, h: 8 }); // dy=12 (cascade from lifecycle)
   });
+
+  // ---------------------------------------------------------------------------
+  // Sub-scenario: a pushed block must drag its south-contiguous neighbor even
+  // when the push is large enough to "jump over" the neighbor (no resulting
+  // collision). The south-contiguity relation from the INITIAL layout is
+  // preserved through the cascade.
+  //
+  // Source: debug session .debug-sessions/1779181079407-1grdaqa.json
+  //   - After the bulk of the residual pass, `images` (F, a heading at y=32)
+  //     is pushed down to y=44 (dy=12).
+  //   - `image-inspection` (K, at y=34) was initially south-contiguous to F
+  //     (F.y+F.h=34 = K.y, x-overlap on the right column).
+  //   - F-new at y=44 sits BELOW K-initial at y=34..42 — no induced collision.
+  //   - Bug: K was not pushed because collision-only cascade misses this case.
+  //   - Expected: K follows F with dy >= dy_F = 12. K-new at y=46..54.
+  //   - Then K-new collides with `inspection` heading at y=51 → inspection
+  //     must be pushed in turn.
+  // ---------------------------------------------------------------------------
+  it("drags a south-contiguous neighbor even when the push jumps over it", () => {
+    // Smaller synthetic reproduction focused on the F→K dragging.
+    //
+    // Layout:
+    //
+    //         x=0          x=18         x=36
+    //  y=0   ┌──────────  heading-A  ────────┐  (full width 36, h=2)
+    //  y=2   ├────────────┬─── primary ──────┤  primary (18, 2, 18, 4)
+    //  y=2   │            │                  │
+    //  y=6   │  block-B   ├──────────────────┤  block-B  (0, 2, 18, 10)
+    //        │  (h=10)    │                  │
+    //  y=12  ├────────────┴──────────────────┤  heading-F (0, 12, 36, 1)
+    //  y=13  ├──────  block-K  ──────────────┤  block-K (18, 13, 18, 4)
+    //        │                               │
+    //  y=17  └────────────────────────────────┘
+    //
+    // Move primary north by 1:
+    //   - chain {primary, heading-A}: A wraps to (0, primary.newY + primary.h)
+    //     = (0, 1+4, 36, 2) = (0, 5, 36, 2).
+    //   - A overlaps block-B (y=[5,7) ⊂ [2,12)) → B pushed by dy = 5+2-2 = 5
+    //     → B-new (0, 7, 18, 10), y=[7,17).
+    //   - A does not overlap heading-F (initial y=12) but B-new (y=[7,17))
+    //     overlaps F-initial (y=[12,13)) → F pushed by dy = 7+10-12 = 5
+    //     → F-new (0, 17, 36, 1), y=[17,18).
+    //   - F-new at y=[17,18) does NOT overlap K-initial (y=[13,17)) — F has
+    //     "jumped over" K. But K was initially south-contiguous to F
+    //     (F.y+F.h=13 = K.y, x-overlap [18,36)). K must follow F: dy_K >= dy_F
+    //     = 5. So K-new at (18, 18, 18, 4).
+    //
+    // The bug, before fix: K stays at y=13 because no collision triggers its push.
+    const initial: LayoutBlock[] = [
+      block("heading-A", 0, 0, 36, 2),
+      block("block-B", 0, 2, 18, 10),
+      block("primary", 18, 2, 18, 4),
+      block("heading-F", 0, 12, 36, 1),
+      block("block-K", 18, 13, 18, 4),
+    ];
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "primary",
+      dx: 0,
+      dy: -1,
+    };
+
+    const result = applyOperation(
+      initial,
+      op,
+      makeOptions(initial, {
+        "heading-A": { minH: 2 },
+        "heading-F": { minH: 1 },
+      })
+    );
+
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+
+    // No overlap anywhere.
+    const finalBlocks = result.blocks;
+    for (let i = 0; i < finalBlocks.length; i++) {
+      for (let j = i + 1; j < finalBlocks.length; j++) {
+        const a = finalBlocks[i].position;
+        const b = finalBlocks[j].position;
+        const overlap =
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(
+          overlap,
+          `${finalBlocks[i].id} (${JSON.stringify(a)}) overlaps ${finalBlocks[j].id} (${JSON.stringify(b)})`
+        ).toBe(false);
+      }
+    }
+
+    expect(byId("primary")).toEqual({ x: 18, y: 1, w: 18, h: 4 });
+    expect(byId("heading-A")).toEqual({ x: 0, y: 5, w: 36, h: 2 });
+    expect(byId("block-B")).toEqual({ x: 0, y: 7, w: 18, h: 10 }); // dy=5
+    expect(byId("heading-F")).toEqual({ x: 0, y: 17, w: 36, h: 1 }); // dy=5
+    // The critical assertion: block-K must follow heading-F because it was
+    // south-contiguous in the initial layout, even though F jumped over K's
+    // initial position. dy_K >= dy_F = 5.
+    expect(byId("block-K")).toEqual({ x: 18, y: 18, w: 18, h: 4 }); // dy=5
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Scenario: east drag that shrinks neighbors against the grid right edge until
+// they wrap south. The south-fallback target must place each wrappable on its
+// INITIAL-SESSION X column, not the shrunk X. Using the shrunk X (the column
+// the block occupied just before wrap) overflows the grid when the width is
+// restored.
+//
+// Source: debug session .debug-sessions/1779181774419-txzpcbq.json (cheatsheets/docker)
+//   - User drags `container-lifecycle` east by 14 cells.
+//   - `container-status` (initial x=18, w=18) and `container-interaction`
+//     (initial x=18, w=18) get pushed east, saturate at x=30 w=6 (minW), then
+//     wrap south.
+//   - Before fix: they wrap to (30, …, 18, …) — overflowing 12 cells past x=36.
+//   - After fix: they wrap to (18, …, 18, …) — their initial-session column.
+// -----------------------------------------------------------------------------
+
+describe("integration — east drag wrap south restores initial column", () => {
+  it("places shrunk-then-wrapped blocks on their initial X column, not the shrunk X", () => {
+    // Minimal synthetic reproduction of the docker east-drag bug.
+    //
+    //         x=0           x=18          x=36
+    //  y=0   ┌──── heading (containers, 36x2) ────┐
+    //  y=2   ├─ lifecycle ─┬─── status ───────────┤  status   (18, 2, 18, 11)
+    //  y=2   │             │                      │  lifecycle(0,  2, 18, 22)  primary
+    //  y=13  │             ├─ interaction ────────┤  interaction (18, 13, 18, 16)
+    //  y=24  ├─ rename ────┴──────────────────────┤  rename   (0, 24, 18, 8)
+    //  y=32
+    const initial: LayoutBlock[] = [
+      block("heading", 0, 0, 36, 2),
+      block("lifecycle", 0, 2, 18, 22),
+      block("status", 18, 2, 18, 11),
+      block("interaction", 18, 13, 18, 16),
+      block("rename", 0, 24, 18, 8),
+    ];
+
+    // Drag lifecycle east by 14 cells. status and interaction must wrap south.
+    const op: Operation = {
+      kind: "move",
+      blockId: "lifecycle",
+      dx: 14,
+      dy: 0,
+    };
+
+    // Cards have a minW of 6 (mirrors the real cheatsheet card constraint).
+    // This forces the east-shrink to saturate at w=6 and then triggers wrap south
+    // instead of shrinking all the way down to w=1.
+    const result = applyOperation(
+      initial,
+      op,
+      makeOptions(initial, {
+        status: { minW: 6 },
+        interaction: { minW: 6 },
+      })
+    );
+
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+
+    // No overlap and every block stays within the grid horizontally.
+    const finalBlocks = result.blocks;
+    for (const b of finalBlocks) {
+      expect(
+        b.position.x + b.position.w,
+        `${b.id} overflows grid: x=${b.position.x} w=${b.position.w}`
+      ).toBeLessThanOrEqual(36);
+      expect(b.position.x, `${b.id} has negative x`).toBeGreaterThanOrEqual(0);
+    }
+    for (let i = 0; i < finalBlocks.length; i++) {
+      for (let j = i + 1; j < finalBlocks.length; j++) {
+        const a = finalBlocks[i].position;
+        const b = finalBlocks[j].position;
+        const overlap =
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(
+          overlap,
+          `${finalBlocks[i].id} (${JSON.stringify(a)}) overlaps ${finalBlocks[j].id} (${JSON.stringify(b)})`
+        ).toBe(false);
+      }
+    }
+
+    // Primary lands at x=14 (initial 0 + dx 14), size unchanged.
+    expect(byId("lifecycle")).toEqual({ x: 14, y: 2, w: 18, h: 22 });
+
+    // The critical assertion: wrapped blocks restore size AND initial X column.
+    // Before the fix they ended up at x=30 (the shrunk column) → overflow.
+    expect(byId("status").x).toBe(18);
+    expect(byId("status").w).toBe(18);
+    expect(byId("interaction").x).toBe(18);
+    expect(byId("interaction").w).toBe(18);
+  });
 });

@@ -197,11 +197,11 @@ When the primary moves east/west and the chain saturates, the engine cannot wrap
 
 Determining the order of placement:
 
-1. **Normalize row positions** of wrappable members: translate the wrappable group so the member closest in y to the primary's anchor row aligns with the primary's anchor row. The same `dy` translation is applied uniformly to all wrappable members. **Columns (x) are not modified.**
-2. **Compute euclidean distance** from each normalized member's anchor to the primary's anchor.
+1. **Normalize row positions** of wrappable members: translate the wrappable group so the member closest in y to the primary's anchor row aligns with the primary's anchor row. The same `dy` translation is applied uniformly to all wrappable members. **Columns (x) are not modified at this stage.**
+2. **Compute euclidean distance** from each normalized member's anchor to the primary's anchor, using the member's **initial-session X** for the horizontal coordinate (see step 4 below for the rationale).
 3. **Sort by distance, descending**: farthest first.
 4. **Place each in turn**:
-   - Preserve the member's **original x** (column).
+   - Use the member's **initial-session X** as the target column — that is, the X the block had when the session started, *before* any shrink/move/wrap that occurred during the gesture. Using the current (shrunk) X would push the block past the grid right edge once its width is restored: a block squeezed from `(x=18, w=18)` down to `(x=30, w=6)` against the east edge must wrap back to `x=18`, not stay at `x=30`. The initial column is read from `SessionMemory.getInitialPosition`.
    - Compute new `y` such that the group's relative y-structure is preserved and the whole group lies just below the primary (starting at `primary.y + primary.h`).
    - Restore initial size.
    - Run a recursive resolution on the placement collisions (push/shrink/wrap on the south region).
@@ -209,6 +209,21 @@ Determining the order of placement:
    - Emit `block.wrap` with `cause = { kind: "wrap-fallback-south" }`.
 
 **Note**: this may create holes in the south region. That is accepted; holes resolve naturally when the user moves blocks back.
+
+### Residual cascade after wrap
+
+After every wrappable member has landed on its target (south-fallback for horizontal axis, opposite-side baseline for vertical axis), the destination region may still contain non-chain, non-wrappable blocks that collide with the wrappable's new placement. The **residual cascade** resolves these post-wrap collisions by pushing the offending blocks south.
+
+The cascade follows two propagation rules; both are evaluated in a single BFS that runs until no `dy` changes:
+
+1. **Induced collision.** If a pushed block X (or a wrappable freshly placed) overlaps another block Y at its current projected position, Y is pushed south by the minimum `dy` required to clear X.
+2. **Initial south-contiguity preserved.** If Y was south-contiguous to X in the layout *as it was at the start of the step* (X.y + X.h = Y.y, with x-overlap), then once X is pushed by `dy_X`, Y is pushed by at least `dy_X` — even if X's new position no longer collides with Y. This avoids the "jump over" pathology where a large push by X leaves Y orphaned in place.
+
+Per-block `dy` is accumulated independently; the cascade never applies a uniform group shift. Each block descends only as far as strictly required by the two rules above. The seeded source (wrappable id that first pushed each block) is recorded for event emission.
+
+Each pushed block also runs against the set of placed wrappables as **obstacles**: if a block's projected position overlaps a wrappable's placement, its `dy` is raised to clear that obstacle. This stabilises the multi-wrappable case where wrappables are placed in farthest-first order.
+
+The cascade emits a `block.move` event per pushed block with `cause = { kind: "push", sourceId: <wrappable> }`.
 
 ### Resize specifics
 
