@@ -575,3 +575,208 @@ describe("integration — cascading wrap among chain members", () => {
     expect(byId("A").y).toBeLessThanOrEqual(byId("B").y);
   });
 });
+
+// -----------------------------------------------------------------------------
+// Scenario: shrink absorption to avoid premature wrap.
+//
+// When a chain pushed in some direction has its tail member saturated against
+// the grid edge, the engine should look for the nearest non-saturated member
+// in the chain (between the tail and the primary) and shrink it by 1 unit to
+// absorb the displacement, rather than wrapping the tail member immediately.
+// Only the absorber and members between the primary and the absorber (exclusive)
+// are affected. The tail and any members between the absorber and the tail
+// stay put.
+// -----------------------------------------------------------------------------
+
+describe("integration — shrink absorption before wrap", () => {
+  it("shrinks a mid-chain member instead of wrapping the saturated tail", () => {
+    // Setup matching the docker scenario: E moves north, with C between E and
+    // the heading A. A is at the north edge (y=0) and is already at minH (h=2),
+    // so A is saturated. C has plenty of vertical slack (h=11, minH=1).
+    //
+    //   A = heading at (0, 0, w=36, h=2), minH=2 (saturated)
+    //   C = card at (18, 2, w=18, h=11), minH=1 (not saturated)
+    //   E = card at (18, 13, w=18, h=16) — primary, drag north
+    //
+    // Expected:
+    //   - E moves to (18, 12) (push north by 1)
+    //   - C shrinks by 1 on its south edge (newH=10), top stays at y=2
+    //     → C now (18, 2, w=18, h=10), bottom=12
+    //   - A stays at (0, 0, 36, 2). No wrap.
+    const initial: LayoutBlock[] = [
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 36, h: 2 } },
+      block("C", 18, 2, 18, 11),
+      block("E", 18, 13, 18, 16),
+    ];
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "E",
+      dx: 0,
+      dy: -1,
+    };
+
+    const options = makeOptions(initial, {
+      A: { minH: 2 },
+      C: { minH: 1 },
+      E: { minH: 1 },
+    });
+
+    const result = applyOperation(initial, op, options);
+
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+
+    // E moved north by 1.
+    expect(byId("E")).toEqual({ x: 18, y: 12, w: 18, h: 16 });
+
+    // C absorbed the displacement by shrinking on its south edge.
+    expect(byId("C")).toEqual({ x: 18, y: 2, w: 18, h: 10 });
+
+    // A did NOT wrap — it stays at its initial position and size.
+    expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+  });
+
+  it("absorbs on every branch when the saturated tail spans multiple columns", () => {
+    // Docker scenario, step 3 of an F=images drag north.
+    //
+    // Layout (relevant part):
+    //   A = containers heading at (0, 0, 36, 2), minH=2 (saturated north)
+    //   B = container-lifecycle at (0, 2, 18, 22), minH=1
+    //   C = container-status at (18, 2, 18, 11), minH=1
+    //   D = container-rename at (0, 24, 18, 8), minH=1
+    //   E = container-interaction at (18, 13, 18, 16), minH=1
+    //   F = images heading at (0, 32, 36, 2), minH=2 — primary
+    //
+    // Drag F north by 4 units (dy=-4). On step 3, F arrives at y=29 so the
+    // chain expands to include E (E.y+h=29 = F.y). At that step the chain
+    // contains both columns leading to A: F → D → B → A (left column) and
+    // F → E → C → A (right column).
+    //
+    // With single-branch absorption (the bug), only one absorber would be
+    // chosen (e.g. B on the left), C would still push, A would not wrap, and
+    // on the next step B and E would slide on top of A. With multi-branch
+    // absorption, both B and C shrink simultaneously and A stays put.
+    const initial: LayoutBlock[] = [
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 36, h: 2 } },
+      block("B", 0, 2, 18, 22),
+      block("C", 18, 2, 18, 11),
+      block("D", 0, 24, 18, 8),
+      block("E", 18, 13, 18, 16),
+      { id: "F", kind: "heading", position: { x: 0, y: 32, w: 36, h: 2 } },
+    ];
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "F",
+      dx: 0,
+      dy: -4,
+    };
+
+    const options = makeOptions(initial, {
+      A: { minH: 2 },
+      B: { minH: 1 },
+      C: { minH: 1 },
+      D: { minH: 1 },
+      E: { minH: 1 },
+      F: { minH: 2 },
+    });
+
+    const result = applyOperation(initial, op, options);
+
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+
+    // F arrived at y=28 (initial 32 minus 4).
+    expect(byId("F")).toEqual({ x: 0, y: 28, w: 36, h: 2 });
+
+    // A never wrapped — the multi-branch absorption kept it in place.
+    expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+
+    // B and C absorbed the 4-unit displacement by shrinking their south
+    // edges. Both keep y=2.
+    expect(byId("B").x).toBe(0);
+    expect(byId("B").y).toBe(2);
+    expect(byId("B").w).toBe(18);
+    expect(byId("C").x).toBe(18);
+    expect(byId("C").y).toBe(2);
+    expect(byId("C").w).toBe(18);
+
+    // No block overlaps any other.
+    for (let i = 0; i < result.blocks.length; i++) {
+      for (let j = i + 1; j < result.blocks.length; j++) {
+        const a = result.blocks[i].position;
+        const b = result.blocks[j].position;
+        const overlap =
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(overlap, `${result.blocks[i].id} overlaps ${result.blocks[j].id}`).toBe(false);
+      }
+    }
+  });
+
+  it("freezes both branches when they converge on a shared upstream absorber", () => {
+    // Scenario: a wide saturated tail A is reached through two branches that
+    // both pass through saturated members (B left, C right) and then converge
+    // on a common non-saturated ancestor E. Only E should shrink; both B
+    // and C must stay put (frozen), otherwise the branch whose direct parent
+    // is processed second in the BFS slides on top of A.
+    //
+    // Layout:
+    //   A = heading at (0, 0, 36, 2), minH=2 (saturated north)
+    //   B = card at (0, 2, 18, 4),   minH=4 (saturated)
+    //   C = card at (18, 2, 18, 4),  minH=4 (saturated)
+    //   E = card at (10, 6, 18, 8),  minH=4 (NOT saturated — shared parent of B and C)
+    //   D = card at (6, 14, 10, 4),  minH=4 (saturated, parent of E)
+    //   F = heading at (0, 18, 36, 2), minH=2 — primary, drag north dy=-1
+    //
+    // Reverse BFS from A:
+    //   - parents(A) = {B, C}
+    //   - B saturated → walk up → parents(B) = {E}
+    //   - C saturated → walk up → parents(C) = {E}
+    //   - Both branches converge on E (non-saturated) → E is the single absorber.
+    //
+    // Expected after dy=-1:
+    //   - F moves to (0, 17)
+    //   - D pushes to (6, 13)
+    //   - E shrinks 8→7 on its south edge: (10, 6, 18, 7)
+    //   - B, C, A unchanged.
+    const initial: LayoutBlock[] = [
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 36, h: 2 } },
+      block("B", 0, 2, 18, 4),
+      block("C", 18, 2, 18, 4),
+      block("E", 10, 6, 18, 8),
+      block("D", 6, 14, 10, 4),
+      { id: "F", kind: "heading", position: { x: 0, y: 18, w: 36, h: 2 } },
+    ];
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "F",
+      dx: 0,
+      dy: -1,
+    };
+
+    const options = makeOptions(initial, {
+      A: { minH: 2 },
+      B: { minH: 4 },
+      C: { minH: 4 },
+      D: { minH: 4 },
+      E: { minH: 4 },
+      F: { minH: 2 },
+    });
+
+    const result = applyOperation(initial, op, options);
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+
+    expect(byId("F")).toEqual({ x: 0, y: 17, w: 36, h: 2 });
+    expect(byId("D")).toEqual({ x: 6, y: 13, w: 10, h: 4 });
+    expect(byId("E")).toEqual({ x: 10, y: 6, w: 18, h: 7 });
+    expect(byId("B")).toEqual({ x: 0, y: 2, w: 18, h: 4 });
+    expect(byId("C")).toEqual({ x: 18, y: 2, w: 18, h: 4 });
+    expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+  });
+});

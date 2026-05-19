@@ -6,7 +6,7 @@
 
 import { computeOperationChain } from "./chain";
 import { computeCompactTranslations } from "./compact";
-import { intersects, isWithinGridX, isWithinGridY, translate } from "./geometry";
+import { intersects, isContiguous, isWithinGridX, isWithinGridY, translate } from "./geometry";
 import type { SessionMemory } from "./session";
 import type {
   BlockConstraints,
@@ -475,6 +475,184 @@ function resolveChainPushStep(
     });
   }
 
+  // Shrink absorption pass.
+  //
+  // When a tail member would `wrap`, the chain may be able to swallow the
+  // 1-unit displacement internally by shrinking a non-saturated upstream
+  // member on its trailing edge (the edge facing the saturated tail). The
+  // primary itself never absorbs — it expresses the user's intent.
+  //
+  // Branches and shared members. A saturated tail T can be reached from the
+  // primary through multiple branches of the contiguity graph (e.g. a wide
+  // tail touched by two columns of the chain). Each branch is computed
+  // independently via a reverse BFS from T toward the primary, traversing
+  // `isContiguous(parent, child, D)` edges. For each branch the absorber is
+  // the first non-saturated member encountered (closest to T).
+  //
+  //   - If every branch leading to T has an absorber, T is absorbed: every
+  //     absorber shrinks once (a single shrink on a shared member absorbs the
+  //     displacement for every branch passing through it), and every member
+  //     strictly between an absorber and T along its branch — plus T itself —
+  //     is removed from `actions` and stays put.
+  //   - If at least one branch has no absorber (every upstream non-primary
+  //     member is saturated on this axis), T is left as `wrap` and follows
+  //     the standard wrap path. Other independent tails can still be absorbed.
+  const chainBlockById = new Map<string, LayoutBlock>();
+  for (const m of chainMembers) chainBlockById.set(m.id, m);
+
+  const isSaturatedOnAxis = (member: LayoutBlock): boolean => {
+    const c = ctx.constraints.get(member.id);
+    const minW = c?.minW ?? 1;
+    const minH = c?.minH ?? 1;
+    return direction === "east" || direction === "west"
+      ? member.position.w <= minW
+      : member.position.h <= minH;
+  };
+
+  // Returns the list of chain members whose face `D` is touched by `child`.
+  // Those are the immediate upstream parents of `child` in the chain graph
+  // (i.e. one step closer to the primary).
+  const upstreamParents = (childId: string): string[] => {
+    const child = chainBlockById.get(childId);
+    /* c8 ignore next -- defensive: childId always comes from the chain */
+    if (!child) return [];
+    const out: string[] = [];
+    for (const m of chainMembers) {
+      if (m.id === childId) continue;
+      if (isContiguous(m.position, child.position, direction)) out.push(m.id);
+    }
+    return out;
+  };
+
+  // Per-tail analysis: absorbers (set) + frozen members (set, excludes
+  // absorbers, includes the tail). When a branch has no absorber, the tail
+  // is flagged as "wrap-forced" and excluded from absorption application.
+  const absorbersToShrink = new Set<string>();
+  const frozenMembers = new Set<string>();
+
+  for (let i = orderedChain.length - 1; i >= 0; i--) {
+    const tailId = orderedChain[i];
+    const tailAction = actions.get(tailId);
+    if (!tailAction || tailAction.kind !== "wrap") continue;
+
+    // For each tail, run a reverse BFS along contiguity edges from the tail
+    // toward the primary. Collect, per branch, the first non-saturated
+    // ancestor encountered (excluding the primary). A branch is a maximal
+    // path of saturated members ending at a non-saturated member (the
+    // absorber) or at the primary (no absorber → wrap-forced).
+    //
+    // Branches converging on the same ancestor must each contribute their
+    // saturated path to the frozen set. We cache resolved nodes per tail so
+    // that a second branch reaching the same absorber (or dead-end) does not
+    // miss its contribution.
+    const tailAbsorbers: string[] = [];
+    const tailFrozen = new Set<string>([tailId]);
+    let branchMissingAbsorber = false;
+
+    // Per-tail caches keyed by member id:
+    //   - `absorberCache` flags nodes already proven to be absorbers for this
+    //     tail. When revisited via another branch, we simply propagate the
+    //     branch's saturated path to the frozen set.
+    //   - `deadendCache` flags saturated nodes whose only upstream is the
+    //     primary, so any branch reaching them is wrap-forced.
+    const absorberCache = new Set<string>();
+    const deadendCache = new Set<string>();
+
+    type Frame = { id: string; pathSaturated: string[] };
+    const queue: Frame[] = [];
+    for (const pId of upstreamParents(tailId)) {
+      if (pId === primary.id) {
+        // The tail is directly contiguous to the primary; this branch has
+        // no non-primary ancestor to absorb.
+        branchMissingAbsorber = true;
+        continue;
+      }
+      queue.push({ id: pId, pathSaturated: [] });
+    }
+
+    while (queue.length > 0 && !branchMissingAbsorber) {
+      const frame = queue.shift()!;
+
+      if (absorberCache.has(frame.id)) {
+        // Another branch already proved this node is an absorber. This
+        // branch terminates here too; commit its saturated path.
+        for (const s of frame.pathSaturated) tailFrozen.add(s);
+        continue;
+      }
+      if (deadendCache.has(frame.id)) {
+        branchMissingAbsorber = true;
+        break;
+      }
+
+      const member = chainBlockById.get(frame.id);
+      /* c8 ignore next -- defensive: frame ids come from chain */
+      if (!member) continue;
+
+      if (!isSaturatedOnAxis(member)) {
+        absorberCache.add(frame.id);
+        tailAbsorbers.push(frame.id);
+        for (const s of frame.pathSaturated) tailFrozen.add(s);
+        continue;
+      }
+
+      // Saturated: walk further upstream. The current saturated member is
+      // appended to the path; if a downstream branch later proves this
+      // sub-tree leads to an absorber, the path will be added to frozen.
+      const nextSaturated = [...frame.pathSaturated, frame.id];
+      const parents = upstreamParents(frame.id);
+      const filteredParents = parents.filter((p) => p !== primary.id);
+      if (filteredParents.length === 0) {
+        // Only the primary is upstream of this saturated member → no absorber
+        // on this branch.
+        deadendCache.add(frame.id);
+        branchMissingAbsorber = true;
+        break;
+      }
+      for (const pId of filteredParents) {
+        queue.push({ id: pId, pathSaturated: nextSaturated });
+      }
+    }
+
+    if (branchMissingAbsorber) {
+      // Leave this tail's `wrap` action in place. Do not freeze anything for
+      // this tail.
+      continue;
+    }
+
+    // Commit absorbers and frozen members for this tail.
+    for (const a of tailAbsorbers) absorbersToShrink.add(a);
+    for (const f of tailFrozen) frozenMembers.add(f);
+  }
+
+  // Apply absorber shrinks. A shared absorber is shrunk only once.
+  for (const absorberId of absorbersToShrink) {
+    const absorber = chainBlockById.get(absorberId);
+    /* c8 ignore next -- defensive: absorber comes from chain */
+    if (!absorber) continue;
+    let absW = absorber.position.w;
+    let absH = absorber.position.h;
+    const absX = absorber.position.x;
+    const absY = absorber.position.y;
+    if (direction === "east" || direction === "west") {
+      absW = absorber.position.w - 1;
+    } else {
+      absH = absorber.position.h - 1;
+    }
+    actions.set(absorberId, {
+      kind: "shrink",
+      newSize: { w: absW, h: absH },
+      newPosition: { x: absX, y: absY, w: absW, h: absH },
+    });
+  }
+
+  // Freeze members on absorbed branches (tail + members between absorber and
+  // tail). Absorbers themselves are NOT frozen — they keep their shrink
+  // action assigned above.
+  for (const fId of frozenMembers) {
+    if (absorbersToShrink.has(fId)) continue;
+    actions.delete(fId);
+  }
+
   // Check option gates before mutating anything.
   const wouldShrink = Array.from(actions.values()).some((a) => a.kind === "shrink");
   const wouldWrap = Array.from(actions.values()).some((a) => a.kind === "wrap");
@@ -555,7 +733,8 @@ function resolveChainPushStep(
     const member = ctx.blocks.find((b) => b.id === id);
     /* c8 ignore next -- defensive: ids come from chain computed over ctx.blocks */
     if (!member) continue;
-    const action = actions.get(id)!;
+    const action = actions.get(id);
+    if (!action) continue;
     const from = { ...member.position };
 
     if (action.kind === "push") {

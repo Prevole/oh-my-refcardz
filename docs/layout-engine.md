@@ -210,6 +210,29 @@ Determining the order of placement:
 
 **Note**: this may create holes in the south region. That is accepted; holes resolve naturally when the user moves blocks back.
 
+### Shrink absorption before wrap
+
+A chain push may saturate one or more tail members against the grid edge. The default action for a saturated tail is **wrap**. However, if **every** branch of the chain leading to that tail contains at least one non-saturated member that can shrink on its trailing axis, the engine prefers to **absorb** the 1-unit displacement internally rather than push the tail off the grid.
+
+The absorption pass runs after every chain member has been assigned a tentative action (push, shrink, or wrap), and before option gates and event emission.
+
+**Branches.** A saturated tail T can be reached from the primary through multiple paths in the contiguity graph (typical case: a wide heading at the grid edge is touched by two columns of the chain). For each tail flagged for wrap, the engine runs a reverse BFS from T toward the primary along `isContiguous(parent, child, D)` edges. Every distinct path from T to a non-saturated upstream member (closest first) yields one **branch** for that tail.
+
+**Per-branch absorber.** On each branch, the **first non-saturated member encountered** (closest to T) is the absorber for that branch. The primary itself is never an absorber: it expresses the user's intent and must keep moving.
+
+**Shared members.** A single chain member can lie on multiple branches (e.g. a member that is an ancestor of two saturated tails, or a shared upstream absorber for two branches that converge). When the same member is chosen as absorber by several branches, it shrinks **once**: a single h-- (or w--) on a shared member absorbs the displacement for every branch passing through it.
+
+**Converging branches.** When two branches reach the same upstream ancestor (e.g. two saturated tails B and C both have E as their parent), both branches contribute their saturated paths to the frozen set, even if the absorber itself is only shrunk once. This prevents the second-visited branch from being silently ignored, which would let its saturated members push on top of the tail in subsequent steps.
+
+**Outcome per tail.**
+
+- **Absorbed tail.** Every branch reaching T has an absorber. T's `wrap` action is removed. Every absorber shrinks 1 unit on its trailing edge (the edge facing T). Every member strictly between any absorber and T along its branch — plus T itself — is removed from the action set and stays at its current position.
+- **Wrap-forced tail.** At least one branch reaching T has no absorber (every upstream non-primary member on that branch is saturated, or the tail is directly contiguous to the primary). T's `wrap` action is kept and follows the standard wrap path. No member is frozen for this tail.
+
+**Independent tails.** Multiple saturated tails are analysed independently. A wrap-forced tail does not prevent other tails from being absorbed.
+
+This unified branch-aware design avoids the regression where a single absorber on one branch would let other branches push their tail off-grid, creating overlaps with the saturated tail on subsequent steps.
+
 ### Cascading wrap among chain members
 
 When a wrappable A lands at its south-fallback target, other members of the same chain (shrunk, moved, or otherwise still occupying their pre-step rows) may now collide with A's new placement. Pushing them further south with the residual cascade would leave them at their shrunk size, sitting under A in a degenerate state.
