@@ -827,9 +827,17 @@ function resolveChainPushStep(
       const pusherSource = residualSource.get(pusher.id) ?? wrappableId;
 
       // Rule (a): induced collision with any non-immovable block.
+      // Order-preservation constraint: pusher can only push `other` if pusher
+      // was initially at or above `other` (pusher.init.y <= other.init.y).
+      // This prevents pathological "remontées" where a block initially south
+      // of `other` ends up cascading and pushing `other` further south through
+      // the BFS, inverting the original vertical order.
+      const pusherInitial = initialPositions.get(pusher.id)!;
       for (const other of ctx.blocks) {
         if (other.id === pusher.id) continue;
         if (immovable.has(other.id)) continue;
+        const otherInitial = initialPositions.get(other.id)!;
+        if (pusherInitial.y > otherInitial.y) continue;
         const otherProjected = projected(other);
         if (!intersects(pusherProjected, otherProjected)) continue;
         const requiredDy = pusherProjected.y + pusherProjected.h - otherProjected.y;

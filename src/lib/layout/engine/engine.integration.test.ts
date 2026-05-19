@@ -333,3 +333,160 @@ describe("integration — east drag wrap south restores initial column", () => {
     expect(byId("interaction").w).toBe(18);
   });
 });
+
+// -----------------------------------------------------------------------------
+// Scenario: east drag of the primary triggers a wrap-south of two right-column
+// neighbors. The post-wrap residual cascade must propagate ONLY the minimum dy
+// required to clear the newly-placed wrappables — it must not amplify or
+// over-push blocks that are already comfortably below.
+//
+// Source: debug session .debug-sessions/1779192723382-vyizvtc.json (cheatsheets/docker)
+//   - User drags `container-lifecycle` (B) east by 13 cells from x=0.
+//   - `container-status` (C) shrinks then wraps to (18, 24, 18, 11).
+//     bottom = 35.
+//   - `container-interaction` (E) shrinks then wraps to (18, 35, 18, 16).
+//     bottom = 51.
+//   - Right-column residual cascade (above the existing `image-inspection` K
+//     at y=34, h=8):
+//       - K must drop to y >= 51 (just clearing E's bottom). dy_K >= 17.
+//       - But the engine observed dy_K = 19 (K landed at y=53). +2 extra.
+//   - That +2 extra ripples down through every block in both columns, blowing
+//     up the bottom blocks: `network-query` (Q) ends at y=173 from y=95
+//     (dy=78), `image-registry` (G) at y=104 from y=72 (dy=32), etc.
+//
+// The expected behavior: residual cascade dy = obstacle_bottom - block_top,
+// no extra gap. Each pushed block clears its immediate pusher exactly, then
+// stops propagating unless it itself creates a new collision.
+// -----------------------------------------------------------------------------
+
+describe("integration — east drag wrap south residual cascade is minimal", () => {
+  it("propagates only the minimum dy required to clear the wrapped blocks", () => {
+    // Full docker page layout snapshot taken from
+    // .debug-sessions/1779192723382-vyizvtc.json at session.start.
+    const initial: LayoutBlock[] = [
+      block("containers", 0, 0, 36, 2),
+      block("container-lifecycle", 0, 2, 18, 22), // primary (B)
+      block("container-status", 18, 2, 18, 11), // C
+      block("container-rename", 0, 24, 18, 8), // D
+      block("container-interaction", 18, 13, 18, 16), // E
+      block("images", 0, 32, 36, 2), // F (heading)
+      block("image-lifecycle", 0, 54, 18, 15), // H
+      block("inspection", 0, 51, 36, 2), // I (heading)
+      block("image-inspection", 18, 34, 18, 8), // K
+      block("container-inspection", 18, 54, 18, 16), // J
+      block("image-registry", 0, 72, 18, 18), // G
+      block("volumes", 0, 70, 18, 2), // L (heading, half-width)
+      block("networks", 18, 70, 18, 2), // P (heading, half-width)
+      block("volume-lifecycle", 18, 72, 18, 12), // N
+      block("volume-query", 18, 84, 18, 11), // M
+      block("volume-mounting", 0, 95, 18, 8), // O
+      block("network-query", 18, 95, 18, 11), // Q
+      block("cleanup", 0, 112, 36, 2), // T (heading)
+      block("network-lifecycle", 0, 114, 18, 12), // R
+      block("network-connection", 18, 114, 18, 17), // S
+      block("system-cleanup", 0, 131, 36, 18), // U
+    ];
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "container-lifecycle",
+      dx: 13,
+      dy: 0,
+    };
+
+    // Cards have minW=6 (matches the real cheatsheet card constraint), so
+    // status/interaction shrink to w=6 then wrap south.
+    const headingOverrides = {
+      containers: { minH: 2 },
+      images: { minH: 2 },
+      inspection: { minH: 2 },
+      volumes: { minH: 2 },
+      networks: { minH: 2 },
+      cleanup: { minH: 2 },
+    };
+    const cardOverrides = {
+      "container-status": { minW: 6 },
+      "container-interaction": { minW: 6 },
+    };
+
+    const result = applyOperation(
+      initial,
+      op,
+      makeOptions(initial, { ...headingOverrides, ...cardOverrides })
+    );
+
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+    const initialY = (id: string) => initial.find((b) => b.id === id)!.position.y;
+
+    // No overlap anywhere.
+    const finalBlocks = result.blocks;
+    for (let i = 0; i < finalBlocks.length; i++) {
+      for (let j = i + 1; j < finalBlocks.length; j++) {
+        const a = finalBlocks[i].position;
+        const b = finalBlocks[j].position;
+        const overlap =
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(
+          overlap,
+          `${finalBlocks[i].id} (${JSON.stringify(a)}) overlaps ${finalBlocks[j].id} (${JSON.stringify(b)})`
+        ).toBe(false);
+      }
+    }
+
+    // Primary moved as requested.
+    expect(byId("container-lifecycle")).toEqual({ x: 13, y: 2, w: 18, h: 22 });
+
+    // Wrapped blocks land just below the primary, restored to their full width.
+    expect(byId("container-status")).toEqual({ x: 18, y: 24, w: 18, h: 11 });
+    expect(byId("container-interaction")).toEqual({ x: 18, y: 35, w: 18, h: 16 });
+
+    // Right-column cascade: image-inspection (K) must clear container-interaction
+    // (E) which now ends at y=51. K is pushed by F (images, which spans full
+    // width and lands at y=51..53 after clearing E). F.init.y=32 <= K.init.y=34
+    // → F legitimately pushes K to y=53 (dy=19 total: 17 from E + 2 from F).
+    expect(byId("image-inspection").y).toBe(53);
+
+    // Order preservation: blocks that were vertically ordered in the initial
+    // layout must remain so after the cascade. No "remontées" allowed.
+    const orderPairs: Array<[string, string]> = [
+      ["image-lifecycle", "volumes"], // H above L
+      ["container-inspection", "networks"], // J above P
+      ["image-lifecycle", "volume-lifecycle"], // H above volume-lifecycle
+      ["container-inspection", "volume-lifecycle"], // J above volume-lifecycle
+    ];
+    for (const [aboveId, belowId] of orderPairs) {
+      const above = byId(aboveId);
+      const below = byId(belowId);
+      expect(
+        above.y,
+        `${aboveId} (y=${above.y}) must remain above ${belowId} (y=${below.y})`
+      ).toBeLessThanOrEqual(below.y);
+    }
+
+    // Critical: bottom blocks should NOT drift by 30+ cells. Bound their drift
+    // by the maximum legitimate dy in the cascade.
+    const MAX_REASONABLE_DRIFT = 20;
+    const bottomBlocks = [
+      "volumes",
+      "networks",
+      "volume-lifecycle",
+      "volume-query",
+      "volume-mounting",
+      "network-query",
+      "image-registry",
+      "cleanup",
+      "network-lifecycle",
+      "network-connection",
+      "system-cleanup",
+    ];
+    for (const id of bottomBlocks) {
+      const drift = byId(id).y - initialY(id);
+      expect(
+        drift,
+        `${id} drifted by ${drift} (initial y=${initialY(id)}, final y=${byId(id).y}); expected <= ${MAX_REASONABLE_DRIFT}`
+      ).toBeLessThanOrEqual(MAX_REASONABLE_DRIFT);
+    }
+  });
+});

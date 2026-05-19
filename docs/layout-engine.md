@@ -216,7 +216,7 @@ After every wrappable member has landed on its target (south-fallback for horizo
 
 The cascade follows two propagation rules; both are evaluated in a single BFS that runs until no `dy` changes:
 
-1. **Induced collision.** If a pushed block X (or a wrappable freshly placed) overlaps another block Y at its current projected position, Y is pushed south by the minimum `dy` required to clear X.
+1. **Induced collision.** If a pushed block X (or a wrappable freshly placed) overlaps another block Y at its current projected position, Y is pushed south by the minimum `dy` required to clear X. This rule fires **only when `X.initial.y <= Y.initial.y`** — that is, X was at or above Y in the layout at the start of the step. This *order-preservation constraint* prevents pathological "remontées" where a block initially south of Y cascades downward and ends up pushing Y further south through transitive collisions, inverting the original vertical order and creating large empty gaps.
 2. **Initial south-contiguity preserved.** If Y was south-contiguous to X in the layout *as it was at the start of the step* (X.y + X.h = Y.y, with x-overlap), then once X is pushed by `dy_X`, Y is pushed by at least `dy_X` — even if X's new position no longer collides with Y. This avoids the "jump over" pathology where a large push by X leaves Y orphaned in place.
 
 Per-block `dy` is accumulated independently; the cascade never applies a uniform group shift. Each block descends only as far as strictly required by the two rules above. The seeded source (wrappable id that first pushed each block) is recorded for event emission.
