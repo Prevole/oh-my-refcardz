@@ -23,10 +23,14 @@ function formatPos(p: { x: number; y: number; w: number; h: number }): string {
 
 /**
  * Renders the contents of the per-block layout badge. In edit-only mode it
- * shows the classic `layoutLabel` (e.g. `[A3] 5,2 · 12x6`). When `debugInfo` is
- * passed (debug overlay active), it shows a richer multi-line summary with the
- * block id, current grid position, and the initial position observed at page
- * load when it has drifted from the current.
+ * shows the classic `layoutLabel` (e.g. `[A3] 5,2 · 12x6`). When `debugInfo`
+ * is passed (developer mode active), it shows a single-line summary:
+ *
+ *   - No drift:    `[A] 5,2 4x6`
+ *   - With drift:  `[A] 3,0 4x6 → 5,2 4x6`
+ *
+ * The semantic block id (e.g. `container-lifecycle`) is exposed via the
+ * native `title` attribute so the visible label stays compact.
  */
 export function LayoutBadgeContent({
   layoutLabel,
@@ -47,21 +51,21 @@ export function LayoutBadgeContent({
       initial.h !== current.h);
 
   return (
-    <span className={styles.cardLayoutBadgeDebug}>
-      <span className={styles.cardLayoutBadgeDebugRow}>
-        <span className={styles.cardLayoutBadgeDebugId}>[{debugId}]</span>
-        <span className={styles.cardLayoutBadgeDebugBlockId}>{blockId}</span>
-      </span>
-      <span className={styles.cardLayoutBadgeDebugRow}>
-        <span className={styles.cardLayoutBadgeDebugLabel}>now</span>
-        <span>{formatPos(current)}</span>
-      </span>
+    <span className={styles.cardLayoutBadgeDebug} title={blockId}>
+      <span className={styles.cardLayoutBadgeDebugId}>[{debugId}]</span>
       {drift ? (
-        <span className={styles.cardLayoutBadgeDebugRow}>
-          <span className={styles.cardLayoutBadgeDebugLabel}>init</span>
-          <span>{formatPos(initial!)}</span>
-        </span>
-      ) : null}
+        <>
+          <span className={styles.cardLayoutBadgeDebugInitial}>
+            {formatPos(initial!)}
+          </span>
+          <span className={styles.cardLayoutBadgeDebugArrow} aria-hidden="true">
+            →
+          </span>
+          <span>{formatPos(current)}</span>
+        </>
+      ) : (
+        <span>{formatPos(current)}</span>
+      )}
     </span>
   );
 }

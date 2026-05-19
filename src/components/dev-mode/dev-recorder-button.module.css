@@ -1,31 +1,25 @@
 .container {
-  position: fixed;
-  bottom: var(--space-4);
-  right: var(--space-4);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   gap: var(--space-2);
 }
 
 .button {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--surface);
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  background: transparent;
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--fg-75);
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   cursor: pointer;
   transition:
     background-color 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.1s ease;
-  box-shadow: var(--shadow-md);
+    border-color 0.15s ease;
 }
 
 .button:hover {
@@ -50,8 +44,20 @@
 }
 
 .icon {
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
+}
+
+.spinner {
+  animation: dev-recorder-spin 1s linear infinite;
+}
+
+@keyframes dev-recorder-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .count {

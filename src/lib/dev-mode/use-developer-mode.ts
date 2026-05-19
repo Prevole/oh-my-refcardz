@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { readStoredDebugOverlay, writeStoredDebugOverlay } from "./debug-overlay-storage";
+import {
+  DEVELOPER_MODE_STORAGE_KEY,
+  readStoredDeveloperMode,
+  writeStoredDeveloperMode,
+} from "./dev-mode-storage";
 
 const SUBSCRIBERS = new Set<() => void>();
 
@@ -12,7 +16,7 @@ function notify() {
 function subscribe(listener: () => void): () => void {
   SUBSCRIBERS.add(listener);
   const onStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key === "omr.debug-overlay") {
+    if (event.key === null || event.key === DEVELOPER_MODE_STORAGE_KEY) {
       listener();
     }
   };
@@ -24,7 +28,7 @@ function subscribe(listener: () => void): () => void {
 }
 
 function getSnapshot(): boolean {
-  return readStoredDebugOverlay();
+  return readStoredDeveloperMode();
 }
 
 function getServerSnapshot(): boolean {
@@ -32,14 +36,14 @@ function getServerSnapshot(): boolean {
 }
 
 /**
- * Persistent toggle for the layout debug overlay (axes, enriched block badges,
- * global stats bar). The state is mirrored in `localStorage` so it survives
- * reloads.
+ * Persistent toggle for developer mode (axes overlay, enriched block badges,
+ * dev-mode bar with reset/save/recording/logs tools). The state is mirrored
+ * in `localStorage` so it survives reloads.
  *
  * The hook is SSR-safe via `useSyncExternalStore`: it returns `false` on the
  * server and resolves to the persisted value on the client.
  */
-export function useDebugOverlay(): {
+export function useDeveloperMode(): {
   enabled: boolean;
   toggle: () => void;
   setEnabled: (value: boolean) => void;
@@ -47,12 +51,12 @@ export function useDebugOverlay(): {
   const enabled = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const setEnabled = useCallback((value: boolean) => {
-    writeStoredDebugOverlay(value);
+    writeStoredDeveloperMode(value);
     notify();
   }, []);
 
   const toggle = useCallback(() => {
-    writeStoredDebugOverlay(!readStoredDebugOverlay());
+    writeStoredDeveloperMode(!readStoredDeveloperMode());
     notify();
   }, []);
 

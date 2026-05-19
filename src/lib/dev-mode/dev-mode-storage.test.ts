@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  DEBUG_OVERLAY_STORAGE_KEY,
-  readStoredDebugOverlay,
-  writeStoredDebugOverlay,
-} from "./debug-overlay-storage";
+  DEVELOPER_MODE_STORAGE_KEY,
+  readStoredDeveloperMode,
+  writeStoredDeveloperMode,
+} from "./dev-mode-storage";
 
 type FakeStorage = {
   store: Map<string, string>;
@@ -26,7 +26,7 @@ function makeFakeStorage(): FakeStorage {
   };
 }
 
-describe("debug-overlay-storage", () => {
+describe("dev-mode-storage", () => {
   const originalWindow = (globalThis as { window?: unknown }).window;
   let storage: FakeStorage;
 
@@ -45,28 +45,28 @@ describe("debug-overlay-storage", () => {
     }
   });
 
-  describe("readStoredDebugOverlay", () => {
+  describe("readStoredDeveloperMode", () => {
     it("returns false when nothing is stored", () => {
-      expect(readStoredDebugOverlay()).toBe(false);
+      expect(readStoredDeveloperMode()).toBe(false);
     });
 
     it("returns true when storage value is exactly '1'", () => {
-      storage.store.set(DEBUG_OVERLAY_STORAGE_KEY, "1");
-      expect(readStoredDebugOverlay()).toBe(true);
+      storage.store.set(DEVELOPER_MODE_STORAGE_KEY, "1");
+      expect(readStoredDeveloperMode()).toBe(true);
     });
 
     it("returns false for any other stored value", () => {
-      storage.store.set(DEBUG_OVERLAY_STORAGE_KEY, "true");
-      expect(readStoredDebugOverlay()).toBe(false);
-      storage.store.set(DEBUG_OVERLAY_STORAGE_KEY, "0");
-      expect(readStoredDebugOverlay()).toBe(false);
-      storage.store.set(DEBUG_OVERLAY_STORAGE_KEY, "");
-      expect(readStoredDebugOverlay()).toBe(false);
+      storage.store.set(DEVELOPER_MODE_STORAGE_KEY, "true");
+      expect(readStoredDeveloperMode()).toBe(false);
+      storage.store.set(DEVELOPER_MODE_STORAGE_KEY, "0");
+      expect(readStoredDeveloperMode()).toBe(false);
+      storage.store.set(DEVELOPER_MODE_STORAGE_KEY, "");
+      expect(readStoredDeveloperMode()).toBe(false);
     });
 
     it("returns false when window is undefined (SSR safe)", () => {
       delete (globalThis as { window?: unknown }).window;
-      expect(readStoredDebugOverlay()).toBe(false);
+      expect(readStoredDeveloperMode()).toBe(false);
     });
 
     it("returns false when localStorage access throws", () => {
@@ -77,25 +77,25 @@ describe("debug-overlay-storage", () => {
           },
         },
       };
-      expect(readStoredDebugOverlay()).toBe(false);
+      expect(readStoredDeveloperMode()).toBe(false);
     });
   });
 
-  describe("writeStoredDebugOverlay", () => {
+  describe("writeStoredDeveloperMode", () => {
     it("writes '1' when enabling", () => {
-      writeStoredDebugOverlay(true);
-      expect(storage.store.get(DEBUG_OVERLAY_STORAGE_KEY)).toBe("1");
+      writeStoredDeveloperMode(true);
+      expect(storage.store.get(DEVELOPER_MODE_STORAGE_KEY)).toBe("1");
     });
 
     it("removes the key when disabling", () => {
-      storage.store.set(DEBUG_OVERLAY_STORAGE_KEY, "1");
-      writeStoredDebugOverlay(false);
-      expect(storage.store.has(DEBUG_OVERLAY_STORAGE_KEY)).toBe(false);
+      storage.store.set(DEVELOPER_MODE_STORAGE_KEY, "1");
+      writeStoredDeveloperMode(false);
+      expect(storage.store.has(DEVELOPER_MODE_STORAGE_KEY)).toBe(false);
     });
 
     it("is a no-op when window is undefined", () => {
       delete (globalThis as { window?: unknown }).window;
-      expect(() => writeStoredDebugOverlay(true)).not.toThrow();
+      expect(() => writeStoredDeveloperMode(true)).not.toThrow();
     });
 
     it("silently absorbs storage errors", () => {
@@ -110,16 +110,16 @@ describe("debug-overlay-storage", () => {
           removeItem: setSpy,
         },
       };
-      expect(() => writeStoredDebugOverlay(true)).not.toThrow();
-      expect(() => writeStoredDebugOverlay(false)).not.toThrow();
+      expect(() => writeStoredDeveloperMode(true)).not.toThrow();
+      expect(() => writeStoredDeveloperMode(false)).not.toThrow();
       expect(setSpy).toHaveBeenCalledTimes(2);
     });
 
     it("round-trips through read", () => {
-      writeStoredDebugOverlay(true);
-      expect(readStoredDebugOverlay()).toBe(true);
-      writeStoredDebugOverlay(false);
-      expect(readStoredDebugOverlay()).toBe(false);
+      writeStoredDeveloperMode(true);
+      expect(readStoredDeveloperMode()).toBe(true);
+      writeStoredDeveloperMode(false);
+      expect(readStoredDeveloperMode()).toBe(false);
     });
   });
 });

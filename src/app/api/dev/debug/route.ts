@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { DebugSession } from "@/lib/debug/types";
+import type { DebugSession } from "@/lib/dev-mode/types";
 
 const debugDirectory = path.join(process.cwd(), ".debug-sessions");
 

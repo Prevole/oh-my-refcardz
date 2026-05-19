@@ -18,7 +18,7 @@ const getServerSnapshot = (): RecordingState => SERVER_SNAPSHOT;
  * React hook providing reactive access to the debug recorder state and control
  * functions. Pass the engine setup to `start()` so the session can be replayed.
  */
-export function useDebugRecorder() {
+export function useDevRecorder() {
   const state = useSyncExternalStore(
     debugRecorder.subscribe,
     debugRecorder.getState,

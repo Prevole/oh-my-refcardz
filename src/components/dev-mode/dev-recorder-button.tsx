@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useDebugRecorder, debugRecorder } from "@/lib/debug";
+import { Circle, LoaderCircle, Square } from "lucide-react";
+import { useDevRecorder, debugRecorder } from "@/lib/dev-mode";
 import type { BlockConstraints } from "@/lib/layout/engine";
-import styles from "./debug-recorder-button.module.css";
+import styles from "./dev-recorder-button.module.css";
 
 type Props = {
   page: string;
@@ -16,14 +17,15 @@ type Props = {
 };
 
 /**
- * Debug recorder button — only visible in development mode.
+ * Dev recorder button — only visible in development mode and only rendered
+ * inside the developer mode bar.
  *
- * Floating control to start/stop recording debug sessions. Captures the engine
- * setup at start so sessions can be replayed with
+ * Inline (non-floating) control to start/stop recording debug sessions.
+ * Captures the engine setup at start so sessions can be replayed with
  * `scripts/replay-layout-journal.ts`.
  */
-export function DebugRecorderButton({ page, engine, debugIdMap }: Props) {
-  const { isRecording, eventCount, start, stop, cancel } = useDebugRecorder();
+export function DevRecorderButton({ page, engine, debugIdMap }: Props) {
+  const { isRecording, eventCount, start, stop, cancel } = useDevRecorder();
   const [isSaving, setIsSaving] = useState(false);
   const [lastResult, setLastResult] = useState<{ success: boolean; path?: string } | null>(null);
 
@@ -63,7 +65,7 @@ export function DebugRecorderButton({ page, engine, debugIdMap }: Props) {
   };
 
   return (
-    <div className={styles.container}>
+    <span className={styles.container}>
       <button
         type="button"
         className={`${styles.button} ${isRecording ? styles.recording : ""}`}
@@ -76,22 +78,27 @@ export function DebugRecorderButton({ page, engine, debugIdMap }: Props) {
             : "Start debug recording"
         }
       >
-        <span className={styles.icon}>
-          {isSaving ? "⏳" : isRecording ? "⏹" : "⏺"}
+        <span className={styles.icon} aria-hidden="true">
+          {isSaving ? (
+            <LoaderCircle size={14} strokeWidth={2} className={styles.spinner} />
+          ) : isRecording ? (
+            <Square size={14} strokeWidth={2} fill="currentColor" />
+          ) : (
+            <Circle size={14} strokeWidth={2} fill="currentColor" />
+          )}
         </span>
         {isRecording && <span className={styles.count}>{eventCount}</span>}
         {isRecording && <span className={styles.pulse} />}
       </button>
 
       {lastResult && (
-        <div
+        <span
           className={`${styles.toast} ${lastResult.success ? styles.success : styles.error}`}
         >
-          {lastResult.success
-            ? `Saved to ${lastResult.path}`
-            : "Failed to save session"}
-        </div>
+          {lastResult.success ? `Saved to ${lastResult.path}` : "Failed to save session"}
+        </span>
       )}
-    </div>
+    </span>
   );
 }
+

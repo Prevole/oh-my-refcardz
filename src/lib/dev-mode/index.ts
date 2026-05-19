@@ -1,7 +1,7 @@
 export { debugRecorder, type DebugRecorder, type DebugRecorderStartOptions } from "./recorder";
-export { useDebugRecorder } from "./use-debug-recorder";
-export { useDebugOverlay } from "./use-debug-overlay";
-export { numberToDebugId, createDebugIdMap } from "./debug-id";
+export { useDevRecorder } from "./use-dev-recorder";
+export { useDeveloperMode } from "./use-developer-mode";
+export { numberToDevId, createDevIdMap } from "./dev-id";
 export type {
   DebugEngineSetup,
   DebugEvent,

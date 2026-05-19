@@ -76,7 +76,7 @@ Entry renderers (command-entry, text-entry, etc.)
 | Keybindings | localStorage | `KeybindingsProvider` |
 | Keyboard scope | React state | `KeyboardContextProvider` |
 | Sheet accent color | React context | `SheetAccentProvider` |
-| Debug overlay toggle | localStorage (`omr.debug-overlay`) | `useDebugOverlay` hook |
+| Developer mode toggle | localStorage (`omr.developer-mode`) | `useDeveloperMode` hook |
 
 ## Key Systems
 
@@ -110,17 +110,25 @@ Grid layout solver with deterministic collision resolution (move, resize, push, 
 
 See: [layout-engine.md](./layout-engine.md) and [layout-actions.md](./layout-actions.md)
 
-### Debug Overlay
+### Developer Mode
 
-A diagnostic overlay for cheatsheet layouts, toggled via `Ctrl+Shift+D` (scope `sheet`). Renders numbered grid axes, a sticky stats bar and enriched block badges showing the drift from the reference position captured when debug was last activated.
+A diagnostic mode for cheatsheet layouts, toggled via `Ctrl+Shift+D` (scope `sheet`). Developer mode is independent of the layout edit mode. When active it renders:
+
+- Numbered, interactive grid axes (hover bands, click-to-pin rows/columns, intersection highlighting).
+- A sticky dev-mode bar at the top of the viewport with stats and a toolbar (Reset / Save / Recording / Logs).
+- Enriched block badges showing the drift from the reference position captured when developer mode was last activated.
+
+The Save button and the Logs dropdown are only mounted when `NODE_ENV=development`. Toggling developer mode off automatically stops any in-flight recording session.
 
 Implementation:
-- Hook: `src/lib/debug/use-debug-overlay.ts` (state, persistence)
-- Storage: `src/lib/debug/debug-overlay-storage.ts` (pure functions, `localStorage`)
-- Components: `src/components/sheets/debug-overlay/`
+- Hook: `src/lib/dev-mode/use-developer-mode.ts` (state, persistence)
+- Storage: `src/lib/dev-mode/dev-mode-storage.ts` (pure functions, `localStorage`)
+- Recorder singleton: `src/lib/dev-mode/recorder.ts` (debug session capture; retains `Debug*` internal naming)
+- Components: `src/components/sheets/dev-overlay/` (bar, axes, logs dropdown), `src/components/dev-mode/` (inline recorder button)
 - Wiring: `src/components/sheets/sheet-renderer.tsx`
+- Dev API: `src/app/api/dev/debug/route.ts` (GET / POST / DELETE for `.debug-sessions/`)
 
-See: [keybindings.md](./keybindings.md#debug-overlay)
+See: [keybindings.md](./keybindings.md#developer-mode)
 
 ## Page Structure
 

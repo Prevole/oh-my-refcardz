@@ -9,7 +9,7 @@ import {
   type Operation,
   type OperationOptions,
 } from "@/lib/layout/engine";
-import { debugRecorder } from "@/lib/debug";
+import { debugRecorder } from "@/lib/dev-mode";
 import { getBlockConstraintsV2 } from "./block-types";
 
 /**

@@ -234,21 +234,28 @@ The system tracks pending sequences with an 800ms timeout.
 4. **Prevent default** — Call `e.preventDefault()` when handling to avoid browser defaults
 5. **Document in help modal** — Add new actions to the appropriate help component
 
-## Debug Overlay
+## Developer Mode
 
-A dedicated action toggles a layout debug overlay used to diagnose grid issues on cheatsheet pages.
+A dedicated action toggles **developer mode**, a diagnostic overlay used to inspect the grid and the layout engine on cheatsheet pages. Developer mode is independent of the layout edit mode and can be active at any time.
 
 | Action ID | Default combo | Scope |
 |---|---|---|
-| `sheet.toggle-debug-overlay` (`ACTION_IDS.TOGGLE_DEBUG_OVERLAY`) | `Ctrl+Shift+D` | `sheet` |
+| `sheet.toggle-developer-mode` (`ACTION_IDS.TOGGLE_DEVELOPER_MODE`) | `Ctrl+Shift+D` | `sheet` |
 
-When enabled, the overlay:
+When enabled, the overlay provides:
 
-- Draws numbered X (0..35) and Y (0..maxRow-1) axes inside the grid.
-- Shows a sticky status bar at the top with the slug, grid dimensions and block count.
-- Enriches every block badge with its debug ID, block ID, current grid position and (if drifted) the position recorded when debug was last activated.
+- **Axes rulers** — Numbered X (0..35) and Y (0..maxRow-1) labels around the grid. Hovering a label highlights the entire row/column with a soft band; clicking a label toggles a stronger "pinned" highlight (multiple rows and columns can be pinned simultaneously). Intersections between any active row and any active column are highlighted as squares; the square uses the stronger style when both axes are pinned and the softer one otherwise.
+- **Dev-mode bar** — A sticky status bar at the top of the viewport with the slug, grid dimensions, block count and layout state (`default` vs `modified`). The bar also hosts a toolbar with:
+  - `Reset` — Reset the layout to the cheatsheet default. Disabled when no local override is stored.
+  - `Save` — Persist the current layout to the source YAML via `/api/dev/layouts/[slug]`. Visible **only** when `NODE_ENV=development`.
+  - `Recording` — Inline replacement of the former floating recorder button. Start/stop debug session capture; right-click cancels.
+  - `Logs` — A dropdown listing previously recorded sessions under `.debug-sessions/`, with per-session `Copy` (clipboard) and `Del` (DELETE via `/api/dev/debug?id=…`) actions. Dev-only.
+  - The toggle shortcut is shown inline using `ActionInlineBinding`.
+- **Block badges** — Every block badge is enriched with its dev ID, block ID, current grid position and (if drifted) the position recorded when developer mode was last activated.
 
-The "initial position" reference is captured at the moment debug is toggled **on**, not at page load. Toggling off and on again resets the reference. State persists across reloads via `localStorage` (key `omr.debug-overlay`).
+The "initial position" reference is captured at the moment developer mode is toggled **on**, not at page load. Toggling off and on again resets the reference. State persists across reloads via `localStorage` (key `omr.developer-mode`).
+
+Turning developer mode **off** while a recording session is active automatically stops the recording (the session is persisted with the description `auto-stopped (dev mode off)`).
 
 The shortcut collides with the browser's "Bookmark all tabs" default; the listener calls `preventDefault()` to suppress it (same approach as `Ctrl+Shift+S` for `LAYOUT_DEV_SAVE`).
 

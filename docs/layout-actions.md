@@ -179,7 +179,7 @@ The existing `CARD_NAV_*`, `CARD_MOVE_*`, `CARD_SHRINK_*`, `CARD_GROW_*` action 
 | `LAYOUT_DIRECTION_UP` | `k` and `ArrowUp` |
 | `LAYOUT_DIRECTION_DOWN` | `j` and `ArrowDown` |
 | `LAYOUT_DEV_SAVE` | (dev only, see [Persistence](#persistence)) |
-| `TOGGLE_DEBUG_OVERLAY` | `Ctrl+Shift+D` (see [Keybindings](./keybindings.md#debug-overlay)) |
+| `TOGGLE_DEVELOPER_MODE` | `Ctrl+Shift+D` (see [Keybindings](./keybindings.md#developer-mode)) |
 
 Modifiers (`Shift`, `Alt`, `Ctrl`) are read from the event at action time, not bound separately. This keeps the action set small.
 

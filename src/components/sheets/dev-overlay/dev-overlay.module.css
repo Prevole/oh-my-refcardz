@@ -1,0 +1,486 @@
+/* ------------------------------------------------------------------------- */
+/* Debug overlay — axes rulers                                                 */
+/* ------------------------------------------------------------------------- */
+
+.axes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Bands and intersections do not capture pointer events so blocks underneath
+   remain interactive; only the ruler labels and the corner clear button
+   capture clicks/hover. */
+
+.cornerClearButton {
+  position: absolute;
+  top: calc(-1 * var(--space-10));
+  left: calc(-1 * var(--space-10));
+  width: var(--space-10);
+  height: var(--space-10);
+  /* Match the inner surface of the row/col labels by reserving the same
+     padding the axes use (padding-bottom on .colAxis, padding-right on
+     .rowAxis). The visible button surface aligns with the labels. */
+  padding: 0 var(--space-3) var(--space-3) 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 5;
+}
+
+.cornerClearButtonInner {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-dark-base) 70%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--fg-50);
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease,
+    color 0.1s ease;
+}
+
+.cornerClearButton:hover:not(:disabled) .cornerClearButtonInner {
+  background: color-mix(in srgb, var(--warning) 22%, var(--bg-dark-base));
+  border-color: var(--warning);
+  color: var(--fg-100);
+}
+
+.cornerClearButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.rowBand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--sheet-grid-row-size);
+  top: calc(
+    var(--axis-index) * (var(--sheet-grid-row-size) + var(--sheet-grid-gap))
+  );
+  pointer-events: none;
+}
+
+.colBand {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--sheet-grid-column-size);
+  left: calc(
+    var(--axis-index) * (var(--sheet-grid-column-size) + var(--sheet-grid-gap))
+  );
+  pointer-events: none;
+}
+
+/* Click bands sit below hover bands so the hover hue stays visible when both
+   layers overlap on the same row/column. */
+.rowBandClick,
+.colBandClick {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--warning) 70%, transparent);
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+.rowBandHover,
+.colBandHover {
+  background: color-mix(in srgb, var(--accent-2) 12%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--accent-2) 55%, transparent);
+  outline-offset: -1px;
+  z-index: 2;
+}
+
+.intersection {
+  position: absolute;
+  width: var(--sheet-grid-column-size);
+  height: var(--sheet-grid-row-size);
+  top: calc(
+    var(--axis-row) * (var(--sheet-grid-row-size) + var(--sheet-grid-gap))
+  );
+  left: calc(
+    var(--axis-col) * (var(--sheet-grid-column-size) + var(--sheet-grid-gap))
+  );
+  pointer-events: none;
+  border-radius: var(--radius-sm);
+}
+
+.intersectionHover {
+  background: color-mix(in srgb, var(--accent-2) 25%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--accent-2) 70%, transparent);
+  outline-offset: -2px;
+  z-index: 3;
+}
+
+.intersectionClick {
+  background: color-mix(in srgb, var(--warning) 38%, transparent);
+  outline: 1px solid var(--warning);
+  outline-offset: -2px;
+  z-index: 3;
+}
+
+.colAxis {
+  position: absolute;
+  top: calc(-1 * var(--space-10));
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--sheet-grid-columns, 36), minmax(0, 1fr));
+  gap: var(--sheet-grid-gap);
+  padding-bottom: var(--space-3);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fg-50);
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.colLabel {
+  text-align: center;
+  padding: 0.1rem 0;
+  background: color-mix(in srgb, var(--bg-dark-base) 70%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease,
+    color 0.1s ease;
+}
+
+.colLabel:hover {
+  background: color-mix(in srgb, var(--accent-2) 20%, var(--bg-dark-base));
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border-subtle));
+  color: var(--fg-100);
+}
+
+.colLabelClick {
+  background: color-mix(in srgb, var(--warning) 30%, var(--bg-dark-base));
+  border-color: var(--warning);
+  color: var(--fg-100);
+}
+
+.rowAxis {
+  position: absolute;
+  top: 0;
+  left: calc(-1 * var(--space-10));
+  bottom: 0;
+  display: grid;
+  grid-auto-rows: var(--sheet-grid-row-size);
+  row-gap: var(--sheet-grid-gap);
+  padding-right: var(--space-3);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fg-50);
+  width: var(--space-10);
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.rowLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-dark-base) 70%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0 0.2rem;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease,
+    color 0.1s ease;
+}
+
+.rowLabel:hover {
+  background: color-mix(in srgb, var(--accent-2) 20%, var(--bg-dark-base));
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border-subtle));
+  color: var(--fg-100);
+}
+
+.rowLabelClick {
+  background: color-mix(in srgb, var(--warning) 30%, var(--bg-dark-base));
+  border-color: var(--warning);
+  color: var(--fg-100);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Debug overlay — stats bar                                                   */
+/* ------------------------------------------------------------------------- */
+
+.statsBar {
+  position: fixed;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: color-mix(in srgb, var(--bg-dark-base) 92%, transparent);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: var(--text-xs);
+  color: var(--fg-75);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.statsBadge {
+  background: var(--warning);
+  color: var(--bg-dark-base);
+  padding: 0.1rem var(--space-2);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.statsItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.statsLabel {
+  color: var(--fg-50);
+  text-transform: uppercase;
+  font-size: calc(var(--text-xs) * 0.85);
+  letter-spacing: 0.04em;
+}
+
+.statsValue {
+  color: var(--fg-100);
+  font-weight: 600;
+}
+
+.statsHint {
+  color: var(--fg-50);
+  margin-left: var(--space-3);
+  font-style: italic;
+}
+
+.statsSep {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  background: var(--border-medium);
+  margin: 0 var(--space-1);
+}
+
+.statsToolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+}
+
+.toolbarButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  color: var(--fg-75);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.toolbarButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--surface-soft) 80%, transparent);
+  border-color: var(--border-strong);
+  color: var(--fg-100);
+}
+
+.toolbarButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toolbarButtonPrimary {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-medium));
+  color: var(--accent);
+}
+
+.toolbarButtonPrimary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+}
+
+/* Grouped buttons share a single rounded outline; inner edges collapse. */
+.toolbarGroup {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.toolbarButtonGrouped {
+  border-radius: 0;
+  margin-left: -1px;
+}
+
+.toolbarButtonGrouped:first-child {
+  margin-left: 0;
+  border-top-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.toolbarButtonGrouped:last-child {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.toolbarButtonGrouped:hover:not(:disabled),
+.toolbarButtonGrouped:focus-visible {
+  z-index: 1;
+}
+
+.toolbarIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.toolbarIcon svg {
+  display: block;
+}
+
+.toolbarCount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.65rem;
+  color: var(--fg-50);
+}
+
+.toolbarShortcut {
+  color: var(--fg-50);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.toolbarShortcutKey {
+  color: var(--fg-75);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Logs dropdown                                                              */
+/* ------------------------------------------------------------------------- */
+
+.logsContainer {
+  position: relative;
+  display: inline-flex;
+}
+
+.logsDropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 1001;
+  min-width: 360px;
+  max-width: 560px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--bg-dark-base) 96%, transparent);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: var(--space-2);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--fg-75);
+}
+
+.logsState {
+  padding: var(--space-3);
+  text-align: center;
+  color: var(--fg-50);
+}
+
+.logsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.logsItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.logsItem:hover {
+  background: color-mix(in srgb, var(--surface-soft) 60%, transparent);
+}
+
+.logsItemMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.logsItemFilename {
+  color: var(--fg-100);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logsItemMeta {
+  color: var(--fg-50);
+  font-size: 0.65rem;
+}
+
+.logsItemActions {
+  display: inline-flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.logsFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.toolbarButtonText {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

@@ -298,10 +298,10 @@
 
 .cardLayoutBadgeDebug {
   display: inline-flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.1rem;
-  text-align: right;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-1);
+  white-space: nowrap;
   line-height: 1.15;
 }
 
@@ -321,6 +321,17 @@
   color: var(--fg-50);
   font-weight: 500;
   font-size: calc(var(--text-xs) * 0.92);
+}
+
+.cardLayoutBadgeDebugInitial {
+  color: var(--fg-50);
+  font-weight: 500;
+}
+
+.cardLayoutBadgeDebugArrow {
+  color: var(--fg-50);
+  font-weight: 600;
+  padding: 0 0.1rem;
 }
 
 .cardLayoutBadgeDebugLabel {

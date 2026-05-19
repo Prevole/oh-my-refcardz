@@ -6,7 +6,7 @@
  * later via `scripts/replay-layout-journal.ts`.
  *
  * Usage:
- *   import { debugRecorder } from "@/lib/debug/recorder";
+ *   import { debugRecorder } from "@/lib/dev-mode/recorder";
  *
  *   // Once per page mount:
  *   debugRecorder.start({ page: "/sheets/git", engine: { gridColumns: 36, constraints: {...} } });

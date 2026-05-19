@@ -1,14 +1,15 @@
 /**
- * Debug ID utilities for layout blocks.
+ * Dev ID utilities for layout blocks.
  *
  * Generates human-readable single-letter IDs (A, B, C, ..., Z, AA, AB, ...)
- * for blocks based on their order of appearance in the YAML file.
+ * for blocks based on their order of appearance in the YAML file. Used by
+ * the developer mode overlay and the debug session recorder.
  */
 
 /**
  * Convert a number to a letter-based ID (0=A, 1=B, ..., 25=Z, 26=AA, etc.)
  */
-export function numberToDebugId(n: number): string {
+export function numberToDevId(n: number): string {
   let result = "";
   let num = n;
 
@@ -21,16 +22,14 @@ export function numberToDebugId(n: number): string {
 }
 
 /**
- * Create a map of block IDs to debug letters based on YAML order.
+ * Create a map of block IDs to dev letters based on YAML order.
  * The order of blocks in the input array is preserved (no sorting).
  * This ensures stable IDs that don't change when blocks move.
  */
-export function createDebugIdMap(
-  blocks: Array<{ id: string }>
-): Map<string, string> {
+export function createDevIdMap(blocks: Array<{ id: string }>): Map<string, string> {
   const map = new Map<string, string>();
   blocks.forEach((block, index) => {
-    map.set(block.id, numberToDebugId(index));
+    map.set(block.id, numberToDevId(index));
   });
 
   return map;

@@ -9,9 +9,9 @@ import { getRenderableBlocks, type CheatSheetItem, type YamlCheatSheetWithMeta }
 import { buildBlockAnchorId } from "@/lib/anchor-navigation";
 import { migrateBlockLayouts, toOldBlockLayouts } from "@/lib/layout/migration";
 import { syncLayoutToDev } from "@/lib/dev-layout-sync";
-import { DebugRecorderButton, createDebugIdMap } from "@/components/debug";
-import { useDebugOverlay } from "@/lib/debug";
-import { DebugAxesOverlay, DebugStatsBar } from "@/components/sheets/debug-overlay";
+import { DevRecorderButton, createDevIdMap } from "@/components/dev-mode";
+import { useDeveloperMode, debugRecorder } from "@/lib/dev-mode";
+import { DevAxesOverlay, DevModeBar, DevLogsDropdown } from "@/components/sheets/dev-overlay";
 import type { BlockConstraints, GridPosition, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
@@ -156,8 +156,8 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
 
-  // -- Debug overlay -------------------------------------------------------
-  const { enabled: debugEnabled, toggle: toggleDebugOverlay } = useDebugOverlay();
+  // -- Developer mode ------------------------------------------------------
+  const { enabled: debugEnabled, toggle: toggleDeveloperMode } = useDeveloperMode();
   const [debugInitialPositions, setDebugInitialPositions] = useState<Map<string, GridPosition>>(
     () => new Map()
   );
@@ -170,19 +170,28 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         snapshot.set(block.id, { ...block.position });
       }
       setDebugInitialPositions(snapshot);
+    } else if (!debugEnabled && prevDebugEnabledRef.current) {
+      // Auto-stop any active recording when dev mode is turned off so we don't
+      // leak in-flight sessions. The promise is fire-and-forget; failures are
+      // logged but should not block the UI transition.
+      if (debugRecorder.getState().isRecording) {
+        debugRecorder.stop("auto-stopped (dev mode off)").catch((err) => {
+          console.warn("[dev] Failed to auto-stop recording:", err);
+        });
+      }
     }
     prevDebugEnabledRef.current = debugEnabled;
   }, [debugEnabled, editor.currentBlocks]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!matchesAction(event, ACTION_IDS.TOGGLE_DEBUG_OVERLAY)) return;
+      if (!matchesAction(event, ACTION_IDS.TOGGLE_DEVELOPER_MODE)) return;
       event.preventDefault();
-      toggleDebugOverlay();
+      toggleDeveloperMode();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [matchesAction, toggleDebugOverlay]);
+  }, [matchesAction, toggleDeveloperMode]);
 
   const debugMaxRow = useMemo(() => {
     let max = 0;
@@ -198,7 +207,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     [editor.currentBlocks]
   );
 
-  const debugIdMap = useMemo(() => createDebugIdMap(blocks), [blocks]);
+  const debugIdMap = useMemo(() => createDevIdMap(blocks), [blocks]);
 
   // Engine setup snapshot for the debug recorder.
   const debugEngineSetup = useMemo(() => {
@@ -262,38 +271,41 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   return (
     <>
-      <div className={cheatsheetStyles.layoutToolbar}>
-        <div className={cheatsheetStyles.layoutToolbarMeta}>
-          <span className={cheatsheetStyles.layoutStorageStatus} suppressHydrationWarning>
-            {hydrated && hasSavedLayout ? "Saved locally" : "Default layout"}
-          </span>
-          {isLayoutActive ? (
+      {isLayoutActive ? (
+        <div className={cheatsheetStyles.layoutToolbar}>
+          <div className={cheatsheetStyles.layoutToolbarMeta}>
             <span className={cheatsheetStyles.sectionLayoutLabel}>
               {gridMetrics.columns} cols · {Math.round(gridMetrics.unitSize)}px
             </span>
-          ) : null}
-          <button
-            type="button"
-            className={cheatsheetStyles.layoutSecondaryButton}
-            onClick={resetLayout}
-            disabled={!hydrated || !hasSavedLayout}
-            suppressHydrationWarning
-          >
-            Reset layout
-          </button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {debugEnabled ? (
-        <DebugStatsBar
+        <DevModeBar
           slug={sheetSlug}
           blockCount={editor.currentBlocks.length}
           maxRow={debugMaxRow}
+          hasSavedLayout={hydrated && hasSavedLayout}
+          onReset={resetLayout}
+          onSave={() => {
+            syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks)).catch((err) => {
+              console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
+            });
+          }}
+          recordingSlot={
+            <DevRecorderButton
+              page={`cheatsheets/${sheetSlug}`}
+              engine={debugEngineSetup}
+              debugIdMap={debugIdMap}
+            />
+          }
+          logsSlot={<DevLogsDropdown />}
         />
       ) : null}
 
       <SheetGrid editMode={isLayoutActive} debugMode={debugEnabled} onMetricsChange={updateGridMetrics}>
-        {debugEnabled ? <DebugAxesOverlay maxRow={debugMaxRow} /> : null}
+        {debugEnabled ? <DevAxesOverlay maxRow={debugMaxRow} /> : null}
         {blocks.map((block) => {
           const layoutBlock = currentBlocksById.get(block.id);
           if (!layoutBlock) return null;
@@ -359,7 +371,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
-      <DebugRecorderButton page={`cheatsheets/${sheetSlug}`} engine={debugEngineSetup} debugIdMap={debugIdMap} />
     </>
   );
 }

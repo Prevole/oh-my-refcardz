@@ -33,7 +33,7 @@ import type {
   DebugEvent,
   DebugSession,
   EngineEventRecord,
-} from "../src/lib/debug/types";
+} from "../src/lib/dev-mode/types";
 
 // -----------------------------------------------------------------------------
 // CLI parsing

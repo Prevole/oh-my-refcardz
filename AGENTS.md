@@ -174,7 +174,7 @@ Cheatsheets are YAML files in `content/cheatsheets/`. Each file requires: `title
 | Architecture | `docs/architecture.md` |
 | Layout engine (`src/lib/layout/engine/`) | `docs/layout-engine.md` |
 | Layout input mapping (drag/resize/keyboard hooks) | `docs/layout-actions.md` |
-| Debug overlay (`src/lib/debug/use-debug-overlay.ts`, `src/components/sheets/debug-overlay/`) | `docs/keybindings.md`, `docs/architecture.md` |
+| Debug overlay (`src/lib/dev-mode/use-developer-mode.ts`, `src/components/sheets/dev-overlay/`) | `docs/keybindings.md`, `docs/architecture.md` |
 
 ---
 
