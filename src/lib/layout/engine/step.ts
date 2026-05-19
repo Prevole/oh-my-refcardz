@@ -686,6 +686,116 @@ function resolveChainPushStep(
     previousId = id;
   }
 
+  // Phase 3.6.6a — cascading wrap promotion among chain members.
+  //
+  // When a wrappable A lands at its target, other chain members (B) that were
+  // shrunk or pushed during this step may now overlap A's placement. Rather
+  // than pushing B further south through the residual cascade (which would
+  // leave B at its shrunk size, sitting under A in a degenerate state), we
+  // promote B to a wrap as well: B is moved to a south-fallback target,
+  // restored to its session-initial size, and added to the immovable set so
+  // it participates in further cascades as an obstacle rather than a target.
+  //
+  // The promotion runs iteratively until no chain member collides with any
+  // placed wrappable, allowing transitive cascades (B promotes, which may
+  // then cause C to collide and promote, etc.).
+  //
+  // This phase applies only for horizontal-axis steps (east/west) where the
+  // south fallback wrap is meaningful; vertical-axis wraps already stack
+  // through their own placement logic.
+  if (direction === "east" || direction === "west") {
+    let promoted = true;
+    while (promoted) {
+      promoted = false;
+      // Build the list of placed wrappables (originals + previously promoted).
+      // A chain member is a candidate for promotion if it is in the chain,
+      // is NOT itself a wrappable (already placed), and collides with any
+      // placed wrappable's current position.
+      const placedWrappableBlocks = ctx.blocks.filter((b) => affectedWrapped.has(b.id));
+      const candidates: LayoutBlock[] = [];
+      for (const id of actions.keys()) {
+        if (id === primary.id) continue;
+        if (affectedWrapped.has(id)) continue;
+        const member = ctx.blocks.find((b) => b.id === id);
+        /* c8 ignore next -- defensive: ids come from actions keyed by ctx.blocks */
+        if (!member) continue;
+        const collides = placedWrappableBlocks.some((w) => intersects(member.position, w.position));
+        if (collides) candidates.push(member);
+      }
+      if (candidates.length === 0) break;
+
+      // Promote each candidate to a south-fallback wrap. We recompute the
+      // south-fallback placement using all currently placed wrappables as
+      // pre-occupied space (by including them via the primary-region check
+      // inside computeSouthFallbackPlacements).
+      //
+      // To stay consistent with the existing south-fallback semantics, we
+      // run computeSouthFallbackPlacements once with all candidates as new
+      // wrappables, using their session-initial sizes and initial-x targets.
+      const wrappableInputsForPromotion: WrappableInput[] = candidates.map((member) => {
+        const restored = ctx.session.getInitialSize(member.id) ?? {
+          w: member.position.w,
+          h: member.position.h,
+        };
+        const initialX = ctx.session.getInitialPosition(member.id)?.x ?? member.position.x;
+        return {
+          id: member.id,
+          current: { ...member.position },
+          restoredSize: restored,
+          initialX,
+        };
+      });
+      // Account for already-placed wrappables by adding them as virtual
+      // obstacles. The south-fallback algorithm treats the primary's new
+      // position as the seed; existing wrappables also occupy space. To
+      // make the algorithm aware of those, we pass the union region as
+      // primary. The cleanest way is to call the algorithm once and then
+      // post-correct by stacking against placed wrappables.
+      const placements = computeSouthFallbackPlacements({
+        primary: primaryNewPos,
+        wrappables: wrappableInputsForPromotion,
+      });
+
+      for (const placement of placements) {
+        const member = ctx.blocks.find((b) => b.id === placement.id);
+        /* c8 ignore next -- defensive: placement.id comes from candidates */
+        if (!member) continue;
+        let target = placement.target;
+        // Stack against already-placed wrappables (originals + already promoted
+        // in earlier iterations of this loop): if target overlaps any placed
+        // wrappable, push target south.
+        let safety = ctx.blocks.length + 1;
+        while (safety-- > 0) {
+          const conflict = ctx.blocks.find(
+            (other) =>
+              other.id !== member.id &&
+              affectedWrapped.has(other.id) &&
+              intersects(target, other.position)
+          );
+          if (!conflict) break;
+          target = { ...target, y: conflict.position.y + conflict.position.h };
+        }
+        const from = { ...member.position };
+        member.position = target;
+        ctx.emit({
+          type: "block.wrap",
+          opId: ctx.opId,
+          stepIndex: ctx.stepIndex,
+          blockId: member.id,
+          from,
+          to: { ...target },
+          restoredSize: { w: target.w, h: target.h },
+          cause: { kind: "wrap-fallback-south" },
+        });
+        affectedWrapped.add(member.id);
+        affectedMoved.delete(member.id);
+        affectedShrunk.delete(member.id);
+        wrapResidualOrder.push(member.id);
+        promoted = true;
+      }
+    }
+  }
+
   // Phase 3.6.6b — residual collisions for wrap placements.
   //
   // After all wrappables have landed on their precomputed targets (south

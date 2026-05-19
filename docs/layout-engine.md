@@ -210,6 +210,22 @@ Determining the order of placement:
 
 **Note**: this may create holes in the south region. That is accepted; holes resolve naturally when the user moves blocks back.
 
+### Cascading wrap among chain members
+
+When a wrappable A lands at its south-fallback target, other members of the same chain (shrunk, moved, or otherwise still occupying their pre-step rows) may now collide with A's new placement. Pushing them further south with the residual cascade would leave them at their shrunk size, sitting under A in a degenerate state.
+
+To avoid this, a **wrap-promotion pass** runs *before* the residual cascade (horizontal-axis steps only). For every chain member B (not the primary, not already wrapped) whose current position overlaps any placed wrappable, B is **promoted to a wrap**:
+
+- B is moved to a south-fallback target computed against the primary's new position.
+- B is restored to its **session-initial size** (`SessionMemory.getInitialSize`).
+- B is stacked against already-placed wrappables (originals or earlier promotions in the same step) by pushing its target south as long as it overlaps any of them.
+- B is added to the set of placed wrappables (immovable for the residual cascade).
+- A `block.wrap` event is emitted with `cause = { kind: "wrap-fallback-south" }`.
+
+The pass runs iteratively until no candidate remains, so promotions cascade transitively: if B's promotion creates a new collision for C, C is promoted on the next iteration.
+
+The promotion criterion is purely positional: *any* chain member in collision with a wrappable's placement is eligible, regardless of whether it was previously shrunk, pushed, or just moved. A non-chain block in the same situation is handled by the residual cascade instead (it is pushed south, not wrapped, because it never participated in the chain).
+
 ### Residual cascade after wrap
 
 After every wrappable member has landed on its target (south-fallback for horizontal axis, opposite-side baseline for vertical axis), the destination region may still contain non-chain, non-wrappable blocks that collide with the wrappable's new placement. The **residual cascade** resolves these post-wrap collisions by pushing the offending blocks south.

@@ -490,3 +490,88 @@ describe("integration — east drag wrap south residual cascade is minimal", () 
     }
   });
 });
+
+// -----------------------------------------------------------------------------
+// Scenario: cascading wrap among chain members.
+//
+// When a chain member A (heading) reaches its minW and wraps south, any other
+// chain member B that ends up overlapping with A's wrap target must itself
+// wrap south (and restore its session-initial size), rather than just being
+// pushed by the residual cascade. This avoids leaving A sitting on top of B
+// in a state where B is still shrunk.
+// -----------------------------------------------------------------------------
+
+describe("integration — cascading wrap among chain members", () => {
+  it("promotes a chain member to wrap when it collides with another member's wrap target", () => {
+    // Setup: A is a heading at the top of a column, B is the card directly
+    // under A, C is the card to the east. All three share the top of the grid.
+    // Drag C west enough to force A through shrink-to-minW then wrap.
+    //
+    //   A = heading at (0, 0, w=18, h=2), minW=12
+    //   B = card at (0, 2, w=18, h=22), minW=6
+    //   C = card at (18, 0, w=18, h=11), minW=6 — primary
+    //
+    // Dragging C west by dx=-7 forces:
+    //   - C through x=18..11 (chain west: C → A & B push west)
+    //   - A shrinks until w=12 (minW) then wraps south
+    //   - B shrinks alongside A
+    // After A wraps, A and B both end up at full width below the primary.
+    const initial: LayoutBlock[] = [
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 18, h: 2 } },
+      block("B", 0, 2, 18, 22),
+      block("C", 18, 0, 18, 11),
+    ];
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "C",
+      dx: -7,
+      dy: 0,
+    };
+
+    const options = makeOptions(initial, {
+      A: { minW: 12, minH: 2 },
+      B: { minW: 6 },
+      C: { minW: 6 },
+    });
+
+    const result = applyOperation(initial, op, options);
+
+    expect(result.accepted).toBe(true);
+
+    const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
+
+    // C moves west to x=11.
+    expect(byId("C").x).toBe(11);
+
+    // A reached minW=12 and was forced to wrap south. After wrap, A is
+    // restored to its session-initial width (w=18).
+    expect(byId("A").w).toBe(18);
+    expect(byId("A").y).toBeGreaterThan(0);
+
+    // B was in the chain alongside A but as a non-wrappable shrinker. When A
+    // wrapped to a y where B was still sitting, B should also wrap south
+    // (rather than be left in place to overlap A) and restore its session-
+    // initial width.
+    expect(byId("B").w).toBe(18);
+    expect(byId("B").y).toBeGreaterThan(2);
+
+    // No overlap anywhere.
+    for (let i = 0; i < result.blocks.length; i++) {
+      for (let j = i + 1; j < result.blocks.length; j++) {
+        const a = result.blocks[i].position;
+        const b = result.blocks[j].position;
+        const overlap =
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(
+          overlap,
+          `${result.blocks[i].id} (${JSON.stringify(a)}) overlaps ${result.blocks[j].id} (${JSON.stringify(b)})`
+        ).toBe(false);
+      }
+    }
+
+    // A wraps before B (A reached minW first), so A should be above B in the
+    // final layout.
+    expect(byId("A").y).toBeLessThanOrEqual(byId("B").y);
+  });
+});
