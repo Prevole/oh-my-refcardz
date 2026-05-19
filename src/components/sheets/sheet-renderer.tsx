@@ -9,11 +9,19 @@ import { getRenderableBlocks, type CheatSheetItem, type YamlCheatSheetWithMeta }
 import { buildBlockAnchorId } from "@/lib/anchor-navigation";
 import { migrateBlockLayouts, toOldBlockLayouts } from "@/lib/layout/migration";
 import { syncLayoutToDev } from "@/lib/dev-layout-sync";
-import { DevRecorderButton, createDevIdMap } from "@/components/dev-mode";
+import { DevRecorderButton, createDevIdMap, type DevRecorderButtonHandle } from "@/components/dev-mode";
 import { useDeveloperMode, debugRecorder } from "@/lib/dev-mode";
-import { DevAxesOverlay, DevModeBar, DevLogsDropdown } from "@/components/sheets/dev-overlay";
+import {
+  DevAxesOverlay,
+  DevModeBar,
+  DevLogsDropdown,
+  type DevAxesOverlayHandle,
+  type DevLogsDropdownHandle,
+} from "@/components/sheets/dev-overlay";
 import type { BlockConstraints, GridPosition, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
 import { useKeybindings } from "@/hooks/use-keybindings";
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
+import { useAction } from "@/hooks/use-action";
 import { ACTION_IDS } from "@/lib/keybindings";
 import {
   useLayoutPersistence,
@@ -162,6 +170,15 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     () => new Map()
   );
   const prevDebugEnabledRef = useRef(false);
+  const recorderRef = useRef<DevRecorderButtonHandle>(null);
+  const logsRef = useRef<DevLogsDropdownHandle>(null);
+  const axesRef = useRef<DevAxesOverlayHandle>(null);
+
+  // Push the dedicated `dev` scope while developer mode is on. This makes
+  // every sheet-level keybinding inert (they are all gated on the `global`
+  // scope or via `useScopedKeyboardHandler("global", …)`), so dev-mode keys
+  // can be defined without conflicts.
+  useKeyboardScope("dev", debugEnabled, { modal: true });
 
   useEffect(() => {
     if (debugEnabled && !prevDebugEnabledRef.current) {
@@ -192,6 +209,36 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [matchesAction, toggleDeveloperMode]);
+
+  // -- Dev mode keyboard actions ------------------------------------------
+  // The `dev` scope is pushed while developer mode is on. These handlers are
+  // therefore only active in that mode and never collide with sheet/global
+  // bindings.
+  const saveLayoutToDev = useCallback(() => {
+    syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks)).catch((err) => {
+      console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
+    });
+  }, [editor.committedBlocks, sheetSlug]);
+
+  useAction(ACTION_IDS.DEV_SAVE_LAYOUT, "dev", () => {
+    if (process.env.NODE_ENV === "development") saveLayoutToDev();
+  });
+
+  useAction(ACTION_IDS.DEV_RESET_LAYOUT, "dev", () => {
+    if (hasSavedLayout) resetLayout();
+  });
+
+  useAction(ACTION_IDS.DEV_TOGGLE_RECORDING, "dev", () => {
+    recorderRef.current?.toggle();
+  });
+
+  useAction(ACTION_IDS.DEV_TOGGLE_LOGS, "dev", () => {
+    logsRef.current?.toggle();
+  });
+
+  useAction(ACTION_IDS.DEV_ENTER_AXES_MODE, "dev", () => {
+    axesRef.current?.enterAxesMode();
+  });
 
   const debugMaxRow = useMemo(() => {
     let max = 0;
@@ -271,16 +318,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   return (
     <>
-      {isLayoutActive ? (
-        <div className={cheatsheetStyles.layoutToolbar}>
-          <div className={cheatsheetStyles.layoutToolbarMeta}>
-            <span className={cheatsheetStyles.sectionLayoutLabel}>
-              {gridMetrics.columns} cols · {Math.round(gridMetrics.unitSize)}px
-            </span>
-          </div>
-        </div>
-      ) : null}
-
       {debugEnabled ? (
         <DevModeBar
           slug={sheetSlug}
@@ -288,24 +325,21 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           maxRow={debugMaxRow}
           hasSavedLayout={hydrated && hasSavedLayout}
           onReset={resetLayout}
-          onSave={() => {
-            syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks)).catch((err) => {
-              console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
-            });
-          }}
+          onSave={saveLayoutToDev}
           recordingSlot={
             <DevRecorderButton
+              ref={recorderRef}
               page={`cheatsheets/${sheetSlug}`}
               engine={debugEngineSetup}
               debugIdMap={debugIdMap}
             />
           }
-          logsSlot={<DevLogsDropdown />}
+          logsSlot={<DevLogsDropdown ref={logsRef} />}
         />
       ) : null}
 
       <SheetGrid editMode={isLayoutActive} debugMode={debugEnabled} onMetricsChange={updateGridMetrics}>
-        {debugEnabled ? <DevAxesOverlay maxRow={debugMaxRow} /> : null}
+        {debugEnabled ? <DevAxesOverlay ref={axesRef} maxRow={debugMaxRow} /> : null}
         {blocks.map((block) => {
           const layoutBlock = currentBlocksById.get(block.id);
           if (!layoutBlock) return null;

@@ -17,6 +17,9 @@ export function mergeWithDefaults(stored: Partial<KeybindingsConfig>): Keybindin
     home: [],
     sheet: [],
     "sheet-layout": [],
+    dev: [],
+    "dev-logs": [],
+    "dev-axes": [],
   };
 
   for (const context of Object.keys(DEFAULT_KEYBINDINGS) as KeybindingContext[]) {

@@ -19,7 +19,14 @@ export interface KeyDisplayPart {
   value: string;
 }
 
-export type KeybindingContext = "global" | "home" | "sheet" | "sheet-layout";
+export type KeybindingContext =
+  | "global"
+  | "home"
+  | "sheet"
+  | "sheet-layout"
+  | "dev"
+  | "dev-logs"
+  | "dev-axes";
 
 export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null {
   switch (scope) {
@@ -27,6 +34,12 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "global";
     case "sheet-layout":
       return "sheet-layout";
+    case "dev":
+      return "dev";
+    case "dev-logs":
+      return "dev-logs";
+    case "dev-axes":
+      return "dev-axes";
     default:
       return null;
   }
@@ -69,6 +82,32 @@ export const ACTION_IDS = {
   CARD_SHRINK_HEIGHT: "sheet-layout.shrink-height",
   CARD_GROW_HEIGHT: "sheet-layout.grow-height",
   LAYOUT_DEV_SAVE: "sheet-layout.dev-save",
+
+  // Developer mode top-level actions (scope `dev` / context `dev`).
+  DEV_SAVE_LAYOUT: "dev.save-layout",
+  DEV_RESET_LAYOUT: "dev.reset-layout",
+  DEV_TOGGLE_RECORDING: "dev.toggle-recording",
+  DEV_TOGGLE_LOGS: "dev.toggle-logs",
+  DEV_ENTER_AXES_MODE: "dev.enter-axes-mode",
+
+  // Logs dropdown sub-mode (scope `dev-logs` / context `dev-logs`).
+  DEV_LOGS_CURSOR_DOWN: "dev-logs.cursor-down",
+  DEV_LOGS_CURSOR_UP: "dev-logs.cursor-up",
+  DEV_LOGS_COPY_FILENAME: "dev-logs.copy-filename",
+  DEV_LOGS_DELETE: "dev-logs.delete",
+  DEV_LOGS_DELETE_ALL: "dev-logs.delete-all",
+  DEV_LOGS_REFRESH: "dev-logs.refresh",
+  DEV_LOGS_CLOSE: "dev-logs.close",
+
+  // Axes selection sub-mode (scope `dev-axes` / context `dev-axes`).
+  DEV_AXES_CURSOR_LEFT: "dev-axes.cursor-left",
+  DEV_AXES_CURSOR_RIGHT: "dev-axes.cursor-right",
+  DEV_AXES_CURSOR_UP: "dev-axes.cursor-up",
+  DEV_AXES_CURSOR_DOWN: "dev-axes.cursor-down",
+  DEV_AXES_TOGGLE_COL: "dev-axes.toggle-col",
+  DEV_AXES_TOGGLE_ROW: "dev-axes.toggle-row",
+  DEV_AXES_CLEAR_ALL: "dev-axes.clear-all",
+  DEV_AXES_EXIT: "dev-axes.exit",
 } as const;
 
 export type ActionId = (typeof ACTION_IDS)[keyof typeof ACTION_IDS];
@@ -250,6 +289,115 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_DEV_SAVE,
       label: "Save layout to dev backend",
       combos: [combo("s", "ctrl", "shift")],
+    },
+  ],
+
+  dev: [
+    {
+      id: ACTION_IDS.DEV_SAVE_LAYOUT,
+      label: "Save layout (dev)",
+      combos: [key("s")],
+    },
+    {
+      id: ACTION_IDS.DEV_RESET_LAYOUT,
+      label: "Reset layout",
+      combos: [key("w")],
+    },
+    {
+      id: ACTION_IDS.DEV_TOGGLE_RECORDING,
+      label: "Toggle recording",
+      combos: [key("r")],
+    },
+    {
+      id: ACTION_IDS.DEV_TOGGLE_LOGS,
+      label: "Toggle logs dropdown",
+      combos: [key("o")],
+    },
+    {
+      id: ACTION_IDS.DEV_ENTER_AXES_MODE,
+      label: "Enter axes selection mode",
+      combos: [combo("G", "shift")],
+    },
+  ],
+
+  "dev-logs": [
+    {
+      id: ACTION_IDS.DEV_LOGS_CURSOR_DOWN,
+      label: "Cursor down",
+      combos: [key("j"), key("ArrowDown")],
+    },
+    {
+      id: ACTION_IDS.DEV_LOGS_CURSOR_UP,
+      label: "Cursor up",
+      combos: [key("k"), key("ArrowUp")],
+    },
+    {
+      id: ACTION_IDS.DEV_LOGS_COPY_FILENAME,
+      label: "Copy filename",
+      combos: [key("y")],
+    },
+    {
+      id: ACTION_IDS.DEV_LOGS_DELETE,
+      label: "Delete session",
+      combos: [key("d")],
+    },
+    {
+      id: ACTION_IDS.DEV_LOGS_DELETE_ALL,
+      label: "Delete all sessions",
+      combos: [combo("D", "shift")],
+    },
+    {
+      id: ACTION_IDS.DEV_LOGS_REFRESH,
+      label: "Refresh list",
+      combos: [combo("R", "shift")],
+    },
+    {
+      id: ACTION_IDS.DEV_LOGS_CLOSE,
+      label: "Close dropdown",
+      combos: [key("Escape")],
+    },
+  ],
+
+  "dev-axes": [
+    {
+      id: ACTION_IDS.DEV_AXES_CURSOR_LEFT,
+      label: "Cursor left",
+      combos: [key("h"), key("ArrowLeft")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_CURSOR_RIGHT,
+      label: "Cursor right",
+      combos: [key("l"), key("ArrowRight")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_CURSOR_UP,
+      label: "Cursor up",
+      combos: [key("k"), key("ArrowUp")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_CURSOR_DOWN,
+      label: "Cursor down",
+      combos: [key("j"), key("ArrowDown")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_TOGGLE_COL,
+      label: "Toggle column pin",
+      combos: [key(" "), key("Enter")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_TOGGLE_ROW,
+      label: "Toggle row pin",
+      combos: [combo(" ", "shift"), combo("Enter", "shift")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_CLEAR_ALL,
+      label: "Clear all pinned",
+      combos: [key("c")],
+    },
+    {
+      id: ACTION_IDS.DEV_AXES_EXIT,
+      label: "Exit axes mode",
+      combos: [key("Escape")],
     },
   ],
 };

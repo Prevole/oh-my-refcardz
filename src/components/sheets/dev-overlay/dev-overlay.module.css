@@ -97,6 +97,21 @@
   z-index: 2;
 }
 
+/* Keyboard-mode emphasis: the virtual cursor reuses the hover bands but
+   appears more solid to differentiate it from a fleeting mouse hover. */
+.axesKeyboardMode .rowBandHover,
+.axesKeyboardMode .colBandHover {
+  background: color-mix(in srgb, var(--accent-2) 22%, transparent);
+  outline-style: solid;
+  outline-color: color-mix(in srgb, var(--accent-2) 85%, transparent);
+}
+
+.axesKeyboardMode .intersectionHover {
+  background: color-mix(in srgb, var(--accent-2) 40%, transparent);
+  outline-style: solid;
+  outline-color: color-mix(in srgb, var(--accent-2) 95%, transparent);
+}
+
 .intersection {
   position: absolute;
   width: var(--sheet-grid-column-size);
@@ -157,7 +172,8 @@
     color 0.1s ease;
 }
 
-.colLabel:hover {
+.colLabel:hover,
+.colLabel.axisLabelHover {
   background: color-mix(in srgb, var(--accent-2) 20%, var(--bg-dark-base));
   border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border-subtle));
   color: var(--fg-100);
@@ -204,7 +220,8 @@
     color 0.1s ease;
 }
 
-.rowLabel:hover {
+.rowLabel:hover,
+.rowLabel.axisLabelHover {
   background: color-mix(in srgb, var(--accent-2) 20%, var(--bg-dark-base));
   border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border-subtle));
   color: var(--fg-100);
@@ -367,6 +384,16 @@
   display: block;
 }
 
+.spinner {
+  animation: dev-overlay-spin 0.7s linear infinite;
+}
+
+@keyframes dev-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .toolbarCount {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -440,6 +467,14 @@
 
 .logsItem:hover {
   background: color-mix(in srgb, var(--surface-soft) 60%, transparent);
+}
+
+/* Keyboard cursor: teal `--accent-2` to match the dev-mode hover hue used by
+   the axes overlay. Stays visible under hover via specificity. */
+.logsItemSelected,
+.logsItemSelected:hover {
+  background: color-mix(in srgb, var(--accent-2) 18%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border-subtle));
 }
 
 .logsItemMain {

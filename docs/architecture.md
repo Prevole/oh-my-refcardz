@@ -88,7 +88,9 @@ See: [entry-renderers.md](./entry-renderers.md)
 
 ### Keybindings
 
-Configurable keyboard shortcuts with scope management.
+Configurable keyboard shortcuts with scope management. The system uses a declarative action registry (`useAction(id, scope, handler)`) and a single global `KeyboardDispatcher` (mounted in `src/app/providers.tsx`) that walks the scope stack top-down on every `keydown`, dispatching to the first matching handler. Scopes are pushed with a per-call `modal` flag that controls cascade blocking.
+
+Legacy direct listeners (`useScopedKeyboardHandler`, raw `window.addEventListener` with `matchesAction`) still coexist for older code paths.
 
 See: [keybindings.md](./keybindings.md)
 
@@ -112,10 +114,10 @@ See: [layout-engine.md](./layout-engine.md) and [layout-actions.md](./layout-act
 
 ### Developer Mode
 
-A diagnostic mode for cheatsheet layouts, toggled via `Ctrl+Shift+D` (scope `sheet`). Developer mode is independent of the layout edit mode. When active it renders:
+A diagnostic mode for cheatsheet layouts, toggled via `Ctrl+Shift+D` (the toggle uses a raw `window` listener so it always works, even while modal dev sub-scopes are active). Developer mode is independent of the layout edit mode. When active it pushes the modal `dev` scope, which isolates all other shortcuts. It renders:
 
-- Numbered, interactive grid axes (hover bands, click-to-pin rows/columns, intersection highlighting).
-- A sticky dev-mode bar at the top of the viewport with stats and a toolbar (Reset / Save / Recording / Logs).
+- Numbered, interactive grid axes (hover bands, click-to-pin rows/columns, intersection highlighting, and a keyboard-driven cursor sub-mode entered via `Shift+G` → modal `dev-axes` scope).
+- A sticky dev-mode bar at the top of the viewport with stats and a toolbar (Reset / Save / Recording / Logs). The Logs dropdown pushes the modal `dev-logs` scope.
 - Enriched block badges showing the drift from the reference position captured when developer mode was last activated.
 
 The Save button and the Logs dropdown are only mounted when `NODE_ENV=development`. Toggling developer mode off automatically stops any in-flight recording session.
@@ -178,6 +180,7 @@ See: [keybindings.md](./keybindings.md#developer-mode)
 ```
 RootLayout
 ├── KeyboardContextProvider
+│   └── KeyboardDispatcher (single global keydown listener)
 ├── KeybindingsProvider
 ├── UISettingsProvider
 └── Page

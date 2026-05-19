@@ -286,6 +286,9 @@ const CONTEXT_LABELS: Record<KeybindingContext, string> = {
   home: "Home",
   sheet: "Cheatsheet",
   "sheet-layout": "Layout",
+  dev: "Developer Mode",
+  "dev-logs": "Developer Mode — Logs",
+  "dev-axes": "Developer Mode — Axes",
 };
 
 function ContextSection({
@@ -434,7 +437,15 @@ export function KeybindingEditor() {
     setLastConflict(null);
   }, [resetAll]);
 
-  const contexts: KeybindingContext[] = ["global", "home", "sheet", "sheet-layout"];
+  const contexts: KeybindingContext[] = [
+    "global",
+    "home",
+    "sheet",
+    "sheet-layout",
+    "dev",
+    "dev-logs",
+    "dev-axes",
+  ];
 
   return (
     <div className={styles.editor}>

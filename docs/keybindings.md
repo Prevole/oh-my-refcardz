@@ -6,17 +6,30 @@ The keybindings system provides configurable keyboard shortcuts with scope manag
 
 ```
 src/lib/
-├── keybindings.ts        # Action IDs, default config, key matching
-├── keyboard-scope.ts     # Scope stack management
-└── keybinding-utils.ts   # Merge, conflict detection utilities
+├── keybindings.ts            # Action IDs, default config, key matching
+├── keyboard-scope.ts         # Scope stack management
+├── keyboard-dispatch.ts      # Pure cascade + modality + conflict routine
+├── action-handler-registry.ts # (actionId, scope) -> handler singleton
+└── keybinding-utils.ts       # Merge, conflict detection utilities
 
 src/hooks/
-├── use-keybindings.tsx   # KeybindingsProvider, useKeybindings hook
-└── use-keyboard-context.tsx  # KeyboardContextProvider, scope hooks
+├── use-keybindings.tsx       # KeybindingsProvider, useKeybindings hook
+├── use-keyboard-context.tsx  # KeyboardContextProvider, scope hooks
+└── use-action.ts             # useAction(actionId, scope, handler)
+
+src/components/keyboard/
+└── keyboard-dispatcher.tsx   # Single global keydown listener
 
 src/components/settings/
-└── keybinding-editor.tsx # UI for customizing keybindings
+└── keybinding-editor.tsx     # UI for customizing keybindings
 ```
+
+There are **two coexisting handler paths**:
+
+1. **Action registry + dispatcher (preferred)** — Declarative. Call `useAction(id, scope, handler)` to bind a handler to a `(actionId, scope)` pair. A single global `keydown` listener (the `KeyboardDispatcher`) walks the scope stack and runs at most one handler per event.
+2. **Legacy direct listeners** — Older code uses `useScopedKeyboardHandler(scope, fn)` or raw `window.addEventListener("keydown", ...)` with `matchesAction(event, action)`. Still supported; new code should prefer the registry.
+
+The two paths coexist without interference because the dispatcher only fires for actions explicitly bound through the registry; everything else is left to legacy listeners.
 
 ## Core Concepts
 
@@ -29,6 +42,7 @@ export const ACTION_IDS = {
   TOGGLE_HELP: "global.toggle-help",
   MOVE_UP: "global.move-up",
   COPY_COMMAND: "sheet.copy",
+  DEV_SAVE_LAYOUT: "dev.save-layout",
   // ...
 } as const;
 ```
@@ -54,34 +68,76 @@ Helper functions:
 
 ### Contexts
 
-Keybindings are grouped by context:
+Keybindings are grouped by context. Adding a new context requires updating `KeybindingContext`, `scopeToContext()`, `DEFAULT_KEYBINDINGS`, `mergeWithDefaults()` and the settings editor (label + listing).
 
 | Context | When active | Example actions |
 |---------|-------------|-----------------|
 | `global` | Always | Navigation, help, settings |
 | `home` | Home page | Search, open sheet |
 | `sheet` | Cheatsheet page | Copy, show details, back to home |
-| `sheet-layout` | Cheatsheet page | Card navigation, resize |
+| `sheet-layout` | Layout edit mode | Card navigation, resize |
+| `dev` | Developer mode active | Save/reset/record/logs/axes |
+| `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |
+| `dev-axes` | Axes keyboard mode | Cursor nav, pin row/col |
 
 ### Scopes
 
-Scopes control which keybindings are active. They form a stack:
+Scopes form a stack of `{ scope, modal }` entries:
 
 ```
-["global"]                    # Base state
-["global", "help"]            # Help modal open
-["global", "settings"]        # Settings panel open
+[{ scope: "global", modal: false }]                       # Base
+[..., { scope: "help",  modal: false }]                   # Help modal open
+[..., { scope: "dev",   modal: true  },
+      { scope: "dev-logs", modal: true }]                 # Dev mode with logs open
 ```
 
-When a scope is pushed, keybindings in that scope become active. Scopes can block lower scopes (e.g., modal blocks global navigation).
+#### Modality (cascade blocking)
+
+Each scope on the stack declares whether it is **modal**:
+
+- **Non-modal**: an unmatched event cascades to the next lower scope.
+- **Modal**: an unmatched event stops at this scope. The cascade does not reach lower scopes.
+
+Modality is **per-push**, not a global scope property — the same scope can be modal or not depending on the call site:
+
+```typescript
+useKeyboardScope("dev-logs", open, { modal: true });
+```
+
+The dispatcher cascade walks the stack top-down and stops on the first scope that yields a match. If a modal scope yields no match, the cascade halts there (preventing leak to lower scopes such as the parent `dev` mode).
 
 ## Usage
 
-### Checking if an action matches
+### Registering an action handler (recommended)
+
+```typescript
+import { useAction } from "@/hooks/use-action";
+import { ACTION_IDS } from "@/lib/keybindings";
+
+function MyComponent() {
+  useAction(ACTION_IDS.DEV_SAVE_LAYOUT, "dev", () => {
+    saveLayout();
+  });
+}
+```
+
+The handler reference is auto-refreshed; only `actionId` and `scope` participate in bind/unbind, so callers do not need to memoize the handler.
+
+### Pushing a scope
+
+```typescript
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
+
+function Dropdown({ open }) {
+  // Modal so parent shortcuts do not leak through while open.
+  useKeyboardScope("dev-logs", open, { modal: true });
+}
+```
+
+### Legacy: direct matchesAction usage
 
 ```typescript
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { ACTION_IDS } from "@/lib/keybindings";
 
 function MyComponent() {
   const { matchesAction } = useKeybindings();
@@ -99,54 +155,29 @@ function MyComponent() {
 }
 ```
 
-### Resolving multiple actions
+This pattern is still used in many places; prefer `useAction` for new code.
 
-When multiple actions could match, use `resolveAction`:
+### Resolving multiple actions (legacy)
 
 ```typescript
-const { resolveAction } = useKeybindings();
-
 const matchedAction = resolveAction(event, [
   ACTION_IDS.MOVE_UP,
   ACTION_IDS.MOVE_DOWN,
   ACTION_IDS.COPY_COMMAND,
 ]);
-
-if (matchedAction === ACTION_IDS.MOVE_UP) {
-  // ...
-}
 ```
 
-### Scoped keyboard handlers
-
-Use `useScopedKeyboardHandler` to only handle keys when a scope is active:
+### Scoped keyboard handler (legacy)
 
 ```typescript
-import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
-
 useScopedKeyboardHandler("global", (event) => {
-  // Only called when "global" scope is active
   if (matchesAction(event, ACTION_IDS.TOGGLE_HELP)) {
     setHelpOpen(true);
   }
 }, [matchesAction]);
 ```
 
-### Managing scopes
-
-Push/pop scopes when modals or panels open:
-
-```typescript
-import { useKeyboardScope } from "@/hooks/use-keyboard-context";
-
-function Modal({ open }) {
-  useKeyboardScope("help", open);
-  // When open=true, "help" scope is pushed
-  // When open=false, "help" scope is popped
-}
-```
-
-## Adding a New Keybinding
+## Adding a new keybinding
 
 ### 1. Define the action ID
 
@@ -161,32 +192,29 @@ export const ACTION_IDS = {
 
 ### 2. Add to default config
 
-In `src/lib/keybindings.ts`, add to the appropriate context:
-
 ```typescript
 export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   // ...
-  "sheet": [
+  sheet: [
     // ... existing
     {
       id: ACTION_IDS.MY_NEW_ACTION,
       label: "My new action",
-      combos: [key("m"), combo("m", "shift")],  // Multiple bindings OK
+      combos: [key("m"), combo("m", "shift")],
     },
   ],
 };
 ```
 
-### 3. Handle the action
-
-In your component or hook:
+### 3. Register the handler
 
 ```typescript
-if (matchesAction(e, ACTION_IDS.MY_NEW_ACTION)) {
-  e.preventDefault();
+useAction(ACTION_IDS.MY_NEW_ACTION, "sheet", () => {
   doMyAction();
-}
+});
 ```
+
+(Note: as of writing, the `sheet` scope is not yet routed through the dispatcher; for that scope use the legacy `matchesAction` pattern. New sub-scopes added under developer mode flow through the registry by default.)
 
 ### 4. Update help modal (optional)
 
@@ -203,16 +231,24 @@ Users can customize keybindings via Settings (`","` key):
 
 Customizations are stored in localStorage under `oh-my-refcardz:keybindings`.
 
-## Conflict Detection
+## Conflict detection
 
-When adding a combo that's already bound to another action:
+Two layers:
 
-1. The conflict is detected via `findConflict()`
-2. The old binding is automatically removed
-3. The new binding is added
-4. A `KeybindingConflict` object is returned for UI feedback
+### Editor-level (definition conflicts)
 
-## Key Sequences
+When adding a combo to an action that collides with another action in the same context, `findConflict()` detects it; the old binding is removed and a `KeybindingConflict` object is returned for UI feedback.
+
+### Dispatcher-level (runtime conflicts)
+
+When two handlers in the **same scope** both match the same event, the dispatcher applies strict conflict detection:
+
+- `NODE_ENV === "development"`: throws `Conflicting key handlers in scope "X": ...`. This guarantees a conflict is caught during development.
+- Other environments: calls `onConflict(scope, ids)` (which logs a warning) and runs the first matching handler deterministically.
+
+This catches the case where two actions in the same context happen to share a combo and both have handlers bound.
+
+## Key sequences
 
 For multi-key sequences like Vim's `gg`:
 
@@ -226,36 +262,79 @@ For multi-key sequences like Vim's `gg`:
 
 The system tracks pending sequences with an 800ms timeout.
 
-## Best Practices
+## Best practices
 
-1. **Use contexts appropriately** — Global actions in `global`, page-specific in their context
-2. **Provide multiple bindings** — e.g., both `j` and `ArrowDown` for accessibility
-3. **Check scope before handling** — Use `isScopeActive()` or `useScopedKeyboardHandler`
-4. **Prevent default** — Call `e.preventDefault()` when handling to avoid browser defaults
-5. **Document in help modal** — Add new actions to the appropriate help component
+1. **Prefer `useAction`** over raw `window.addEventListener` for new code.
+2. **Use modality** when pushing scopes that represent modal UI (dropdowns, sub-modes). This prevents parent shortcuts from leaking through.
+3. **Provide multiple bindings** — e.g., both `j` and `ArrowDown` for accessibility.
+4. **Document in help modal** — Add new actions to the appropriate help component.
 
-## Developer Mode
+## Developer mode
 
-A dedicated action toggles **developer mode**, a diagnostic overlay used to inspect the grid and the layout engine on cheatsheet pages. Developer mode is independent of the layout edit mode and can be active at any time.
+Developer mode is a diagnostic overlay used to inspect the grid and the layout engine on cheatsheet pages. It is independent of layout edit mode and can be active at any time. State persists across reloads via `localStorage` (key `omr.developer-mode`).
+
+### Toggle
 
 | Action ID | Default combo | Scope |
 |---|---|---|
-| `sheet.toggle-developer-mode` (`ACTION_IDS.TOGGLE_DEVELOPER_MODE`) | `Ctrl+Shift+D` | `sheet` |
+| `sheet.toggle-developer-mode` (`ACTION_IDS.TOGGLE_DEVELOPER_MODE`) | `Ctrl+Shift+D` | `sheet` (raw `window` listener — bypasses the dispatcher so dev mode can always be toggled) |
 
-When enabled, the overlay provides:
+The shortcut collides with the browser's "Bookmark all tabs" default; the listener calls `preventDefault()` to suppress it.
 
-- **Axes rulers** — Numbered X (0..35) and Y (0..maxRow-1) labels around the grid. Hovering a label highlights the entire row/column with a soft band; clicking a label toggles a stronger "pinned" highlight (multiple rows and columns can be pinned simultaneously). Intersections between any active row and any active column are highlighted as squares; the square uses the stronger style when both axes are pinned and the softer one otherwise.
-- **Dev-mode bar** — A sticky status bar at the top of the viewport with the slug, grid dimensions, block count and layout state (`default` vs `modified`). The bar also hosts a toolbar with:
-  - `Reset` — Reset the layout to the cheatsheet default. Disabled when no local override is stored.
-  - `Save` — Persist the current layout to the source YAML via `/api/dev/layouts/[slug]`. Visible **only** when `NODE_ENV=development`.
-  - `Recording` — Inline replacement of the former floating recorder button. Start/stop debug session capture; right-click cancels.
-  - `Logs` — A dropdown listing previously recorded sessions under `.debug-sessions/`, with per-session `Copy` (clipboard) and `Del` (DELETE via `/api/dev/debug?id=…`) actions. Dev-only.
-  - The toggle shortcut is shown inline using `ActionInlineBinding`.
-- **Block badges** — Every block badge is enriched with its dev ID, block ID, current grid position and (if drifted) the position recorded when developer mode was last activated.
+### Modal scope stack
 
-The "initial position" reference is captured at the moment developer mode is toggled **on**, not at page load. Toggling off and on again resets the reference. State persists across reloads via `localStorage` (key `omr.developer-mode`).
+When dev mode is on, the stack typically looks like:
+
+```
+global → dev (modal)
+global → dev (modal) → dev-logs (modal)
+global → dev (modal) → dev-axes (modal)
+```
+
+Because `dev` is modal, all sheet/global shortcuts are inert while in dev mode. The two exceptions are `Ctrl+Shift+D` (toggle dev mode) and `Ctrl+Shift+S` (layout dev save), which run on dedicated listeners and bypass the dispatcher.
+
+### Scope `dev` actions (bare keys)
+
+| Action | Default | Effect |
+|---|---|---|
+| `DEV_SAVE_LAYOUT` | `s` | Save the current layout via `/api/dev/layouts/[slug]` (dev only) |
+| `DEV_RESET_LAYOUT` | `w` | Reset to the cheatsheet default (no-op if no local override) |
+| `DEV_TOGGLE_RECORDING` | `r` | Start / stop the debug recorder |
+| `DEV_TOGGLE_LOGS` | `o` | Open / close the recorded-sessions dropdown |
+| `DEV_ENTER_AXES_MODE` | `Shift+G` | Enter the keyboard-driven axes selection sub-mode |
+
+### Scope `dev-logs` actions (dropdown open)
+
+| Action | Default | Effect |
+|---|---|---|
+| `DEV_LOGS_CURSOR_DOWN` | `j`, `↓` | Move cursor down (cyclic) |
+| `DEV_LOGS_CURSOR_UP` | `k`, `↑` | Move cursor up (cyclic) |
+| `DEV_LOGS_COPY_FILENAME` | `y` | Copy selected filename |
+| `DEV_LOGS_DELETE` | `d` | Delete selected session |
+| `DEV_LOGS_DELETE_ALL` | `Shift+D` | Delete all sessions |
+| `DEV_LOGS_REFRESH` | `Shift+R` | Refresh list |
+| `DEV_LOGS_CLOSE` | `Esc` | Close dropdown |
+
+### Scope `dev-axes` actions (axes keyboard mode)
+
+| Action | Default | Effect |
+|---|---|---|
+| `DEV_AXES_CURSOR_LEFT` | `h`, `←` | Move virtual cursor left |
+| `DEV_AXES_CURSOR_RIGHT` | `l`, `→` | Move virtual cursor right |
+| `DEV_AXES_CURSOR_UP` | `k`, `↑` | Move virtual cursor up |
+| `DEV_AXES_CURSOR_DOWN` | `j`, `↓` | Move virtual cursor down |
+| `DEV_AXES_TOGGLE_COL` | `Space`, `Enter` | Pin / unpin the column at the cursor |
+| `DEV_AXES_TOGGLE_ROW` | `Shift+Space`, `Shift+Enter` | Pin / unpin the row at the cursor |
+| `DEV_AXES_CLEAR_ALL` | `c` | Clear all pinned rows / columns |
+| `DEV_AXES_EXIT` | `Esc` | Exit axes mode (returns to `dev` scope) |
+
+### Overlay components
+
+- **Axes rulers** — Numbered X (0..35) and Y (0..maxRow-1) labels around the grid. Hover (mouse over the grid or label) highlights a row/column. Click toggles a stronger "pinned" highlight. In axes keyboard mode, pointer tracking is suspended and a virtual cursor (driven by the actions above) replaces hover; bands appear solid (vs dashed) to distinguish them from a fleeting mouse hover.
+- **Dev-mode bar** — Sticky status bar with slug, grid dimensions, block count, layout state, and toolbar (`Reset`, `Save`, `Recording`, `Logs`).
+- **Block badges** — Every block shows its dev ID, block ID, current grid position, and (if drifted) the position recorded when developer mode was last activated.
+
+The "initial position" reference is captured at the moment developer mode is toggled **on**, not at page load. Toggling off and on again resets the reference.
 
 Turning developer mode **off** while a recording session is active automatically stops the recording (the session is persisted with the description `auto-stopped (dev mode off)`).
-
-The shortcut collides with the browser's "Bookmark all tabs" default; the listener calls `preventDefault()` to suppress it (same approach as `Ctrl+Shift+S` for `LAYOUT_DEV_SAVE`).
 

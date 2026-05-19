@@ -16,21 +16,30 @@ import {
   isScopeActiveInStack,
   getActiveScope,
   type KeyboardScopeId,
+  type ScopeEntry,
 } from "@/lib/keyboard-scope";
 
 export type { KeyboardScopeId } from "@/lib/keyboard-scope";
 
+export interface PushScopeOptions {
+  /** Modal scopes block unmatched events from cascading to lower scopes. */
+  modal?: boolean;
+}
+
 type KeyboardContextValue = {
   activeScope: KeyboardScopeId;
+  scopeStack: ReadonlyArray<ScopeEntry>;
   isScopeActive: (scope: KeyboardScopeId) => boolean;
-  pushScope: (scope: KeyboardScopeId) => void;
+  pushScope: (scope: KeyboardScopeId, options?: PushScopeOptions) => void;
   popScope: (scope: KeyboardScopeId) => void;
 };
 
 const KeyboardContext = createContext<KeyboardContextValue | null>(null);
 
+const ROOT_ENTRY: ScopeEntry = { scope: "global", modal: false };
+
 export function KeyboardContextProvider({ children }: { children: ReactNode }) {
-  const [scopeStack, setScopeStack] = useState<KeyboardScopeId[]>(["global"]);
+  const [scopeStack, setScopeStack] = useState<ScopeEntry[]>([ROOT_ENTRY]);
 
   const activeScope = getActiveScope(scopeStack);
 
@@ -39,9 +48,13 @@ export function KeyboardContextProvider({ children }: { children: ReactNode }) {
     [scopeStack]
   );
 
-  const pushScope = useCallback((scope: KeyboardScopeId) => {
-    setScopeStack((prev) => pushScopeToStack(prev, scope));
-  }, []);
+  const pushScope = useCallback(
+    (scope: KeyboardScopeId, options?: PushScopeOptions) => {
+      const modal = options?.modal ?? false;
+      setScopeStack((prev) => pushScopeToStack(prev, scope, modal));
+    },
+    []
+  );
 
   const popScope = useCallback((scope: KeyboardScopeId) => {
     setScopeStack((prev) => popScopeFromStack(prev, scope));
@@ -50,11 +63,12 @@ export function KeyboardContextProvider({ children }: { children: ReactNode }) {
   const value = useMemo<KeyboardContextValue>(
     () => ({
       activeScope,
+      scopeStack,
       isScopeActive,
       pushScope,
       popScope,
     }),
-    [activeScope, isScopeActive, pushScope, popScope]
+    [activeScope, scopeStack, isScopeActive, pushScope, popScope]
   );
 
   return (
@@ -72,19 +86,24 @@ export function useKeyboardContext(): KeyboardContextValue {
   return context;
 }
 
-export function useKeyboardScope(scope: KeyboardScopeId, active: boolean): boolean {
+export function useKeyboardScope(
+  scope: KeyboardScopeId,
+  active: boolean,
+  options?: PushScopeOptions,
+): boolean {
   const { isScopeActive, pushScope, popScope } = useKeyboardContext();
   const wasActiveRef = useRef(false);
+  const modal = options?.modal ?? false;
 
   useEffect(() => {
     if (active && !wasActiveRef.current) {
-      pushScope(scope);
+      pushScope(scope, { modal });
       wasActiveRef.current = true;
     } else if (!active && wasActiveRef.current) {
       popScope(scope);
       wasActiveRef.current = false;
     }
-  }, [active, scope, pushScope, popScope]);
+  }, [active, scope, modal, pushScope, popScope]);
 
   useEffect(() => {
     return () => {
