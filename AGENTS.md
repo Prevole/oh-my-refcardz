@@ -160,6 +160,8 @@ Cheatsheets are YAML files in `content/cheatsheets/`. Each file requires: `title
 | `docs/entry-renderers.md` | Modular renderer system, adding new types |
 | `docs/keybindings.md` | Keyboard shortcuts system, scopes, adding actions |
 | `docs/placeholders.md` | User input prompts in commands, escaping |
+| `docs/layout-engine.md` | Layout engine contract: vocabulary, pipeline, events, edge cases |
+| `docs/layout-actions.md` | Mapping of mouse/keyboard inputs to engine operations |
 
 **After code changes**, check if related documentation needs updating:
 
@@ -170,6 +172,8 @@ Cheatsheets are YAML files in `content/cheatsheets/`. Each file requires: `title
 | Placeholder system | `docs/placeholders.md` |
 | Keybindings | `docs/keybindings.md` |
 | Architecture | `docs/architecture.md` |
+| Layout engine (`src/lib/layout/engine/`) | `docs/layout-engine.md` |
+| Layout input mapping (drag/resize/keyboard hooks) | `docs/layout-actions.md` |
 
 ---
 

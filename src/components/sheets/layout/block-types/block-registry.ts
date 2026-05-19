@@ -1,4 +1,5 @@
 import type { ComponentType, PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import type { BlockConstraints as EngineBlockConstraints, Direction } from "@/lib/layout/engine";
 
 /**
  * Identifies the type of layout block.
@@ -153,14 +154,12 @@ export function getRegisteredBlockKinds(): LayoutBlockKind[] {
  * Gets the resize constraints for a block type in the new solver format.
  * This is used by the V2 layout system.
  */
-export function getBlockConstraintsV2(kind: LayoutBlockKind): import("@/lib/layout/solver/types").BlockConstraints {
+export function getBlockConstraintsV2(kind: LayoutBlockKind): EngineBlockConstraints {
   const config = getBlockConfig(kind);
   const { constraints, resizeHandles } = config;
 
-  // Convert resize handles to allowed directions (excluding diagonals for solver)
   const allowedResizeDirections = resizeHandles.filter(
-    (h): h is import("@/lib/layout/solver/types").ResizeDirection =>
-      h === "north" || h === "south" || h === "east" || h === "west"
+    (h): h is Direction => h === "north" || h === "south" || h === "east" || h === "west"
   );
 
   return {

@@ -34,37 +34,36 @@ describe("numberToDebugId", () => {
 });
 
 describe("createDebugIdMap", () => {
-  it("assigns letters based on visual order (top-to-bottom, left-to-right)", () => {
+  it("assigns letters based on input order (YAML order)", () => {
     const blocks = [
-      { id: "block-3", position: { x: 0, y: 2 } },
-      { id: "block-1", position: { x: 0, y: 0 } },
-      { id: "block-2", position: { x: 2, y: 0 } },
+      { id: "block-3" },
+      { id: "block-1" },
+      { id: "block-2" },
     ];
 
     const map = createDebugIdMap(blocks);
 
-    // block-1 is at (0,0) -> first -> A
-    // block-2 is at (2,0) -> same row, right -> B
-    // block-3 is at (0,2) -> below -> C
-    expect(map.get("block-1")).toBe("A");
-    expect(map.get("block-2")).toBe("B");
-    expect(map.get("block-3")).toBe("C");
+    // Letters are assigned in input order, no sorting
+    expect(map.get("block-3")).toBe("A"); // first in array
+    expect(map.get("block-1")).toBe("B"); // second in array
+    expect(map.get("block-2")).toBe("C"); // third in array
   });
 
-  it("sorts by Y first, then X", () => {
+  it("preserves input order without any sorting", () => {
     const blocks = [
-      { id: "d", position: { x: 3, y: 1 } },
-      { id: "c", position: { x: 0, y: 1 } },
-      { id: "b", position: { x: 2, y: 0 } },
-      { id: "a", position: { x: 0, y: 0 } },
+      { id: "d" },
+      { id: "c" },
+      { id: "b" },
+      { id: "a" },
     ];
 
     const map = createDebugIdMap(blocks);
 
-    expect(map.get("a")).toBe("A"); // (0,0)
-    expect(map.get("b")).toBe("B"); // (2,0)
-    expect(map.get("c")).toBe("C"); // (0,1)
-    expect(map.get("d")).toBe("D"); // (3,1)
+    // Order is preserved as-is from the input array
+    expect(map.get("d")).toBe("A");
+    expect(map.get("c")).toBe("B");
+    expect(map.get("b")).toBe("C");
+    expect(map.get("a")).toBe("D");
   });
 
   it("returns empty map for empty input", () => {

@@ -103,6 +103,12 @@ YAML structure for defining cheatsheets.
 
 See: [cheatsheet-schema.md](./cheatsheet-schema.md)
 
+### Layout Engine
+
+Grid layout solver with deterministic collision resolution (move, resize, push, shrink, wrap).
+
+See: [layout-engine.md](./layout-engine.md) and [layout-actions.md](./layout-actions.md)
+
 ## Page Structure
 
 ### Home Page (`/`)

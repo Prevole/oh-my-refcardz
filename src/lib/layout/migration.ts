@@ -6,7 +6,7 @@
  * - New format: { x, y, w, h } (0-indexed)
  */
 
-import type { GridPosition, LayoutBlock, LayoutBlockKind } from "./solver/types";
+import type { GridPosition, LayoutBlock, LayoutBlockKind } from "./engine";
 
 // -----------------------------------------------------------------------------
 // Old Format Types (for migration)

@@ -2,7 +2,7 @@
  * Debug ID utilities for layout blocks.
  *
  * Generates human-readable single-letter IDs (A, B, C, ..., Z, AA, AB, ...)
- * for blocks based on their order of appearance in the layout.
+ * for blocks based on their order of appearance in the YAML file.
  */
 
 /**
@@ -21,22 +21,15 @@ export function numberToDebugId(n: number): string {
 }
 
 /**
- * Create a map of block IDs to debug letters based on their visual order.
- * Blocks are sorted by Y position first, then X position.
+ * Create a map of block IDs to debug letters based on YAML order.
+ * The order of blocks in the input array is preserved (no sorting).
+ * This ensures stable IDs that don't change when blocks move.
  */
 export function createDebugIdMap(
-  blocks: Array<{ id: string; position: { x: number; y: number } }>
+  blocks: Array<{ id: string }>
 ): Map<string, string> {
-  // Sort blocks by position (top-to-bottom, left-to-right)
-  const sorted = [...blocks].sort((a, b) => {
-    if (a.position.y !== b.position.y) {
-      return a.position.y - b.position.y;
-    }
-    return a.position.x - b.position.x;
-  });
-
   const map = new Map<string, string>();
-  sorted.forEach((block, index) => {
+  blocks.forEach((block, index) => {
     map.set(block.id, numberToDebugId(index));
   });
 

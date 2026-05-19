@@ -1,170 +1,110 @@
 /**
  * Debug session recording types.
  *
- * This module provides types for recording debug sessions during development.
- * Sessions capture layout solver events, user interactions, and state changes
- * to help diagnose bugs.
+ * Captures engine events emitted during user interactions so they can be
+ * inspected, diffed, and replayed (see `scripts/replay-layout-journal.ts`).
+ *
+ * Design notes:
+ * - Engine events are stored verbatim — no extra abstraction layer. The replay
+ *   script reads the session, reconstructs the inputs (initial blocks, op,
+ *   constraints, gridColumns), runs `applyOperation`, and compares the resulting
+ *   event stream with the recorded one.
+ * - `UserActionEvent` is the only debug-specific event type. It marks discrete
+ *   user gestures that have no direct engine equivalent (mode switches, button
+ *   clicks, etc.).
  */
 
-import type { LayoutBlock, LayoutIntent } from "@/lib/layout/solver/types";
+import type { BlockConstraints, EngineEvent } from "@/lib/layout/engine";
 
 /**
- * Base event with timestamp and category.
+ * Common fields for every recorded event.
  */
 export type DebugEventBase = {
-  /** Unique event ID */
+  /** Sequential event id within the session ("evt-1", "evt-2", ...) */
   id: string;
-  /** Timestamp in ms since session start */
+  /** Milliseconds elapsed since `DebugSession.startedAt` */
   timestamp: number;
-  /** Event category for filtering */
-  category: "solver" | "interaction" | "state" | "user";
+  /** Coarse category used by UI filters. Derived from `event.type` for engine events. */
+  category: "session" | "step" | "chain" | "block" | "user";
 };
 
 /**
- * Solver intent event - when an intent is applied.
+ * An engine event captured during a session.
  */
-export type SolverIntentEvent = DebugEventBase & {
-  type: "solver:intent";
-  data: {
-    intent: LayoutIntent;
-    startLayout: LayoutBlock[];
-    resultLayout: LayoutBlock[];
-    accepted: boolean;
-    pushedIds: string[];
-    shrunkIds: string[];
-  };
+export type EngineEventRecord = DebugEventBase & {
+  type: "engine";
+  event: EngineEvent;
 };
 
 /**
- * Solver collision event - when collisions are detected.
- */
-export type SolverCollisionEvent = DebugEventBase & {
-  type: "solver:collision";
-  data: {
-    sourceId: string;
-    sourcePosition: { x: number; y: number; w: number; h: number };
-    originalPosition: { x: number; y: number };
-    axis: "horizontal" | "vertical";
-    direction: "north" | "south" | "east" | "west";
-    allCollisions: string[];
-    collisionsInPath: string[];
-  };
-};
-
-/**
- * Solver final pass event - when final collisions are resolved.
- */
-export type SolverFinalPassEvent = DebugEventBase & {
-  type: "solver:finalPass";
-  data: {
-    sourceId: string;
-    finalCollisions: Array<{
-      id: string;
-      position: { x: number; y: number; w: number; h: number };
-      pushDistance: number;
-    }>;
-  };
-};
-
-/**
- * Interaction start event.
- */
-export type InteractionStartEvent = DebugEventBase & {
-  type: "interaction:start";
-  data: {
-    interactionType: "drag" | "resize" | "keyboard";
-    blockId: string;
-    startLayout: LayoutBlock[];
-  };
-};
-
-/**
- * Interaction end event.
- */
-export type InteractionEndEvent = DebugEventBase & {
-  type: "interaction:end";
-  data: {
-    interactionType: "drag" | "resize" | "keyboard";
-    blockId: string;
-    outcome: "commit" | "cancel";
-    finalLayout: LayoutBlock[];
-  };
-};
-
-/**
- * State change event.
- */
-export type StateChangeEvent = DebugEventBase & {
-  type: "state:change";
-  data: {
-    field: string;
-    oldValue: unknown;
-    newValue: unknown;
-  };
-};
-
-/**
- * User action event (button clicks, etc).
+ * A user-initiated action that is not an engine event (mode switch, button
+ * click, etc.). Optional but useful to trace context in long recordings.
  */
 export type UserActionEvent = DebugEventBase & {
   type: "user:action";
+  category: "user";
   data: {
     action: string;
     details?: Record<string, unknown>;
   };
 };
 
+export type DebugEvent = EngineEventRecord | UserActionEvent;
+
 /**
- * Union of all debug events.
+ * Serializable block constraints map (Map<string, BlockConstraints> → record).
+ * Maps are not JSON-serializable, so we use a plain object on disk.
  */
-export type DebugEvent =
-  | SolverIntentEvent
-  | SolverCollisionEvent
-  | SolverFinalPassEvent
-  | InteractionStartEvent
-  | InteractionEndEvent
-  | StateChangeEvent
-  | UserActionEvent;
+export type SerializableConstraints = Record<string, BlockConstraints>;
+
+/**
+ * Engine inputs captured at recording start so the session can be replayed
+ * deterministically. Without these, the replay script cannot reproduce the
+ * engine's decisions.
+ */
+export type DebugEngineSetup = {
+  gridColumns: number;
+  constraints: SerializableConstraints;
+};
 
 /**
  * Debug session metadata.
  */
 export type DebugSessionMeta = {
-  /** Session ID */
   id: string;
-  /** Session start timestamp (ISO string) */
+  /** ISO timestamp when recording started */
   startedAt: string;
-  /** Session end timestamp (ISO string) */
+  /** ISO timestamp when recording stopped */
   endedAt: string;
   /** Duration in ms */
   duration: number;
-  /** Page/sheet being debugged */
+  /** Page or sheet being debugged (free-form label) */
   page: string;
-  /** User-provided description */
+  /** Optional user-provided description */
   description?: string;
   /** Number of events captured */
   eventCount: number;
 };
 
 /**
- * Complete debug session.
+ * Complete debug session as persisted to disk.
  */
 export type DebugSession = DebugSessionMeta & {
-  /** All captured events */
+  /** Engine inputs needed to replay the session deterministically */
+  engine: DebugEngineSetup;
+  /** All captured events in chronological order */
   events: DebugEvent[];
-  /** Map of block IDs to debug letters (A, B, C...) for easier identification */
+  /** Optional human-friendly id mapping (block id → letter "A", "B", ...) */
   debugIdMap?: Record<string, string>;
 };
 
 /**
- * Recording state.
+ * Live recording state observable by UIs (button, badge, etc.).
  */
 export type RecordingState = {
-  /** Whether recording is active */
   isRecording: boolean;
-  /** Session ID if recording */
   sessionId: string | null;
-  /** Session start time */
+  /** ms since epoch when recording started (or null) */
   startTime: number | null;
   /** Number of events captured so far */
   eventCount: number;

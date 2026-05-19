@@ -1,28 +1,42 @@
 /**
  * Debug recorder singleton.
  *
- * This module provides a global debug recorder that can capture events
- * from anywhere in the codebase (including non-React code like the solver).
+ * The recorder captures engine events emitted during user interactions so they
+ * can be persisted as a JSON session file under `.debug-sessions/` and replayed
+ * later via `scripts/replay-layout-journal.ts`.
  *
  * Usage:
  *   import { debugRecorder } from "@/lib/debug/recorder";
- *   debugRecorder.record({ type: "solver:intent", ... });
+ *
+ *   // Once per page mount:
+ *   debugRecorder.start({ page: "/sheets/git", engine: { gridColumns: 36, constraints: {...} } });
+ *
+ *   // Pass the emitter to every applyOperation call:
+ *   applyOperation(blocks, op, { ...options, emitter: debugRecorder.getEngineEmitter() });
+ *
+ *   // At the end:
+ *   await debugRecorder.stop("description");
  */
 
 import type {
+  BlockConstraints,
+  EngineEvent,
+  EngineEventEmitter,
+  EngineEventListener,
+} from "@/lib/layout/engine";
+import { createEventEmitter, createNoopEmitter } from "@/lib/layout/engine";
+import type {
+  DebugEngineSetup,
   DebugEvent,
   DebugSession,
+  EngineEventRecord,
   RecordingState,
-  SolverIntentEvent,
-  SolverCollisionEvent,
-  SolverFinalPassEvent,
-  InteractionStartEvent,
-  InteractionEndEvent,
+  SerializableConstraints,
+  UserActionEvent,
 } from "./types";
-import type { LayoutBlock, LayoutIntent } from "@/lib/layout/solver/types";
 
 // -----------------------------------------------------------------------------
-// Singleton State
+// Singleton state
 // -----------------------------------------------------------------------------
 
 let state: RecordingState = {
@@ -34,82 +48,168 @@ let state: RecordingState = {
 
 let events: DebugEvent[] = [];
 let currentPage = "";
+let currentEngineSetup: DebugEngineSetup = { gridColumns: 0, constraints: {} };
 let currentDebugIdMap: Map<string, string> = new Map();
 let eventIdCounter = 0;
-const listeners: Set<() => void> = new Set();
+const stateListeners: Set<() => void> = new Set();
+
+/**
+ * Live engine emitter. Its `emit` is wired to the recorder when recording is
+ * active and to a noop otherwise — flipped via `setActive` below. This keeps
+ * the same reference across the recording lifecycle so callers don't need to
+ * re-fetch it.
+ */
+let liveEmitter: EngineEventEmitter = createNoopEmitter();
 
 // -----------------------------------------------------------------------------
-// Internal Helpers
+// Internal helpers
 // -----------------------------------------------------------------------------
 
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
+const generateSessionId = (): string =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-function generateEventId(): string {
-  return `evt-${++eventIdCounter}`;
-}
+const generateEventId = (): string => `evt-${++eventIdCounter}`;
 
-function notifyListeners(): void {
-  listeners.forEach((listener) => listener());
-}
+const notifyStateListeners = (): void => {
+  for (const listener of stateListeners) listener();
+};
 
-function getTimestamp(): number {
-  if (!state.startTime) return 0;
-  return Date.now() - state.startTime;
-}
+const getTimestamp = (): number =>
+  state.startTime === null ? 0 : Date.now() - state.startTime;
+
+const categoryForEngineEvent = (event: EngineEvent): "session" | "step" | "chain" | "block" => {
+  if (event.type.startsWith("session.")) return "session";
+  if (event.type.startsWith("step.")) return "step";
+  if (event.type.startsWith("chain.")) return "chain";
+  return "block";
+};
+
+const captureEngineEvent: EngineEventListener = (event) => {
+  if (!state.isRecording) return;
+  const record: EngineEventRecord = {
+    id: generateEventId(),
+    timestamp: getTimestamp(),
+    category: categoryForEngineEvent(event),
+    type: "engine",
+    event,
+  };
+  events.push(record);
+  state = { ...state, eventCount: events.length };
+  notifyStateListeners();
+};
+
+const installLiveEmitter = (): void => {
+  // Always wire a fresh emitter; old references become noop after stop/cancel.
+  liveEmitter = createEventEmitter();
+  liveEmitter.on(captureEngineEvent);
+};
+
+const detachLiveEmitter = (): void => {
+  liveEmitter = createNoopEmitter();
+};
+
+const resetRecordingState = (): void => {
+  state = {
+    isRecording: false,
+    sessionId: null,
+    startTime: null,
+    eventCount: 0,
+  };
+  events = [];
+  currentEngineSetup = { gridColumns: 0, constraints: {} };
+  currentDebugIdMap = new Map();
+  detachLiveEmitter();
+};
 
 // -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
 
+export type DebugRecorderStartOptions = {
+  /** Page or sheet label being debugged. */
+  page: string;
+  /** Engine inputs captured at start so the session can be replayed. */
+  engine: {
+    gridColumns: number;
+    constraints: Map<string, BlockConstraints> | SerializableConstraints;
+  };
+  /** Optional block id → letter mapping for readable replays. */
+  debugIdMap?: Map<string, string>;
+};
+
+const serializeConstraints = (
+  constraints: Map<string, BlockConstraints> | SerializableConstraints
+): SerializableConstraints => {
+  if (constraints instanceof Map) {
+    const out: SerializableConstraints = {};
+    for (const [id, c] of constraints) out[id] = c;
+    return out;
+  }
+  return { ...constraints };
+};
+
 export const debugRecorder = {
   /**
-   * Start recording a new session.
+   * Start a new recording session. Captures the engine setup so the session
+   * can later be replayed deterministically.
    */
-  start(page: string, debugIdMap?: Map<string, string>): void {
+  start(options: DebugRecorderStartOptions): void {
     if (state.isRecording) {
       console.warn("[debugRecorder] Already recording, call stop() first");
       return;
     }
 
-    const sessionId = generateId();
     state = {
       isRecording: true,
-      sessionId,
+      sessionId: generateSessionId(),
       startTime: Date.now(),
       eventCount: 0,
     };
     events = [];
-    currentPage = page;
-    currentDebugIdMap = debugIdMap ?? new Map();
+    currentPage = options.page;
+    currentEngineSetup = {
+      gridColumns: options.engine.gridColumns,
+      constraints: serializeConstraints(options.engine.constraints),
+    };
+    currentDebugIdMap = options.debugIdMap ?? new Map();
     eventIdCounter = 0;
+    installLiveEmitter();
 
-    console.log(`[debugRecorder] Started session ${sessionId} on ${page}`);
-    notifyListeners();
+    console.log(`[debugRecorder] Started session ${state.sessionId} on ${options.page}`);
+    notifyStateListeners();
   },
 
   /**
-   * Update the debug ID map (e.g., when layout changes).
+   * Update the debug id map. Useful when blocks are added/removed during the
+   * session.
    */
   updateDebugIdMap(debugIdMap: Map<string, string>): void {
     currentDebugIdMap = debugIdMap;
   },
 
   /**
-   * Stop recording and save the session.
+   * Update the engine setup mid-session (e.g., constraints changed). Replays
+   * use the final setup; consider stopping and starting a new session if you
+   * want to record the change as a discrete step.
+   */
+  updateEngineSetup(setup: DebugEngineSetup): void {
+    currentEngineSetup = {
+      gridColumns: setup.gridColumns,
+      constraints: { ...setup.constraints },
+    };
+  },
+
+  /**
+   * Stop recording, persist the session via the dev API, and return the result.
    */
   async stop(description?: string): Promise<{ success: boolean; path?: string; error?: string }> {
-    if (!state.isRecording || !state.sessionId || !state.startTime) {
+    if (!state.isRecording || !state.sessionId || state.startTime === null) {
       console.warn("[debugRecorder] Not recording");
       return { success: false, error: "Not recording" };
     }
 
-    // Convert Map to plain object for JSON serialization
     const debugIdMapObject: Record<string, string> = {};
-    currentDebugIdMap.forEach((value, key) => {
-      debugIdMapObject[key] = value;
-    });
+    for (const [k, v] of currentDebugIdMap) debugIdMapObject[k] = v;
 
     const session: DebugSession = {
       id: state.sessionId,
@@ -119,24 +219,18 @@ export const debugRecorder = {
       page: currentPage,
       description,
       eventCount: events.length,
+      engine: currentEngineSetup,
       events,
       debugIdMap: debugIdMapObject,
     };
 
-    console.log(`[debugRecorder] Stopping session ${state.sessionId} with ${events.length} events`);
+    console.log(
+      `[debugRecorder] Stopping session ${state.sessionId} with ${events.length} events`
+    );
 
-    // Reset state before async call
-    state = {
-      isRecording: false,
-      sessionId: null,
-      startTime: null,
-      eventCount: 0,
-    };
-    events = [];
-    currentDebugIdMap = new Map();
-    notifyListeners();
+    resetRecordingState();
+    notifyStateListeners();
 
-    // Save to server
     try {
       const response = await fetch("/api/dev/debug", {
         method: "POST",
@@ -145,7 +239,7 @@ export const debugRecorder = {
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({ error: "Unknown error" }));
         console.error("[debugRecorder] Failed to save session:", error);
         return { success: false, error: error.error };
       }
@@ -160,163 +254,83 @@ export const debugRecorder = {
   },
 
   /**
-   * Cancel recording without saving.
+   * Discard the current session without saving.
    */
   cancel(): void {
     if (!state.isRecording) return;
 
     console.log(`[debugRecorder] Cancelled session ${state.sessionId}`);
-    state = {
-      isRecording: false,
-      sessionId: null,
-      startTime: null,
-      eventCount: 0,
-    };
-    events = [];
-    currentDebugIdMap = new Map();
-    notifyListeners();
+    resetRecordingState();
+    notifyStateListeners();
   },
 
   /**
-   * Record a raw event.
+   * Record a user action (mode switch, button click, etc.). No-op outside of
+   * an active session.
    */
-  record(event: Omit<DebugEvent, "id" | "timestamp">): void {
+  recordUserAction(action: string, details?: Record<string, unknown>): void {
     if (!state.isRecording) return;
-
-    const fullEvent = {
-      ...event,
+    const record: UserActionEvent = {
       id: generateEventId(),
       timestamp: getTimestamp(),
-    } as DebugEvent;
-
-    events.push(fullEvent);
+      category: "user",
+      type: "user:action",
+      data: { action, details },
+    };
+    events.push(record);
     state = { ...state, eventCount: events.length };
-    notifyListeners();
+    notifyStateListeners();
   },
 
   /**
-   * Record a solver intent event.
+   * Engine event emitter to be passed to `applyOperation`. Always safe to use;
+   * dispatches to the active session when recording, to a noop otherwise.
+   *
+   * The same reference is returned across the recording lifecycle for the
+   * current session — after `stop()`/`cancel()`, the returned emitter is a
+   * noop and a fresh one is created on the next `start()`.
    */
-  recordIntent(data: {
-    intent: LayoutIntent;
-    startLayout: LayoutBlock[];
-    resultLayout: LayoutBlock[];
-    accepted: boolean;
-    pushedIds: string[];
-    shrunkIds: string[];
-  }): void {
-    this.record({
-      type: "solver:intent",
-      category: "solver",
-      data,
-    } as Omit<SolverIntentEvent, "id" | "timestamp">);
+  getEngineEmitter(): EngineEventEmitter {
+    return liveEmitter;
   },
 
   /**
-   * Record a solver collision event.
-   */
-  recordCollision(data: {
-    sourceId: string;
-    sourcePosition: { x: number; y: number; w: number; h: number };
-    originalPosition: { x: number; y: number };
-    axis: "horizontal" | "vertical";
-    direction: "north" | "south" | "east" | "west";
-    allCollisions: string[];
-    collisionsInPath: string[];
-  }): void {
-    this.record({
-      type: "solver:collision",
-      category: "solver",
-      data,
-    } as Omit<SolverCollisionEvent, "id" | "timestamp">);
-  },
-
-  /**
-   * Record a solver final pass event.
-   */
-  recordFinalPass(data: {
-    sourceId: string;
-    finalCollisions: Array<{
-      id: string;
-      position: { x: number; y: number; w: number; h: number };
-      pushDistance: number;
-    }>;
-  }): void {
-    this.record({
-      type: "solver:finalPass",
-      category: "solver",
-      data,
-    } as Omit<SolverFinalPassEvent, "id" | "timestamp">);
-  },
-
-  /**
-   * Record an interaction start event.
-   */
-  recordInteractionStart(data: {
-    interactionType: "drag" | "resize" | "keyboard";
-    blockId: string;
-    startLayout: LayoutBlock[];
-  }): void {
-    this.record({
-      type: "interaction:start",
-      category: "interaction",
-      data,
-    } as Omit<InteractionStartEvent, "id" | "timestamp">);
-  },
-
-  /**
-   * Record an interaction end event.
-   */
-  recordInteractionEnd(data: {
-    interactionType: "drag" | "resize" | "keyboard";
-    blockId: string;
-    outcome: "commit" | "cancel";
-    finalLayout: LayoutBlock[];
-  }): void {
-    this.record({
-      type: "interaction:end",
-      category: "interaction",
-      data,
-    } as Omit<InteractionEndEvent, "id" | "timestamp">);
-  },
-
-  /**
-   * Get current recording state.
+   * Current recording state snapshot.
    */
   getState(): RecordingState {
     return state;
   },
 
   /**
-   * Subscribe to state changes.
+   * Subscribe to recording state changes. Returns an unsubscribe function.
    */
   subscribe(listener: () => void): () => void {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
+    stateListeners.add(listener);
+    return () => {
+      stateListeners.delete(listener);
+    };
   },
 
   /**
-   * Check if currently recording.
+   * True when a session is currently recording.
    */
   isRecording(): boolean {
     return state.isRecording;
   },
 
   /**
-   * Get debug letter for a block ID.
-   * Returns the letter (e.g., "A", "B") or "?" if not found.
+   * Resolve a debug letter for a block id. Returns "?" when unknown.
    */
   getDebugId(blockId: string): string {
     return currentDebugIdMap.get(blockId) ?? "?";
   },
 
   /**
-   * Get current debug ID map.
+   * Current debug id map (read-only view via reference; do not mutate).
    */
   getDebugIdMap(): Map<string, string> {
     return currentDebugIdMap;
   },
 };
 
-// Export type for the recorder
 export type DebugRecorder = typeof debugRecorder;

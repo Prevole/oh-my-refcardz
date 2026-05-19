@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { YamlCheatSheetWithMeta } from "@/lib/cheatsheet-shared";
-import { syncLayoutToDev } from "@/lib/dev-layout-sync";
 import { buildDefaultBlockLayouts } from "./layout-inference";
 import type { BlockLayoutState } from "./layout-types";
 import {
@@ -75,10 +74,6 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
     }
 
     window.localStorage.setItem(storageKey, serializeStoredLayouts(blockLayouts));
-
-    if (process.env.NODE_ENV === "development") {
-      syncLayoutToDev(sheetSlug, blockLayouts);
-    }
   }, [blockLayouts, defaultBlockLayouts, sheetSlug]);
 
   function resetLayout() {

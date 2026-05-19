@@ -13,7 +13,7 @@ import {
   normalizeBlockLayouts,
   type OldBlockLayoutState,
 } from "./migration";
-import type { GridPosition, LayoutBlock } from "./solver/types";
+import type { GridPosition, LayoutBlock } from "./engine";
 
 describe("migration", () => {
   describe("toGridPosition", () => {

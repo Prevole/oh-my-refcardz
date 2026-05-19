@@ -2,66 +2,61 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { LayoutBlock, ResizeDirection, ResizeIntent } from "@/lib/layout/solver/types";
+import type { Direction, LayoutBlock } from "@/lib/layout/engine";
 import { GRID_GAP_PX } from "../sheet-grid";
 import { isResizeDirectionEnabled, type ResizeHandleDirection } from "./block-types";
 import type { GridMetricsState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
 
 /**
- * State tracked during a resize operation.
+ * Resize input emitted whenever the cumulative delta or modifier flags change.
+ * The consumer translates this into an engine ResizeOperation against the
+ * interaction snapshot.
  */
-export type ResizeStateV2 = {
-  /** The block being resized */
+export type ResizeMove = {
   blockId: string;
-  /** The resize direction */
-  direction: ResizeDirection;
-  /** Unit size at resize start */
-  unitSize: number;
-  /** Pointer position at resize start */
-  startClientX: number;
-  startClientY: number;
-  /** Block position/size at resize start (0-indexed) */
-  originX: number;
-  originY: number;
-  originW: number;
-  originH: number;
-  /** Current computed delta */
-  currentDelta: number;
-  /** Whether compact mode is active (shift key) */
+  edge: Direction;
+  /** Signed delta in grid cells from the resize origin, along the edge axis. */
+  delta: number;
+  /** Shift key — engine should attempt compact mode. */
   compact: boolean;
+  /** Alt key — engine should run in strict mode. */
+  strict: boolean;
 };
 
-/**
- * Result of the useCardResizeV2 hook.
- */
+export type ResizeStateV2 = {
+  blockId: string;
+  edge: Direction;
+  delta: number;
+  compact: boolean;
+  strict: boolean;
+};
+
 export type UseCardResizeV2Result = {
-  /** Current resize state, if any */
   resizeState: ResizeStateV2 | null;
-  /** Start resizing a block */
-  startBlockResize: (blockId: string, direction: ResizeHandleDirection, event: ReactPointerEvent<HTMLElement>) => void;
+  startBlockResize: (
+    blockId: string,
+    handle: ResizeHandleDirection,
+    event: ReactPointerEvent<HTMLElement>
+  ) => void;
 };
 
 type UseCardResizeV2Options = {
-  /** Current layout blocks */
   blocks: LayoutBlock[];
-  /** Grid metrics for coordinate calculations */
   gridMetrics: GridMetricsState;
-  /** Called when resize starts */
   onResizeStart?: (blockId: string) => void;
-  /** Called during resize with the current resize intent */
-  onResizeMove?: (intent: ResizeIntent) => void;
-  /** Called when resize ends */
+  onResizeMove?: (move: ResizeMove) => void;
   onResizeEnd?: () => void;
-  /** Called when resize is cancelled */
   onResizeCancel?: () => void;
 };
 
 /**
- * Convert a ResizeHandleDirection to a cardinal ResizeDirection.
+ * Reduce diagonal handles to their dominant cardinal direction.
+ * Diagonal directions are not supported by the engine; we project them to the
+ * vertical edge by default (north for top-row diagonals, south for bottom-row).
  */
-function toCardinalDirection(handleDirection: ResizeHandleDirection): ResizeDirection {
-  switch (handleDirection) {
+function toCardinalEdge(handle: ResizeHandleDirection): Direction {
+  switch (handle) {
     case "north":
     case "north-east":
     case "north-west":
@@ -78,15 +73,11 @@ function toCardinalDirection(handleDirection: ResizeHandleDirection): ResizeDire
 }
 
 /**
- * Calculate delta in grid units based on direction and pointer movement.
+ * Compute the cumulative delta in grid cells along the edge's axis, given the
+ * pixel offset from the resize origin.
  */
-function calculateDelta(
-  direction: ResizeDirection,
-  deltaXPx: number,
-  deltaYPx: number,
-  pitch: number
-): number {
-  switch (direction) {
+function computeDelta(edge: Direction, deltaXPx: number, deltaYPx: number, pitch: number): number {
+  switch (edge) {
     case "north":
       return -Math.round(deltaYPx / pitch);
     case "south":
@@ -98,18 +89,17 @@ function calculateDelta(
   }
 }
 
-/**
- * Hook for handling card resize interactions.
- *
- * This hook:
- * - Captures pointer events to start/track/end resize
- * - Converts pointer deltas to grid units
- * - Produces ResizeIntent for the solver
- * - Tracks Shift key for compact mode
- *
- * The hook does NOT directly modify the layout. It only produces intents
- * that the parent component passes to the layout editor.
- */
+type InternalResizeState = {
+  blockId: string;
+  edge: Direction;
+  unitSize: number;
+  startClientX: number;
+  startClientY: number;
+  lastDelta: number;
+  lastCompact: boolean;
+  lastStrict: boolean;
+};
+
 export function useCardResizeV2({
   blocks,
   gridMetrics,
@@ -118,149 +108,127 @@ export function useCardResizeV2({
   onResizeEnd,
   onResizeCancel,
 }: UseCardResizeV2Options): UseCardResizeV2Result {
-  // Use state for the resize state that needs to trigger re-renders
   const [resizeState, setResizeState] = useState<ResizeStateV2 | null>(null);
-
-  // Refs for internal tracking
-  const resizeStateRef = useRef<ResizeStateV2 | null>(null);
+  const internalRef = useRef<InternalResizeState | null>(null);
   const callbacksRef = useRef({ onResizeStart, onResizeMove, onResizeEnd, onResizeCancel });
 
-  // Keep callbacks ref up to date
   useEffect(() => {
     callbacksRef.current = { onResizeStart, onResizeMove, onResizeEnd, onResizeCancel };
   }, [onResizeStart, onResizeMove, onResizeEnd, onResizeCancel]);
 
-  // Sync state to ref for use in event handlers
-  useEffect(() => {
-    resizeStateRef.current = resizeState;
-  }, [resizeState]);
-
-  // Set up global pointer listeners when resizing
   useEffect(() => {
     if (!resizeState) return;
 
-    function handlePointerMove(event: PointerEvent) {
-      const active = resizeStateRef.current;
-      if (!active) return;
+    function emitIfChanged(delta: number, compact: boolean, strict: boolean) {
+      const internal = internalRef.current;
+      if (!internal) return;
 
-      const pitch = active.unitSize + GRID_GAP_PX;
-      const deltaXPx = event.clientX - active.startClientX;
-      const deltaYPx = event.clientY - active.startClientY;
-
-      const delta = calculateDelta(active.direction, deltaXPx, deltaYPx, pitch);
-      const compact = event.shiftKey;
-
-      if (delta !== active.currentDelta || compact !== active.compact) {
-        const updatedState = {
-          ...active,
-          currentDelta: delta,
-          compact,
-        };
-        setResizeState(updatedState);
-
-        const intent: ResizeIntent = {
-          type: "resize",
-          blockId: active.blockId,
-          direction: active.direction,
-          delta,
-          compact,
-        };
-        callbacksRef.current.onResizeMove?.(intent);
+      if (
+        delta === internal.lastDelta &&
+        compact === internal.lastCompact &&
+        strict === internal.lastStrict
+      ) {
+        return;
       }
+
+      internal.lastDelta = delta;
+      internal.lastCompact = compact;
+      internal.lastStrict = strict;
+
+      setResizeState({
+        blockId: internal.blockId,
+        edge: internal.edge,
+        delta,
+        compact,
+        strict,
+      });
+
+      callbacksRef.current.onResizeMove?.({
+        blockId: internal.blockId,
+        edge: internal.edge,
+        delta,
+        compact,
+        strict,
+      });
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const internal = internalRef.current;
+      if (!internal) return;
+
+      const pitch = internal.unitSize + GRID_GAP_PX;
+      const deltaXPx = event.clientX - internal.startClientX;
+      const deltaYPx = event.clientY - internal.startClientY;
+      const delta = computeDelta(internal.edge, deltaXPx, deltaYPx, pitch);
+
+      emitIfChanged(delta, event.shiftKey, event.altKey);
     }
 
     function handlePointerUp() {
+      internalRef.current = null;
       setResizeState(null);
       callbacksRef.current.onResizeEnd?.();
     }
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        internalRef.current = null;
         setResizeState(null);
         callbacksRef.current.onResizeCancel?.();
         return;
       }
-
-      if (event.key === "Shift") {
-        const active = resizeStateRef.current;
-        if (active && !active.compact) {
-          const updatedState = { ...active, compact: true };
-          setResizeState(updatedState);
-
-          const intent: ResizeIntent = {
-            type: "resize",
-            blockId: active.blockId,
-            direction: active.direction,
-            delta: active.currentDelta,
-            compact: true,
-          };
-          callbacksRef.current.onResizeMove?.(intent);
-        }
-      }
-    }
-
-    function handleKeyUp(event: KeyboardEvent) {
-      if (event.key === "Shift") {
-        const active = resizeStateRef.current;
-        if (active && active.compact) {
-          const updatedState = { ...active, compact: false };
-          setResizeState(updatedState);
-
-          const intent: ResizeIntent = {
-            type: "resize",
-            blockId: active.blockId,
-            direction: active.direction,
-            delta: active.currentDelta,
-            compact: false,
-          };
-          callbacksRef.current.onResizeMove?.(intent);
-        }
+      const internal = internalRef.current;
+      if (!internal) return;
+      // Re-emit on modifier change with the last known delta.
+      if (event.key === "Shift" || event.key === "Alt") {
+        emitIfChanged(internal.lastDelta, event.shiftKey, event.altKey);
       }
     }
 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keydown", handleKey);
+    window.addEventListener("keyup", handleKey);
 
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("keyup", handleKey);
     };
   }, [resizeState]);
 
   const startBlockResize = useCallback(
-    (blockId: string, handleDirection: ResizeHandleDirection, event: ReactPointerEvent<HTMLElement>) => {
+    (blockId: string, handle: ResizeHandleDirection, event: ReactPointerEvent<HTMLElement>) => {
       const block = blocks.find((b) => b.id === blockId);
       if (!block) return;
+      if (!isResizeDirectionEnabled(block.kind, handle)) return;
 
-      if (!isResizeDirectionEnabled(block.kind, handleDirection)) {
-        return;
-      }
-
-      const direction = toCardinalDirection(handleDirection);
+      const edge = toCardinalEdge(handle);
       const metrics = gridMetrics ?? FALLBACK_METRICS;
 
       event.preventDefault();
       event.stopPropagation();
 
-      const state: ResizeStateV2 = {
+      internalRef.current = {
         blockId,
-        direction,
+        edge,
         unitSize: metrics.unitSize,
         startClientX: event.clientX,
         startClientY: event.clientY,
-        originX: block.position.x,
-        originY: block.position.y,
-        originW: block.position.w,
-        originH: block.position.h,
-        currentDelta: 0,
-        compact: event.shiftKey,
+        lastDelta: 0,
+        lastCompact: event.shiftKey,
+        lastStrict: event.altKey,
       };
 
-      setResizeState(state);
+      setResizeState({
+        blockId,
+        edge,
+        delta: 0,
+        compact: event.shiftKey,
+        strict: event.altKey,
+      });
+
       callbacksRef.current.onResizeStart?.(blockId);
     },
     [blocks, gridMetrics]

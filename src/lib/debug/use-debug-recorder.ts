@@ -1,10 +1,10 @@
 "use client";
 
 import { useSyncExternalStore, useCallback } from "react";
-import { debugRecorder } from "./recorder";
+import { debugRecorder, type DebugRecorderStartOptions } from "./recorder";
 import type { RecordingState } from "./types";
 
-// Stable server snapshot - must be cached outside the component
+// Stable server snapshot — must be cached outside the component.
 const SERVER_SNAPSHOT: RecordingState = {
   isRecording: false,
   sessionId: null,
@@ -12,14 +12,11 @@ const SERVER_SNAPSHOT: RecordingState = {
   eventCount: 0,
 };
 
-function getServerSnapshot(): RecordingState {
-  return SERVER_SNAPSHOT;
-}
+const getServerSnapshot = (): RecordingState => SERVER_SNAPSHOT;
 
 /**
- * Hook to use the debug recorder in React components.
- *
- * Provides reactive access to recording state and control functions.
+ * React hook providing reactive access to the debug recorder state and control
+ * functions. Pass the engine setup to `start()` so the session can be replayed.
  */
 export function useDebugRecorder() {
   const state = useSyncExternalStore(
@@ -28,13 +25,11 @@ export function useDebugRecorder() {
     getServerSnapshot
   );
 
-  const start = useCallback((page: string, debugIdMap?: Map<string, string>) => {
-    debugRecorder.start(page, debugIdMap);
+  const start = useCallback((options: DebugRecorderStartOptions) => {
+    debugRecorder.start(options);
   }, []);
 
-  const stop = useCallback(async (description?: string) => {
-    return debugRecorder.stop(description);
-  }, []);
+  const stop = useCallback((description?: string) => debugRecorder.stop(description), []);
 
   const cancel = useCallback(() => {
     debugRecorder.cancel();

@@ -67,6 +67,7 @@ export const ACTION_IDS = {
   CARD_GROW_WIDTH: "sheet-layout.grow-width",
   CARD_SHRINK_HEIGHT: "sheet-layout.shrink-height",
   CARD_GROW_HEIGHT: "sheet-layout.grow-height",
+  LAYOUT_DEV_SAVE: "sheet-layout.dev-save",
 } as const;
 
 export type ActionId = (typeof ACTION_IDS)[keyof typeof ACTION_IDS];
@@ -238,6 +239,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.CARD_GROW_HEIGHT,
       label: "Grow card height",
       combos: [combo("J", "alt", "shift"), combo("ArrowDown", "alt", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_DEV_SAVE,
+      label: "Save layout to dev backend",
+      combos: [combo("s", "ctrl", "shift")],
     },
   ],
 };

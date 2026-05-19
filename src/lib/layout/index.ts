@@ -1,12 +1,9 @@
 /**
- * Layout System V2
+ * Layout module — public surface.
  *
- * New layout engine with:
- * - Constraint propagation
- * - Deterministic collision solving
- * - Immutable snapshots
- * - Clean separation between solver and UI
+ * See docs/layout-engine.md for the engine contract and docs/architecture.md
+ * for the broader picture.
  */
 
-export * from "./solver";
+export * from "./engine";
 export * from "./migration";

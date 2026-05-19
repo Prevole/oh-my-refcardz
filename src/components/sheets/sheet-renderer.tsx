@@ -8,9 +8,11 @@ import { getItemAnchorId } from "@/lib/anchors";
 import { getRenderableBlocks, type CheatSheetItem, type YamlCheatSheetWithMeta } from "@/lib/cheatsheet-shared";
 import { buildBlockAnchorId } from "@/lib/anchor-navigation";
 import { migrateBlockLayouts, toOldBlockLayouts } from "@/lib/layout/migration";
-import { LayoutSnapshotProvider } from "@/lib/layout/layout-snapshot-context";
+import { syncLayoutToDev } from "@/lib/dev-layout-sync";
 import { DebugRecorderButton, createDebugIdMap } from "@/components/debug";
-import type { LayoutBlock, MoveIntent, ResizeIntent } from "@/lib/layout/solver/types";
+import type { BlockConstraints, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
+import { useKeybindings } from "@/hooks/use-keybindings";
+import { ACTION_IDS } from "@/lib/keybindings";
 import {
   useLayoutPersistence,
   useLayoutEditor,
@@ -19,9 +21,12 @@ import {
   useCardKeyboardV2,
   BlockRenderer,
   FALLBACK_METRICS,
+  getBlockConstraintsV2,
   type GridMetricsState,
   type ResizeHandleDirection,
 } from "./layout";
+import type { DragMove } from "./layout/use-card-drag-v2";
+import type { ResizeMove } from "./layout/use-card-resize-v2";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 type Props = {
@@ -33,117 +38,139 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const blocks = getRenderableBlocks(sheet);
   const [gridMetrics, setGridMetrics] = useState<GridMetricsState>(FALLBACK_METRICS);
 
-  // Use existing persistence hook (1-indexed format)
   const { blockLayouts, setBlockLayouts, hydrated, hasSavedLayout, resetLayout } = useLayoutPersistence(
     sheetSlug,
     sheet
   );
 
-  // Convert to 0-indexed format for V2 hooks
   const initialBlocksV2 = useMemo(() => migrateBlockLayouts(blockLayouts), [blockLayouts]);
 
-  // Layout editor hook (orchestrates the editing session)
   const editor = useLayoutEditor({
     initialBlocks: initialBlocksV2,
     gridColumns: GRID_COLUMNS,
     onCommit: useCallback(
       (newBlocks: LayoutBlock[]) => {
-        // Convert back to 1-indexed format and persist
         setBlockLayouts(toOldBlockLayouts(newBlocks));
       },
       [setBlockLayouts]
     ),
   });
 
-  // Sync from persistence to editor when persistence changes (e.g., hydration or reset)
+  // Sync persistence -> editor when persistence changes (hydration, reset).
   useEffect(() => {
     const newBlocks = migrateBlockLayouts(blockLayouts);
-    // Only update if different to avoid infinite loops
     if (JSON.stringify(newBlocks) !== JSON.stringify(editor.committedBlocks)) {
       editor.setCommittedLayout(newBlocks);
     }
-  }, [blockLayouts]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockLayouts]);
 
-  // Drag hook
+  // -- Drag ----------------------------------------------------------------
+  const handleDragStart = useCallback(
+    (blockId: string) => editor.startInteraction("drag", blockId),
+    [editor]
+  );
+  const handleDragMove = useCallback(
+    (move: DragMove) => {
+      const op: MoveOperation = {
+        kind: "move",
+        blockId: move.blockId,
+        dx: move.dx,
+        dy: move.dy,
+      };
+      editor.applyInteractionOperation(op, {
+        allowShrink: !move.strict,
+        allowWrap: !move.strict,
+      });
+    },
+    [editor]
+  );
+  const handleDragEnd = useCallback(() => editor.commitInteraction(), [editor]);
+  const handleDragCancel = useCallback(() => editor.cancelInteraction(), [editor]);
+
   const { dragState, startBlockDrag } = useCardDragV2({
     blocks: editor.currentBlocks,
     gridMetrics,
-    onDragStart: useCallback(
-      (blockId: string) => {
-        editor.startInteraction("drag", blockId);
-      },
-      [editor]
-    ),
-    onDragMove: useCallback(
-      (intent: MoveIntent) => {
-        editor.applyIntent(intent);
-      },
-      [editor]
-    ),
-    onDragEnd: useCallback(() => {
-      editor.commitInteraction();
-    }, [editor]),
-    onDragCancel: useCallback(() => {
-      editor.cancelInteraction();
-    }, [editor]),
+    onDragStart: handleDragStart,
+    onDragMove: handleDragMove,
+    onDragEnd: handleDragEnd,
+    onDragCancel: handleDragCancel,
   });
 
-  // Resize hook
+  // -- Resize --------------------------------------------------------------
+  const handleResizeStart = useCallback(
+    (blockId: string) => editor.startInteraction("resize", blockId),
+    [editor]
+  );
+  const handleResizeMove = useCallback(
+    (move: ResizeMove) => {
+      const op: ResizeOperation = {
+        kind: "resize",
+        blockId: move.blockId,
+        edge: move.edge,
+        delta: move.delta,
+      };
+      editor.applyInteractionOperation(op, {
+        compact: move.compact,
+        allowShrink: !move.strict,
+        allowWrap: !move.strict,
+      });
+    },
+    [editor]
+  );
+  const handleResizeEnd = useCallback(() => editor.commitInteraction(), [editor]);
+  const handleResizeCancel = useCallback(() => editor.cancelInteraction(), [editor]);
+
   const { resizeState, startBlockResize } = useCardResizeV2({
     blocks: editor.currentBlocks,
     gridMetrics,
-    onResizeStart: useCallback(
-      (blockId: string) => {
-        editor.startInteraction("resize", blockId);
-      },
-      [editor]
-    ),
-    onResizeMove: useCallback(
-      (intent: ResizeIntent) => {
-        editor.applyIntent(intent);
-      },
-      [editor]
-    ),
-    onResizeEnd: useCallback(() => {
-      editor.commitInteraction();
-    }, [editor]),
-    onResizeCancel: useCallback(() => {
-      editor.cancelInteraction();
-    }, [editor]),
+    onResizeStart: handleResizeStart,
+    onResizeMove: handleResizeMove,
+    onResizeEnd: handleResizeEnd,
+    onResizeCancel: handleResizeCancel,
   });
 
-  // Keyboard hook
+  // -- Keyboard (inert in step 5; step 5b will wire Zellij modes) ---------
   const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboardV2({
     blocks: editor.currentBlocks,
-    onMoveIntent: useCallback(
-      (intent: MoveIntent) => {
-        editor.applyIntent(intent);
-      },
-      [editor]
-    ),
-    onResizeIntent: useCallback(
-      (intent: ResizeIntent) => {
-        editor.applyIntent(intent);
-      },
-      [editor]
-    ),
   });
+
+  // -- Dev save shortcut ---------------------------------------------------
+  const { matchesAction } = useKeybindings();
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (!matchesAction(event, ACTION_IDS.LAYOUT_DEV_SAVE)) return;
+      event.preventDefault();
+      syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks)).catch((err) => {
+        console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
+      });
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [editor.committedBlocks, matchesAction, sheetSlug]);
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
 
-  // Build a map of current blocks by ID for rendering
   const currentBlocksById = useMemo(
     () => new Map(editor.currentBlocks.map((block) => [block.id, block])),
     [editor.currentBlocks]
   );
 
-  // Build debug ID map based on committed layout (stable order)
-  const debugIdMap = useMemo(
-    () => createDebugIdMap(editor.committedBlocks),
-    [editor.committedBlocks]
-  );
+  const debugIdMap = useMemo(() => createDebugIdMap(blocks), [blocks]);
 
-  // Anchor target sync effect
+  // Engine setup snapshot for the debug recorder.
+  const debugEngineSetup = useMemo(() => {
+    const constraints = new Map<string, BlockConstraints>();
+    for (const block of editor.committedBlocks) {
+      constraints.set(block.id, getBlockConstraintsV2(block.kind));
+    }
+    return { gridColumns: GRID_COLUMNS, constraints };
+  }, [editor.committedBlocks]);
+
+  // Anchor target sync effect.
   useEffect(() => {
     function syncAnchorTargetState() {
       const currentTarget = document.querySelector<HTMLElement>("[data-anchor-target='true']");
@@ -172,9 +199,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   }, []);
 
   function updateGridMetrics(nextMetrics: GridMetricsState) {
-    setGridMetrics((currentMetrics) => {
-      if (currentMetrics.columns === nextMetrics.columns && currentMetrics.unitSize === nextMetrics.unitSize) {
-        return currentMetrics;
+    setGridMetrics((current) => {
+      if (current.columns === nextMetrics.columns && current.unitSize === nextMetrics.unitSize) {
+        return current;
       }
       return nextMetrics;
     });
@@ -195,7 +222,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   }
 
   return (
-    <LayoutSnapshotProvider snapshot={editor.snapshot}>
+    <>
       <div className={cheatsheetStyles.layoutToolbar}>
         <div className={cheatsheetStyles.layoutToolbarMeta}>
           <span className={cheatsheetStyles.layoutStorageStatus} suppressHydrationWarning>
@@ -223,7 +250,6 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           const layoutBlock = currentBlocksById.get(block.id);
           if (!layoutBlock) return null;
 
-          // Convert 0-indexed position to 1-indexed for BlockRenderer
           const pos = layoutBlock.position;
           const colStart = pos.x + 1;
           const rowStart = pos.y + 1;
@@ -233,9 +259,12 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           const isDragging = Boolean(dragState && dragState.blockId === block.id);
           const isResizing = Boolean(resizeState && resizeState.blockId === block.id);
           const isKeyboardFocused = Boolean(focusedCard && focusedCard.blockId === block.id);
-          const isDimmed = Boolean(dragState || resizeState || focusedCard) && !isDragging && !isResizing && !isKeyboardFocused;
+          const isDimmed =
+            Boolean(dragState || resizeState || focusedCard) &&
+            !isDragging &&
+            !isResizing &&
+            !isKeyboardFocused;
 
-          // Get debug ID for this block
           const debugId = debugIdMap.get(block.id) ?? "?";
 
           return (
@@ -255,8 +284,10 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               keyboardFocused={isKeyboardFocused}
               manipulating={isKeyboardFocused && isManipulating}
               onHeaderPointerDown={(event) => handleHeaderPointerDown(block.id, event)}
-              onResizePointerDown={(direction, event) => handleResizePointerDown(block.id, direction, event)}
-              activeResizeDirection={isResizing && resizeState ? resizeState.direction : null}
+              onResizePointerDown={(direction, event) =>
+                handleResizePointerDown(block.id, direction, event)
+              }
+              activeResizeDirection={isResizing && resizeState ? resizeState.edge : null}
               layoutLabel={`[${debugId}] ${colStart},${rowStart} · ${colSpan}x${rowSpan}`}
             >
               {block.kind === "card" ? (
@@ -270,16 +301,14 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
-      <DebugRecorderButton page={`cheatsheets/${sheetSlug}`} debugIdMap={debugIdMap} />
-    </LayoutSnapshotProvider>
+      <DebugRecorderButton page={`cheatsheets/${sheetSlug}`} engine={debugEngineSetup} debugIdMap={debugIdMap} />
+    </>
   );
 }
 
 function SheetItem({ item }: { item: CheatSheetItem }) {
   const anchorId = getItemAnchorId(item.entries);
-  const hasAliases = item.entries.some(
-    (entry) => "alias" in entry || "aliases" in entry
-  );
+  const hasAliases = item.entries.some((entry) => "alias" in entry || "aliases" in entry);
   const hasDetailedEntries = item.detailedEntries && item.detailedEntries.length > 0;
 
   const titleEntry = item.entries.find((entry) => "title" in entry);
@@ -296,9 +325,7 @@ function SheetItem({ item }: { item: CheatSheetItem }) {
       data-item=""
       data-item-details={itemData}
     >
-      {hasDetailedEntries && (
-        <ItemActions hasExample={true} />
-      )}
+      {hasDetailedEntries && <ItemActions hasExample={true} />}
       <div className={cheatsheetStyles.itemEntriesHeader}>
         {item.entries.map((entry, index) => (
           <EntryRenderer key={index} entry={entry} hasAliases={hasAliases} />

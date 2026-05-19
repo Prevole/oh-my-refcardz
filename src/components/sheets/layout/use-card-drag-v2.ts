@@ -2,63 +2,53 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { LayoutBlock, MoveIntent } from "@/lib/layout/solver/types";
+import type { LayoutBlock } from "@/lib/layout/engine";
 import { GRID_GAP_PX } from "../sheet-grid";
 import { calculateAutoScrollSpeed } from "./auto-scroll";
 import type { GridMetricsState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
 
 /**
- * State tracked during a drag operation.
+ * Drag input emitted on every cell crossing.
+ * The consumer (sheet-renderer) is responsible for translating this into an
+ * engine MoveOperation against the interaction snapshot.
  */
-export type DragStateV2 = {
-  /** The block being dragged */
+export type DragMove = {
   blockId: string;
-  /** Grid rect at drag start (for coordinate calculations) */
-  gridRect: DOMRect;
-  /** Unit size at drag start */
-  unitSize: number;
-  /** Offset from pointer to block top-left corner (in pixels) */
-  pointerOffsetX: number;
-  pointerOffsetY: number;
-  /** Original block position (0-indexed) */
-  originX: number;
-  originY: number;
-  /** Block dimensions */
-  width: number;
-  height: number;
-  /** Current computed position (0-indexed) */
-  currentX: number;
-  currentY: number;
+  /** Cumulative delta in grid cells since the drag started. */
+  dx: number;
+  dy: number;
+  /** Strict mode (Alt key) — engine should refuse to shrink neighbors. */
+  strict: boolean;
 };
 
-/**
- * Result of the useCardDragV2 hook.
- */
+export type DragStateV2 = {
+  blockId: string;
+  /** Origin in grid cells at drag start. */
+  originX: number;
+  originY: number;
+  /** Current cumulative delta in grid cells (for UI feedback). */
+  dx: number;
+  dy: number;
+};
+
 export type UseCardDragV2Result = {
-  /** Current drag state, if any */
   dragState: DragStateV2 | null;
-  /** Start dragging a block */
   startBlockDrag: (blockId: string, event: ReactPointerEvent<HTMLElement>) => void;
 };
 
 type UseCardDragV2Options = {
-  /** Current layout blocks */
   blocks: LayoutBlock[];
-  /** Grid metrics for coordinate calculations */
   gridMetrics: GridMetricsState;
-  /** Called when drag starts */
   onDragStart?: (blockId: string) => void;
-  /** Called during drag with the current move intent */
-  onDragMove?: (intent: MoveIntent) => void;
-  /** Called when drag ends */
+  onDragMove?: (move: DragMove) => void;
   onDragEnd?: () => void;
-  /** Called when drag is cancelled */
   onDragCancel?: () => void;
 };
 
 /**
- * Convert pointer position to grid coordinates.
+ * Convert pointer (clientX, clientY) into grid cell coordinates.
+ * The pointer offset compensates for the click position inside the block.
  */
 function pointerToGridCoords(
   clientX: number,
@@ -67,27 +57,27 @@ function pointerToGridCoords(
   unitSize: number,
   offsetX: number,
   offsetY: number
-): { x: number; y: number } {
+): { cellX: number; cellY: number } {
   const pitch = unitSize + GRID_GAP_PX;
-  const blockLeft = clientX - offsetX - gridRect.left;
-  const blockTop = clientY - offsetY - gridRect.top;
-  const x = Math.round(blockLeft / pitch);
-  const y = Math.round(blockTop / pitch);
-  return { x: Math.max(0, x), y: Math.max(0, y) };
+  const blockLeftPx = clientX - offsetX - gridRect.left;
+  const blockTopPx = clientY - offsetY - gridRect.top;
+  return {
+    cellX: Math.max(0, Math.round(blockLeftPx / pitch)),
+    cellY: Math.max(0, Math.round(blockTopPx / pitch)),
+  };
 }
 
-/**
- * Hook for handling card drag interactions.
- *
- * This hook:
- * - Captures pointer events to start/track/end drag
- * - Converts pointer positions to grid coordinates
- * - Produces MoveIntent for the solver
- * - Handles auto-scrolling near viewport edges
- *
- * The hook does NOT directly modify the layout. It only produces intents
- * that the parent component passes to the layout editor.
- */
+type InternalDragState = {
+  blockId: string;
+  unitSize: number;
+  pointerOffsetX: number;
+  pointerOffsetY: number;
+  originX: number;
+  originY: number;
+  lastCellX: number;
+  lastCellY: number;
+};
+
 export function useCardDragV2({
   blocks,
   gridMetrics,
@@ -96,112 +86,139 @@ export function useCardDragV2({
   onDragEnd,
   onDragCancel,
 }: UseCardDragV2Options): UseCardDragV2Result {
-  // Use state for the drag state that needs to trigger re-renders
   const [dragState, setDragState] = useState<DragStateV2 | null>(null);
 
-  // Refs for internal tracking that don't need to trigger re-renders
-  const dragStateRef = useRef<DragStateV2 | null>(null);
+  const internalRef = useRef<InternalDragState | null>(null);
   const autoScrollFrameRef = useRef<number | null>(null);
   const lastPointerRef = useRef<{ x: number; y: number; altKey: boolean }>({ x: 0, y: 0, altKey: false });
   const callbacksRef = useRef({ onDragStart, onDragMove, onDragEnd, onDragCancel });
 
-  // Keep callbacks ref up to date
   useEffect(() => {
     callbacksRef.current = { onDragStart, onDragMove, onDragEnd, onDragCancel };
   }, [onDragStart, onDragMove, onDragEnd, onDragCancel]);
 
-  // Sync state to ref for use in event handlers
-  useEffect(() => {
-    dragStateRef.current = dragState;
-  }, [dragState]);
-
-  // Set up global pointer listeners when dragging
   useEffect(() => {
     if (!dragState) return;
 
-    function updateDragPosition(clientX: number, clientY: number, altKey: boolean) {
-      const active = dragStateRef.current;
-      if (!active) return;
-
+    function getGridRect(): DOMRect | null {
       const grid = document.querySelector("[data-sheet-grid]");
-      if (!(grid instanceof HTMLElement)) return;
-      const gridRect = grid.getBoundingClientRect();
+      if (!(grid instanceof HTMLElement)) return null;
+      return grid.getBoundingClientRect();
+    }
 
-      const coords = pointerToGridCoords(
+    function updateFromPointer(clientX: number, clientY: number, altKey: boolean) {
+      const internal = internalRef.current;
+      if (!internal) return;
+
+      const gridRect = getGridRect();
+      if (!gridRect) return;
+
+      const { cellX, cellY } = pointerToGridCoords(
         clientX,
         clientY,
         gridRect,
-        active.unitSize,
-        active.pointerOffsetX,
-        active.pointerOffsetY
+        internal.unitSize,
+        internal.pointerOffsetX,
+        internal.pointerOffsetY
       );
 
-      if (coords.x !== active.currentX || coords.y !== active.currentY) {
-        const updatedState = {
-          ...active,
-          currentX: coords.x,
-          currentY: coords.y,
-          gridRect,
-        };
-        setDragState(updatedState);
-
-        const intent: MoveIntent = {
-          type: "move",
-          blockId: active.blockId,
-          x: coords.x,
-          y: coords.y,
-          // Alt+Drag disables shrinking (blocks are only pushed/wrapped)
-          allowShrink: !altKey,
-        };
-        callbacksRef.current.onDragMove?.(intent);
+      if (cellX === internal.lastCellX && cellY === internal.lastCellY) {
+        // No cell boundary crossed; skip engine call.
+        return;
       }
+
+      internal.lastCellX = cellX;
+      internal.lastCellY = cellY;
+
+      const dx = cellX - internal.originX;
+      const dy = cellY - internal.originY;
+
+      setDragState({
+        blockId: internal.blockId,
+        originX: internal.originX,
+        originY: internal.originY,
+        dx,
+        dy,
+      });
+
+      callbacksRef.current.onDragMove?.({
+        blockId: internal.blockId,
+        dx,
+        dy,
+        strict: altKey,
+      });
     }
 
     function runAutoScroll() {
-      const scrollSpeed = calculateAutoScrollSpeed(lastPointerRef.current.y, window.innerHeight);
-      if (scrollSpeed !== 0) {
-        window.scrollBy(0, scrollSpeed);
-        // Use last known altKey state for auto-scroll updates
-        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y, lastPointerRef.current.altKey);
+      const speed = calculateAutoScrollSpeed(lastPointerRef.current.y, window.innerHeight);
+      if (speed !== 0) {
+        window.scrollBy(0, speed);
+        updateFromPointer(
+          lastPointerRef.current.x,
+          lastPointerRef.current.y,
+          lastPointerRef.current.altKey
+        );
       }
       autoScrollFrameRef.current = requestAnimationFrame(runAutoScroll);
     }
 
     function handlePointerMove(event: PointerEvent) {
       lastPointerRef.current = { x: event.clientX, y: event.clientY, altKey: event.altKey };
-      updateDragPosition(event.clientX, event.clientY, event.altKey);
+      updateFromPointer(event.clientX, event.clientY, event.altKey);
     }
 
-    function handlePointerUp() {
+    function cleanupAutoScroll() {
       if (autoScrollFrameRef.current !== null) {
         cancelAnimationFrame(autoScrollFrameRef.current);
         autoScrollFrameRef.current = null;
       }
+    }
+
+    function handlePointerUp() {
+      cleanupAutoScroll();
+      internalRef.current = null;
       setDragState(null);
       callbacksRef.current.onDragEnd?.();
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        if (autoScrollFrameRef.current !== null) {
-          cancelAnimationFrame(autoScrollFrameRef.current);
-          autoScrollFrameRef.current = null;
-        }
+        cleanupAutoScroll();
+        internalRef.current = null;
         setDragState(null);
         callbacksRef.current.onDragCancel?.();
+        return;
       }
-      // Update altKey state when Alt is pressed/released during drag
       if (event.key === "Alt") {
         lastPointerRef.current = { ...lastPointerRef.current, altKey: true };
-        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y, true);
+        // Re-evaluate even if the pointer didn't move — strict mode change can
+        // alter the engine's behavior, but it does not move the pointer to a
+        // new cell. We still re-emit the current cumulative delta to allow the
+        // editor to recompute with the new flag.
+        const internal = internalRef.current;
+        if (internal) {
+          callbacksRef.current.onDragMove?.({
+            blockId: internal.blockId,
+            dx: internal.lastCellX - internal.originX,
+            dy: internal.lastCellY - internal.originY,
+            strict: true,
+          });
+        }
       }
     }
 
     function handleKeyUp(event: KeyboardEvent) {
-      // Update altKey state when Alt is released
       if (event.key === "Alt") {
         lastPointerRef.current = { ...lastPointerRef.current, altKey: false };
-        updateDragPosition(lastPointerRef.current.x, lastPointerRef.current.y, false);
+        const internal = internalRef.current;
+        if (internal) {
+          callbacksRef.current.onDragMove?.({
+            blockId: internal.blockId,
+            dx: internal.lastCellX - internal.originX,
+            dy: internal.lastCellY - internal.originY,
+            strict: false,
+          });
+        }
       }
     }
 
@@ -213,10 +230,7 @@ export function useCardDragV2({
     window.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      if (autoScrollFrameRef.current !== null) {
-        cancelAnimationFrame(autoScrollFrameRef.current);
-        autoScrollFrameRef.current = null;
-      }
+      cleanupAutoScroll();
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("keydown", handleKeyDown);
@@ -226,41 +240,46 @@ export function useCardDragV2({
 
   const startBlockDrag = useCallback(
     (blockId: string, event: ReactPointerEvent<HTMLElement>) => {
-      if ((event.target as HTMLElement).closest("[data-card-layout-controls]")) return;
-      if ((event.target as HTMLElement).closest("[data-card-resize-handle]")) return;
+      const target = event.target as HTMLElement;
+      if (target.closest("[data-card-layout-controls]")) return;
+      if (target.closest("[data-card-resize-handle]")) return;
 
       const grid = event.currentTarget.closest("[data-sheet-grid]");
       if (!(grid instanceof HTMLElement)) return;
 
-      const metrics = gridMetrics ?? FALLBACK_METRICS;
       const block = blocks.find((b) => b.id === blockId);
       if (!block) return;
 
+      const metrics = gridMetrics ?? FALLBACK_METRICS;
       const gridRect = grid.getBoundingClientRect();
       const pitch = metrics.unitSize + GRID_GAP_PX;
 
-      const blockLeft = gridRect.left + block.position.x * pitch;
-      const blockTop = gridRect.top + block.position.y * pitch;
-      const pointerOffsetX = event.clientX - blockLeft;
-      const pointerOffsetY = event.clientY - blockTop;
+      const blockLeftPx = gridRect.left + block.position.x * pitch;
+      const blockTopPx = gridRect.top + block.position.y * pitch;
+      const pointerOffsetX = event.clientX - blockLeftPx;
+      const pointerOffsetY = event.clientY - blockTopPx;
 
       event.preventDefault();
 
-      const state: DragStateV2 = {
+      internalRef.current = {
         blockId,
-        gridRect,
         unitSize: metrics.unitSize,
         pointerOffsetX,
         pointerOffsetY,
         originX: block.position.x,
         originY: block.position.y,
-        width: block.position.w,
-        height: block.position.h,
-        currentX: block.position.x,
-        currentY: block.position.y,
+        lastCellX: block.position.x,
+        lastCellY: block.position.y,
       };
 
-      setDragState(state);
+      setDragState({
+        blockId,
+        originX: block.position.x,
+        originY: block.position.y,
+        dx: 0,
+        dy: 0,
+      });
+
       lastPointerRef.current = { x: event.clientX, y: event.clientY, altKey: event.altKey };
       callbacksRef.current.onDragStart?.(blockId);
     },

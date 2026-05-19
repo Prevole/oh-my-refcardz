@@ -1,16 +1,14 @@
-export { debugRecorder, type DebugRecorder } from "./recorder";
+export { debugRecorder, type DebugRecorder, type DebugRecorderStartOptions } from "./recorder";
 export { useDebugRecorder } from "./use-debug-recorder";
 export { numberToDebugId, createDebugIdMap } from "./debug-id";
 export type {
+  DebugEngineSetup,
   DebugEvent,
+  DebugEventBase,
   DebugSession,
   DebugSessionMeta,
+  EngineEventRecord,
   RecordingState,
-  SolverIntentEvent,
-  SolverCollisionEvent,
-  SolverFinalPassEvent,
-  InteractionStartEvent,
-  InteractionEndEvent,
-  StateChangeEvent,
+  SerializableConstraints,
   UserActionEvent,
 } from "./types";
