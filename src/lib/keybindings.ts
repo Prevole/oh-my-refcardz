@@ -53,6 +53,7 @@ export const ACTION_IDS = {
   COPY_COMMAND: "sheet.copy",
   SHOW_EXAMPLE: "sheet.show-details",
   CLEAR_COMMAND_FOCUS: "sheet.clear-focus",
+  TOGGLE_DEBUG_OVERLAY: "sheet.toggle-debug-overlay",
 
   CARD_NAV_LEFT: "sheet-layout.nav-left",
   CARD_NAV_RIGHT: "sheet-layout.nav-right",
@@ -171,6 +172,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.CLEAR_COMMAND_FOCUS,
       label: "Clear selection",
       combos: [key("Escape")],
+    },
+    {
+      id: ACTION_IDS.TOGGLE_DEBUG_OVERLAY,
+      label: "Toggle layout debug overlay",
+      combos: [combo("d", "ctrl", "shift")],
     },
   ],
 

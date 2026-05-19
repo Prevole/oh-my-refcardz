@@ -76,6 +76,7 @@ Entry renderers (command-entry, text-entry, etc.)
 | Keybindings | localStorage | `KeybindingsProvider` |
 | Keyboard scope | React state | `KeyboardContextProvider` |
 | Sheet accent color | React context | `SheetAccentProvider` |
+| Debug overlay toggle | localStorage (`omr.debug-overlay`) | `useDebugOverlay` hook |
 
 ## Key Systems
 
@@ -108,6 +109,18 @@ See: [cheatsheet-schema.md](./cheatsheet-schema.md)
 Grid layout solver with deterministic collision resolution (move, resize, push, shrink, wrap).
 
 See: [layout-engine.md](./layout-engine.md) and [layout-actions.md](./layout-actions.md)
+
+### Debug Overlay
+
+A diagnostic overlay for cheatsheet layouts, toggled via `Ctrl+Shift+D` (scope `sheet`). Renders numbered grid axes, a sticky stats bar and enriched block badges showing the drift from the reference position captured when debug was last activated.
+
+Implementation:
+- Hook: `src/lib/debug/use-debug-overlay.ts` (state, persistence)
+- Storage: `src/lib/debug/debug-overlay-storage.ts` (pure functions, `localStorage`)
+- Components: `src/components/sheets/debug-overlay/`
+- Wiring: `src/components/sheets/sheet-renderer.tsx`
+
+See: [keybindings.md](./keybindings.md#debug-overlay)
 
 ## Page Structure
 

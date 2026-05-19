@@ -15,10 +15,16 @@ type SheetGridMetrics = {
 type SheetGridProps = {
   children: ReactNode;
   editMode?: boolean;
+  debugMode?: boolean;
   onMetricsChange?: (metrics: SheetGridMetrics) => void;
 };
 
-export function SheetGrid({ children, editMode = false, onMetricsChange }: SheetGridProps) {
+export function SheetGrid({
+  children,
+  editMode = false,
+  debugMode = false,
+  onMetricsChange,
+}: SheetGridProps) {
   const ref = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -53,7 +59,13 @@ export function SheetGrid({ children, editMode = false, onMetricsChange }: Sheet
     <section
       ref={ref}
       data-sheet-grid
-      className={`${cheatsheetStyles.dashboardGrid} ${editMode ? cheatsheetStyles.dashboardGridEditMode : ""}`}
+      className={[
+        cheatsheetStyles.dashboardGrid,
+        editMode ? cheatsheetStyles.dashboardGridEditMode : "",
+        debugMode ? cheatsheetStyles.dashboardGridDebug : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       {children}
     </section>

@@ -37,6 +37,13 @@ export type BlockRendererPropsFromParent = {
   editMode: boolean;
   /** Label shown in edit mode */
   layoutLabel?: string;
+  /** Debug overlay info; when set, badge is shown even outside edit mode */
+  debugInfo?: {
+    debugId: string;
+    blockId: string;
+    current: { x: number; y: number; w: number; h: number };
+    initial?: { x: number; y: number; w: number; h: number };
+  };
   /** Whether this block is currently being dragged or resized */
   dragging: boolean;
   /** Whether this block is dimmed */
@@ -73,6 +80,7 @@ export function BlockRenderer({
   rowSpan,
   editMode,
   layoutLabel,
+  debugInfo,
   dragging,
   dimmed,
   keyboardFocused,
@@ -99,6 +107,7 @@ export function BlockRenderer({
       rowSpan={rowSpan}
       editMode={editMode}
       layoutLabel={layoutLabel}
+      debugInfo={debugInfo}
       dragging={dragging}
       dimmed={dimmed}
       keyboardFocused={keyboardFocused}

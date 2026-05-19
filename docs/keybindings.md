@@ -233,3 +233,22 @@ The system tracks pending sequences with an 800ms timeout.
 3. **Check scope before handling** — Use `isScopeActive()` or `useScopedKeyboardHandler`
 4. **Prevent default** — Call `e.preventDefault()` when handling to avoid browser defaults
 5. **Document in help modal** — Add new actions to the appropriate help component
+
+## Debug Overlay
+
+A dedicated action toggles a layout debug overlay used to diagnose grid issues on cheatsheet pages.
+
+| Action ID | Default combo | Scope |
+|---|---|---|
+| `sheet.toggle-debug-overlay` (`ACTION_IDS.TOGGLE_DEBUG_OVERLAY`) | `Ctrl+Shift+D` | `sheet` |
+
+When enabled, the overlay:
+
+- Draws numbered X (0..35) and Y (0..maxRow-1) axes inside the grid.
+- Shows a sticky status bar at the top with the slug, grid dimensions and block count.
+- Enriches every block badge with its debug ID, block ID, current grid position and (if drifted) the position recorded when debug was last activated.
+
+The "initial position" reference is captured at the moment debug is toggled **on**, not at page load. Toggling off and on again resets the reference. State persists across reloads via `localStorage` (key `omr.debug-overlay`).
+
+The shortcut collides with the browser's "Bookmark all tabs" default; the listener calls `preventDefault()` to suppress it (same approach as `Ctrl+Shift+S` for `LAYOUT_DEV_SAVE`).
+

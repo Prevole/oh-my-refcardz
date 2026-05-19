@@ -1,5 +1,6 @@
 import { registerBlockType, type BlockRendererProps } from "./block-registry";
 import { ResizeHandles } from "./resize-handles";
+import { LayoutBadgeContent } from "./layout-badge-content";
 import { GRID_COLUMNS } from "../../sheet-grid";
 import styles from "../../cheatsheet-rendering.module.css";
 
@@ -18,6 +19,7 @@ function HeadingBlockRenderer({
   rowSpan,
   editMode,
   layoutLabel,
+  debugInfo,
   dragging,
   dimmed,
   keyboardFocused,
@@ -51,9 +53,16 @@ function HeadingBlockRenderer({
         ["--card-row-span" as string]: String(rowSpan),
       }}
     >
-      {editMode ? (
+      {editMode || debugInfo ? (
         <div className={styles.cardLayoutBadgeRow}>
-          <div className={styles.cardLayoutBadge}>{layoutLabel ?? `${colSpan}x${rowSpan}`}</div>
+          <div className={styles.cardLayoutBadge}>
+            <LayoutBadgeContent
+              layoutLabel={layoutLabel}
+              colSpan={colSpan}
+              rowSpan={rowSpan}
+              debugInfo={debugInfo}
+            />
+          </div>
         </div>
       ) : null}
       <div

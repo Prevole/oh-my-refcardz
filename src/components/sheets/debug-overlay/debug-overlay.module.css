@@ -1,0 +1,114 @@
+/* ------------------------------------------------------------------------- */
+/* Debug overlay — axes rulers                                                 */
+/* ------------------------------------------------------------------------- */
+
+.axes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.colAxis {
+  position: absolute;
+  top: calc(-1 * var(--space-6));
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--sheet-grid-columns, 36), minmax(0, 1fr));
+  gap: var(--sheet-grid-gap);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fg-50);
+}
+
+.colLabel {
+  text-align: center;
+  padding: 0.1rem 0;
+  background: color-mix(in srgb, var(--bg-dark-base) 70%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.rowAxis {
+  position: absolute;
+  top: 0;
+  left: calc(-1 * var(--space-6));
+  bottom: 0;
+  display: grid;
+  grid-auto-rows: var(--sheet-grid-row-size);
+  row-gap: var(--sheet-grid-gap);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fg-50);
+  width: calc(var(--space-6) - 0.25rem);
+}
+
+.rowLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-dark-base) 70%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0 0.2rem;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Debug overlay — stats bar                                                   */
+/* ------------------------------------------------------------------------- */
+
+.statsBar {
+  position: fixed;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: color-mix(in srgb, var(--bg-dark-base) 92%, transparent);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: var(--text-xs);
+  color: var(--fg-75);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.statsBadge {
+  background: var(--warning);
+  color: var(--bg-dark-base);
+  padding: 0.1rem var(--space-2);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.statsItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.statsLabel {
+  color: var(--fg-50);
+  text-transform: uppercase;
+  font-size: calc(var(--text-xs) * 0.85);
+  letter-spacing: 0.04em;
+}
+
+.statsValue {
+  color: var(--fg-100);
+  font-weight: 600;
+}
+
+.statsHint {
+  color: var(--fg-50);
+  margin-left: var(--space-3);
+  font-style: italic;
+}

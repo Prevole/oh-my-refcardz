@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { registerBlockType, type BlockRendererProps } from "./block-registry";
 import { ResizeHandles } from "./resize-handles";
+import { LayoutBadgeContent } from "./layout-badge-content";
 import { GRID_COLUMNS } from "../../sheet-grid";
 import { MAX_ROW_SPAN } from "../layout-types";
 import styles from "../../cheatsheet-rendering.module.css";
@@ -27,6 +28,7 @@ function CardBlockRenderer({
   rowSpan,
   editMode,
   layoutLabel,
+  debugInfo,
   dragging,
   dimmed,
   keyboardFocused,
@@ -60,10 +62,17 @@ function CardBlockRenderer({
         ["--card-row-span" as string]: String(rowSpan),
       }}
     >
-      {editMode ? (
+      {editMode || debugInfo ? (
         <div className={styles.cardLayoutBadgeRow}>
-          <div className={styles.cardLayoutBadge}>{layoutLabel ?? `${colSpan}x${rowSpan}`}</div>
-          {controls}
+          <div className={styles.cardLayoutBadge}>
+            <LayoutBadgeContent
+              layoutLabel={layoutLabel}
+              colSpan={colSpan}
+              rowSpan={rowSpan}
+              debugInfo={debugInfo}
+            />
+          </div>
+          {editMode ? controls : null}
         </div>
       ) : null}
       <div

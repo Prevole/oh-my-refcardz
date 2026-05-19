@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SheetGrid, GRID_COLUMNS } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
@@ -10,7 +10,9 @@ import { buildBlockAnchorId } from "@/lib/anchor-navigation";
 import { migrateBlockLayouts, toOldBlockLayouts } from "@/lib/layout/migration";
 import { syncLayoutToDev } from "@/lib/dev-layout-sync";
 import { DebugRecorderButton, createDebugIdMap } from "@/components/debug";
-import type { BlockConstraints, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
+import { useDebugOverlay } from "@/lib/debug";
+import { DebugAxesOverlay, DebugStatsBar } from "@/components/sheets/debug-overlay";
+import type { BlockConstraints, GridPosition, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
 import {
@@ -154,6 +156,43 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
 
+  // -- Debug overlay -------------------------------------------------------
+  const { enabled: debugEnabled, toggle: toggleDebugOverlay } = useDebugOverlay();
+  const [debugInitialPositions, setDebugInitialPositions] = useState<Map<string, GridPosition>>(
+    () => new Map()
+  );
+  const prevDebugEnabledRef = useRef(false);
+
+  useEffect(() => {
+    if (debugEnabled && !prevDebugEnabledRef.current) {
+      const snapshot = new Map<string, GridPosition>();
+      for (const block of editor.currentBlocks) {
+        snapshot.set(block.id, { ...block.position });
+      }
+      setDebugInitialPositions(snapshot);
+    }
+    prevDebugEnabledRef.current = debugEnabled;
+  }, [debugEnabled, editor.currentBlocks]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!matchesAction(event, ACTION_IDS.TOGGLE_DEBUG_OVERLAY)) return;
+      event.preventDefault();
+      toggleDebugOverlay();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [matchesAction, toggleDebugOverlay]);
+
+  const debugMaxRow = useMemo(() => {
+    let max = 0;
+    for (const block of editor.currentBlocks) {
+      const bottom = block.position.y + block.position.h;
+      if (bottom > max) max = bottom;
+    }
+    return max;
+  }, [editor.currentBlocks]);
+
   const currentBlocksById = useMemo(
     () => new Map(editor.currentBlocks.map((block) => [block.id, block])),
     [editor.currentBlocks]
@@ -245,7 +284,16 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         </div>
       </div>
 
-      <SheetGrid editMode={isLayoutActive} onMetricsChange={updateGridMetrics}>
+      {debugEnabled ? (
+        <DebugStatsBar
+          slug={sheetSlug}
+          blockCount={editor.currentBlocks.length}
+          maxRow={debugMaxRow}
+        />
+      ) : null}
+
+      <SheetGrid editMode={isLayoutActive} debugMode={debugEnabled} onMetricsChange={updateGridMetrics}>
+        {debugEnabled ? <DebugAxesOverlay maxRow={debugMaxRow} /> : null}
         {blocks.map((block) => {
           const layoutBlock = currentBlocksById.get(block.id);
           if (!layoutBlock) return null;
@@ -266,6 +314,15 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
             !isKeyboardFocused;
 
           const debugId = debugIdMap.get(block.id) ?? "?";
+          const debugInitial = debugInitialPositions.get(block.id);
+          const debugInfo = debugEnabled
+            ? {
+                debugId,
+                blockId: block.id,
+                current: pos,
+                initial: debugInitial,
+              }
+            : undefined;
 
           return (
             <BlockRenderer
@@ -289,6 +346,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               }
               activeResizeDirection={isResizing && resizeState ? resizeState.edge : null}
               layoutLabel={`[${debugId}] ${colStart},${rowStart} · ${colSpan}x${rowSpan}`}
+              debugInfo={debugInfo}
             >
               {block.kind === "card" ? (
                 <div className={cheatsheetStyles.itemList}>

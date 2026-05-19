@@ -63,6 +63,17 @@ export type BlockRendererProps = {
   editMode: boolean;
   /** Label shown in edit mode (e.g., "1,1 · 12x4") */
   layoutLabel?: string;
+  /**
+   * When set, the block badge is rendered even outside edit mode and shows
+   * additional debug info: id, current 0-indexed position (x,y,w,h), and the
+   * initial position observed at page load when it differs from the current.
+   */
+  debugInfo?: {
+    debugId: string;
+    blockId: string;
+    current: { x: number; y: number; w: number; h: number };
+    initial?: { x: number; y: number; w: number; h: number };
+  };
   /** Whether this block is currently being dragged or resized */
   dragging: boolean;
   /** Whether this block is dimmed (another block is being manipulated) */
