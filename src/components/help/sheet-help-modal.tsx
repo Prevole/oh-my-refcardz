@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
-import { HelpRow } from "@/components/settings/keybinding-display";
+import { KeybindingChart, type ChartEntry } from "@/components/help/keybinding-chart";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS, getCombosDisplay } from "@/lib/keybindings";
 import { useActionCombos } from "@/components/settings/keybinding-display";
@@ -15,7 +15,110 @@ type Props = {
   onClose: () => void;
 };
 
-type Tab = "shortcuts" | "layout" | "legend";
+type Tab = "shortcuts" | "layout" | "developer" | "legend";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "shortcuts", label: "App Shortcuts" },
+  { id: "layout", label: "Layout" },
+  { id: "developer", label: "Developer" },
+  { id: "legend", label: "Symbol Legend" },
+];
+
+// ---- Shortcuts tab data -------------------------------------------------
+
+const NAVIGATION_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.MOVE_LEFT },
+  { id: ACTION_IDS.MOVE_RIGHT },
+  { id: ACTION_IDS.MOVE_DOWN },
+  { id: ACTION_IDS.MOVE_UP },
+  { id: ACTION_IDS.CLEAR_COMMAND_FOCUS },
+  { id: ACTION_IDS.BACK_TO_HOME },
+  { id: ACTION_IDS.GO_TOP },
+  { id: ACTION_IDS.GO_BOTTOM },
+];
+
+const ACTION_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.COPY_COMMAND },
+  { id: ACTION_IDS.SHOW_EXAMPLE },
+];
+
+const MISC_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.TOGGLE_HELP },
+  { id: ACTION_IDS.TOGGLE_SETTINGS },
+];
+
+// ---- Layout tab data ----------------------------------------------------
+
+const LAYOUT_ENTER_ENTRIES: ChartEntry[] = [{ id: ACTION_IDS.LAYOUT_ENTER_MODE }];
+
+const LAYOUT_NAV_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.LAYOUT_NAV_LEFT, label: "Focus card left" },
+  { id: ACTION_IDS.LAYOUT_NAV_RIGHT, label: "Focus card right" },
+  { id: ACTION_IDS.LAYOUT_NAV_UP, label: "Focus card above" },
+  { id: ACTION_IDS.LAYOUT_NAV_DOWN, label: "Focus card below" },
+  { id: ACTION_IDS.LAYOUT_NAV_TO_MOVE },
+  { id: ACTION_IDS.LAYOUT_NAV_TO_RESIZE },
+];
+
+const LAYOUT_MOVE_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.LAYOUT_MOVE_LEFT },
+  { id: ACTION_IDS.LAYOUT_MOVE_RIGHT },
+  { id: ACTION_IDS.LAYOUT_MOVE_UP },
+  { id: ACTION_IDS.LAYOUT_MOVE_DOWN },
+  { id: ACTION_IDS.LAYOUT_MOVE_STRICT_LEFT },
+  { id: ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT },
+  { id: ACTION_IDS.LAYOUT_MOVE_STRICT_UP },
+  { id: ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN },
+  { id: ACTION_IDS.LAYOUT_MOVE_TO_NAV },
+  { id: ACTION_IDS.LAYOUT_MOVE_TO_RESIZE },
+];
+
+const LAYOUT_RESIZE_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_RIGHT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_UP },
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_DOWN },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN },
+  { id: ACTION_IDS.LAYOUT_RESIZE_TO_NAV },
+  { id: ACTION_IDS.LAYOUT_RESIZE_TO_MOVE },
+];
+
+const LAYOUT_RESET_ENTRIES: ChartEntry[] = [{ id: ACTION_IDS.RESET_LAYOUT }];
+
+// ---- Developer tab data -------------------------------------------------
+
+const DEVELOPER_TOP_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.TOGGLE_DEVELOPER_MODE },
+  { id: ACTION_IDS.DEV_SAVE_LAYOUT },
+  { id: ACTION_IDS.DEV_RESET_LAYOUT },
+  { id: ACTION_IDS.DEV_TOGGLE_RECORDING },
+  { id: ACTION_IDS.DEV_TOGGLE_LOGS },
+  { id: ACTION_IDS.DEV_ENTER_AXES_MODE },
+];
+
+const DEVELOPER_LOGS_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.DEV_LOGS_CURSOR_DOWN },
+  { id: ACTION_IDS.DEV_LOGS_CURSOR_UP },
+  { id: ACTION_IDS.DEV_LOGS_COPY_FILENAME },
+  { id: ACTION_IDS.DEV_LOGS_REFRESH },
+  { id: ACTION_IDS.DEV_LOGS_DELETE },
+  { id: ACTION_IDS.DEV_LOGS_DELETE_ALL },
+  { id: ACTION_IDS.DEV_LOGS_CLOSE },
+];
+
+const DEVELOPER_AXES_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.DEV_AXES_CURSOR_LEFT },
+  { id: ACTION_IDS.DEV_AXES_CURSOR_RIGHT },
+  { id: ACTION_IDS.DEV_AXES_CURSOR_UP },
+  { id: ACTION_IDS.DEV_AXES_CURSOR_DOWN },
+  { id: ACTION_IDS.DEV_AXES_TOGGLE_COL },
+  { id: ACTION_IDS.DEV_AXES_TOGGLE_ROW },
+  { id: ACTION_IDS.DEV_AXES_CLEAR_ALL },
+  { id: ACTION_IDS.DEV_AXES_EXIT },
+];
 
 export function SheetHelpModal({ open, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("shortcuts");
@@ -39,62 +142,27 @@ export function SheetHelpModal({ open, onClose }: Props) {
       <p className="font-mono text-xs tracking-[0.15em] text-white/70">HELP</p>
 
       <div className={helpStyles.tabs}>
-        <button
-          className={helpStyles.tab}
-          data-active={activeTab === "shortcuts"}
-          onClick={() => setActiveTab("shortcuts")}
-        >
-          App Shortcuts
-        </button>
-        <button
-          className={helpStyles.tab}
-          data-active={activeTab === "layout"}
-          onClick={() => setActiveTab("layout")}
-        >
-          Layout
-        </button>
-        <button
-          className={helpStyles.tab}
-          data-active={activeTab === "legend"}
-          onClick={() => setActiveTab("legend")}
-        >
-          Symbol Legend
-        </button>
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            className={helpStyles.tab}
+            data-active={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            data-testid={`help-tab-${tab.id}`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className={helpStyles.panel}>
-        <div className={helpStyles.tabContent} data-active={activeTab === "shortcuts"}>
+        <div className={helpStyles.tabContent} data-active={activeTab === "shortcuts"} data-testid="help-content-shortcuts">
           <div className={helpStyles.layoutSection}>
             <h3 className="text-xl font-semibold">Navigation</h3>
             <p className={helpStyles.layoutSectionIntro}>
               Move around the cheatsheet, jump through the page, or return to the grid without reaching for the mouse.
             </p>
-            <table className={`${keybindingStyles.legendTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.MOVE_LEFT} />
-                  <HelpRow actionId={ACTION_IDS.MOVE_RIGHT} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.MOVE_DOWN} />
-                  <HelpRow actionId={ACTION_IDS.MOVE_UP} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.CLEAR_COMMAND_FOCUS} />
-                  <HelpRow actionId={ACTION_IDS.BACK_TO_HOME} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.GO_TOP} />
-                  <HelpRow actionId={ACTION_IDS.GO_BOTTOM} />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={NAVIGATION_ENTRIES} />
           </div>
 
           <div className={helpStyles.layoutSection}>
@@ -102,20 +170,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
             <p className={helpStyles.layoutSectionIntro}>
               Copy commands and inspect details while staying in flow.
             </p>
-            <table className={`${keybindingStyles.legendTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.COPY_COMMAND} />
-                  <HelpRow actionId={ACTION_IDS.SHOW_EXAMPLE} />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={ACTION_ENTRIES} />
           </div>
 
           <div className={helpStyles.layoutSection}>
@@ -123,44 +178,17 @@ export function SheetHelpModal({ open, onClose }: Props) {
             <p className={helpStyles.layoutSectionIntro}>
               Open supporting panels and reference surfaces from anywhere in the page.
             </p>
-            <table className={`${keybindingStyles.legendTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.TOGGLE_HELP} />
-                  <HelpRow actionId={ACTION_IDS.TOGGLE_SETTINGS} />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={MISC_ENTRIES} />
           </div>
         </div>
 
-        <div className={helpStyles.tabContent} data-active={activeTab === "layout"}>
+        <div className={helpStyles.tabContent} data-active={activeTab === "layout"} data-testid="help-content-layout">
           <div className={helpStyles.layoutSection}>
             <h3 className="text-xl font-semibold">Enter Layout Mode</h3>
             <p className={helpStyles.layoutSectionIntro}>
               Press the shortcut below to enter the modal layout editor. The mode opens in <em>navigation</em> by default; press <kbd>m</kbd> for move or <kbd>r</kbd> for resize, and <kbd>Esc</kbd> to leave.
             </p>
-            <table className={`${helpStyles.layoutTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_ENTER_MODE} />
-                  <td />
-                  <td />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={LAYOUT_ENTER_ENTRIES} cols={1} />
           </div>
 
           <div className={helpStyles.layoutSection}>
@@ -168,28 +196,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
             <p className={helpStyles.layoutSectionIntro}>
               Move the focus between blocks. Press <kbd>m</kbd> to switch to move, <kbd>r</kbd> to switch to resize.
             </p>
-            <table className={`${helpStyles.layoutTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_LEFT} label="Focus card left" />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_RIGHT} label="Focus card right" />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_UP} label="Focus card above" />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_DOWN} label="Focus card below" />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_TO_MOVE} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_TO_RESIZE} />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={LAYOUT_NAV_ENTRIES} />
           </div>
 
           <div className={helpStyles.layoutSection}>
@@ -197,36 +204,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
             <p className={helpStyles.layoutSectionIntro}>
               Move the focused block by one grid cell at a time. Add <kbd>Alt</kbd> to refuse any wrap or push (strict move).
             </p>
-            <table className={`${helpStyles.layoutTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_LEFT} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_RIGHT} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_UP} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_DOWN} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_LEFT} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_UP} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_TO_NAV} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_TO_RESIZE} />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={LAYOUT_MOVE_ENTRIES} />
           </div>
 
           <div className={helpStyles.layoutSection}>
@@ -234,36 +212,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
             <p className={helpStyles.layoutSectionIntro}>
               Grow or shrink the focused block. Plain <kbd>h/j/k/l</kbd> grows the matching edge; with <kbd>Shift</kbd> they shrink it. <kbd>Alt</kbd> enforces strict resizes (no wrap/push); <kbd>Ctrl+Shift</kbd> pulls neighbors in (compact shrink).
             </p>
-            <table className={`${helpStyles.layoutTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_RIGHT} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_UP} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_DOWN} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN} />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_TO_NAV} />
-                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_TO_MOVE} />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={LAYOUT_RESIZE_ENTRIES} />
           </div>
 
           <div className={helpStyles.layoutSection}>
@@ -271,25 +220,37 @@ export function SheetHelpModal({ open, onClose }: Props) {
             <p className={helpStyles.layoutSectionIntro}>
               Discard your customizations and return to the original layout shipped with the cheatsheet.
             </p>
-            <table className={`${helpStyles.layoutTable} mt-3`}>
-              <colgroup>
-                <col />
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.RESET_LAYOUT} />
-                  <td />
-                  <td />
-                </tr>
-              </tbody>
-            </table>
+            <KeybindingChart entries={LAYOUT_RESET_ENTRIES} cols={1} />
           </div>
         </div>
 
-        <div className={helpStyles.tabContent} data-active={activeTab === "legend"}>
+        <div className={helpStyles.tabContent} data-active={activeTab === "developer"} data-testid="help-content-developer">
+          <div className={helpStyles.layoutSection}>
+            <h3 className="text-xl font-semibold">Developer Mode</h3>
+            <p className={helpStyles.layoutSectionIntro}>
+              Toggle Developer Mode to access the recording overlay, logs dropdown, and axes inspector. These shortcuts are active once Developer Mode is open.
+            </p>
+            <KeybindingChart entries={DEVELOPER_TOP_ENTRIES} />
+          </div>
+
+          <div className={helpStyles.layoutSection}>
+            <h3 className="text-xl font-semibold">Logs Sub-Mode</h3>
+            <p className={helpStyles.layoutSectionIntro}>
+              Active while the logs dropdown is open. Navigate, copy filenames, refresh, or delete recordings.
+            </p>
+            <KeybindingChart entries={DEVELOPER_LOGS_ENTRIES} />
+          </div>
+
+          <div className={helpStyles.layoutSection}>
+            <h3 className="text-xl font-semibold">Axes Sub-Mode</h3>
+            <p className={helpStyles.layoutSectionIntro}>
+              Active while inspecting the grid axes. Move the cursor and toggle columns or rows on and off.
+            </p>
+            <KeybindingChart entries={DEVELOPER_AXES_ENTRIES} />
+          </div>
+        </div>
+
+        <div className={helpStyles.tabContent} data-active={activeTab === "legend"} data-testid="help-content-legend">
           <div className={helpStyles.layoutSection}>
             <h3 className="text-xl font-semibold">Symbols</h3>
             <p className={helpStyles.layoutSectionIntro}>
