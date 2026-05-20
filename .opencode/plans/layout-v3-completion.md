@@ -60,31 +60,57 @@ canonical roadmap is here.
 
 ## Phase C — Heading nav (bug 2.1)
 
-- [ ] C1. Design `LayoutSnapshotContext` (provider, consumer hook, snapshot shape)
-- [ ] C2. Wire provider in `SheetRenderer`, publish snapshot on layout commits
-- [ ] C3. Refactor `SheetHeadingNavigation` to consume the snapshot and sort by current Y/X
-- [ ] C4. Tests: unit (sort helper), E2E (move heading, nav reflects new order)
-- [ ] C5. Doc update if architecture.md needs the new context mentioned
+- [x] C1. Design `LayoutSnapshotContext` (provider, consumer hook, snapshot shape) — `afdaab4`
+- [x] C2. Wire provider in `SheetRenderer`, publish snapshot on layout commits — `afdaab4`
+- [x] C3. Refactor `SheetHeadingNavigation` to consume the snapshot and sort by current Y/X — `afdaab4`
+- [x] C4. Tests: unit (sort helper), E2E (move heading, nav reflects new order) — `afdaab4`
+- [x] C5. Doc update — `docs/architecture.md` got a "Layout Snapshot" section — `afdaab4`
+
+Phase C committed as `afdaab4` ("feat(layout): heading nav follows live layout order (Phase C)").
+
+Notes:
+- The E2E spec writes a synthetic layout via raw ids (stripped of the `sheet-heading-` / `sheet-card-` DOM prefix) directly in `localStorage` then reloads, rather than reading positions from the live DOM. CSS Grid `--card-row-start` values can diverge from the engine's logical `y` for full-width headings, so building the layout from scratch is the only reliable assertion strategy.
+- Side effect: the heading-nav color gradient now follows the visible vertical flow instead of the YAML declaration order.
 
 ## Phase D — Persistence buffer (Vim model)
 
-- [ ] D1. Rename `hasSavedLayout` → `hasUnsavedChanges` (or equivalent) to reflect buffer-vs-saved semantics
-- [ ] D2. Add visual indicator in dev bar / layout-status-pill when buffer differs from `.layout.json` content
-- [ ] D3. Confirm and document Vim behaviour: every layout change writes to localStorage immediately (no commit boundary)
-- [ ] D4. Watch out for drag-induced spam (60+ writes/sec). Decide whether a debounce is needed only during active drag
-- [ ] D5. Tests: unit (`useLayoutPersistence`), E2E (drag → reload preserved, reset clears)
+- [x] D1. Refactor `useLayoutPersistence`: rename `hasSavedLayout` → `isModifiedFromOriginal`, `resetLayout` → `resetToOriginal`, expose `originalLayout` — `d7e27b6`
+- [x] D2. Propagate rename in `SheetRenderer` + `DevModeBar` callsites — `d7e27b6`
+- [x] D3. New action `sheet.reset-layout` (default `Shift+R`); wired via `useScopedKeyboardHandler("global", …)` in `SheetRenderer` (consistent with the existing `sheet` context pattern) — `d7e27b6`
+- [x] D4. New `LayoutResetButton` floating component (top-right beside settings); mounted only when modified and dev mode is off — `d7e27b6`
+- [x] D5. E2E `e2e/layout-reset.spec.ts` (4 tests): pristine = no button, modified = button visible, click resets + clears storage, `Shift+R` triggers reset — `d7e27b6`
+- [x] D6. Docs: `docs/architecture.md` gained a "Layout Persistence" section (3 layers original/saved/buffer); `docs/keybindings.md` mentions reset in the `sheet` context — `d7e27b6`
+- [x] D7. Full validation — lint, 800/800 unit, 49/0/9 E2E, build, validate:cheatsheets all green — `d7e27b6`
+
+Phase D committed as `d7e27b6` ("feat(layout): user-facing reset to original layout (Phase D)").
+
+Notes:
+- Buffer and saved are still merged into a single `blockLayouts` state (Vim immediate write keeps them equal). A proper split lands with Phase H.
+- The dev-mode bar still has its own Reset button (using the renamed API). It is hidden when the floating user button is visible to avoid duplicate affordances.
+- `@testing-library/react` was intentionally NOT added: the Phase D refactor is a renaming + reorg of existing logic, fully covered by the pure-function tests in `layout-persistence.test.ts` and the new E2E spec. Phase H will revisit when an actual buffer/saved split needs branch coverage.
+- Initial idea was `Ctrl+Shift+R`; rejected because it conflicts with the browser hard-reload shortcut. Final binding is `Shift+R`.
 
 ## Phase E — Keyboard Zellij modal
 
-- [ ] E1. Scope architecture: introduce `layout`, `layout-navigation`, `layout-move`, `layout-resize` scopes (all modal). Validate stacking against the dispatcher
-- [ ] E2. New `ACTION_IDS`: `LAYOUT_ENTER_MODE`, `LAYOUT_EXIT_MODE`, `LAYOUT_SUB_NAVIGATION`, `LAYOUT_SUB_MOVE`, `LAYOUT_SUB_RESIZE`, `LAYOUT_NAV_*`, `LAYOUT_MOVE_*` (+ strict), `LAYOUT_RESIZE_*` (+ strict + compact)
-- [ ] E3. Remove old `CARD_*` IDs and the inert `use-card-keyboard-v2.ts` hook. Ensure `mergeWithDefaults` silently drops removed IDs from existing localStorage payloads
-- [ ] E4. Implement `use-layout-keyboard` (or rename): mode state machine, scope push/pop, `useAction` handlers
-- [ ] E5. Focus initial card near mouse cursor when entering layout mode
+### Sub-commit E1 — Core (scopes + actions + hook + cleanup)
+
+- [x] E1. Scope architecture: introduce `layout`, `layout-navigation`, `layout-move`, `layout-resize` scopes (all modal)
+- [x] E2. New `ACTION_IDS`: `LAYOUT_ENTER_MODE`, `LAYOUT_NAV_*` (+ exit + 2 switchers), `LAYOUT_MOVE_*` (+ strict + 2 switchers + exit), `LAYOUT_RESIZE_*` (+ shrink + strict + compact + 2 switchers + exit) — 41 actions total; IDs use the `<context>.<verb>` convention so each scope is encoded in the ID itself (per user request)
+- [x] E3. Remove old `CARD_*` IDs and the inert `use-card-keyboard-v2.ts` hook. `mergeWithDefaults` silently drops unknown context keys + unknown action IDs from existing localStorage payloads
+- [x] E4. Implement `use-layout-keyboard.ts`: mode state machine, scope cascade (`layout` + active sub-mode), `useAction` handlers for every layout action, manual `useScopedKeyboardHandler("global", …)` for `LAYOUT_ENTER_MODE` (the `sheet` context has no dedicated scope)
+
+### Sub-commit E2 — Polish
+
+- [ ] E5. Focus initial card near mouse cursor when entering layout mode (E1 uses deterministic top-left)
 - [ ] E6. Visual indicators: mode badge in dev bar / status pill, focused-card highlight per sub-mode
 - [ ] E7. Viewport follow: smooth-scroll focused card into view (reuse `auto-scroll.ts`)
-- [ ] E8. Tests: unit (scope transitions, action mapping), integration (full mode sequence), E2E (rewrite `keyboard-layout.spec.ts`)
-- [ ] E9. Doc: `docs/layout-actions.md` shifts from spec to reality; `docs/keybindings.md` lists new layout sub-scopes
+
+### Sub-commit E3 — Tests + docs
+
+- [x] E8a. Unit tests for pure helpers (`findNeighbour`, `pickTopLeftBlock`, action→spec lookup, operation builders) — 14 tests in `use-layout-keyboard.test.ts`
+- [ ] E8b. E2E rewrite of `keyboard-layout.spec.ts` (enter mode + navigate + move + resize + exit)
+- [x] E9a. `docs/keybindings.md` updated with new layout sub-scopes
+- [ ] E9b. `docs/layout-actions.md` shifts from spec to reality (currently still describes the planned model)
 
 ## Phase F — UI help & settings
 

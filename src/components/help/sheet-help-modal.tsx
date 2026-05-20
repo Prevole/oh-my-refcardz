@@ -142,9 +142,9 @@ export function SheetHelpModal({ open, onClose }: Props) {
 
         <div className={helpStyles.tabContent} data-active={activeTab === "layout"}>
           <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Focus a Card</h3>
+            <h3 className="text-xl font-semibold">Enter Layout Mode</h3>
             <p className={helpStyles.layoutSectionIntro}>
-              Layout editing is implicit. Use the focus-card shortcuts below to select a card and reveal the layout overlay.
+              Press the shortcut below to enter the modal layout editor. The mode opens in <em>navigation</em> by default; press <kbd>m</kbd> for move or <kbd>r</kbd> for resize, and <kbd>Esc</kbd> to leave.
             </p>
             <table className={`${helpStyles.layoutTable} mt-3`}>
               <colgroup>
@@ -155,21 +155,18 @@ export function SheetHelpModal({ open, onClose }: Props) {
               </colgroup>
               <tbody>
                 <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_NAV_LEFT} label="Focus card left" />
-                  <HelpRow actionId={ACTION_IDS.CARD_NAV_RIGHT} label="Focus card right" />
-                </tr>
-                <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_NAV_UP} label="Focus card above" />
-                  <HelpRow actionId={ACTION_IDS.CARD_NAV_DOWN} label="Focus card below" />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_ENTER_MODE} />
+                  <td />
+                  <td />
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Move a Card</h3>
+            <h3 className="text-xl font-semibold">Navigation Sub-Mode</h3>
             <p className={helpStyles.layoutSectionIntro}>
-              Once a card is focused, use the move shortcuts below to nudge it across the dashboard grid.
+              Move the focus between blocks. Press <kbd>m</kbd> to switch to move, <kbd>r</kbd> to switch to resize.
             </p>
             <table className={`${helpStyles.layoutTable} mt-3`}>
               <colgroup>
@@ -180,21 +177,25 @@ export function SheetHelpModal({ open, onClose }: Props) {
               </colgroup>
               <tbody>
                 <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_MOVE_LEFT} />
-                  <HelpRow actionId={ACTION_IDS.CARD_MOVE_RIGHT} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_LEFT} label="Focus card left" />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_RIGHT} label="Focus card right" />
                 </tr>
                 <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_MOVE_UP} />
-                  <HelpRow actionId={ACTION_IDS.CARD_MOVE_DOWN} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_UP} label="Focus card above" />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_DOWN} label="Focus card below" />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_TO_MOVE} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_NAV_TO_RESIZE} />
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Resize a Card</h3>
+            <h3 className="text-xl font-semibold">Move Sub-Mode</h3>
             <p className={helpStyles.layoutSectionIntro}>
-              Resize the focused card with the keyboard shortcuts below, or drag its edges with the mouse.
+              Move the focused block by one grid cell at a time. Add <kbd>Alt</kbd> to refuse any wrap or push (strict move).
             </p>
             <table className={`${helpStyles.layoutTable} mt-3`}>
               <colgroup>
@@ -205,21 +206,33 @@ export function SheetHelpModal({ open, onClose }: Props) {
               </colgroup>
               <tbody>
                 <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_SHRINK_WIDTH} />
-                  <HelpRow actionId={ACTION_IDS.CARD_GROW_WIDTH} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_LEFT} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_RIGHT} />
                 </tr>
                 <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_SHRINK_HEIGHT} />
-                  <HelpRow actionId={ACTION_IDS.CARD_GROW_HEIGHT} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_UP} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_DOWN} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_LEFT} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_UP} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_TO_NAV} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_MOVE_TO_RESIZE} />
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Misc</h3>
+            <h3 className="text-xl font-semibold">Resize Sub-Mode</h3>
             <p className={helpStyles.layoutSectionIntro}>
-              Clear the current card focus without leaving the cheatsheet.
+              Grow or shrink the focused block. Plain <kbd>h/j/k/l</kbd> grows the matching edge; with <kbd>Shift</kbd> they shrink it. <kbd>Alt</kbd> enforces strict resizes (no wrap/push); <kbd>Ctrl+Shift</kbd> pulls neighbors in (compact shrink).
             </p>
             <table className={`${helpStyles.layoutTable} mt-3`}>
               <colgroup>
@@ -230,7 +243,44 @@ export function SheetHelpModal({ open, onClose }: Props) {
               </colgroup>
               <tbody>
                 <tr>
-                  <HelpRow actionId={ACTION_IDS.CARD_CLEAR_FOCUS} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_RIGHT} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_UP} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_GROW_DOWN} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN} />
+                </tr>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_TO_NAV} />
+                  <HelpRow actionId={ACTION_IDS.LAYOUT_RESIZE_TO_MOVE} />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className={helpStyles.layoutSection}>
+            <h3 className="text-xl font-semibold">Reset</h3>
+            <p className={helpStyles.layoutSectionIntro}>
+              Discard your customizations and return to the original layout shipped with the cheatsheet.
+            </p>
+            <table className={`${helpStyles.layoutTable} mt-3`}>
+              <colgroup>
+                <col />
+                <col />
+                <col />
+                <col />
+              </colgroup>
+              <tbody>
+                <tr>
+                  <HelpRow actionId={ACTION_IDS.RESET_LAYOUT} />
                   <td />
                   <td />
                 </tr>

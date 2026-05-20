@@ -74,8 +74,11 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 |---------|-------------|-----------------|
 | `global` | Always | Navigation, help, settings |
 | `home` | Home page | Search, open sheet |
-| `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout |
-| `sheet-layout` | Layout edit mode | Card navigation, resize |
+| `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout, enter layout mode |
+| `layout` | Layout modal mode (any sub-mode) | Parent scope; currently empty, reserved for future shared layout bindings |
+| `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down, switch to move/resize, exit |
+| `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier) |
+| `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants) |
 | `dev` | Developer mode active | Save/reset/record/logs/axes |
 | `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |
 | `dev-axes` | Axes keyboard mode | Cursor nav, pin row/col |

@@ -12,21 +12,25 @@ export interface KeybindingConflict {
 }
 
 export function mergeWithDefaults(stored: Partial<KeybindingsConfig>): KeybindingsConfig {
-  const result: KeybindingsConfig = {
-    global: [],
-    home: [],
-    sheet: [],
-    "sheet-layout": [],
-    dev: [],
-    "dev-logs": [],
-    "dev-axes": [],
-  };
+  const result = {} as KeybindingsConfig;
+
+  // Initialise every known context with an empty list so the result always has
+  // the full shape. Unknown contexts present in `stored` (e.g. legacy keys
+  // from a previous schema like the removed `sheet-layout`) are silently
+  // ignored: the iteration below only walks defaults, so a stored payload
+  // that references a context we no longer expose simply falls through.
+  for (const context of Object.keys(DEFAULT_KEYBINDINGS) as KeybindingContext[]) {
+    result[context] = [];
+  }
 
   for (const context of Object.keys(DEFAULT_KEYBINDINGS) as KeybindingContext[]) {
     const defaultActions = DEFAULT_KEYBINDINGS[context];
     const storedActions = stored[context] ?? [];
 
     result[context] = defaultActions.map((defaultAction) => {
+      // Stored actions whose id no longer exists in the defaults are dropped
+      // here too — we only look up by the default id, so a renamed/removed
+      // action ID never makes it back into the active config.
       const storedAction = storedActions.find((a) => a.id === defaultAction.id);
       if (storedAction) {
         return { ...defaultAction, combos: storedAction.combos };

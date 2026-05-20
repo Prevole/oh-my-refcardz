@@ -23,7 +23,10 @@ export type KeybindingContext =
   | "global"
   | "home"
   | "sheet"
-  | "sheet-layout"
+  | "layout"
+  | "layout-navigation"
+  | "layout-move"
+  | "layout-resize"
   | "dev"
   | "dev-logs"
   | "dev-axes";
@@ -32,8 +35,14 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
   switch (scope) {
     case "global":
       return "global";
-    case "sheet-layout":
-      return "sheet-layout";
+    case "layout":
+      return "layout";
+    case "layout-navigation":
+      return "layout-navigation";
+    case "layout-move":
+      return "layout-move";
+    case "layout-resize":
+      return "layout-resize";
     case "dev":
       return "dev";
     case "dev-logs":
@@ -68,21 +77,54 @@ export const ACTION_IDS = {
   CLEAR_COMMAND_FOCUS: "sheet.clear-focus",
   TOGGLE_DEVELOPER_MODE: "sheet.toggle-developer-mode",
   RESET_LAYOUT: "sheet.reset-layout",
+  LAYOUT_ENTER_MODE: "sheet.layout-enter-mode",
 
-  CARD_NAV_LEFT: "sheet-layout.nav-left",
-  CARD_NAV_RIGHT: "sheet-layout.nav-right",
-  CARD_NAV_UP: "sheet-layout.nav-up",
-  CARD_NAV_DOWN: "sheet-layout.nav-down",
-  CARD_CLEAR_FOCUS: "sheet-layout.clear-focus",
-  CARD_MOVE_LEFT: "sheet-layout.move-left",
-  CARD_MOVE_RIGHT: "sheet-layout.move-right",
-  CARD_MOVE_UP: "sheet-layout.move-up",
-  CARD_MOVE_DOWN: "sheet-layout.move-down",
-  CARD_SHRINK_WIDTH: "sheet-layout.shrink-width",
-  CARD_GROW_WIDTH: "sheet-layout.grow-width",
-  CARD_SHRINK_HEIGHT: "sheet-layout.shrink-height",
-  CARD_GROW_HEIGHT: "sheet-layout.grow-height",
-  LAYOUT_DEV_SAVE: "sheet-layout.dev-save",
+  // Layout sub-mode: navigation (scope `layout-navigation`).
+  LAYOUT_NAV_LEFT: "layout-navigation.left",
+  LAYOUT_NAV_RIGHT: "layout-navigation.right",
+  LAYOUT_NAV_UP: "layout-navigation.up",
+  LAYOUT_NAV_DOWN: "layout-navigation.down",
+  LAYOUT_NAV_TO_MOVE: "layout-navigation.to-move",
+  LAYOUT_NAV_TO_RESIZE: "layout-navigation.to-resize",
+  LAYOUT_NAV_EXIT: "layout-navigation.exit",
+
+  // Layout sub-mode: move (scope `layout-move`).
+  LAYOUT_MOVE_LEFT: "layout-move.left",
+  LAYOUT_MOVE_RIGHT: "layout-move.right",
+  LAYOUT_MOVE_UP: "layout-move.up",
+  LAYOUT_MOVE_DOWN: "layout-move.down",
+  LAYOUT_MOVE_STRICT_LEFT: "layout-move.strict-left",
+  LAYOUT_MOVE_STRICT_RIGHT: "layout-move.strict-right",
+  LAYOUT_MOVE_STRICT_UP: "layout-move.strict-up",
+  LAYOUT_MOVE_STRICT_DOWN: "layout-move.strict-down",
+  LAYOUT_MOVE_TO_NAV: "layout-move.to-nav",
+  LAYOUT_MOVE_TO_RESIZE: "layout-move.to-resize",
+  LAYOUT_MOVE_EXIT: "layout-move.exit",
+
+  // Layout sub-mode: resize (scope `layout-resize`).
+  LAYOUT_RESIZE_GROW_LEFT: "layout-resize.grow-left",
+  LAYOUT_RESIZE_GROW_RIGHT: "layout-resize.grow-right",
+  LAYOUT_RESIZE_GROW_UP: "layout-resize.grow-up",
+  LAYOUT_RESIZE_GROW_DOWN: "layout-resize.grow-down",
+  LAYOUT_RESIZE_SHRINK_LEFT: "layout-resize.shrink-left",
+  LAYOUT_RESIZE_SHRINK_RIGHT: "layout-resize.shrink-right",
+  LAYOUT_RESIZE_SHRINK_UP: "layout-resize.shrink-up",
+  LAYOUT_RESIZE_SHRINK_DOWN: "layout-resize.shrink-down",
+  LAYOUT_RESIZE_GROW_STRICT_LEFT: "layout-resize.grow-strict-left",
+  LAYOUT_RESIZE_GROW_STRICT_RIGHT: "layout-resize.grow-strict-right",
+  LAYOUT_RESIZE_GROW_STRICT_UP: "layout-resize.grow-strict-up",
+  LAYOUT_RESIZE_GROW_STRICT_DOWN: "layout-resize.grow-strict-down",
+  LAYOUT_RESIZE_SHRINK_STRICT_LEFT: "layout-resize.shrink-strict-left",
+  LAYOUT_RESIZE_SHRINK_STRICT_RIGHT: "layout-resize.shrink-strict-right",
+  LAYOUT_RESIZE_SHRINK_STRICT_UP: "layout-resize.shrink-strict-up",
+  LAYOUT_RESIZE_SHRINK_STRICT_DOWN: "layout-resize.shrink-strict-down",
+  LAYOUT_RESIZE_SHRINK_COMPACT_LEFT: "layout-resize.shrink-compact-left",
+  LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT: "layout-resize.shrink-compact-right",
+  LAYOUT_RESIZE_SHRINK_COMPACT_UP: "layout-resize.shrink-compact-up",
+  LAYOUT_RESIZE_SHRINK_COMPACT_DOWN: "layout-resize.shrink-compact-down",
+  LAYOUT_RESIZE_TO_NAV: "layout-resize.to-nav",
+  LAYOUT_RESIZE_TO_MOVE: "layout-resize.to-move",
+  LAYOUT_RESIZE_EXIT: "layout-resize.exit",
 
   // Developer mode top-level actions (scope `dev` / context `dev`).
   DEV_SAVE_LAYOUT: "dev.save-layout",
@@ -223,78 +265,226 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Reset layout to original",
       combos: [combo("R", "shift")],
     },
+    {
+      id: ACTION_IDS.LAYOUT_ENTER_MODE,
+      label: "Enter layout mode",
+      combos: [combo("m", "ctrl")],
+    },
   ],
 
-  "sheet-layout": [
+  layout: [],
+
+  "layout-navigation": [
     {
-      id: ACTION_IDS.CARD_NAV_LEFT,
-      label: "Navigate to card left",
-      combos: [combo("h", "shift"), combo("ArrowLeft", "shift")],
+      id: ACTION_IDS.LAYOUT_NAV_LEFT,
+      label: "Focus card to the left",
+      combos: [key("h"), key("ArrowLeft")],
     },
     {
-      id: ACTION_IDS.CARD_NAV_RIGHT,
-      label: "Navigate to card right",
-      combos: [combo("l", "shift"), combo("ArrowRight", "shift")],
+      id: ACTION_IDS.LAYOUT_NAV_RIGHT,
+      label: "Focus card to the right",
+      combos: [key("l"), key("ArrowRight")],
     },
     {
-      id: ACTION_IDS.CARD_NAV_UP,
-      label: "Navigate to card above",
-      combos: [combo("k", "shift"), combo("ArrowUp", "shift")],
+      id: ACTION_IDS.LAYOUT_NAV_UP,
+      label: "Focus card above",
+      combos: [key("k"), key("ArrowUp")],
     },
     {
-      id: ACTION_IDS.CARD_NAV_DOWN,
-      label: "Navigate to card below",
-      combos: [combo("j", "shift"), combo("ArrowDown", "shift")],
+      id: ACTION_IDS.LAYOUT_NAV_DOWN,
+      label: "Focus card below",
+      combos: [key("j"), key("ArrowDown")],
     },
     {
-      id: ACTION_IDS.CARD_CLEAR_FOCUS,
-      label: "Clear card focus",
+      id: ACTION_IDS.LAYOUT_NAV_TO_MOVE,
+      label: "Switch to move sub-mode",
+      combos: [key("m")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_NAV_TO_RESIZE,
+      label: "Switch to resize sub-mode",
+      combos: [key("r")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_NAV_EXIT,
+      label: "Exit layout mode",
       combos: [key("Escape")],
     },
+  ],
+
+  "layout-move": [
     {
-      id: ACTION_IDS.CARD_MOVE_LEFT,
+      id: ACTION_IDS.LAYOUT_MOVE_LEFT,
       label: "Move card left",
+      combos: [key("h"), key("ArrowLeft")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_MOVE_RIGHT,
+      label: "Move card right",
+      combos: [key("l"), key("ArrowRight")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_MOVE_UP,
+      label: "Move card up",
+      combos: [key("k"), key("ArrowUp")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_MOVE_DOWN,
+      label: "Move card down",
+      combos: [key("j"), key("ArrowDown")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_MOVE_STRICT_LEFT,
+      label: "Move card left (strict)",
       combos: [combo("h", "alt"), combo("ArrowLeft", "alt")],
     },
     {
-      id: ACTION_IDS.CARD_MOVE_RIGHT,
-      label: "Move card right",
+      id: ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT,
+      label: "Move card right (strict)",
       combos: [combo("l", "alt"), combo("ArrowRight", "alt")],
     },
     {
-      id: ACTION_IDS.CARD_MOVE_UP,
-      label: "Move card up",
+      id: ACTION_IDS.LAYOUT_MOVE_STRICT_UP,
+      label: "Move card up (strict)",
       combos: [combo("k", "alt"), combo("ArrowUp", "alt")],
     },
     {
-      id: ACTION_IDS.CARD_MOVE_DOWN,
-      label: "Move card down",
+      id: ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN,
+      label: "Move card down (strict)",
       combos: [combo("j", "alt"), combo("ArrowDown", "alt")],
     },
     {
-      id: ACTION_IDS.CARD_SHRINK_WIDTH,
-      label: "Shrink card width",
+      id: ACTION_IDS.LAYOUT_MOVE_TO_NAV,
+      label: "Switch to navigation sub-mode",
+      combos: [key("n")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_MOVE_TO_RESIZE,
+      label: "Switch to resize sub-mode",
+      combos: [key("r")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_MOVE_EXIT,
+      label: "Exit layout mode",
+      combos: [key("Escape")],
+    },
+  ],
+
+  "layout-resize": [
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT,
+      label: "Grow card to the left",
+      combos: [key("h"), key("ArrowLeft")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_RIGHT,
+      label: "Grow card to the right",
+      combos: [key("l"), key("ArrowRight")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_UP,
+      label: "Grow card upward",
+      combos: [key("k"), key("ArrowUp")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_DOWN,
+      label: "Grow card downward",
+      combos: [key("j"), key("ArrowDown")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT,
+      label: "Shrink card from the left",
+      combos: [combo("H", "shift"), combo("ArrowLeft", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT,
+      label: "Shrink card from the right",
+      combos: [combo("L", "shift"), combo("ArrowRight", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP,
+      label: "Shrink card from the top",
+      combos: [combo("K", "shift"), combo("ArrowUp", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN,
+      label: "Shrink card from the bottom",
+      combos: [combo("J", "shift"), combo("ArrowDown", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_LEFT,
+      label: "Grow card left (strict)",
+      combos: [combo("h", "alt"), combo("ArrowLeft", "alt")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_RIGHT,
+      label: "Grow card right (strict)",
+      combos: [combo("l", "alt"), combo("ArrowRight", "alt")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_UP,
+      label: "Grow card up (strict)",
+      combos: [combo("k", "alt"), combo("ArrowUp", "alt")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_DOWN,
+      label: "Grow card down (strict)",
+      combos: [combo("j", "alt"), combo("ArrowDown", "alt")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_LEFT,
+      label: "Shrink card left (strict)",
       combos: [combo("H", "alt", "shift"), combo("ArrowLeft", "alt", "shift")],
     },
     {
-      id: ACTION_IDS.CARD_GROW_WIDTH,
-      label: "Grow card width",
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_RIGHT,
+      label: "Shrink card right (strict)",
       combos: [combo("L", "alt", "shift"), combo("ArrowRight", "alt", "shift")],
     },
     {
-      id: ACTION_IDS.CARD_SHRINK_HEIGHT,
-      label: "Shrink card height",
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP,
+      label: "Shrink card up (strict)",
       combos: [combo("K", "alt", "shift"), combo("ArrowUp", "alt", "shift")],
     },
     {
-      id: ACTION_IDS.CARD_GROW_HEIGHT,
-      label: "Grow card height",
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_DOWN,
+      label: "Shrink card down (strict)",
       combos: [combo("J", "alt", "shift"), combo("ArrowDown", "alt", "shift")],
     },
     {
-      id: ACTION_IDS.LAYOUT_DEV_SAVE,
-      label: "Save layout to dev backend",
-      combos: [combo("s", "ctrl", "shift")],
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_LEFT,
+      label: "Shrink card left (compact)",
+      combos: [combo("H", "ctrl", "shift"), combo("ArrowLeft", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT,
+      label: "Shrink card right (compact)",
+      combos: [combo("L", "ctrl", "shift"), combo("ArrowRight", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP,
+      label: "Shrink card up (compact)",
+      combos: [combo("K", "ctrl", "shift"), combo("ArrowUp", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
+      label: "Shrink card down (compact)",
+      combos: [combo("J", "ctrl", "shift"), combo("ArrowDown", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_TO_NAV,
+      label: "Switch to navigation sub-mode",
+      combos: [key("n")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_TO_MOVE,
+      label: "Switch to move sub-mode",
+      combos: [key("m")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESIZE_EXIT,
+      label: "Exit layout mode",
+      combos: [key("Escape")],
     },
   ],
 

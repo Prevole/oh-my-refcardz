@@ -53,8 +53,12 @@ export type { UseCardDragV2Result, DragStateV2, DragMove } from "./use-card-drag
 export { useCardResizeV2 } from "./use-card-resize-v2";
 export type { UseCardResizeV2Result, ResizeStateV2, ResizeMove } from "./use-card-resize-v2";
 
-export { useCardKeyboardV2 } from "./use-card-keyboard-v2";
-export type { UseCardKeyboardV2Result, CardFocusV2 } from "./use-card-keyboard-v2";
+export { useLayoutKeyboard } from "./use-layout-keyboard";
+export type {
+  UseLayoutKeyboardResult,
+  LayoutKeyboardFocus,
+  LayoutSubMode,
+} from "./use-layout-keyboard";
 
 // Layout snapshot: publishes the live layout for sibling consumers
 // (heading navigation today; possibly more in the future).

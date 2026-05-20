@@ -3,7 +3,10 @@ export type KeyboardScopeId =
   | "settings"
   | "help"
   | "info"
-  | "sheet-layout"
+  | "layout"
+  | "layout-navigation"
+  | "layout-move"
+  | "layout-resize"
   | "dev"
   | "dev-logs"
   | "dev-axes";

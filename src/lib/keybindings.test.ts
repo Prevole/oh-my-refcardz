@@ -543,8 +543,11 @@ describe("scopeToContext", () => {
     expect(scopeToContext("global")).toBe("global");
   });
 
-  it("maps sheet-layout scope to sheet-layout context", () => {
-    expect(scopeToContext("sheet-layout")).toBe("sheet-layout");
+  it("maps layout sub-mode scopes to their dedicated contexts", () => {
+    expect(scopeToContext("layout")).toBe("layout");
+    expect(scopeToContext("layout-navigation")).toBe("layout-navigation");
+    expect(scopeToContext("layout-move")).toBe("layout-move");
+    expect(scopeToContext("layout-resize")).toBe("layout-resize");
   });
 
   it("returns null for unknown scope", () => {

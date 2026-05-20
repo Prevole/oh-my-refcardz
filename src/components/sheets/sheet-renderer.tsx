@@ -28,7 +28,7 @@ import {
   useLayoutEditor,
   useCardDragV2,
   useCardResizeV2,
-  useCardKeyboardV2,
+  useLayoutKeyboard,
   usePublishLayoutSnapshot,
   BlockRenderer,
   FALLBACK_METRICS,
@@ -151,29 +151,14 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     onResizeCancel: handleResizeCancel,
   });
 
-  // -- Keyboard (inert in step 5; step 5b will wire Zellij modes) ---------
-  const { focusedCard, setFocusedCard, isManipulating } = useCardKeyboardV2({
+  // -- Keyboard (Zellij modal layout mode, entered via Ctrl+M) ------------
+  const { focusedCard, setFocusedCard, isManipulating } = useLayoutKeyboard({
     blocks: editor.currentBlocks,
+    editor,
   });
 
-  // -- Dev save shortcut ---------------------------------------------------
-  const { matchesAction } = useKeybindings();
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (!matchesAction(event, ACTION_IDS.LAYOUT_DEV_SAVE)) return;
-      event.preventDefault();
-      syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks)).catch((err) => {
-        console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
-      });
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [editor.committedBlocks, matchesAction, sheetSlug]);
-
   // -- Reset layout shortcut (user feature, Shift+R) -----------------------
+  const { matchesAction } = useKeybindings();
   useScopedKeyboardHandler(
     "global",
     (event: KeyboardEvent) => {

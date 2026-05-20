@@ -143,7 +143,9 @@ describe("keybinding-utils", () => {
         global: [{ id: "global.toggle-help", label: "", combos: [key("1")] }],
         home: [{ id: "home.focus-search", label: "", combos: [key("2")] }],
         sheet: [{ id: "sheet.back-to-home", label: "", combos: [key("3")] }],
-        "sheet-layout": [{ id: "sheet-layout.nav-left", label: "", combos: [key("5")] }],
+        "layout-navigation": [
+          { id: "layout-navigation.left", label: "", combos: [key("5")] },
+        ],
       };
 
       const result = mergeWithDefaults(stored);
@@ -151,7 +153,23 @@ describe("keybinding-utils", () => {
       expect(result.global.find((a) => a.id === "global.toggle-help")!.combos).toEqual([key("1")]);
       expect(result.home.find((a) => a.id === "home.focus-search")!.combos).toEqual([key("2")]);
       expect(result.sheet.find((a) => a.id === "sheet.back-to-home")!.combos).toEqual([key("3")]);
-      expect(result["sheet-layout"].find((a) => a.id === "sheet-layout.nav-left")!.combos).toEqual([key("5")]);
+      expect(
+        result["layout-navigation"].find((a) => a.id === "layout-navigation.left")!.combos
+      ).toEqual([key("5")]);
+    });
+
+    it("silently drops legacy context keys that no longer exist", () => {
+      const stored = {
+        global: [{ id: "global.toggle-help", label: "", combos: [key("9")] }],
+        "sheet-layout": [
+          { id: "sheet-layout.nav-left", label: "legacy", combos: [key("0")] },
+        ],
+      } as unknown as Partial<KeybindingsConfig>;
+
+      const result = mergeWithDefaults(stored);
+
+      expect(result.global.find((a) => a.id === "global.toggle-help")!.combos).toEqual([key("9")]);
+      expect((result as Record<string, unknown>)["sheet-layout"]).toBeUndefined();
     });
 
     it("returns all default actions even when stored has partial list", () => {
