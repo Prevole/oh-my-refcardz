@@ -29,14 +29,15 @@ export type UseLayoutPersistenceResult = {
   blockLayouts: BlockLayoutState[];
   setBlockLayouts: Dispatch<SetStateAction<BlockLayoutState[]>>;
   hydrated: boolean;
-  hasSavedLayout: boolean;
-  resetLayout: () => void;
+  originalLayout: BlockLayoutState[];
+  isModifiedFromOriginal: boolean;
+  resetToOriginal: () => void;
 };
 
 export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWithMeta): UseLayoutPersistenceResult {
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot);
 
-  const defaultBlockLayouts = useMemo(() => {
+  const originalLayout = useMemo(() => {
     const inferredLayouts = buildDefaultBlockLayouts(sheet);
 
     if (sheet.savedBlockLayout) {
@@ -45,49 +46,50 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
     return inferredLayouts;
   }, [sheet]);
 
-  const [blockLayouts, setBlockLayouts] = useState(defaultBlockLayouts);
+  const [blockLayouts, setBlockLayouts] = useState(originalLayout);
   const [storageHydrated, setStorageHydrated] = useState(false);
   const didHydrateStorage = useRef(false);
 
-  const hasSavedLayout = storageHydrated && !areLayoutsEqual(blockLayouts, defaultBlockLayouts);
+  const isModifiedFromOriginal = storageHydrated && !areLayoutsEqual(blockLayouts, originalLayout);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(buildStorageKey(sheetSlug));
-    const savedLayouts = parseStoredLayouts(raw, sheet, defaultBlockLayouts);
-    const nextLayouts = savedLayouts ?? defaultBlockLayouts;
+    const savedLayouts = parseStoredLayouts(raw, sheet, originalLayout);
+    const nextLayouts = savedLayouts ?? originalLayout;
 
     queueMicrotask(() => {
       setBlockLayouts(nextLayouts);
       setStorageHydrated(true);
       didHydrateStorage.current = true;
     });
-  }, [defaultBlockLayouts, sheet, sheetSlug]);
+  }, [originalLayout, sheet, sheetSlug]);
 
   useEffect(() => {
     if (!didHydrateStorage.current) return;
 
     const storageKey = buildStorageKey(sheetSlug);
 
-    if (areLayoutsEqual(blockLayouts, defaultBlockLayouts)) {
+    if (areLayoutsEqual(blockLayouts, originalLayout)) {
       window.localStorage.removeItem(storageKey);
       return;
     }
 
     window.localStorage.setItem(storageKey, serializeStoredLayouts(blockLayouts));
-  }, [blockLayouts, defaultBlockLayouts, sheetSlug]);
+  }, [blockLayouts, originalLayout, sheetSlug]);
 
-  function resetLayout() {
+  function resetToOriginal() {
     if (!hydrated) return;
 
     window.localStorage.removeItem(buildStorageKey(sheetSlug));
-    setBlockLayouts(defaultBlockLayouts);
+    setBlockLayouts(originalLayout);
   }
 
   return {
     blockLayouts,
     setBlockLayouts,
     hydrated,
-    hasSavedLayout,
-    resetLayout,
+    originalLayout,
+    isModifiedFromOriginal,
+    resetToOriginal,
   };
 }

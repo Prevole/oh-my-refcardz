@@ -113,6 +113,27 @@ Grid layout solver with deterministic collision resolution (move, resize, push, 
 
 See: [layout-engine.md](./layout-engine.md) and [layout-actions.md](./layout-actions.md)
 
+### Layout Persistence
+
+Three logical layers live side-by-side on the client:
+
+| Layer | Source | Mutability |
+|-------|--------|------------|
+| `originalLayout` | YAML inferred positions + optional `<sheet>.layout.json` (`savedBlockLayout`), fused at load time | read-only |
+| Saved layout | `localStorage["sheet-layout:<slug>"]` | written on every commit (Vim-style immediate write) |
+| Buffer layout | React state in `useLayoutPersistence` (`blockLayouts`) | mutated by the editor in real time |
+
+`useLayoutPersistence` exposes:
+
+- `blockLayouts` / `setBlockLayouts` — the current buffer (today identical to the saved layout since commits are immediate).
+- `originalLayout` — the pristine layout derived from YAML + `.layout.json`.
+- `isModifiedFromOriginal` — `true` when the live buffer differs from the original.
+- `resetToOriginal()` — clear localStorage and snap the buffer back to the original.
+
+The reset action is a **user-facing feature**: a floating `LayoutResetButton` (top-right, beside the settings button) is mounted by `SheetRenderer` whenever `isModifiedFromOriginal` is true and developer mode is off. The same action is bound to the `sheet.reset-layout` keybinding (default `Shift+R`).
+
+Sources: `src/components/sheets/layout/use-layout-persistence.ts`, `src/components/sheets/layout/layout-persistence.ts`, `src/components/sheets/layout/layout-reset-button.tsx`.
+
 ### Layout Snapshot
 
 A read-only mirror of the live block positions, exposed through `LayoutSnapshotProvider` (mounted in the cheatsheet page) and consumed via `useLayoutSnapshot()`. The renderer publishes a new snapshot whenever the editor commits a layout change (initial hydration, user edits, reset). Consumers that need to follow the on-screen order — most notably the heading navigation sidebar — sort their items with `sortByLayoutOrder` (stable, `(y, x)` ascending) instead of relying on YAML declaration order.

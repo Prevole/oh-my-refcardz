@@ -74,7 +74,7 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 |---------|-------------|-----------------|
 | `global` | Always | Navigation, help, settings |
 | `home` | Home page | Search, open sheet |
-| `sheet` | Cheatsheet page | Copy, show details, back to home |
+| `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout |
 | `sheet-layout` | Layout edit mode | Card navigation, resize |
 | `dev` | Developer mode active | Save/reset/record/logs/axes |
 | `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |

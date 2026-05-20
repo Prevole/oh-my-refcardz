@@ -67,6 +67,7 @@ export const ACTION_IDS = {
   SHOW_EXAMPLE: "sheet.show-details",
   CLEAR_COMMAND_FOCUS: "sheet.clear-focus",
   TOGGLE_DEVELOPER_MODE: "sheet.toggle-developer-mode",
+  RESET_LAYOUT: "sheet.reset-layout",
 
   CARD_NAV_LEFT: "sheet-layout.nav-left",
   CARD_NAV_RIGHT: "sheet-layout.nav-right",
@@ -216,6 +217,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.TOGGLE_DEVELOPER_MODE,
       label: "Toggle developer mode",
       combos: [combo("d", "ctrl", "shift")],
+    },
+    {
+      id: ACTION_IDS.RESET_LAYOUT,
+      label: "Reset layout to original",
+      combos: [combo("R", "shift")],
     },
   ],
 

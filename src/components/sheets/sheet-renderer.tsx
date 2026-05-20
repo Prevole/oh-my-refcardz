@@ -20,7 +20,7 @@ import {
 } from "@/components/sheets/dev-overlay";
 import type { BlockConstraints, GridPosition, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { useKeyboardScope } from "@/hooks/use-keyboard-context";
+import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useAction } from "@/hooks/use-action";
 import { ACTION_IDS } from "@/lib/keybindings";
 import {
@@ -38,6 +38,7 @@ import {
 } from "./layout";
 import type { DragMove } from "./layout/use-card-drag-v2";
 import type { ResizeMove } from "./layout/use-card-resize-v2";
+import { LayoutResetButton } from "./layout/layout-reset-button";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 type Props = {
@@ -49,7 +50,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const blocks = getRenderableBlocks(sheet);
   const [gridMetrics, setGridMetrics] = useState<GridMetricsState>(FALLBACK_METRICS);
 
-  const { blockLayouts, setBlockLayouts, hydrated, hasSavedLayout, resetLayout } = useLayoutPersistence(
+  const { blockLayouts, setBlockLayouts, hydrated, isModifiedFromOriginal, resetToOriginal } = useLayoutPersistence(
     sheetSlug,
     sheet
   );
@@ -172,6 +173,20 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [editor.committedBlocks, matchesAction, sheetSlug]);
 
+  // -- Reset layout shortcut (user feature, Shift+R) -----------------------
+  useScopedKeyboardHandler(
+    "global",
+    (event: KeyboardEvent) => {
+      const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if (!matchesAction(event, ACTION_IDS.RESET_LAYOUT)) return;
+      if (!isModifiedFromOriginal) return;
+      event.preventDefault();
+      resetToOriginal();
+    },
+    [matchesAction, isModifiedFromOriginal, resetToOriginal]
+  );
+
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
 
   // -- Developer mode ------------------------------------------------------
@@ -235,7 +250,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   });
 
   useAction(ACTION_IDS.DEV_RESET_LAYOUT, "dev", () => {
-    if (hasSavedLayout) resetLayout();
+    if (isModifiedFromOriginal) resetToOriginal();
   });
 
   useAction(ACTION_IDS.DEV_TOGGLE_RECORDING, "dev", () => {
@@ -333,8 +348,8 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           slug={sheetSlug}
           blockCount={editor.currentBlocks.length}
           maxRow={debugMaxRow}
-          hasSavedLayout={hydrated && hasSavedLayout}
-          onReset={resetLayout}
+          hasSavedLayout={hydrated && isModifiedFromOriginal}
+          onReset={resetToOriginal}
           onSave={saveLayoutToDev}
           recordingSlot={
             <DevRecorderButton
@@ -415,6 +430,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
+      {hydrated && isModifiedFromOriginal && !debugEnabled ? (
+        <LayoutResetButton onClick={resetToOriginal} />
+      ) : null}
     </>
   );
 }

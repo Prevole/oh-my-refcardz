@@ -32,3 +32,11 @@
 .settings:hover {
   transform: rotate(45deg);
 }
+
+.resetLayout {
+  right: calc(var(--space-6) + 2.5rem + var(--space-3));
+}
+
+.resetLayout:hover {
+  transform: rotate(-30deg);
+}
