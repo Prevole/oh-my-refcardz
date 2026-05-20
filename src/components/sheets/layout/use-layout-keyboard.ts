@@ -151,6 +151,34 @@ export function pickTopLeftBlock(blocks: readonly LayoutBlock[]): string | null 
   return best.id;
 }
 
+/**
+ * Pick the block whose rendered center is closest to `cursor` (viewport
+ * coordinates). Returns `null` if no block has a known rect.
+ *
+ * `rectFor` is injected for testability — production code passes a closure
+ * that reads `document.querySelector('[data-layout-block-id="…"]')`.
+ */
+export function pickClosestBlockByRects(
+  blockIds: readonly string[],
+  cursor: { x: number; y: number },
+  rectFor: (id: string) => { left: number; top: number; width: number; height: number } | null,
+): string | null {
+  let best: { id: string; distSq: number } | null = null;
+  for (const id of blockIds) {
+    const rect = rectFor(id);
+    if (!rect) continue;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = cx - cursor.x;
+    const dy = cy - cursor.y;
+    const distSq = dx * dx + dy * dy;
+    if (!best || distSq < best.distSq) {
+      best = { id, distSq };
+    }
+  }
+  return best?.id ?? null;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Action → operation mapping                                                  */
 /* -------------------------------------------------------------------------- */
@@ -282,6 +310,18 @@ export function useLayoutKeyboard({
     blocksRef.current = blocks;
   }, [blocks]);
 
+  // Track the last known mouse position so that entering layout mode focuses
+  // the block closest to the user's pointer. Fallback to viewport center when
+  // no mousemove has been observed yet (pure-keyboard sessions).
+  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    const onMove = (event: MouseEvent) => {
+      cursorRef.current = { x: event.clientX, y: event.clientY };
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
   // Cascade modal scopes: parent `layout` while the mode is active, plus the
   // active sub-mode scope. The dispatcher walks top-down so the sub-mode wins
   // on conflicts, then falls through to `layout` (currently empty).
@@ -294,7 +334,20 @@ export function useLayoutKeyboard({
     setMode("navigation");
     setFocusedCard((current) => {
       if (current) return current;
-      const id = pickTopLeftBlock(blocksRef.current);
+      const blocks = blocksRef.current;
+      const cursor = cursorRef.current ?? {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      };
+      const closest = pickClosestBlockByRects(
+        blocks.map((b) => b.id),
+        cursor,
+        (id) => {
+          const el = document.querySelector(`[data-layout-block-id="${id}"]`);
+          return el ? el.getBoundingClientRect() : null;
+        },
+      );
+      const id = closest ?? pickTopLeftBlock(blocks);
       return id ? { blockId: id } : null;
     });
   }, []);
@@ -439,6 +492,24 @@ export function useLayoutKeyboard({
   useAction(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT, "layout-resize", () => submitResize(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT));
   useAction(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP, "layout-resize", () => submitResize(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP));
   useAction(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN, "layout-resize", () => submitResize(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN));
+
+  /* ---------------- viewport follow ---------------- */
+
+  // Scroll the focused block into view whenever its identity OR its position
+  // changes (navigation jumps to a new block, or move/resize displaces it).
+  const focusedPos = useMemo(() => {
+    if (!focusedCard) return null;
+    const block = blocks.find((b) => b.id === focusedCard.blockId);
+    if (!block) return null;
+    return `${block.position.x},${block.position.y},${block.position.w},${block.position.h}`;
+  }, [focusedCard, blocks]);
+
+  useEffect(() => {
+    if (!focusedCard || focusedPos === null) return;
+    const el = document.querySelector(`[data-layout-block-id="${focusedCard.blockId}"]`);
+    if (!(el instanceof HTMLElement)) return;
+    el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }, [focusedCard, focusedPos]);
 
   return useMemo(
     () => ({

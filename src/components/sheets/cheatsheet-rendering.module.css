@@ -140,11 +140,11 @@
 
 .headingBlockKeyboardFocused {
   z-index: var(--z-dropdown);
-  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 65%, var(--border-strong));
+  border-color: color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 65%, var(--border-strong));
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 24%, transparent),
-    0 0 0 2px color-mix(in srgb, var(--sheet-accent, var(--accent)) 45%, transparent),
-    0 0 1.5rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 18%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 24%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 45%, transparent),
+    0 0 1.5rem color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 18%, transparent);
 }
 
 .headingBlockManipulating {
@@ -244,11 +244,11 @@
 
 .cardKeyboardFocused {
   z-index: var(--z-dropdown);
-  border-color: color-mix(in srgb, var(--sheet-accent, var(--accent)) 65%, var(--border-strong));
+  border-color: color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 65%, var(--border-strong));
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--sheet-accent, var(--accent)) 30%, transparent),
-    0 0 0 2px color-mix(in srgb, var(--sheet-accent, var(--accent)) 45%, transparent),
-    0 0 1.5rem color-mix(in srgb, var(--sheet-accent, var(--accent)) 20%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 30%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 45%, transparent),
+    0 0 1.5rem color-mix(in srgb, var(--layout-mode-color, var(--sheet-accent, var(--accent))) 20%, transparent);
 }
 
 .cardManipulating {

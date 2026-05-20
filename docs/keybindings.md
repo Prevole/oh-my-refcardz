@@ -83,6 +83,15 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |
 | `dev-axes` | Axes keyboard mode | Cursor nav, pin row/col |
 
+### Layout mode visual feedback
+
+When a `layout-*` scope is active, two visual cues confirm the current sub-mode:
+
+- A floating **mode pill** in the top-right corner (`LayoutModePill`) shows the sub-mode label and a color: navigation = sheet accent, move = `--success`, resize = `--warning`.
+- The focused block highlight uses the same color via the `--layout-mode-color` CSS variable, set on the `<SheetGrid>` root and consumed by `.cardKeyboardFocused` / `.headingBlockKeyboardFocused`.
+
+Entering layout mode (`Ctrl+M`) focuses the block closest to the mouse cursor (fallback: viewport center, then top-left). On every focus change or move/resize, the focused block is scrolled into view (`block: "nearest"`).
+
 ### Scopes
 
 Scopes form a stack of `{ scope, modal }` entries:

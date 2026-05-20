@@ -7,6 +7,7 @@ import {
   findNeighbour,
   moveSpecFromAction,
   navDirectionFromAction,
+  pickClosestBlockByRects,
   pickTopLeftBlock,
   resizeSpecFromAction,
 } from "./use-layout-keyboard";
@@ -28,6 +29,36 @@ describe("pickTopLeftBlock", () => {
       block("d", 9, 0),
     ];
     expect(pickTopLeftBlock(blocks)).toBe("c");
+  });
+});
+
+describe("pickClosestBlockByRects", () => {
+  const rects: Record<string, { left: number; top: number; width: number; height: number }> = {
+    a: { left: 0, top: 0, width: 100, height: 100 },
+    b: { left: 500, top: 0, width: 100, height: 100 },
+    c: { left: 0, top: 500, width: 100, height: 100 },
+    d: { left: 500, top: 500, width: 100, height: 100 },
+  };
+  const rectFor = (id: string) => rects[id] ?? null;
+
+  it("returns the id whose rect center is closest to the cursor", () => {
+    expect(pickClosestBlockByRects(["a", "b", "c", "d"], { x: 50, y: 50 }, rectFor)).toBe("a");
+    expect(pickClosestBlockByRects(["a", "b", "c", "d"], { x: 550, y: 550 }, rectFor)).toBe("d");
+    expect(pickClosestBlockByRects(["a", "b", "c", "d"], { x: 550, y: 50 }, rectFor)).toBe("b");
+  });
+
+  it("skips ids whose rect lookup returns null", () => {
+    expect(
+      pickClosestBlockByRects(["missing", "a"], { x: 9999, y: 9999 }, rectFor),
+    ).toBe("a");
+  });
+
+  it("returns null when no id has a known rect", () => {
+    expect(pickClosestBlockByRects(["missing"], { x: 0, y: 0 }, rectFor)).toBeNull();
+  });
+
+  it("returns null when the id list is empty", () => {
+    expect(pickClosestBlockByRects([], { x: 0, y: 0 }, rectFor)).toBeNull();
   });
 });
 

@@ -60,6 +60,8 @@ export type {
   LayoutSubMode,
 } from "./use-layout-keyboard";
 
+export { LayoutModePill, LAYOUT_MODE_COLORS } from "./layout-mode-pill";
+
 // Layout snapshot: publishes the live layout for sibling consumers
 // (heading navigation today; possibly more in the future).
 export {

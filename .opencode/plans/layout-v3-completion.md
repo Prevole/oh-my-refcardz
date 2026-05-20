@@ -92,7 +92,7 @@ Notes:
 
 ## Phase E — Keyboard Zellij modal
 
-### Sub-commit E1 — Core (scopes + actions + hook + cleanup)
+### Sub-commit E1 — Core (scopes + actions + hook + cleanup) — `c5e7654`
 
 - [x] E1. Scope architecture: introduce `layout`, `layout-navigation`, `layout-move`, `layout-resize` scopes (all modal)
 - [x] E2. New `ACTION_IDS`: `LAYOUT_ENTER_MODE`, `LAYOUT_NAV_*` (+ exit + 2 switchers), `LAYOUT_MOVE_*` (+ strict + 2 switchers + exit), `LAYOUT_RESIZE_*` (+ shrink + strict + compact + 2 switchers + exit) — 41 actions total; IDs use the `<context>.<verb>` convention so each scope is encoded in the ID itself (per user request)
@@ -101,9 +101,9 @@ Notes:
 
 ### Sub-commit E2 — Polish
 
-- [ ] E5. Focus initial card near mouse cursor when entering layout mode (E1 uses deterministic top-left)
-- [ ] E6. Visual indicators: mode badge in dev bar / status pill, focused-card highlight per sub-mode
-- [ ] E7. Viewport follow: smooth-scroll focused card into view (reuse `auto-scroll.ts`)
+- [x] E5. Focus initial card near mouse cursor when entering layout mode (closest-rect-to-pointer; fallback viewport center, then top-left)
+- [x] E6. Visual indicators: `LayoutModePill` top-right + focused-card highlight color per sub-mode via `--layout-mode-color` CSS var on the grid root
+- [x] E7. Viewport follow: `scrollIntoView({ block: "nearest", behavior: "smooth" })` on focused-block change or position change
 
 ### Sub-commit E3 — Tests + docs
 

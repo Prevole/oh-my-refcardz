@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { SheetGrid, GRID_COLUMNS } from "@/components/sheets/sheet-grid";
 import { EntryRenderer } from "@/components/sheets/entry-renderers";
 import { ItemActions } from "@/components/sheets/item-actions";
@@ -39,6 +40,7 @@ import {
 import type { DragMove } from "./layout/use-card-drag-v2";
 import type { ResizeMove } from "./layout/use-card-resize-v2";
 import { LayoutResetButton } from "./layout/layout-reset-button";
+import { LayoutModePill, LAYOUT_MODE_COLORS } from "./layout/layout-mode-pill";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 type Props = {
@@ -152,7 +154,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   });
 
   // -- Keyboard (Zellij modal layout mode, entered via Ctrl+M) ------------
-  const { focusedCard, setFocusedCard, isManipulating } = useLayoutKeyboard({
+  const { mode: layoutMode, focusedCard, setFocusedCard, isManipulating } = useLayoutKeyboard({
     blocks: editor.currentBlocks,
     editor,
   });
@@ -348,7 +350,17 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         />
       ) : null}
 
-      <SheetGrid editMode={isLayoutActive} debugMode={debugEnabled} layoutReady={hydrated} onMetricsChange={updateGridMetrics}>
+      <SheetGrid
+        editMode={isLayoutActive}
+        debugMode={debugEnabled}
+        layoutReady={hydrated}
+        onMetricsChange={updateGridMetrics}
+        style={
+          layoutMode !== null
+            ? ({ "--layout-mode-color": LAYOUT_MODE_COLORS[layoutMode] } as CSSProperties)
+            : undefined
+        }
+      >
         {debugEnabled ? <DevAxesOverlay ref={axesRef} maxRow={debugMaxRow} /> : null}
         {blocks.map((block) => {
           const layoutBlock = currentBlocksById.get(block.id);
@@ -418,6 +430,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
       {hydrated && isModifiedFromOriginal && !debugEnabled ? (
         <LayoutResetButton onClick={resetToOriginal} />
       ) : null}
+      {layoutMode !== null && !debugEnabled ? <LayoutModePill mode={layoutMode} /> : null}
     </>
   );
 }

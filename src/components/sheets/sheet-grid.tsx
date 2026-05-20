@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 export const GRID_GAP_PX = 16;
@@ -18,6 +18,7 @@ type SheetGridProps = {
   debugMode?: boolean;
   layoutReady?: boolean;
   onMetricsChange?: (metrics: SheetGridMetrics) => void;
+  style?: CSSProperties;
 };
 
 export function SheetGrid({
@@ -26,6 +27,7 @@ export function SheetGrid({
   debugMode = false,
   layoutReady = false,
   onMetricsChange,
+  style,
 }: SheetGridProps) {
   const ref = useRef<HTMLElement | null>(null);
 
@@ -69,6 +71,7 @@ export function SheetGrid({
       ]
         .filter(Boolean)
         .join(" ")}
+      style={style}
     >
       {children}
     </section>

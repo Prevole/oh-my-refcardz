@@ -252,9 +252,14 @@ The existing `syncLayoutToDev` function will be refactored to remove the auto-de
 
 ## Future considerations
 
-- **Visual indicator** showing the current layout mode (status bar / accent overlay).
+- ~~**Visual indicator** showing the current layout mode (status bar / accent overlay).~~ Implemented as `LayoutModePill` (top-right): pill colored per sub-mode (navigation = sheet accent, move = `--success`, resize = `--warning`). The same color cascades to the focused block highlight via the `--layout-mode-color` CSS variable set on the grid root.
 - **Sticky modifiers** for repeated operations within a mode.
 - **Undo/redo** on top of engine sessions (see `layout-engine.md`).
 - **Touch input**: not in scope. Project is desktop-only.
+
+### Implemented polish (Phase E2)
+
+- **Closest-to-cursor initial focus** — When entering layout mode (`Ctrl+M`), the focused block is the one whose viewport-rect center is closest to the mouse pointer. Fallback: viewport center if no `mousemove` has been observed (pure-keyboard session). Final fallback: `pickTopLeftBlock` when no block has a rendered rect.
+- **Viewport follow** — Changing focus (`h/j/k/l`) or moving/resizing the focused block triggers `scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" })` so the block stays visible even on long sheets.
 
 See [`layout-engine.md`](./layout-engine.md) for the engine contract and resolution pipeline.
