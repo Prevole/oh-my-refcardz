@@ -10,19 +10,19 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
 
 - [/] **FP1**. **Default arrows / secondary hjkl swap** — Inverted combo order in `DEFAULT_KEYBINDINGS` for 34 movement actions across 5 scopes (`layout-navigation`, `layout-move`, `layout-resize`, `dev-logs`, `dev-axes`). Scope `global` already had arrows first. No tests cared about combo *order* in defaults; no E2E broke because both bindings still match. Inline help (which renders `maxCombos=1`) now shows arrow glyphs. 821/821 unit ✓, 75/75 E2E ✓.
 
-- [ ] **FP2**. **Unify mode-switch keybindings in `layout` scope**
-  (approach A3). Today `LAYOUT_NAV_TO_MOVE`, `LAYOUT_NAV_TO_RESIZE`,
+- [/] **FP2**. **Unify mode-switch keybindings in `layout` scope**
+  (approach A3). 6 actions (`LAYOUT_NAV_TO_MOVE`, `LAYOUT_NAV_TO_RESIZE`,
   `LAYOUT_MOVE_TO_NAV`, `LAYOUT_MOVE_TO_RESIZE`, `LAYOUT_RESIZE_TO_NAV`,
-  `LAYOUT_RESIZE_TO_MOVE` are six distinct actions in three modal
-  scopes. Replace with three actions `LAYOUT_GOTO_NAVIGATION`,
-  `LAYOUT_GOTO_MOVE`, `LAYOUT_GOTO_RESIZE` in the `layout` parent
-  scope. Sub-scopes (`layout-navigation`/`layout-move`/`layout-resize`)
-  become **non-modal** so the cascade reaches `layout`.
-  Risk: `Escape` or other shared keys could leak into the sub-scopes.
-  Audit the lower scopes (`sheet`, `global`) before flipping
-  modality. The new structure is reflected in `SCOPE_HELP_MAP` and the
-  help modal entry lists. See also: `docs/ideas-backlog.md` —
-  per-binding propagation control.
+  `LAYOUT_RESIZE_TO_MOVE`) collapsed into 3 (`LAYOUT_GOTO_NAVIGATION` `n`,
+  `LAYOUT_GOTO_MOVE` `m`, `LAYOUT_GOTO_RESIZE` `b`) registered in scope
+  `layout`. Sub-scopes flipped to non-modal so the cascade reaches the
+  parent. `Escape` stays in each sub-scope (`LAYOUT_NAV_EXIT`/`LAYOUT_MOVE_EXIT`/
+  `LAYOUT_RESIZE_EXIT` unchanged, still exit-complete) — prevents leak to
+  `sheet.BACK_TO_HOME`. Key `r` → `b` for resize (azerty adjacency `b m n`).
+  Updates: `contextual-inline-help.tsx` SCOPE_HELP_MAP, `sheet-help-modal.tsx`
+  ENTRIES lists, `keyboard-layout.spec.ts` + `contextual-inline-help.spec.ts`
+  E2E (helper signature + `r`→`b`), `docs/keybindings.md` (cascade pattern).
+  821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
 - [ ] **FP3**. **Settings panel: width + title bar + UI tab compact**
   (points 1, 3, 8). Panel grows to 2/3 viewport width (with sensible

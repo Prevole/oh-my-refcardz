@@ -84,10 +84,10 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `global` | Always | Navigation, help, settings |
 | `home` | Home page | Search, open sheet |
 | `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout, enter layout mode |
-| `layout` | Layout modal mode (any sub-mode) | Parent scope; currently empty, reserved for future shared layout bindings |
-| `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down, switch to move/resize, exit |
-| `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier) |
-| `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants) |
+| `layout` | Layout modal mode (any sub-mode) | Parent scope; hosts sub-mode switching bindings (`n` / `m` / `b`) shared across all sub-modes via the cascade |
+| `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down, exit |
+| `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier), exit |
+| `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants), exit |
 | `dev` | Developer mode active | Save/reset/record/logs/axes |
 | `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |
 | `dev-axes` | Axes keyboard mode | Cursor nav, pin row/col |
@@ -126,6 +126,8 @@ useKeyboardScope("dev-logs", open, { modal: true });
 ```
 
 The dispatcher cascade walks the stack top-down and stops on the first scope that yields a match. If a modal scope yields no match, the cascade halts there (preventing leak to lower scopes such as the parent `dev` mode).
+
+**Layout cascade pattern**: the `layout` parent scope is modal (it blocks sheet/global bindings while in layout mode), but its sub-scopes (`layout-navigation`, `layout-move`, `layout-resize`) are **non-modal**. This lets sub-mode-switch keys (`n`, `m`, `b`) live exclusively in `layout` and reach all three sub-modes by cascading from the active sub-scope up to the parent. Each sub-scope still binds `Escape` to its own exit handler, so Escape is consumed before it can leak to sheet-level bindings such as `BACK_TO_HOME`.
 
 ## Usage
 

@@ -79,13 +79,17 @@ export const ACTION_IDS = {
   RESET_LAYOUT: "sheet.reset-layout",
   LAYOUT_ENTER_MODE: "sheet.layout-enter-mode",
 
+  // Layout parent scope: shared mode-switch actions (cascade target from
+  // sub-scopes when no sub-scope binding matches).
+  LAYOUT_GOTO_NAVIGATION: "layout.goto-navigation",
+  LAYOUT_GOTO_MOVE: "layout.goto-move",
+  LAYOUT_GOTO_RESIZE: "layout.goto-resize",
+
   // Layout sub-mode: navigation (scope `layout-navigation`).
   LAYOUT_NAV_LEFT: "layout-navigation.left",
   LAYOUT_NAV_RIGHT: "layout-navigation.right",
   LAYOUT_NAV_UP: "layout-navigation.up",
   LAYOUT_NAV_DOWN: "layout-navigation.down",
-  LAYOUT_NAV_TO_MOVE: "layout-navigation.to-move",
-  LAYOUT_NAV_TO_RESIZE: "layout-navigation.to-resize",
   LAYOUT_NAV_EXIT: "layout-navigation.exit",
 
   // Layout sub-mode: move (scope `layout-move`).
@@ -97,8 +101,6 @@ export const ACTION_IDS = {
   LAYOUT_MOVE_STRICT_RIGHT: "layout-move.strict-right",
   LAYOUT_MOVE_STRICT_UP: "layout-move.strict-up",
   LAYOUT_MOVE_STRICT_DOWN: "layout-move.strict-down",
-  LAYOUT_MOVE_TO_NAV: "layout-move.to-nav",
-  LAYOUT_MOVE_TO_RESIZE: "layout-move.to-resize",
   LAYOUT_MOVE_EXIT: "layout-move.exit",
 
   // Layout sub-mode: resize (scope `layout-resize`).
@@ -122,8 +124,6 @@ export const ACTION_IDS = {
   LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT: "layout-resize.shrink-compact-right",
   LAYOUT_RESIZE_SHRINK_COMPACT_UP: "layout-resize.shrink-compact-up",
   LAYOUT_RESIZE_SHRINK_COMPACT_DOWN: "layout-resize.shrink-compact-down",
-  LAYOUT_RESIZE_TO_NAV: "layout-resize.to-nav",
-  LAYOUT_RESIZE_TO_MOVE: "layout-resize.to-move",
   LAYOUT_RESIZE_EXIT: "layout-resize.exit",
 
   // Developer mode top-level actions (scope `dev` / context `dev`).
@@ -272,7 +272,23 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
   ],
 
-  layout: [],
+  layout: [
+    {
+      id: ACTION_IDS.LAYOUT_GOTO_NAVIGATION,
+      label: "Switch to navigation sub-mode",
+      combos: [key("n")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_GOTO_MOVE,
+      label: "Switch to move sub-mode",
+      combos: [key("m")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_GOTO_RESIZE,
+      label: "Switch to resize sub-mode",
+      combos: [key("b")],
+    },
+  ],
 
   "layout-navigation": [
     {
@@ -294,16 +310,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_NAV_DOWN,
       label: "Focus card below",
       combos: [key("ArrowDown"), key("j")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_NAV_TO_MOVE,
-      label: "Switch to move sub-mode",
-      combos: [key("m")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_NAV_TO_RESIZE,
-      label: "Switch to resize sub-mode",
-      combos: [key("r")],
     },
     {
       id: ACTION_IDS.LAYOUT_NAV_EXIT,
@@ -352,16 +358,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN,
       label: "Move card down (strict)",
       combos: [combo("ArrowDown", "alt"), combo("j", "alt")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_MOVE_TO_NAV,
-      label: "Switch to navigation sub-mode",
-      combos: [key("n")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_MOVE_TO_RESIZE,
-      label: "Switch to resize sub-mode",
-      combos: [key("r")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_EXIT,
@@ -470,16 +466,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
       label: "Shrink card down (compact)",
       combos: [combo("ArrowDown", "ctrl", "shift"), combo("J", "ctrl", "shift")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_RESIZE_TO_NAV,
-      label: "Switch to navigation sub-mode",
-      combos: [key("n")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_RESIZE_TO_MOVE,
-      label: "Switch to move sub-mode",
-      combos: [key("m")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_EXIT,

@@ -322,13 +322,16 @@ export function useLayoutKeyboard({
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
-  // Cascade modal scopes: parent `layout` while the mode is active, plus the
-  // active sub-mode scope. The dispatcher walks top-down so the sub-mode wins
-  // on conflicts, then falls through to `layout` (currently empty).
+  // Cascade modal scopes: the parent `layout` scope holds shared bindings
+  // (mode switching) while the sub-mode scopes are non-modal so that
+  // unmatched events cascade up to `layout`. Mode-switch keys (`n`, `m`,
+  // `b`) only live in `layout`; sub-scopes provide their movement and Exit
+  // bindings exclusively. The dispatcher walks top-down so sub-mode wins
+  // on conflicts.
   useKeyboardScope("layout", mode !== null, { modal: true });
-  useKeyboardScope("layout-navigation", mode === "navigation", { modal: true });
-  useKeyboardScope("layout-move", mode === "move", { modal: true });
-  useKeyboardScope("layout-resize", mode === "resize", { modal: true });
+  useKeyboardScope("layout-navigation", mode === "navigation");
+  useKeyboardScope("layout-move", mode === "move");
+  useKeyboardScope("layout-resize", mode === "resize");
 
   const enterMode = useCallback(() => {
     setMode("navigation");
@@ -387,32 +390,24 @@ export function useLayoutKeyboard({
     [matchesAction, enterMode]
   );
 
-  useAction(ACTION_IDS.LAYOUT_NAV_TO_MOVE, "layout-navigation", () => {
+  useAction(ACTION_IDS.LAYOUT_GOTO_NAVIGATION, "layout", () => {
+    setMode("navigation");
+  });
+  useAction(ACTION_IDS.LAYOUT_GOTO_MOVE, "layout", () => {
     setMode("move");
   });
-  useAction(ACTION_IDS.LAYOUT_NAV_TO_RESIZE, "layout-navigation", () => {
+  useAction(ACTION_IDS.LAYOUT_GOTO_RESIZE, "layout", () => {
     setMode("resize");
   });
+
   useAction(ACTION_IDS.LAYOUT_NAV_EXIT, "layout-navigation", () => {
     exitMode();
   });
 
-  useAction(ACTION_IDS.LAYOUT_MOVE_TO_NAV, "layout-move", () => {
-    setMode("navigation");
-  });
-  useAction(ACTION_IDS.LAYOUT_MOVE_TO_RESIZE, "layout-move", () => {
-    setMode("resize");
-  });
   useAction(ACTION_IDS.LAYOUT_MOVE_EXIT, "layout-move", () => {
     exitMode();
   });
 
-  useAction(ACTION_IDS.LAYOUT_RESIZE_TO_NAV, "layout-resize", () => {
-    setMode("navigation");
-  });
-  useAction(ACTION_IDS.LAYOUT_RESIZE_TO_MOVE, "layout-resize", () => {
-    setMode("move");
-  });
   useAction(ACTION_IDS.LAYOUT_RESIZE_EXIT, "layout-resize", () => {
     exitMode();
   });

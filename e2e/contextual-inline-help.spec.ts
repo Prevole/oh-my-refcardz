@@ -39,7 +39,7 @@ async function enterLayoutMode(page: Page) {
   await page.waitForTimeout(30);
 }
 
-async function switchSubMode(page: Page, key: "m" | "r", expected: "move" | "resize") {
+async function switchSubMode(page: Page, key: "m" | "b", expected: "move" | "resize") {
   await page.keyboard.press(key);
   await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute("data-mode", expected);
   await page.waitForTimeout(30);
@@ -83,9 +83,9 @@ test.describe("ContextualInlineHelp - sheet surface", () => {
     await expectHelpAttributes(page, "sheet", "layout-move");
   });
 
-  test("switches to layout-resize when pressing r in layout mode", async ({ page }) => {
+  test("switches to layout-resize when pressing b in layout mode", async ({ page }) => {
     await enterLayoutMode(page);
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
     await expectHelpAttributes(page, "sheet", "layout-resize");
   });
 

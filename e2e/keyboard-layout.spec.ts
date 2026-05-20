@@ -107,7 +107,7 @@ async function enterLayoutMode(page: Page) {
  * A small synchronous yield after the pill flip lets React commit
  * and the scope context to switch before the next press.
  */
-async function switchSubMode(page: Page, key: "n" | "m" | "r", expected: "navigation" | "move" | "resize") {
+async function switchSubMode(page: Page, key: "n" | "m" | "b", expected: "navigation" | "move" | "resize") {
   await page.keyboard.press(key);
   await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute("data-mode", expected);
   // Yield one event loop tick to let React commit the scope change.
@@ -147,14 +147,14 @@ test.describe("Keyboard layout mode — entry, exit, sub-modes (Phase E3)", () =
     await enterLayoutMode(page);
   });
 
-  test("the mode pill cycles through n / m / r and back", async ({ page }) => {
+  test("the mode pill cycles through n / m / b and back", async ({ page }) => {
     await enterLayoutMode(page);
     const pill = page.getByTestId("layout-mode-pill");
 
     await page.keyboard.press("m");
     await expect(pill).toHaveAttribute("data-mode", "move");
 
-    await page.keyboard.press("r");
+    await page.keyboard.press("b");
     await expect(pill).toHaveAttribute("data-mode", "resize");
 
     await page.keyboard.press("n");
@@ -188,7 +188,7 @@ test.describe("Keyboard layout mode — entry, exit, sub-modes (Phase E3)", () =
 
   test("Escape exits layout mode from the resize sub-mode", async ({ page }) => {
     await enterLayoutMode(page);
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
   });
@@ -255,7 +255,7 @@ test.describe("Keyboard layout mode — navigation sub-mode (Phase E3)", () => {
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
       .toBe("sheet-card-bottom-left");
 
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
       .toBe("sheet-card-bottom-left");
 
@@ -323,7 +323,7 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
 
   test("j grows the south edge by 1 row", async ({ page }) => {
     await focusBottomLeft(page);
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
 
     const before = await findById(page, "sheet-card-bottom-left");
     expect(before.rowSpan).toBe(6);
@@ -336,7 +336,7 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
 
   test("Shift+J shrinks the south edge by 1 row", async ({ page }) => {
     await focusBottomLeft(page);
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
 
     // Grow south first so we have room to shrink.
     await page.keyboard.press("j");
@@ -358,7 +358,7 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
     );
 
     const before = await findById(page, "sheet-card-top-left");
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
     await page.keyboard.press("Alt+k");
     const after = await findById(page, "sheet-card-top-left");
     expect(after.rowSpan).toBe(before.rowSpan);
@@ -367,7 +367,7 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
 
   test("Ctrl+Shift+J is compact shrink (pulls the south edge in)", async ({ page }) => {
     await focusBottomLeft(page);
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
 
     // Grow south by 3 to create room.
     await page.keyboard.press("j");
@@ -400,7 +400,7 @@ test.describe("Keyboard layout mode — visual integration (Phase E3)", () => {
     await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
 
     // Grow south by 1: deterministic on this fixture (60+ free rows).
-    await switchSubMode(page, "r", "resize");
+    await switchSubMode(page, "b", "resize");
     const before = await findById(page, "sheet-card-bottom-left");
     await page.keyboard.press("j");
     const after = await findById(page, "sheet-card-bottom-left");
