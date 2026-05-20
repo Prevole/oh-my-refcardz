@@ -69,7 +69,7 @@ export function HomeClient({ categories }: Props) {
     toggleRandom,
     setBorder,
     setDirection,
-    toggleAccordion,
+    setActivePanelTab,
     resetModern,
   } = useUISettings();
 
@@ -644,7 +644,7 @@ export function HomeClient({ categories }: Props) {
         onToggleRandom={toggleRandom}
         onSetBorder={setBorder}
         onSetDirection={setDirection}
-        onToggleAccordion={toggleAccordion}
+        onSetActivePanelTab={setActivePanelTab}
         onResetModern={resetModern}
       />
     </div>

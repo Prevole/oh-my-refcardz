@@ -180,8 +180,8 @@ SCOPE_HELP_MAP entries:
 
 ### Sub-phases
 
-- [ ] F1. **Pre-flight test-id hardening** — add `data-testid` attributes to `SettingsPanel`, `KeybindingEditor`, `SheetHelpModal` and recording overlay; update `settings-keybindings.spec.ts` to use them. Protects E2E during the refactor.
-- [ ] F2. **SettingsPanel structural refactor** — slide-in widened to ≈66vw, remove accordions, introduce top-level `UI | Keybindings` tabs. Persist active tab in `useUISettings`. Inline explanation labels under sections.
+- [x] F1. **Pre-flight test-id hardening** — `7f4c0ac`. Stable `data-testid` on SettingsPanel, KeybindingEditor (rows expose `data-action-id`), hex-board. `settings-keybindings.spec.ts` rewritten via `getByTestId`; `home-navigation.spec.ts` migrated for the hex board selector. Lint clean, 821/821 unit, 69/69 E2E.
+- [/] F2. **SettingsPanel structural refactor** — slide-in widened to 66vw (min 720px, max 1100px); accordions replaced by top-level `UI | Keybindings` tabs. Persisted active tab in `useUISettings` (`panelTabs.active`). Backward-compatible migration: old `accordion` field silently dropped. Inline explanation labels and a per-tab lead paragraph added. Removed unused `toggleAccordion`/`AccordionState` API; `AccordionItem` component left in place for potential reuse (purge candidate in G8). Pending commit.
 - [ ] F3. **KeybindingEditor regroup into 5 sub-tabs** — Global / Home / Cheatsheet / Layout Mode / Developer. Multi-context sub-tabs stack their sections with discreet `<h3>` headers. Active sub-tab persisted in `useUISettings`. Recording logic unchanged.
 - [ ] F4. **`<KeybindingChart />` extraction** — read-only component `{ actionIds: ActionId[]; cols?: 2 | 3; label?: (id) => string }`. Shared CSS for keycaps.
 - [ ] F5. **SheetHelpModal refactor** — adopt `<KeybindingChart />`; add `Developer` tab covering `dev`, `dev-logs`, `dev-axes`.

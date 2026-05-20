@@ -25,7 +25,7 @@ export function SheetShortcuts() {
     toggleRandom,
     setBorder,
     setDirection,
-    toggleAccordion,
+    setActivePanelTab,
     resetModern,
   } = useUISettings();
 
@@ -96,7 +96,7 @@ export function SheetShortcuts() {
         onToggleRandom={toggleRandom}
         onSetBorder={setBorder}
         onSetDirection={setDirection}
-        onToggleAccordion={toggleAccordion}
+        onSetActivePanelTab={setActivePanelTab}
         onResetModern={resetModern}
       />
     </>

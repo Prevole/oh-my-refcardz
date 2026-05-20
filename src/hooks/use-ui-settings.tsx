@@ -13,14 +13,15 @@ export interface ModernSettings {
   direction: GradientDirection;
 }
 
-export interface AccordionState {
-  ui: boolean;
-  keybindings: boolean;
+export type SettingsTopTab = "ui" | "keybindings";
+
+export interface PanelTabsState {
+  active: SettingsTopTab;
 }
 
 export interface UISettings {
   modern: ModernSettings;
-  accordion: AccordionState;
+  panelTabs: PanelTabsState;
 }
 
 const STORAGE_KEY = "oh-my-refcardz:ui-settings";
@@ -32,9 +33,8 @@ const DEFAULT_SETTINGS: UISettings = {
     border: "both",
     direction: "l-r",
   },
-  accordion: {
-    ui: true,
-    keybindings: false,
+  panelTabs: {
+    active: "ui",
   },
 };
 
@@ -64,14 +64,12 @@ function loadSettings(): UISettings {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as UISettings;
-      const merged = {
-        ...DEFAULT_SETTINGS,
-        ...parsed,
-        modern: { ...DEFAULT_SETTINGS.modern, ...parsed.modern },
-        accordion: { ...DEFAULT_SETTINGS.accordion, ...parsed.accordion },
+      const parsed = JSON.parse(stored) as Partial<UISettings>;
+      const merged: UISettings = {
+        modern: { ...DEFAULT_SETTINGS.modern, ...(parsed.modern ?? {}) },
+        panelTabs: { ...DEFAULT_SETTINGS.panelTabs, ...(parsed.panelTabs ?? {}) },
       };
-      if (merged.modern?.random && !hasRandomizedThisSession) {
+      if (merged.modern.random && !hasRandomizedThisSession) {
         hasRandomizedThisSession = true;
         cachedSettings = {
           ...merged,
@@ -128,7 +126,7 @@ interface UISettingsContextValue {
   toggleRandom: () => void;
   setBorder: (border: BorderStyle) => void;
   setDirection: (direction: GradientDirection) => void;
-  toggleAccordion: (section: keyof AccordionState) => void;
+  setActivePanelTab: (tab: SettingsTopTab) => void;
   resetModern: () => void;
   resetAll: () => void;
 }
@@ -170,14 +168,11 @@ export function UISettingsProvider({ children }: ProviderProps) {
     setModernSettings({ direction, random: false });
   }, [setModernSettings]);
 
-  const toggleAccordion = useCallback((section: keyof AccordionState) => {
+  const setActivePanelTab = useCallback((tab: SettingsTopTab) => {
     const current = loadSettings();
-    const newSettings = {
+    const newSettings: UISettings = {
       ...current,
-      accordion: {
-        ...current.accordion,
-        [section]: !current.accordion[section],
-      },
+      panelTabs: { ...current.panelTabs, active: tab },
     };
     saveSettings(newSettings);
   }, []);
@@ -199,7 +194,7 @@ export function UISettingsProvider({ children }: ProviderProps) {
     toggleRandom,
     setBorder,
     setDirection,
-    toggleAccordion,
+    setActivePanelTab,
     resetModern,
     resetAll,
   };
