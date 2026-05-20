@@ -8,7 +8,7 @@ import { SheetCommandsShell } from "@/components/sheets/sheet-commands-shell";
 import { LayoutSnapshotProvider } from "@/components/sheets/layout";
 import { YamlSheetRenderer } from "@/components/sheets/sheet-renderer";
 import { TechIcon } from "@/components/ui/tech-icon";
-import { SheetInlineHelp } from "@/components/help/inline-keybinding-help";
+import { ContextualInlineHelp } from "@/components/help/contextual-inline-help";
 import { getRenderableBlocks } from "@/lib/cheatsheet-shared";
 import { getAllCheatSheetsMeta, getYamlCheatSheetWithMeta } from "@/lib/yaml-cheatsheets";
 import cheatsheetStyles from "@/components/sheets/cheatsheet-rendering.module.css";
@@ -45,7 +45,7 @@ export default async function CheatSheetPage({ params }: Props) {
         <SheetLinksProvider knownSlugs={knownSlugs}>
         <LayoutSnapshotProvider>
         <main className="relative z-10 mx-auto max-w-7xl">
-          <SheetInlineHelp />
+          <ContextualInlineHelp surface="sheet" />
           <div className="mt-16 flex items-center gap-4">
             <TechIcon
               icon={iconName}

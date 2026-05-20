@@ -31,7 +31,7 @@ import { SettingsButton } from "@/components/settings/settings-button";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { AnchorNavigation } from "@/components/navigation/anchor-navigation";
 import { buildIndexedAnchorId } from "@/lib/anchor-navigation";
-import { HomeInlineHelp } from "@/components/help/inline-keybinding-help";
+import { ContextualInlineHelp } from "@/components/help/contextual-inline-help";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
@@ -436,7 +436,7 @@ export function HomeClient({ categories }: Props) {
         <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-5xl">
           Keyboard-first cheat sheets
         </h1>
-        <HomeInlineHelp />
+        <ContextualInlineHelp surface="home" />
 
         <input
           id="search"
