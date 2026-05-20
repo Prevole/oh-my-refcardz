@@ -1,0 +1,42 @@
+title: Layout E2E Fixture
+summary: Synthetic cheatsheet used by E2E tests to exercise keyboard layout mode.
+  Four cards arranged in a 2x2 grid below a single heading, with plenty of free
+  space south for predictable move/resize operations.
+color: "#2F855A"
+
+blocks:
+  - heading:
+      id: section
+      title: Section
+
+  - card:
+      id: top-left
+      title: Top Left
+      items:
+          - entries:
+              - title: First entry
+              - text: Static text used to give the card a stable height.
+
+  - card:
+      id: top-right
+      title: Top Right
+      items:
+          - entries:
+              - title: First entry
+              - text: Static text used to give the card a stable height.
+
+  - card:
+      id: bottom-left
+      title: Bottom Left
+      items:
+          - entries:
+              - title: First entry
+              - text: Static text used to give the card a stable height.
+
+  - card:
+      id: bottom-right
+      title: Bottom Right
+      items:
+          - entries:
+              - title: First entry
+              - text: Static text used to give the card a stable height.

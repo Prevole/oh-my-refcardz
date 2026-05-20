@@ -99,7 +99,7 @@ Notes:
 - [x] E3. Remove old `CARD_*` IDs and the inert `use-card-keyboard-v2.ts` hook. `mergeWithDefaults` silently drops unknown context keys + unknown action IDs from existing localStorage payloads
 - [x] E4. Implement `use-layout-keyboard.ts`: mode state machine, scope cascade (`layout` + active sub-mode), `useAction` handlers for every layout action, manual `useScopedKeyboardHandler("global", …)` for `LAYOUT_ENTER_MODE` (the `sheet` context has no dedicated scope)
 
-### Sub-commit E2 — Polish
+### Sub-commit E2 — Polish — `2cdf566`
 
 - [x] E5. Focus initial card near mouse cursor when entering layout mode (closest-rect-to-pointer; fallback viewport center, then top-left)
 - [x] E6. Visual indicators: `LayoutModePill` top-right + focused-card highlight color per sub-mode via `--layout-mode-color` CSS var on the grid root
@@ -108,9 +108,25 @@ Notes:
 ### Sub-commit E3 — Tests + docs
 
 - [x] E8a. Unit tests for pure helpers (`findNeighbour`, `pickTopLeftBlock`, action→spec lookup, operation builders) — 14 tests in `use-layout-keyboard.test.ts`
-- [ ] E8b. E2E rewrite of `keyboard-layout.spec.ts` (enter mode + navigate + move + resize + exit)
+- [x] E8b. E2E rewrite of `keyboard-layout.spec.ts` (16 tests, 95/95 on 5x repeat) against the new `content_test/` fixture infrastructure
 - [x] E9a. `docs/keybindings.md` updated with new layout sub-scopes
-- [ ] E9b. `docs/layout-actions.md` shifts from spec to reality (currently still describes the planned model)
+- [x] E9b. `docs/layout-actions.md` Phase E3 section: fixture infra + scope-race timing helpers
+- [x] E10. **Test content fixture infra** (introduced during E3): `content_test/cheatsheets/`, `OH_MY_REFCARDZ_CONTENT_ROOT` env var, `.next-test/` build dir, dedicated Playwright webServer on port 3100. Validates via `npm run validate:cheatsheets`. See `docs/architecture.md#test-content-fixtures`.
+
+> Note: introducing the dedicated fixture infrastructure breaks all
+> other E2E suites that target production slugs (`git`, `diff-so-fancy`,
+> etc.). A follow-up phase migrates each suite to its own forged
+> fixture under `content_test/`. Tracked separately.
+
+## Phase E-bis — Migrate remaining E2E suites to forged fixtures
+
+- [ ] Eb1. `cheatsheet-navigation.spec.ts` — needs a sheet with copyable commands, items with details, placeholders, and multi-copyable items
+- [ ] Eb2. `heading-nav-layout.spec.ts` — needs a sheet with ≥3 headings reorderable in the layout
+- [ ] Eb3. `layout-reset.spec.ts` — needs a draggable layout
+- [ ] Eb4. `layout-persistence.spec.ts` — needs a draggable layout + reload semantics
+- [ ] Eb5. `south-fallback.spec.ts` — needs a layout with a south-wrap scenario
+- [ ] Eb6. `home-navigation.spec.ts` — needs ≥4 cards on the home page (multiple cheatsheets in `content_test/`)
+- [ ] Eb7. `settings-keybindings.spec.ts` — validate against new content tree
 
 ## Phase F — UI help & settings
 

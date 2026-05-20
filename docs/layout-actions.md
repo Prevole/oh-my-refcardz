@@ -262,4 +262,15 @@ The existing `syncLayoutToDev` function will be refactored to remove the auto-de
 - **Closest-to-cursor initial focus** — When entering layout mode (`Ctrl+M`), the focused block is the one whose viewport-rect center is closest to the mouse pointer. Fallback: viewport center if no `mousemove` has been observed (pure-keyboard session). Final fallback: `pickTopLeftBlock` when no block has a rendered rect.
 - **Viewport follow** — Changing focus (`h/j/k/l`) or moving/resizing the focused block triggers `scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" })` so the block stays visible even on long sheets.
 
+### E2E coverage (Phase E3)
+
+`e2e/keyboard-layout.spec.ts` exercises the full Zellij-style modal contract against a dedicated fixture at `content_test/cheatsheets/00-layout/layout-e2e.yaml` (one heading + a 2x2 card grid with ~60 free rows south). The fixture is served by Playwright's `webServer` via the `OH_MY_REFCARDZ_CONTENT_ROOT` environment variable; see [`architecture.md`](./architecture.md#test-content-fixtures).
+
+Two timing helpers live in the spec to defeat React-scope race conditions:
+
+- `switchSubMode(page, key, expected)` — presses `n`/`m`/`r`, asserts the pill's `data-mode` attribute, then yields one event-loop tick so the underlying keyboard scope dispatcher commits the new context before the next press.
+- `enterLayoutMode(page)` — same yield after `Control+m`, so navigation keystrokes are not handled by the previous scope.
+
+Without these yields, fast Playwright keypresses can outrun React state commits and hit the previous scope (e.g. a `j` after `m` would be handled as `nav-south` instead of `move-south`).
+
 See [`layout-engine.md`](./layout-engine.md) for the engine contract and resolution pipeline.

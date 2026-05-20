@@ -191,7 +191,17 @@ export const categoryMetaSchema = z.object({
   description: z.string().min(1),
 });
 
-const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
+const CONTENT_ROOT_ENV = "OH_MY_REFCARDZ_CONTENT_ROOT";
+
+function resolveContentDirectory(): string {
+  const override = process.env[CONTENT_ROOT_ENV];
+  if (override && override.length > 0) {
+    return path.isAbsolute(override) ? override : path.join(process.cwd(), override);
+  }
+  return path.join(process.cwd(), "content", "cheatsheets");
+}
+
+const contentDirectory = resolveContentDirectory();
 
 const CATEGORY_META_FILES = new Set(["meta.yaml", "_meta.yaml"]);
 

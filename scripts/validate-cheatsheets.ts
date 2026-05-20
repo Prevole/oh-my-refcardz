@@ -24,20 +24,25 @@ async function collectYamlFiles(directory: string): Promise<string[]> {
   return files;
 }
 
-async function main() {
-  const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
-  const yamlFiles = await collectYamlFiles(contentDirectory);
-
-  if (yamlFiles.length === 0) {
-    throw new Error("No .yaml cheatsheets found in content/cheatsheets.");
+async function validateRoot(root: string): Promise<number> {
+  let yamlFiles: string[];
+  try {
+    yamlFiles = await collectYamlFiles(root);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return 0;
+    }
+    throw error;
   }
+
+  if (yamlFiles.length === 0) return 0;
 
   const errors: string[] = [];
 
   for (const file of yamlFiles) {
     const raw = await fs.readFile(file, "utf8");
     const parsedYaml = load(raw);
-    const relativeFile = path.relative(contentDirectory, file);
+    const relativeFile = path.relative(root, file);
 
     if (CATEGORY_META_FILES.has(path.basename(file))) {
       const parsed = categoryMetaSchema.safeParse(parsedYaml);
@@ -61,10 +66,32 @@ async function main() {
   }
 
   if (errors.length > 0) {
-    throw new Error(`Cheatsheet validation failed:\n- ${errors.join("\n- ")}`);
+    throw new Error(`Cheatsheet validation failed in ${root}:\n- ${errors.join("\n- ")}`);
   }
 
-  process.stdout.write(`Validated ${yamlFiles.length} cheatsheets successfully.\n`);
+  return yamlFiles.length;
+}
+
+async function main() {
+  const roots = [
+    path.join(process.cwd(), "content", "cheatsheets"),
+    path.join(process.cwd(), "content_test", "cheatsheets"),
+  ];
+
+  let total = 0;
+  for (const root of roots) {
+    const count = await validateRoot(root);
+    if (count > 0) {
+      process.stdout.write(
+        `Validated ${count} cheatsheets in ${path.relative(process.cwd(), root)}.\n`,
+      );
+    }
+    total += count;
+  }
+
+  if (total === 0) {
+    throw new Error("No .yaml cheatsheets found in any content root.");
+  }
 }
 
 main().catch((error) => {

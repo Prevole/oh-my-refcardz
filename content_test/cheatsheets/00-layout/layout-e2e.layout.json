@@ -1,0 +1,27 @@
+[
+  {
+    "id": "section",
+    "kind": "heading",
+    "position": { "x": 0, "y": 0, "w": 36, "h": 2 }
+  },
+  {
+    "id": "top-left",
+    "kind": "card",
+    "position": { "x": 0, "y": 2, "w": 18, "h": 6 }
+  },
+  {
+    "id": "top-right",
+    "kind": "card",
+    "position": { "x": 18, "y": 2, "w": 18, "h": 6 }
+  },
+  {
+    "id": "bottom-left",
+    "kind": "card",
+    "position": { "x": 0, "y": 8, "w": 18, "h": 6 }
+  },
+  {
+    "id": "bottom-right",
+    "kind": "card",
+    "position": { "x": 18, "y": 8, "w": 18, "h": 6 }
+  }
+]

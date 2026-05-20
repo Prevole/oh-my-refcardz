@@ -279,6 +279,30 @@ Run: `npm run test`
 
 Run: `npm run test:e2e`
 
+#### Test content fixtures
+
+E2E specs run against a dedicated content tree at
+`content_test/cheatsheets/` instead of the production `content/cheatsheets/`.
+This isolation guarantees deterministic test inputs: layouts, block ids
+and dimensions are forged for the specific scenarios under test rather
+than coupled to the evolving production cheatsheets.
+
+The switch is driven by the `OH_MY_REFCARDZ_CONTENT_ROOT` environment
+variable, read by `resolveContentDirectory()` in
+`src/lib/yaml-cheatsheets.ts`. `playwright.config.ts` sets this variable
+on its dedicated `webServer` (port `3100`, build directory `.next-test/`
+via `next.config.ts`) so that the test server stays isolated from a
+developer's `npm run dev` on port `3000`.
+
+`npm run validate:cheatsheets` validates both `content/cheatsheets/` and
+`content_test/cheatsheets/` against the Zod schema.
+
+Each E2E suite has its fixtures under `content_test/cheatsheets/`, kept
+minimal and forged to exercise specific behaviour (e.g.
+`00-layout/layout-e2e.yaml` for the modal keyboard layout mode tests:
+one heading + a 2x2 card grid with abundant south space, making
+push-south and grow-south operations deterministic).
+
 ## Performance Considerations
 
 1. **Static Generation** — Cheatsheet pages are pre-rendered at build time
