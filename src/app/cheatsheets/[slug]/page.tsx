@@ -5,6 +5,7 @@ import { SheetAccentProvider } from "@/app/cheatsheets/[slug]/sheet-accent-provi
 import { SheetHeadingNavigation } from "@/app/cheatsheets/[slug]/sheet-heading-navigation";
 import { SheetLinksProvider } from "@/components/sheets/sheet-links-context";
 import { SheetCommandsShell } from "@/components/sheets/sheet-commands-shell";
+import { LayoutSnapshotProvider } from "@/components/sheets/layout";
 import { YamlSheetRenderer } from "@/components/sheets/sheet-renderer";
 import { TechIcon } from "@/components/ui/tech-icon";
 import { SheetInlineHelp } from "@/components/help/inline-keybinding-help";
@@ -42,6 +43,7 @@ export default async function CheatSheetPage({ params }: Props) {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,#ffb70355,transparent_30%),radial-gradient(circle_at_90%_0%,#00d1b250,transparent_35%),linear-gradient(130deg,#0d1321,#111f35)]" />
       <SheetAccentProvider sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom}>
         <SheetLinksProvider knownSlugs={knownSlugs}>
+        <LayoutSnapshotProvider>
         <main className="relative z-10 mx-auto max-w-7xl">
           <SheetInlineHelp />
           <div className="mt-16 flex items-center gap-4">
@@ -62,6 +64,7 @@ export default async function CheatSheetPage({ params }: Props) {
           </div>
         </main>
         <SheetHeadingNavigation sections={headings} sheetColor={sheet.color} sheetColorFrom={sheet.colorFrom} />
+        </LayoutSnapshotProvider>
         </SheetLinksProvider>
       </SheetAccentProvider>
     </div>

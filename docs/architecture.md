@@ -77,6 +77,7 @@ Entry renderers (command-entry, text-entry, etc.)
 | Keyboard scope | React state | `KeyboardContextProvider` |
 | Sheet accent color | React context | `SheetAccentProvider` |
 | Developer mode toggle | localStorage (`omr.developer-mode`) | `useDeveloperMode` hook |
+| Live layout snapshot (positions) | React context | `LayoutSnapshotProvider` |
 
 ## Key Systems
 
@@ -111,6 +112,12 @@ See: [cheatsheet-schema.md](./cheatsheet-schema.md)
 Grid layout solver with deterministic collision resolution (move, resize, push, shrink, wrap).
 
 See: [layout-engine.md](./layout-engine.md) and [layout-actions.md](./layout-actions.md)
+
+### Layout Snapshot
+
+A read-only mirror of the live block positions, exposed through `LayoutSnapshotProvider` (mounted in the cheatsheet page) and consumed via `useLayoutSnapshot()`. The renderer publishes a new snapshot whenever the editor commits a layout change (initial hydration, user edits, reset). Consumers that need to follow the on-screen order — most notably the heading navigation sidebar — sort their items with `sortByLayoutOrder` (stable, `(y, x)` ascending) instead of relying on YAML declaration order.
+
+Source: `src/components/sheets/layout/layout-snapshot.tsx`.
 
 ### Developer Mode
 

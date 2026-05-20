@@ -29,6 +29,7 @@ import {
   useCardDragV2,
   useCardResizeV2,
   useCardKeyboardV2,
+  usePublishLayoutSnapshot,
   BlockRenderer,
   FALLBACK_METRICS,
   getBlockConstraintsV2,
@@ -74,6 +75,15 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blockLayouts]);
+
+  // Publish the live committed layout to the LayoutSnapshotProvider so that
+  // siblings (heading navigation today) can sort against the current
+  // positions. Driven from `committedBlocks` rather than the `onCommit`
+  // callback so that hydration and reset both flow through one branch.
+  const publishLayoutSnapshot = usePublishLayoutSnapshot();
+  useEffect(() => {
+    publishLayoutSnapshot(editor.committedBlocks);
+  }, [editor.committedBlocks, publishLayoutSnapshot]);
 
   // -- Drag ----------------------------------------------------------------
   const handleDragStart = useCallback(

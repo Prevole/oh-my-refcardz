@@ -55,3 +55,13 @@ export type { UseCardResizeV2Result, ResizeStateV2, ResizeMove } from "./use-car
 
 export { useCardKeyboardV2 } from "./use-card-keyboard-v2";
 export type { UseCardKeyboardV2Result, CardFocusV2 } from "./use-card-keyboard-v2";
+
+// Layout snapshot: publishes the live layout for sibling consumers
+// (heading navigation today; possibly more in the future).
+export {
+  LayoutSnapshotProvider,
+  useLayoutSnapshot,
+  usePublishLayoutSnapshot,
+  sortByLayoutOrder,
+} from "./layout-snapshot";
+export type { LayoutSnapshot } from "./layout-snapshot";

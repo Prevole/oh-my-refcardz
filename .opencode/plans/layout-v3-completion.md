@@ -56,7 +56,7 @@ canonical roadmap is here.
   - `npm run test:e2e` — **41 passed / 9 skipped / 2 failed** (vs 37/0/29 in the Phase A baseline). The 2 remaining failures are not layout-related (help modal `?`/`Escape`); see parking.
   - `npm run build` OK.
   - `npm run validate:cheatsheets` OK (10 cheatsheets).
-- [ ] B5. Commit Phase B (awaiting user OK)
+- [x] B5. Commit Phase B — `87de50f` ("test(layout): restore E2E baseline and lock engine guarantees (Phase B)")
 
 ## Phase C — Heading nav (bug 2.1)
 
