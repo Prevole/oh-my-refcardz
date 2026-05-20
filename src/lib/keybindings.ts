@@ -278,22 +278,22 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.LAYOUT_NAV_LEFT,
       label: "Focus card to the left",
-      combos: [key("h"), key("ArrowLeft")],
+      combos: [key("ArrowLeft"), key("h")],
     },
     {
       id: ACTION_IDS.LAYOUT_NAV_RIGHT,
       label: "Focus card to the right",
-      combos: [key("l"), key("ArrowRight")],
+      combos: [key("ArrowRight"), key("l")],
     },
     {
       id: ACTION_IDS.LAYOUT_NAV_UP,
       label: "Focus card above",
-      combos: [key("k"), key("ArrowUp")],
+      combos: [key("ArrowUp"), key("k")],
     },
     {
       id: ACTION_IDS.LAYOUT_NAV_DOWN,
       label: "Focus card below",
-      combos: [key("j"), key("ArrowDown")],
+      combos: [key("ArrowDown"), key("j")],
     },
     {
       id: ACTION_IDS.LAYOUT_NAV_TO_MOVE,
@@ -316,42 +316,42 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.LAYOUT_MOVE_LEFT,
       label: "Move card left",
-      combos: [key("h"), key("ArrowLeft")],
+      combos: [key("ArrowLeft"), key("h")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_RIGHT,
       label: "Move card right",
-      combos: [key("l"), key("ArrowRight")],
+      combos: [key("ArrowRight"), key("l")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_UP,
       label: "Move card up",
-      combos: [key("k"), key("ArrowUp")],
+      combos: [key("ArrowUp"), key("k")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_DOWN,
       label: "Move card down",
-      combos: [key("j"), key("ArrowDown")],
+      combos: [key("ArrowDown"), key("j")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_STRICT_LEFT,
       label: "Move card left (strict)",
-      combos: [combo("h", "alt"), combo("ArrowLeft", "alt")],
+      combos: [combo("ArrowLeft", "alt"), combo("h", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT,
       label: "Move card right (strict)",
-      combos: [combo("l", "alt"), combo("ArrowRight", "alt")],
+      combos: [combo("ArrowRight", "alt"), combo("l", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_STRICT_UP,
       label: "Move card up (strict)",
-      combos: [combo("k", "alt"), combo("ArrowUp", "alt")],
+      combos: [combo("ArrowUp", "alt"), combo("k", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN,
       label: "Move card down (strict)",
-      combos: [combo("j", "alt"), combo("ArrowDown", "alt")],
+      combos: [combo("ArrowDown", "alt"), combo("j", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_MOVE_TO_NAV,
@@ -374,102 +374,102 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT,
       label: "Grow card to the left",
-      combos: [key("h"), key("ArrowLeft")],
+      combos: [key("ArrowLeft"), key("h")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_RIGHT,
       label: "Grow card to the right",
-      combos: [key("l"), key("ArrowRight")],
+      combos: [key("ArrowRight"), key("l")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_UP,
       label: "Grow card upward",
-      combos: [key("k"), key("ArrowUp")],
+      combos: [key("ArrowUp"), key("k")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_DOWN,
       label: "Grow card downward",
-      combos: [key("j"), key("ArrowDown")],
+      combos: [key("ArrowDown"), key("j")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT,
       label: "Shrink card from the left",
-      combos: [combo("H", "shift"), combo("ArrowLeft", "shift")],
+      combos: [combo("ArrowLeft", "shift"), combo("H", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT,
       label: "Shrink card from the right",
-      combos: [combo("L", "shift"), combo("ArrowRight", "shift")],
+      combos: [combo("ArrowRight", "shift"), combo("L", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP,
       label: "Shrink card from the top",
-      combos: [combo("K", "shift"), combo("ArrowUp", "shift")],
+      combos: [combo("ArrowUp", "shift"), combo("K", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN,
       label: "Shrink card from the bottom",
-      combos: [combo("J", "shift"), combo("ArrowDown", "shift")],
+      combos: [combo("ArrowDown", "shift"), combo("J", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_LEFT,
       label: "Grow card left (strict)",
-      combos: [combo("h", "alt"), combo("ArrowLeft", "alt")],
+      combos: [combo("ArrowLeft", "alt"), combo("h", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_RIGHT,
       label: "Grow card right (strict)",
-      combos: [combo("l", "alt"), combo("ArrowRight", "alt")],
+      combos: [combo("ArrowRight", "alt"), combo("l", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_UP,
       label: "Grow card up (strict)",
-      combos: [combo("k", "alt"), combo("ArrowUp", "alt")],
+      combos: [combo("ArrowUp", "alt"), combo("k", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_DOWN,
       label: "Grow card down (strict)",
-      combos: [combo("j", "alt"), combo("ArrowDown", "alt")],
+      combos: [combo("ArrowDown", "alt"), combo("j", "alt")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_LEFT,
       label: "Shrink card left (strict)",
-      combos: [combo("H", "alt", "shift"), combo("ArrowLeft", "alt", "shift")],
+      combos: [combo("ArrowLeft", "alt", "shift"), combo("H", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_RIGHT,
       label: "Shrink card right (strict)",
-      combos: [combo("L", "alt", "shift"), combo("ArrowRight", "alt", "shift")],
+      combos: [combo("ArrowRight", "alt", "shift"), combo("L", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP,
       label: "Shrink card up (strict)",
-      combos: [combo("K", "alt", "shift"), combo("ArrowUp", "alt", "shift")],
+      combos: [combo("ArrowUp", "alt", "shift"), combo("K", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_DOWN,
       label: "Shrink card down (strict)",
-      combos: [combo("J", "alt", "shift"), combo("ArrowDown", "alt", "shift")],
+      combos: [combo("ArrowDown", "alt", "shift"), combo("J", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_LEFT,
       label: "Shrink card left (compact)",
-      combos: [combo("H", "ctrl", "shift"), combo("ArrowLeft", "ctrl", "shift")],
+      combos: [combo("ArrowLeft", "ctrl", "shift"), combo("H", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT,
       label: "Shrink card right (compact)",
-      combos: [combo("L", "ctrl", "shift"), combo("ArrowRight", "ctrl", "shift")],
+      combos: [combo("ArrowRight", "ctrl", "shift"), combo("L", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP,
       label: "Shrink card up (compact)",
-      combos: [combo("K", "ctrl", "shift"), combo("ArrowUp", "ctrl", "shift")],
+      combos: [combo("ArrowUp", "ctrl", "shift"), combo("K", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
       label: "Shrink card down (compact)",
-      combos: [combo("J", "ctrl", "shift"), combo("ArrowDown", "ctrl", "shift")],
+      combos: [combo("ArrowDown", "ctrl", "shift"), combo("J", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_TO_NAV,
@@ -520,12 +520,12 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.DEV_LOGS_CURSOR_DOWN,
       label: "Cursor down",
-      combos: [key("j"), key("ArrowDown")],
+      combos: [key("ArrowDown"), key("j")],
     },
     {
       id: ACTION_IDS.DEV_LOGS_CURSOR_UP,
       label: "Cursor up",
-      combos: [key("k"), key("ArrowUp")],
+      combos: [key("ArrowUp"), key("k")],
     },
     {
       id: ACTION_IDS.DEV_LOGS_COPY_FILENAME,
@@ -558,22 +558,22 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.DEV_AXES_CURSOR_LEFT,
       label: "Cursor left",
-      combos: [key("h"), key("ArrowLeft")],
+      combos: [key("ArrowLeft"), key("h")],
     },
     {
       id: ACTION_IDS.DEV_AXES_CURSOR_RIGHT,
       label: "Cursor right",
-      combos: [key("l"), key("ArrowRight")],
+      combos: [key("ArrowRight"), key("l")],
     },
     {
       id: ACTION_IDS.DEV_AXES_CURSOR_UP,
       label: "Cursor up",
-      combos: [key("k"), key("ArrowUp")],
+      combos: [key("ArrowUp"), key("k")],
     },
     {
       id: ACTION_IDS.DEV_AXES_CURSOR_DOWN,
       label: "Cursor down",
-      combos: [key("j"), key("ArrowDown")],
+      combos: [key("ArrowDown"), key("j")],
     },
     {
       id: ACTION_IDS.DEV_AXES_TOGGLE_COL,
