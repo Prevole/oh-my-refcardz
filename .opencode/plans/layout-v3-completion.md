@@ -30,17 +30,33 @@ canonical roadmap is here.
 
 ## Phase A — Audit + plan refresh
 
-- [ ] A1. Run `npm run test` and capture pass/fail state
-- [ ] A2. Run `npm run test:e2e` and capture pass/fail state
-- [ ] A3. Run coverage report for the engine (`npm run test:coverage`)
-- [ ] A4. Cross-reference bugfix commits (`143ef35`, `b415f5b`, `cd7d62e`, `cdc6a01`, `341b584`) with the bug numbers in `layout-v2-bugfixes.md`
-- [ ] A5. Update `layout-v2-bugfixes.md` to reflect actual status (mark Phase 1 done items, align Phase 3 on Zellij, mark Phase 4.2/4.3 deferred, add cross-link to this document)
+- [x] A1. Run `npm run test` and capture pass/fail state — **38 files / 792 tests green**
+- [x] A2. Run `npm run test:e2e` and capture pass/fail state — **37 passed / 29 failed**
+  - 17 fails in `keyboard-layout.spec.ts` (inert v2 keyboard hook — expected)
+  - 11 fails in `layout-persistence.spec.ts` (blocked on `[class*='layoutToolbar']` selector — the legacy toolbar was removed during dev-mode refactor; selector must be updated)
+  - 1 transient fail in `cheatsheet-navigation.spec.ts:25` (vim j/k) — passed when re-run in isolation; mark as flaky, re-check in B
+- [x] A3. Run coverage report — engine **99.10% lines / 93.49% branches**; `step.ts` has minor branch gaps at lines 583-584 and 607-609 (re-check in G2)
+- [x] A4. Cross-reference bugfix commits with bug numbers — see updated `layout-v2-bugfixes.md`
+  - `143ef35`, `b415f5b`, `cd7d62e`, `cdc6a01`, `341b584` → cover bugs 1.1 / 1.2 / 1.3 / 1.5 at engine level
+  - Bug 1.4 (UI freeze on resize limit) still to verify in Phase B
+- [x] A5. Update `layout-v2-bugfixes.md` to reflect actual status — done
 
 ## Phase B — Étape 6 V2
 
-- [ ] B1. E2E triage: classify each failing layout test (fix, skip with justification, delete)
-- [ ] B2. Add south-fallback E2E scenario
-- [ ] B3. Full validation: lint, test, test:e2e, build, validate:cheatsheets
+- [x] B1. E2E triage: classify each failing layout test (fix, skip with justification, delete)
+  - Added `layoutReady` prop to `SheetGrid` and a `data-layout-ready` data-attribute as the new readiness signal; wired from `SheetRenderer` (`hydrated`).
+  - Replaced 13 `[class*='layoutToolbar']` selectors in `e2e/layout-persistence.spec.ts` with `[data-sheet-grid][data-layout-ready='true']`.
+  - In `layout-persistence.spec.ts`: 1 test reformulated (default layout assertion uses `data-layout-ready`), 8 tests skipped with annotation pointing to Phase E (they depend on the inert V2 keyboard hook).
+  - `keyboard-layout.spec.ts` reduced to a single `test.describe.skip` placeholder annotated for Phase E rewrite (the whole file targeted the V1 flat keyboard model).
+- [x] B2. Add south-fallback E2E scenario — new `e2e/south-fallback.spec.ts` (2 tests): drag-induced south wrap is observable in the DOM, and the wrapped layout survives a page reload byte-for-byte.
+- [x] B3. Verify bug 1.4 (UI freeze on resize limit) — engine returns the largest partial application by design (snapshot + recalc from delta); UI consequently freezes at the last valid state with no reset. Two new integration tests in `engine.integration.test.ts` ("Engine integration: resize against grid limit") cover both partial application and total rejection paths.
+- [x] B4. Full validation: lint, test, test:e2e, build, validate:cheatsheets
+  - `npm run lint` clean.
+  - `npm run test` — 794/794 unit tests passing (8 integration tests in `engine.integration.test.ts` → 10 with the bug 1.4 additions).
+  - `npm run test:e2e` — **41 passed / 9 skipped / 2 failed** (vs 37/0/29 in the Phase A baseline). The 2 remaining failures are not layout-related (help modal `?`/`Escape`); see parking.
+  - `npm run build` OK.
+  - `npm run validate:cheatsheets` OK (10 cheatsheets).
+- [ ] B5. Commit Phase B (awaiting user OK)
 
 ## Phase C — Heading nav (bug 2.1)
 
@@ -116,6 +132,14 @@ canonical roadmap is here.
 - **Vim auto-save**: drag operations can produce 60+ writes/sec. Phase D evaluates whether to debounce during active drag (without introducing a commit/preview split in persistence).
 
 ## Open questions / parking
+
+- **Layout overlay selector** : `layout-persistence.spec.ts` E2Es wait on `[class*='layoutToolbar']`. **Resolved in B1** — replaced by `[data-sheet-grid][data-layout-ready='true']` (option b from the decision matrix). The grid emits `data-layout-ready` once `useLayoutPersistence` reports `hydrated`. Dev-mode-independent.
+- **Flaky vim j/k test** : `cheatsheet-navigation.spec.ts:25` failed once in the full suite but passed in isolation. **Re-verified in B4: now passes consistently** (the noisy environment from the broken layout tests was the likely culprit). Will keep an eye on it in subsequent phases.
+- **Help modal E2E fails (2 tests, surfaced in B4)** :
+  - `cheatsheet-navigation.spec.ts:109` (`opens help modal with Shift+/`) — fails even in isolation. The combo is `key("?")` (portable, no `Shift` modifier in the keybinding); on a US layout `page.keyboard.press("?")` produces `event.key === "?"`. Suspect: dispatcher ordering between the new `dispatchKeyEvent` and the legacy `useScopedKeyboardHandler` used by `<SheetHelpModal />`, or a missing `useAction` binding for `ACTION_IDS.TOGGLE_HELP` outside the home page.
+  - `home-navigation.spec.ts:122` (`closes help modal with Escape`) — passes in isolation, fails in suite. Suggests cross-test state bleed or a race in modal teardown.
+  - **Decision (B4)** : these failures are NOT layout-related and the help/settings UI is the explicit subject of Phase F. Document here, do not fix in Phase B. Phase F (and the keyboard refactor in Phase E that eliminates legacy/registry coexistence) will resolve them naturally; if not, a focused fix lands at the start of Phase F.
+- **`step.ts` branch coverage** : lines 583-584 and 607-609 not exercised. Likely defensive guards; either add `/* c8 ignore */` with justification or craft a covering test in Phase G.
 
 (decisions deferred during execution land here)
 

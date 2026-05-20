@@ -338,7 +338,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         />
       ) : null}
 
-      <SheetGrid editMode={isLayoutActive} debugMode={debugEnabled} onMetricsChange={updateGridMetrics}>
+      <SheetGrid editMode={isLayoutActive} debugMode={debugEnabled} layoutReady={hydrated} onMetricsChange={updateGridMetrics}>
         {debugEnabled ? <DevAxesOverlay ref={axesRef} maxRow={debugMaxRow} /> : null}
         {blocks.map((block) => {
           const layoutBlock = currentBlocksById.get(block.id);

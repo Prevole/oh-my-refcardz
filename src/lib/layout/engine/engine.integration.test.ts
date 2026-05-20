@@ -780,3 +780,60 @@ describe("integration — shrink absorption before wrap", () => {
     expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
   });
 });
+
+// -----------------------------------------------------------------------------
+// Scenario: resize freezes at the last valid state when the limit is reached.
+//
+// This is the engine-level contract behind layout-v2 bug 1.4 ("UI freeze on
+// resize limit"). Driven from the snapshot at every pointer move, the UI
+// relies on the engine returning the largest partial application possible
+// when the cumulative delta cannot be honoured fully.
+//
+//   - A single 4-wide block at x=0. We try to resize east by +50 cells.
+//   - The grid is 36 wide; the block tops out at w = 36 (x+w = 36).
+//   - The first 32 east steps must succeed; the remaining 18 are rejected.
+//   - The returned blocks must reflect the largest valid state (w = 36),
+//     not the initial state, not a partial-then-reset.
+// -----------------------------------------------------------------------------
+
+describe("Engine integration: resize against grid limit", () => {
+  it("freezes the block at the last valid width and reports partial application", () => {
+    const blocks: LayoutBlock[] = [block("solo", 0, 0, 4, 2)];
+
+    const op: Operation = {
+      kind: "resize",
+      blockId: "solo",
+      edge: "east",
+      delta: 50,
+    };
+
+    const result = applyOperation(blocks, op, makeOptions(blocks));
+
+    expect(result.accepted).toBe(true);
+    expect(result.appliedDelta).toBe(32);
+    expect(result.rejected).toBeUndefined();
+
+    const final = result.blocks.find((b) => b.id === "solo")!;
+    expect(final.position).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+  });
+
+  it("returns the initial layout untouched when no step can be applied", () => {
+    const blocks: LayoutBlock[] = [block("solo", 0, 0, 36, 2)];
+
+    const op: Operation = {
+      kind: "resize",
+      blockId: "solo",
+      edge: "east",
+      delta: 5,
+    };
+
+    const result = applyOperation(blocks, op, makeOptions(blocks));
+
+    expect(result.accepted).toBe(false);
+    expect(result.appliedDelta).toBe(0);
+    expect(result.rejected).toBeDefined();
+
+    const final = result.blocks.find((b) => b.id === "solo")!;
+    expect(final.position).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+  });
+});
