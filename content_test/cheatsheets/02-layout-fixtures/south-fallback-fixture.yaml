@@ -1,0 +1,62 @@
+title: South Fallback Fixture
+summary: Synthetic cheatsheet used by the south-fallback E2E. Several cards
+  arranged on the same row so dragging one onto its neighbours triggers the
+  engine's south-wrap collision strategy.
+color: "#EF4444"
+
+blocks:
+  - heading:
+      id: section
+      title: Section
+
+  - card:
+      id: card-a
+      title: Card A
+      items:
+        - entries:
+            - command: south-fixture-a-1
+        - entries:
+            - command: south-fixture-a-2
+        - entries:
+            - command: south-fixture-a-3
+        - entries:
+            - command: south-fixture-a-4
+
+  - card:
+      id: card-b
+      title: Card B
+      items:
+        - entries:
+            - command: south-fixture-b-1
+        - entries:
+            - command: south-fixture-b-2
+        - entries:
+            - command: south-fixture-b-3
+        - entries:
+            - command: south-fixture-b-4
+
+  - card:
+      id: card-c
+      title: Card C
+      items:
+        - entries:
+            - command: south-fixture-c-1
+        - entries:
+            - command: south-fixture-c-2
+        - entries:
+            - command: south-fixture-c-3
+        - entries:
+            - command: south-fixture-c-4
+
+  - card:
+      id: card-d
+      title: Card D
+      items:
+        - entries:
+            - command: south-fixture-d-1
+        - entries:
+            - command: south-fixture-d-2
+        - entries:
+            - command: south-fixture-d-3
+        - entries:
+            - command: south-fixture-d-4

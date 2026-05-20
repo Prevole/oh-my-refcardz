@@ -8,7 +8,7 @@ import { test, expect, type Page } from "@playwright/test";
 //   3. Clicking the button (or pressing Shift+R) restores the original
 //      layout, clears the localStorage key, and hides the button.
 
-const SHEET_SLUG = "diff-so-fancy";
+const SHEET_SLUG = "layout-reset-fixture";
 const STORAGE_KEY = `sheet-layout:${SHEET_SLUG}`;
 
 async function gotoSheetReady(page: Page) {
@@ -42,14 +42,14 @@ async function seedModifiedLayout(page: Page) {
       stripPrefix(a.getAttribute("data-layout-block-id") ?? "")
     );
 
-    // Force a non-default layout: put the daily-review heading at the
-    // very top and basics further down.
+    // Force a non-default layout: put Section B at the very top and
+    // Section A further down.
     const layout: Record<string, { colStart: number; rowStart: number; colSpan: number; rowSpan: number }> = {
-      "daily-review-flow": { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-      "common-commands": { colStart: 1, rowStart: 3, colSpan: 36, rowSpan: 14 },
-      basics: { colStart: 1, rowStart: 17, colSpan: 36, rowSpan: 2 },
-      "what-it-is": { colStart: 1, rowStart: 19, colSpan: 18, rowSpan: 14 },
-      pager: { colStart: 19, rowStart: 19, colSpan: 18, rowSpan: 14 },
+      "section-b": { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      "card-b1": { colStart: 1, rowStart: 3, colSpan: 18, rowSpan: 6 },
+      "card-b2": { colStart: 19, rowStart: 3, colSpan: 18, rowSpan: 6 },
+      "section-a": { colStart: 1, rowStart: 9, colSpan: 36, rowSpan: 2 },
+      "card-a1": { colStart: 1, rowStart: 11, colSpan: 36, rowSpan: 6 },
     };
 
     const blocks = orderedRawIds.map(({ id, kind }) => ({

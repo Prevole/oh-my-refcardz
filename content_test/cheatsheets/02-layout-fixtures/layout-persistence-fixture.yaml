@@ -1,0 +1,113 @@
+title: Layout Persistence Fixture
+summary: Synthetic cheatsheet used by E2E tests covering drag-and-drop persistence
+  and auto-scroll near viewport edges. The layout is intentionally tall (several
+  stacked cards) so the page can be scrolled by ~300px to exercise the auto-scroll
+  trigger when dragging near the top edge of the viewport.
+color: "#10B981"
+
+blocks:
+  - heading:
+      id: section
+      title: Section
+
+  - card:
+      id: card-one
+      title: Card One
+      items:
+        - entries:
+            - command: persistence-fixture-one-a
+        - entries:
+            - command: persistence-fixture-one-b
+        - entries:
+            - command: persistence-fixture-one-c
+        - entries:
+            - command: persistence-fixture-one-d
+        - entries:
+            - command: persistence-fixture-one-e
+        - entries:
+            - command: persistence-fixture-one-f
+
+  - card:
+      id: card-two
+      title: Card Two
+      items:
+        - entries:
+            - command: persistence-fixture-two-a
+        - entries:
+            - command: persistence-fixture-two-b
+        - entries:
+            - command: persistence-fixture-two-c
+        - entries:
+            - command: persistence-fixture-two-d
+        - entries:
+            - command: persistence-fixture-two-e
+        - entries:
+            - command: persistence-fixture-two-f
+
+  - card:
+      id: card-three
+      title: Card Three
+      items:
+        - entries:
+            - command: persistence-fixture-three-a
+        - entries:
+            - command: persistence-fixture-three-b
+        - entries:
+            - command: persistence-fixture-three-c
+        - entries:
+            - command: persistence-fixture-three-d
+        - entries:
+            - command: persistence-fixture-three-e
+        - entries:
+            - command: persistence-fixture-three-f
+
+  - card:
+      id: card-four
+      title: Card Four
+      items:
+        - entries:
+            - command: persistence-fixture-four-a
+        - entries:
+            - command: persistence-fixture-four-b
+        - entries:
+            - command: persistence-fixture-four-c
+        - entries:
+            - command: persistence-fixture-four-d
+        - entries:
+            - command: persistence-fixture-four-e
+        - entries:
+            - command: persistence-fixture-four-f
+
+  - card:
+      id: card-five
+      title: Card Five
+      items:
+        - entries:
+            - command: persistence-fixture-five-a
+        - entries:
+            - command: persistence-fixture-five-b
+        - entries:
+            - command: persistence-fixture-five-c
+        - entries:
+            - command: persistence-fixture-five-d
+        - entries:
+            - command: persistence-fixture-five-e
+        - entries:
+            - command: persistence-fixture-five-f
+
+  - card:
+      id: card-six
+      title: Card Six
+      items:
+        - entries:
+            - command: persistence-fixture-six-a
+        - entries:
+            - command: persistence-fixture-six-b
+        - entries:
+            - command: persistence-fixture-six-c
+        - entries:
+            - command: persistence-fixture-six-d
+        - entries:
+            - command: persistence-fixture-six-e
+        - entries:
+            - command: persistence-fixture-six-f

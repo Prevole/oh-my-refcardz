@@ -1,0 +1,68 @@
+title: Navigation Fixture
+summary: Synthetic cheatsheet used by E2E tests to exercise keyboard navigation,
+  copy actions, details modal and placeholder prompts. Contains a variety of
+  item shapes (simple commands, multi-copyable items, items with details, items
+  with placeholders) plus enough vertical content to enable scroll-based tests.
+color: "#3B82F6"
+
+blocks:
+  - heading:
+      id: basics
+      title: Basics
+
+  - card:
+      id: simple-commands
+      title: Simple Commands
+      items:
+        - entries:
+            - command: nav-fixture-cmd-one
+        - entries:
+            - command: nav-fixture-cmd-two
+        - entries:
+            - command: nav-fixture-cmd-three
+        - entries:
+            - command: nav-fixture-cmd-four
+
+  - card:
+      id: with-details
+      title: Commands With Details
+      items:
+        - entries:
+            - command: nav-fixture-detailed
+          detailedEntries:
+            - text: This entry has detailed information shown in the modal.
+            - commandExample: nav-fixture-detailed --verbose
+        - entries:
+            - command: nav-fixture-also-detailed
+          detailedEntries:
+            - text: A second detailed entry used as a fallback during navigation.
+            - commandExample: nav-fixture-also-detailed --help
+
+  - heading:
+      id: advanced
+      title: Advanced
+
+  - card:
+      id: multi-copyables
+      title: Multi-Copyable Items
+      items:
+        - entries:
+            - alias:
+                content: "nav (a|al|ali)"
+                copy: nav a
+            - command: nav-fixture-multi-primary
+            - commandExample: nav-fixture-multi-primary --flag
+        - entries:
+            - command: nav-fixture-multi-secondary-one
+            - command: nav-fixture-multi-secondary-two
+
+  - card:
+      id: placeholders
+      title: Commands With Placeholders
+      items:
+        - entries:
+            - command: nav-fixture-branch <branch name>
+        - entries:
+            - command: nav-fixture-tag <tag>
+        - entries:
+            - command: nav-fixture-multi <source> <target>

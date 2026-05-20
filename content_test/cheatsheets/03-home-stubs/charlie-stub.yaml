@@ -1,0 +1,15 @@
+title: Charlie Stub
+summary: Placeholder cheatsheet used to populate the home page hex grid for E2E tests.
+color: "#14B8A6"
+
+blocks:
+  - heading:
+      id: section
+      title: Section
+
+  - card:
+      id: card
+      title: Card
+      items:
+        - entries:
+            - command: charlie-stub-command

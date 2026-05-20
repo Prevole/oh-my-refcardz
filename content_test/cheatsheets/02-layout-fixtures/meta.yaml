@@ -1,0 +1,2 @@
+title: Layout Fixtures
+description: Synthetic fixtures used by E2E tests that exercise persistence, reset, and heading-navigation reordering of the layout engine.

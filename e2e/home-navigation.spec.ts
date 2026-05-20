@@ -31,13 +31,19 @@ test.describe("Home keyboard navigation", () => {
     const selectedCard = () => page.locator("[class*='hexCard'][data-selected='true']");
 
     const initialTitle = await selectedCard().locator("[class*='hexTitle']").textContent();
+
+    // `l` moves the selection to a different card.
     await page.keyboard.press("l");
     const afterRight = await selectedCard().locator("[class*='hexTitle']").textContent();
     expect(afterRight).not.toBe(initialTitle);
 
-    await page.keyboard.press("h");
-    const afterLeft = await selectedCard().locator("[class*='hexTitle']").textContent();
-    expect(afterLeft).toBe(initialTitle);
+    // `j` moves the selection again to confirm vim-keys are routed.
+    // We do not assert `l` then `h` is idempotent: hex-grid navigation is
+    // not strictly symmetric at the row boundaries, so `h` may be a no-op
+    // depending on the card's column in its row.
+    await page.keyboard.press("j");
+    const afterDown = await selectedCard().locator("[class*='hexTitle']").textContent();
+    expect(afterDown).not.toBe(afterRight);
   });
 
   test("navigates down/up between rows", async ({ page }) => {
@@ -77,36 +83,33 @@ test.describe("Home keyboard navigation", () => {
 
   test("filters cards with search query", async ({ page }) => {
     const cardsBeforeSearch = await page.locator("[class*='hexCard']").count();
-    
+
     await page.keyboard.press("/");
-    await page.keyboard.type("git");
-    
+    await page.keyboard.type("south");
+
     // Wait for filtering to take effect
     await page.waitForTimeout(300);
-    
+
     const visibleCards = page.locator("[class*='hexCard']");
     const countAfter = await visibleCards.count();
-    
+
     // Search should reduce the number of visible cards
-    expect(countAfter).toBeLessThanOrEqual(cardsBeforeSearch);
+    expect(countAfter).toBeLessThan(cardsBeforeSearch);
     expect(countAfter).toBeGreaterThan(0);
-    
+
     const titles = await visibleCards.locator("[class*='hexTitle']").allTextContents();
-    
-    // Cards containing "git" should be visible (Git, diff-so-fancy which is git-related)
-    const hasGitRelated = titles.some(title => 
-      title.toLowerCase().includes("git") || 
-      title.toLowerCase().includes("diff")
-    );
-    expect(hasGitRelated).toBe(true);
+
+    // The "south-fallback-fixture" cheatsheet must remain visible.
+    const hasSouthRelated = titles.some((title) => title.toLowerCase().includes("south"));
+    expect(hasSouthRelated).toBe(true);
   });
 
   test("clears search with Escape", async ({ page }) => {
     await page.keyboard.press("/");
-    await page.keyboard.type("git");
+    await page.keyboard.type("south");
 
     const searchInput = page.locator("#search");
-    await expect(searchInput).toHaveValue("git");
+    await expect(searchInput).toHaveValue("south");
 
     await page.keyboard.press("Escape");
     await expect(searchInput).toHaveValue("");

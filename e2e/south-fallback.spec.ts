@@ -4,9 +4,11 @@ import { test, expect, type Page } from "@playwright/test";
 // When a block is moved/resized in a way that creates an unresolvable
 // horizontal collision, the engine wraps the impacted block(s) toward
 // the south (the grid has no south edge). We exercise this user-side
-// via a generous mouse drag on a dense cheatsheet (git) and verify
-// that at least one other block ended up further south than where it
-// started.
+// via a generous mouse drag on a dense cheatsheet and verify that at
+// least one other block ended up further south than where it started.
+
+const SHEET_SLUG = "south-fallback-fixture";
+const STORAGE_KEY = `sheet-layout:${SHEET_SLUG}`;
 
 async function gotoSheetReady(page: Page, slug: string) {
   await page.goto(`/cheatsheets/${slug}`);
@@ -66,7 +68,7 @@ test.describe("Layout engine south-fallback", () => {
   });
 
   test("wraps a colliding block toward the south when dragged onto another", async ({ page }) => {
-    await gotoSheetReady(page, "git");
+    await gotoSheetReady(page, SHEET_SLUG);
 
     const initial = await readBlockSnapshots(page);
     expect(initial.length).toBeGreaterThan(2);
@@ -135,7 +137,7 @@ test.describe("Layout engine south-fallback", () => {
   });
 
   test("south-wrapped layout survives a page reload", async ({ page }) => {
-    await gotoSheetReady(page, "git");
+    await gotoSheetReady(page, SHEET_SLUG);
 
     const initial = await readBlockSnapshots(page);
 
@@ -160,7 +162,10 @@ test.describe("Layout engine south-fallback", () => {
     await page.mouse.up();
 
     await expect(async () => {
-      const stored = await page.evaluate(() => localStorage.getItem("sheet-layout:git"));
+      const stored = await page.evaluate(
+        (key) => localStorage.getItem(key),
+        STORAGE_KEY
+      );
       expect(stored).not.toBeNull();
     }).toPass({ timeout: 5000 });
 

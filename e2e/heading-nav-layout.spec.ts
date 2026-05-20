@@ -3,9 +3,9 @@ import { test, expect, type Page } from "@playwright/test";
 // Phase C E2E: the heading navigation reflects the live layout order,
 // not the YAML declaration order. Bug 2.1 from layout-v2-bugfixes.md.
 
-const SHEET_SLUG = "diff-so-fancy";
+const SHEET_SLUG = "heading-nav-fixture";
 const STORAGE_KEY = `sheet-layout:${SHEET_SLUG}`;
-const HEADING_LABELS = ["Basics", "Daily Review Flow"] as const;
+const HEADING_LABELS = ["Section A", "Section B"] as const;
 
 async function gotoSheetReady(page: Page) {
   await page.goto(`/cheatsheets/${SHEET_SLUG}`);
@@ -70,17 +70,10 @@ test.describe("Heading navigation reflects layout order", () => {
         stripPrefix(a.getAttribute("data-layout-block-id") ?? "")
       );
 
-      // Build a synthetic layout with explicit, non-overlapping rows.
-      // We place blocks in this declaration order:
-      //   1. "Daily Review Flow" heading at the top   (row 1)
-      //   2. "Common Commands" card                  (row 3)
-      //   3. "Basics" heading                        (row 17)
-      //   4. "What It Is" card                       (row 19, left half)
-      //   5. "Pager" card                            (row 19, right half)
-      //
-      // Any heading/card not listed above falls into the YAML default
-      // ordering. This is sufficient to assert that the navigation
-      // reorders to put "Daily Review Flow" first.
+      // Force Section B to appear first by placing it at row 1, then
+      // Section A further down. The exact positions of intermediate cards
+      // don't matter for the assertion; we just need to make sure
+      // section-b ends up north of section-a in the engine grid.
       type Block = {
         id: string;
         kind: "heading" | "card";
@@ -91,11 +84,11 @@ test.describe("Heading navigation reflects layout order", () => {
       };
 
       const layout: Record<string, Omit<Block, "id" | "kind">> = {
-        "daily-review-flow": { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-        "common-commands": { colStart: 1, rowStart: 3, colSpan: 36, rowSpan: 14 },
-        basics: { colStart: 1, rowStart: 17, colSpan: 36, rowSpan: 2 },
-        "what-it-is": { colStart: 1, rowStart: 19, colSpan: 18, rowSpan: 14 },
-        pager: { colStart: 19, rowStart: 19, colSpan: 18, rowSpan: 14 },
+        "section-b": { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        "card-b1": { colStart: 1, rowStart: 3, colSpan: 18, rowSpan: 6 },
+        "card-b2": { colStart: 19, rowStart: 3, colSpan: 18, rowSpan: 6 },
+        "section-a": { colStart: 1, rowStart: 9, colSpan: 36, rowSpan: 2 },
+        "card-a1": { colStart: 1, rowStart: 11, colSpan: 36, rowSpan: 6 },
       };
 
       const blocks: Block[] = orderedRawIds.map(({ id, kind }) => ({
@@ -112,8 +105,8 @@ test.describe("Heading navigation reflects layout order", () => {
     await page.goto(`/cheatsheets/${SHEET_SLUG}`);
     await page.waitForSelector("[data-sheet-grid][data-layout-ready='true']");
 
-    // The navigation must now list "Daily Review Flow" before "Basics".
+    // The navigation must now list "Section B" before "Section A".
     const labels = await getNavLabelsInOrder(page);
-    expect(labels.indexOf("Daily Review Flow")).toBeLessThan(labels.indexOf("Basics"));
+    expect(labels.indexOf("Section B")).toBeLessThan(labels.indexOf("Section A"));
   });
 });

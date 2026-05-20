@@ -1,0 +1,35 @@
+title: Heading Navigation Fixture
+summary: Synthetic cheatsheet with two headings and three cards. Used by the
+  heading-navigation E2E to verify the navigation order reflects the live
+  layout, not the YAML declaration order.
+color: "#A855F7"
+
+blocks:
+  - heading:
+      id: section-a
+      title: Section A
+
+  - card:
+      id: card-a1
+      title: Card A1
+      items:
+        - entries:
+            - command: heading-fixture-a1
+
+  - heading:
+      id: section-b
+      title: Section B
+
+  - card:
+      id: card-b1
+      title: Card B1
+      items:
+        - entries:
+            - command: heading-fixture-b1
+
+  - card:
+      id: card-b2
+      title: Card B2
+      items:
+        - entries:
+            - command: heading-fixture-b2

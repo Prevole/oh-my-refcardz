@@ -1,8 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+const SHEET_SLUG = "nav-fixture";
+const SHEET_URL = `/cheatsheets/${SHEET_SLUG}`;
+
 test.describe("Cheatsheet keyboard navigation", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/cheatsheets/git");
+    await page.goto(SHEET_URL);
     await page.waitForSelector("[data-item]");
   });
 
@@ -158,192 +161,105 @@ test.describe("Cheatsheet keyboard navigation", () => {
 
 test.describe("Cheatsheet item actions", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/cheatsheets/git");
+    await page.goto(SHEET_URL);
     await page.waitForSelector("[data-item]");
   });
 
   test("copies command with y key", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    
-    // Navigate to an item first with multiple attempts
-    await expect(async () => {
-      await page.keyboard.press("j");
-      await page.waitForTimeout(100);
-      const focused = page.locator("[data-nav-focused='true']");
-      await expect(focused).toBeVisible({ timeout: 1000 });
-    }).toPass({ timeout: 10000 });
-    
+
+    // Click directly on a known command from the fixture to focus it.
+    // The first card "Simple Commands" contains an item with command
+    // "nav-fixture-cmd-one" (no placeholder, so y copies it verbatim).
+    const target = page.locator("[data-copyable='nav-fixture-cmd-one']");
+    await expect(target).toBeVisible();
+    await target.click();
+
+    await expect(target).toHaveAttribute("data-nav-focused", "true");
+
     await page.keyboard.press("y");
 
     await expect(async () => {
       const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-      expect(clipboardText.length).toBeGreaterThan(0);
+      expect(clipboardText).toBe("nav-fixture-cmd-one");
     }).toPass({ timeout: 5000 });
   });
 
   test("shows details modal with i key when item has details", async ({ page }) => {
-    // Navigate to an item first with multiple attempts
-    await expect(async () => {
-      await page.keyboard.press("j");
-      await page.waitForTimeout(100);
-      const focused = page.locator("[data-nav-focused='true']");
-      await expect(focused).toBeVisible({ timeout: 1000 });
-    }).toPass({ timeout: 10000 });
+    // The "Commands With Details" card contains an item with detailedEntries.
+    // We click on its primary command to focus the parent item, then press i.
+    const copyable = page.locator("[data-copyable='nav-fixture-detailed']");
+    await expect(copyable).toBeVisible();
+    await copyable.click();
 
-    // Navigate to find an item with details (multiple j presses)
-    let foundItemWithDetails = false;
-    for (let i = 0; i < 15; i++) {
-      const focusedItem = page.locator("[data-item][data-nav-focused='true']");
-      const count = await focusedItem.count();
-      if (count > 0) {
-        const hasDetailsAttr = await focusedItem.getAttribute("data-item-details");
-        if (hasDetailsAttr && hasDetailsAttr !== "null" && hasDetailsAttr.length > 10) {
-          foundItemWithDetails = true;
-          break;
-        }
-      }
-      await page.keyboard.press("j");
-      await page.waitForTimeout(150);
-    }
+    // The focus may land on the copyable or on its parent item; both are
+    // valid entry points for the "i" action.
+    await expect(page.locator("[data-nav-focused='true']").first()).toBeVisible();
 
-    if (foundItemWithDetails) {
-      await page.keyboard.press("i");
+    await page.keyboard.press("i");
 
-      await expect(async () => {
-        const modalOverlay = page.locator("[data-command-modal-overlay]");
-        await expect(modalOverlay).toBeVisible({ timeout: 500 });
-      }).toPass({ timeout: 5000 });
+    const modalOverlay = page.locator("[data-command-modal-overlay]");
+    await expect(modalOverlay).toBeVisible({ timeout: 2000 });
 
-      await page.keyboard.press("Escape");
-      
-      await expect(async () => {
-        const modalOverlay = page.locator("[data-command-modal-overlay]");
-        await expect(modalOverlay).toHaveCount(0, { timeout: 500 });
-      }).toPass({ timeout: 5000 });
-    }
+    await page.keyboard.press("Escape");
+    await expect(modalOverlay).toHaveCount(0, { timeout: 2000 });
   });
 
   test("opens placeholder modal when copying command with placeholders", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
-    // Navigate to find a command with placeholder (e.g., <branch name>)
-    let foundCommandWithPlaceholder = false;
-    
-    for (let i = 0; i < 20; i++) {
-      await page.keyboard.press("j");
-      await page.waitForTimeout(100);
-      
-      const focused = page.locator("[data-copyable][data-nav-focused='true']");
-      const count = await focused.count();
-      if (count > 0) {
-        const copyValue = await focused.getAttribute("data-copy-value");
-        if (copyValue && copyValue.includes("<")) {
-          foundCommandWithPlaceholder = true;
-          break;
-        }
-      }
-    }
+    // The "Commands With Placeholders" card contains
+    // "nav-fixture-branch <branch name>". Focus it and press y.
+    const target = page.locator(
+      "[data-copyable='nav-fixture-branch <branch name>']"
+    );
+    await expect(target).toBeVisible();
+    await target.click();
 
-    if (foundCommandWithPlaceholder) {
-      // Press y to copy - should open placeholder modal
-      await page.keyboard.press("y");
+    await expect(target).toHaveAttribute("data-nav-focused", "true");
 
-      await expect(async () => {
-        const modalOverlay = page.locator("[data-command-modal-overlay]");
-        await expect(modalOverlay).toBeVisible({ timeout: 500 });
-      }).toPass({ timeout: 5000 });
+    await page.keyboard.press("y");
 
-      // Modal should have input fields for placeholders
-      const inputField = page.locator("[data-command-modal-overlay] input");
-      await expect(inputField.first()).toBeVisible();
+    const modalOverlay = page.locator("[data-command-modal-overlay]");
+    await expect(modalOverlay).toBeVisible({ timeout: 2000 });
 
-      // Fill in a placeholder value
-      await inputField.first().fill("test-branch");
+    const inputField = page.locator("[data-command-modal-overlay] input");
+    await expect(inputField.first()).toBeVisible();
 
-      // Preview should update
-      const preview = page.locator("[data-command-modal-overlay] p").last();
-      await expect(preview).toContainText("test-branch");
+    await inputField.first().fill("test-branch");
 
-      // Submit with Enter
-      await page.keyboard.press("Enter");
+    const preview = page.locator("[data-command-modal-overlay] pre");
+    await expect(preview).toContainText("test-branch");
 
-      // Modal should close after copy
-      await expect(async () => {
-        const modalOverlay = page.locator("[data-command-modal-overlay]");
-        await expect(modalOverlay).toHaveCount(0, { timeout: 1500 });
-      }).toPass({ timeout: 5000 });
+    await page.keyboard.press("Enter");
 
-      // Clipboard should have the resolved command
-      const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-      expect(clipboardText).toContain("test-branch");
-    }
+    await expect(modalOverlay).toHaveCount(0, { timeout: 2000 });
+
+    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboardText).toContain("test-branch");
+    expect(clipboardText).toContain("nav-fixture-branch");
   });
 
   test("navigates between multiple copyables in an item with j/k", async ({ page }) => {
-    // Navigate to find an item with multiple copyables
-    let foundItemWithMultipleCopyables = false;
-    
-    for (let i = 0; i < 30; i++) {
-      await page.keyboard.press("j");
-      await page.waitForTimeout(100);
-      
-      // Check if current item has multiple copyables
-      const focusedItem = page.locator("[data-item][data-nav-focused='true']");
-      const itemCount = await focusedItem.count();
-      
-      if (itemCount > 0) {
-        const copyablesInItem = focusedItem.locator("[data-copyable]");
-        const copyableCount = await copyablesInItem.count();
-        
-        if (copyableCount >= 2) {
-          foundItemWithMultipleCopyables = true;
-          break;
-        }
-      }
-      
-      // Also check if we're focused on a copyable inside an item with siblings
-      const focusedCopyable = page.locator("[data-copyable][data-nav-focused='true']");
-      const copyableIsVisible = await focusedCopyable.count();
-      
-      if (copyableIsVisible > 0) {
-        const parentItem = focusedCopyable.locator("xpath=ancestor::*[@data-item]");
-        const parentExists = await parentItem.count();
-        
-        if (parentExists > 0) {
-          const siblingsCount = await parentItem.locator("[data-copyable]").count();
-          if (siblingsCount >= 2) {
-            foundItemWithMultipleCopyables = true;
-            break;
-          }
-        }
-      }
-    }
+    // The "Multi-Copyable Items" card has an item with three copyables:
+    // alias "nav a", command "nav-fixture-multi-primary", and
+    // commandExample "nav-fixture-multi-primary --flag".
+    // We focus the first one explicitly, then verify j/k cycles within
+    // the same parent item.
+    const first = page.locator("[data-copyable='nav a']");
+    await expect(first).toBeVisible();
+    await first.click();
+    await expect(first).toHaveAttribute("data-nav-focused", "true");
 
-    if (foundItemWithMultipleCopyables) {
-      // Get current focused element position
-      const initialFocused = page.locator("[data-nav-focused='true']");
-      const initialText = await initialFocused.textContent();
-      
-      // Press j to move to next copyable
-      await page.keyboard.press("j");
-      await page.waitForTimeout(100);
-      
-      // Check that focus moved
-      const newFocused = page.locator("[data-nav-focused='true']");
-      await expect(newFocused).toBeVisible();
-      
-      const newText = await newFocused.textContent();
-      
-      // Press k to move back
-      await page.keyboard.press("k");
-      await page.waitForTimeout(100);
-      
-      const backFocused = page.locator("[data-nav-focused='true']");
-      await expect(backFocused).toBeVisible();
-      
-      // Either we moved between copyables (texts differ) or we moved between items
-      // The navigation should work smoothly in either case
-      expect(initialText !== null || newText !== null).toBe(true);
-    }
+    // j moves to the next copyable in the same item.
+    await page.keyboard.press("j");
+    const second = page.locator(
+      "[data-copyable='nav-fixture-multi-primary']"
+    );
+    await expect(second).toHaveAttribute("data-nav-focused", "true", { timeout: 2000 });
+
+    // k moves back to the first copyable.
+    await page.keyboard.press("k");
+    await expect(first).toHaveAttribute("data-nav-focused", "true", { timeout: 2000 });
   });
 });

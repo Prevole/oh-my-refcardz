@@ -1,0 +1,36 @@
+title: Layout Reset Fixture
+summary: Synthetic cheatsheet used by E2E tests covering the Phase D reset-to-original
+  flow. The structure mirrors heading-nav-fixture so we can seed a known diverging
+  layout via localStorage and verify the reset button appears and restores
+  the original positions.
+color: "#F59E0B"
+
+blocks:
+  - heading:
+      id: section-a
+      title: Section A
+
+  - card:
+      id: card-a1
+      title: Card A1
+      items:
+        - entries:
+            - command: reset-fixture-a1
+
+  - heading:
+      id: section-b
+      title: Section B
+
+  - card:
+      id: card-b1
+      title: Card B1
+      items:
+        - entries:
+            - command: reset-fixture-b1
+
+  - card:
+      id: card-b2
+      title: Card B2
+      items:
+        - entries:
+            - command: reset-fixture-b2
