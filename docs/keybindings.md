@@ -21,7 +21,16 @@ src/components/keyboard/
 └── keyboard-dispatcher.tsx   # Single global keydown listener
 
 src/components/settings/
-└── keybinding-editor.tsx     # UI for customizing keybindings
+├── settings-panel.tsx        # Right slide-in panel (66vw), top-level Tabs (UI / Keybindings)
+├── tabs.tsx                  # Shared <Tabs /> primitive used by settings + sub-tabs
+├── keybinding-editor.tsx     # Editable keybindings UI, 5 sub-tabs by context group
+└── keybinding-display.tsx    # Shared keycap / combo rendering primitives (KeycapDisplayInner, ComboDisplay, HelpRow, ActionInlineBinding, useActionCombos)
+
+src/components/help/
+├── sheet-help-modal.tsx      # Reference modal opened with `?` — 4 tabs (App Shortcuts / Layout / Developer / Symbol Legend)
+├── keybinding-chart.tsx      # Read-only chart used by sheet-help-modal (declarative entries)
+├── contextual-inline-help.tsx # Inline help paragraph that adapts to the active scope (SCOPE_HELP_MAP)
+└── inline-keybinding-help.tsx # InlineKeybinding atom (single binding inside running text)
 ```
 
 There are **two coexisting handler paths**:
@@ -228,20 +237,48 @@ useAction(ACTION_IDS.MY_NEW_ACTION, "sheet", () => {
 
 (Note: as of writing, the `sheet` scope is not yet routed through the dispatcher; for that scope use the legacy `matchesAction` pattern. New sub-scopes added under developer mode flow through the registry by default.)
 
-### 4. Update help modal (optional)
+### 4. Surface the action in the help modal (optional)
 
-If the action should appear in the help modal, add it to the relevant help component in `src/components/help/`.
+If the action should appear in the in-app reference modal (opened with `?`), add it to one of the entry lists in `src/components/help/sheet-help-modal.tsx`:
+
+- `NAVIGATION_ENTRIES`, `ACTION_ENTRIES`, `MISC_ENTRIES` — App Shortcuts tab
+- `LAYOUT_NAV_ENTRIES`, `LAYOUT_MOVE_ENTRIES`, `LAYOUT_RESIZE_ENTRIES`, `LAYOUT_ENTER_ENTRIES`, `LAYOUT_RESET_ENTRIES` — Layout tab
+- `DEVELOPER_TOP_ENTRIES`, `DEVELOPER_LOGS_ENTRIES`, `DEVELOPER_AXES_ENTRIES` — Developer tab
+
+Each list is rendered by `<KeybindingChart entries={...} cols={1|2} />`. Combos are resolved live via `useKeybindings`, so user customizations and resets reflect automatically.
+
+### 5. Surface the action in the contextual inline help (optional)
+
+The inline help paragraph at the top of the home and sheet pages (`<ContextualInlineHelp surface="home"|"sheet" />`) adapts to the active keyboard scope via the `SCOPE_HELP_MAP` in `src/components/help/contextual-inline-help.tsx`. To mention an action there, append a `{ kind: "key", actionId: ... }` token to the relevant entry's `tokens` array.
+
+The map is keyed by `(surface, scope | "default")`. Modal scopes (`settings`, `help`, `info`, `layout`) intentionally have no entry and fall back to the surface's `default`: their overlays mask the inline help anyway.
 
 ## Customization
 
-Users can customize keybindings via Settings (`","` key):
+Users open the settings panel with `,`. The panel is a right slide-in (66vw, min 720 / max 1100) with two top-level tabs:
 
-- Add/remove key combos for any action
-- Set primary combo (shown in UI)
-- Reset individual actions or all to defaults
-- Conflicts are auto-resolved (new binding wins)
+- **UI** — color mode, randomization, border style, sheet direction.
+- **Keybindings** — the keybinding editor, grouped into 5 sub-tabs:
 
-Customizations are stored in localStorage under `oh-my-refcardz:keybindings`.
+  | Sub-tab | Contexts covered |
+  |---|---|
+  | Global | `global` |
+  | Home | `home` |
+  | Cheatsheet | `sheet` |
+  | Layout Mode | `layout`, `layout-navigation`, `layout-move`, `layout-resize` |
+  | Developer | `dev`, `dev-logs`, `dev-axes` |
+
+  Sub-tabs that cover a single context hide the context heading; multi-context sub-tabs stack `<h4>` headers per context. The selected top-level tab and Keybindings sub-tab are both persisted in `useUISettings.panelTabs` (`active` and `keybindingsSub`), so the panel reopens where the user left it.
+
+For each action the user can:
+
+- Add or remove key combos
+- Set the primary combo (shown in UI)
+- Reset individual actions or all actions to defaults
+
+Conflicts are auto-resolved (new binding wins) and surfaced as a dismissible warning via `[data-testid="keybinding-conflict"]`.
+
+Customizations are stored in localStorage under `oh-my-refcardz:keybindings`. UI settings (including the panel's tab state) live under `oh-my-refcardz:ui-settings`.
 
 ## Conflict detection
 
