@@ -1,13 +1,30 @@
 .editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
+}
+
+.subTabsBar {
+  /* The reusable Tabs component already handles its own spacing.
+     Keep this wrapper so future enhancements (sticky bar, etc.) have a hook. */
+}
+
+.subTabIntro {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--fg-60);
+  line-height: 1.5;
 }
 
 .context {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.context:first-of-type {
+  margin-top: 0;
 }
 
 .contextTitle {

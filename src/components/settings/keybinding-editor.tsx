@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { useKeybindings, type KeybindingConflict } from "@/hooks/use-keybindings";
+import { useUISettings } from "@/hooks/use-ui-settings";
 import {
   type KeybindingContext,
   type KeybindingAction,
@@ -16,6 +17,7 @@ import {
   getArrowDirection,
   DEFAULT_KEYBINDINGS,
 } from "@/lib/keybindings";
+import { Tabs } from "./tabs";
 import styles from "./keybinding-editor.module.css";
 
 type RecordingState = {
@@ -293,17 +295,60 @@ const CONTEXT_LABELS: Record<KeybindingContext, string> = {
   home: "Home",
   sheet: "Cheatsheet",
   layout: "Layout Mode",
-  "layout-navigation": "Layout Mode — Navigation",
-  "layout-move": "Layout Mode — Move",
-  "layout-resize": "Layout Mode — Resize",
+  "layout-navigation": "Navigation sub-mode",
+  "layout-move": "Move sub-mode",
+  "layout-resize": "Resize sub-mode",
   dev: "Developer Mode",
-  "dev-logs": "Developer Mode — Logs",
-  "dev-axes": "Developer Mode — Axes",
+  "dev-logs": "Logs sub-mode",
+  "dev-axes": "Axes sub-mode",
 };
+
+type SubTabId = "global" | "home" | "cheatsheet" | "layout" | "developer";
+
+type SubTabConfig = {
+  id: SubTabId;
+  label: string;
+  intro: string;
+  contexts: KeybindingContext[];
+};
+
+const SUB_TABS: SubTabConfig[] = [
+  {
+    id: "global",
+    label: "Global",
+    intro: "Shortcuts active everywhere, regardless of the current page.",
+    contexts: ["global"],
+  },
+  {
+    id: "home",
+    label: "Home",
+    intro: "Shortcuts active on the home grid.",
+    contexts: ["home"],
+  },
+  {
+    id: "cheatsheet",
+    label: "Cheatsheet",
+    intro: "Shortcuts active while browsing a cheatsheet.",
+    contexts: ["sheet"],
+  },
+  {
+    id: "layout",
+    label: "Layout Mode",
+    intro: "Shortcuts active while editing the layout of a cheatsheet. Each sub-mode (Navigation, Move, Resize) has its own set of bindings.",
+    contexts: ["layout", "layout-navigation", "layout-move", "layout-resize"],
+  },
+  {
+    id: "developer",
+    label: "Developer",
+    intro: "Shortcuts active in Developer Mode and its sub-modes.",
+    contexts: ["dev", "dev-logs", "dev-axes"],
+  },
+];
 
 function ContextSection({
   context,
   actions,
+  showHeader,
   recordingActionId,
   onStartRecording,
   onSetPrimary,
@@ -312,6 +357,7 @@ function ContextSection({
 }: {
   context: KeybindingContext;
   actions: KeybindingAction[];
+  showHeader: boolean;
   recordingActionId: string | null;
   onStartRecording: (actionId: string, comboIndex: number | null) => void;
   onSetPrimary: (actionId: string, comboIndex: number) => void;
@@ -319,8 +365,8 @@ function ContextSection({
   onResetAction: (actionId: string) => void;
 }) {
   return (
-    <div className={styles.context}>
-      <h4 className={styles.contextTitle}>{CONTEXT_LABELS[context]}</h4>
+    <div className={styles.context} data-testid="keybinding-context" data-context={context}>
+      {showHeader && <h4 className={styles.contextTitle}>{CONTEXT_LABELS[context]}</h4>}
       <div className={styles.list}>
         {actions.map((action) => (
           <ActionRow
@@ -349,6 +395,9 @@ export function KeybindingEditor() {
     resetAction,
     resetAll,
   } = useKeybindings();
+
+  const { settings, setActiveKeybindingsSubTab } = useUISettings();
+  const activeSubTab = settings.panelTabs.keybindingsSub;
 
   const [recording, setRecording] = useState<RecordingState>(null);
   const [lastConflict, setLastConflict] = useState<KeybindingConflict | null>(null);
@@ -447,21 +496,21 @@ export function KeybindingEditor() {
     setLastConflict(null);
   }, [resetAll]);
 
-  const contexts: KeybindingContext[] = [
-    "global",
-    "home",
-    "sheet",
-    "layout",
-    "layout-navigation",
-    "layout-move",
-    "layout-resize",
-    "dev",
-    "dev-logs",
-    "dev-axes",
-  ];
+  const activeConfig = SUB_TABS.find((tab) => tab.id === activeSubTab) ?? SUB_TABS[0];
+  const showContextHeaders = activeConfig.contexts.length > 1;
 
   return (
     <div className={styles.editor} data-testid="keybinding-editor">
+      <div className={styles.subTabsBar}>
+        <Tabs
+          tabs={SUB_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
+          activeTab={activeSubTab}
+          onChange={(id) => setActiveKeybindingsSubTab(id as SubTabId)}
+        />
+      </div>
+
+      <p className={styles.subTabIntro}>{activeConfig.intro}</p>
+
       {lastConflict && (
         <ConflictNotice
           conflict={lastConflict}
@@ -469,24 +518,27 @@ export function KeybindingEditor() {
         />
       )}
 
-      {contexts.map((context) => (
-        <ContextSection
-          key={context}
-          context={context}
-          actions={config[context]}
-          recordingActionId={recording?.context === context ? recording.actionId : null}
-          onStartRecording={(actionId, comboIndex) =>
-            handleStartRecording(context, actionId, comboIndex)
-          }
-          onSetPrimary={(actionId, comboIndex) =>
-            handleSetPrimary(context, actionId, comboIndex)
-          }
-          onRemoveCombo={(actionId, comboIndex) =>
-            handleRemoveCombo(context, actionId, comboIndex)
-          }
-          onResetAction={(actionId) => handleResetAction(context, actionId)}
-        />
-      ))}
+      <div data-testid="keybinding-sub-tab" data-sub-tab={activeSubTab}>
+        {activeConfig.contexts.map((context) => (
+          <ContextSection
+            key={context}
+            context={context}
+            actions={config[context]}
+            showHeader={showContextHeaders}
+            recordingActionId={recording?.context === context ? recording.actionId : null}
+            onStartRecording={(actionId, comboIndex) =>
+              handleStartRecording(context, actionId, comboIndex)
+            }
+            onSetPrimary={(actionId, comboIndex) =>
+              handleSetPrimary(context, actionId, comboIndex)
+            }
+            onRemoveCombo={(actionId, comboIndex) =>
+              handleRemoveCombo(context, actionId, comboIndex)
+            }
+            onResetAction={(actionId) => handleResetAction(context, actionId)}
+          />
+        ))}
+      </div>
 
       <div className={styles.footer}>
         <button className={styles.resetAllButton} onClick={handleResetAll} data-testid="keybinding-reset-all">

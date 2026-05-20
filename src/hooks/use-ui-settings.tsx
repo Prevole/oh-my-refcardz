@@ -14,9 +14,11 @@ export interface ModernSettings {
 }
 
 export type SettingsTopTab = "ui" | "keybindings";
+export type KeybindingsSubTab = "global" | "home" | "cheatsheet" | "layout" | "developer";
 
 export interface PanelTabsState {
   active: SettingsTopTab;
+  keybindingsSub: KeybindingsSubTab;
 }
 
 export interface UISettings {
@@ -35,6 +37,7 @@ const DEFAULT_SETTINGS: UISettings = {
   },
   panelTabs: {
     active: "ui",
+    keybindingsSub: "global",
   },
 };
 
@@ -127,6 +130,7 @@ interface UISettingsContextValue {
   setBorder: (border: BorderStyle) => void;
   setDirection: (direction: GradientDirection) => void;
   setActivePanelTab: (tab: SettingsTopTab) => void;
+  setActiveKeybindingsSubTab: (tab: KeybindingsSubTab) => void;
   resetModern: () => void;
   resetAll: () => void;
 }
@@ -177,6 +181,15 @@ export function UISettingsProvider({ children }: ProviderProps) {
     saveSettings(newSettings);
   }, []);
 
+  const setActiveKeybindingsSubTab = useCallback((tab: KeybindingsSubTab) => {
+    const current = loadSettings();
+    const newSettings: UISettings = {
+      ...current,
+      panelTabs: { ...current.panelTabs, keybindingsSub: tab },
+    };
+    saveSettings(newSettings);
+  }, []);
+
   const resetModern = useCallback(() => {
     const current = loadSettings();
     const newSettings = { ...current, modern: DEFAULT_SETTINGS.modern };
@@ -195,6 +208,7 @@ export function UISettingsProvider({ children }: ProviderProps) {
     setBorder,
     setDirection,
     setActivePanelTab,
+    setActiveKeybindingsSubTab,
     resetModern,
     resetAll,
   };
