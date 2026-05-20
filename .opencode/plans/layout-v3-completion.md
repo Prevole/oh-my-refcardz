@@ -127,16 +127,84 @@ Notes:
 - [x] Eb5. `south-fallback.spec.ts` — fixture `02-layout-fixtures/south-fallback-fixture.yaml` (2/2)
 - [x] Eb6. `home-navigation.spec.ts` — added 3 stub fixtures in `03-home-stubs/` to pad home grid; search re-pointed to "south"; hjkl test simplified (no symmetric round-trip assertion) (14/14)
 - [x] Eb7. `settings-keybindings.spec.ts` — no fixture needed; passed as-is (9/9)
+- Commit: `925bb55`
 - Lint: added `.next-test/**` to `eslint.config.mjs` global ignores (Playwright build artifacts).
 - Full E2E: 69 passed + 8 skipped, stable on 3 of 4 runs; 1 flaky pre-existing fail on settings Escape (unrelated to E-bis, passes 5/5 in isolation).
 
 ## Phase F — UI help & settings
 
-- [ ] F1. Refactor `keybinding-editor.tsx` to a tabs + accordion hierarchy (Global / Cheatsheet / Layout / Developer)
-- [ ] F2. Restructure `sheet-help-modal.tsx` (Shortcuts / Layout / Developer / Legend) with CSS keycaps and per-sub-mode tables
-- [ ] F3. Audit and update `inline-keybinding-help.tsx` to be context-aware (reacts to current scope stack)
-- [ ] F4. Add a reusable `<KeybindingChart />` (or similar) component for per-sub-mode tables
-- [ ] F5. Doc update: `docs/keybindings.md` "Customization" section if UX changes warrant it
+### Decisions (locked-in)
+
+- **Settings panel** : keep the current right-side slide-in pattern, but bigger (≈ 2/3 of viewport width, full height). Top-level tabs replace the accordions. Persistent enough to embed inline explanation labels.
+- **Sub-tab persistence** : the active sub-tab inside Keybindings is persisted (via `useUISettings`), reopens where the user left.
+- **Inline help decoupling** : the contextual inline help reacts to the active scope and updates *independently* from the layout/dev overlays. Overlays keep their own affordances. We accept potential duplication for v1 and iterate.
+- **Separation of concerns** : `<KeybindingChart />` (read-only) is distinct from `KeybindingEditor` (editable). Two components, more flexibility. Help and Settings stay independent surfaces even though information overlaps — Settings is exhaustive, Help is contextual.
+- **Inline-help universality** : a generic `<ContextualInlineHelp />` driven by a declarative `SCOPE_HELP_MAP` (intro + ordered list of ActionIds + optional template fragments) replaces both `HomeInlineHelp` and `SheetInlineHelp`. New scopes (`layout-navigation`, `layout-move`, `layout-resize`, `dev`, `dev-logs`, `dev-axes`) are added as map entries.
+
+### Target structure
+
+**SettingsPanel (right-side slide-in, ~66vw × 100vh)**
+
+```
+[Header: title + close]
+[Top-level Tabs: UI | Keybindings]
+[Body: scrolls]
+  - Tab "UI"          → existing UI sections (color mode, border, direction, random), no accordion
+  - Tab "Keybindings" → sub-tabs:
+      Global       (context: global)
+      Home         (context: home)
+      Cheatsheet   (context: sheet)
+      Layout Mode  (contexts: layout + layout-navigation + layout-move + layout-resize, stacked sections)
+      Developer    (contexts: dev + dev-logs + dev-axes, stacked sections)
+[Footer (optional, tab-aware): "Reset UI settings" / "Reset all keybindings"]
+```
+
+**SheetHelpModal (existing modal, 3 → 4 tabs)**
+
+```
+Tabs: Shortcuts | Layout | Developer | Legend
+- Shortcuts: Navigation / Actions / Misc (current)
+- Layout:    Enter / Navigation / Move / Resize / Reset (current, refactored via <KeybindingChart/>)
+- Developer: Top-level / Logs / Axes (new)
+- Legend:    Symbols (current, refactored via <KeybindingChart/> where applicable)
+```
+
+**ContextualInlineHelp**
+
+```
+useActiveScope() → reads top of scope stack from use-keyboard-context
+<ContextualInlineHelp /> → looks up SCOPE_HELP_MAP[scope], renders intro + binding list
+SCOPE_HELP_MAP entries:
+  home, sheet, layout-navigation, layout-move, layout-resize, dev, dev-logs, dev-axes
+```
+
+### Sub-phases
+
+- [ ] F1. **Pre-flight test-id hardening** — add `data-testid` attributes to `SettingsPanel`, `KeybindingEditor`, `SheetHelpModal` and recording overlay; update `settings-keybindings.spec.ts` to use them. Protects E2E during the refactor.
+- [ ] F2. **SettingsPanel structural refactor** — slide-in widened to ≈66vw, remove accordions, introduce top-level `UI | Keybindings` tabs. Persist active tab in `useUISettings`. Inline explanation labels under sections.
+- [ ] F3. **KeybindingEditor regroup into 5 sub-tabs** — Global / Home / Cheatsheet / Layout Mode / Developer. Multi-context sub-tabs stack their sections with discreet `<h3>` headers. Active sub-tab persisted in `useUISettings`. Recording logic unchanged.
+- [ ] F4. **`<KeybindingChart />` extraction** — read-only component `{ actionIds: ActionId[]; cols?: 2 | 3; label?: (id) => string }`. Shared CSS for keycaps.
+- [ ] F5. **SheetHelpModal refactor** — adopt `<KeybindingChart />`; add `Developer` tab covering `dev`, `dev-logs`, `dev-axes`.
+- [ ] F6. **`useActiveScope()` hook + `<ContextualInlineHelp />` component + `SCOPE_HELP_MAP`** — declarative map keyed by scope name; intro text + ordered list of action IDs + lightweight template fragments for connector words.
+- [ ] F7. **Replace `HomeInlineHelp` and `SheetInlineHelp`** — single `<ContextualInlineHelp />` mount where each used to live. Verify the 3 usage sites (`home-client.tsx:439`, `cheatsheets/[slug]/page.tsx:48`, `dev-mode-bar.tsx:116`).
+- [ ] F8. **E2E coverage** — adapt `settings-keybindings.spec.ts` to the new DOM; add a focused spec for `<ContextualInlineHelp />` switching as scopes change (enter sheet → enter layout → switch sub-mode → enter dev).
+- [ ] F9. **Doc update** — `docs/keybindings.md` (new tab/sub-tab structure, `SCOPE_HELP_MAP` conventions, persistence keys). Cross-reference from `docs/architecture.md` if needed.
+
+### Acceptance criteria
+
+- Settings panel visually feels like a major surface (66vw, slide-in from right).
+- Top-level tabs (UI / Keybindings) and Keybindings sub-tabs are persisted across reloads.
+- Every existing keybinding from the 10 contexts is reachable via the new sub-tabs grouping with no loss.
+- `SheetHelpModal` exposes all `dev*` actions in the new Developer tab.
+- `<ContextualInlineHelp />` updates on scope changes without re-mounting the parent.
+- All E2E tests green; no regression on `settings-keybindings.spec.ts`.
+- `npm run lint`, `npm run test`, `npm run build`, `npm run validate:cheatsheets` clean.
+
+### Open questions deferred to during execution
+
+- Exact width breakpoint (66vw vs 70vw vs `min(900px, 66vw)`) — decide in F2 against the actual screen.
+- Whether `<KeybindingChart />` should accept a `groupBy` prop for the `Legend` tab — decide in F4.
+- Inline-help template DSL : `Array<{ type: "text"; value: string } | { type: "action"; id: ActionId }>` vs simple `(formatBinding) => ReactNode` render-prop — decide in F6.
 
 ## Phase G — Final validation
 

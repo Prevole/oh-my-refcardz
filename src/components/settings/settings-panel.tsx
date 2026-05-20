@@ -194,11 +194,11 @@ export function SettingsPanel({
   const showDirectionOptions = settings.modern.border !== "full";
 
   return (
-    <div className={styles.overlay} data-closing={isClosing ? "true" : undefined}>
-      <div ref={panelRef} className={styles.panel} data-closing={isClosing ? "true" : undefined}>
+    <div className={styles.overlay} data-closing={isClosing ? "true" : undefined} data-testid="settings-overlay">
+      <div ref={panelRef} className={styles.panel} data-closing={isClosing ? "true" : undefined} data-testid="settings-panel">
         <div className={styles.header}>
           <h2 className={styles.title}>Settings</h2>
-          <button onClick={requestClose} className={styles.close} aria-label="Close">
+          <button onClick={requestClose} className={styles.close} aria-label="Close" data-testid="settings-close">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
@@ -290,7 +290,9 @@ export function SettingsPanel({
             isOpen={settings.accordion.keybindings}
             onToggle={() => onToggleAccordion("keybindings")}
           >
-            <KeybindingEditor />
+            <div data-testid="settings-tab-keybindings">
+              <KeybindingEditor />
+            </div>
           </AccordionItem>
         </div>
       </div>

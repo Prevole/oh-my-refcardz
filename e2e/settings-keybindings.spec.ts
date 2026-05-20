@@ -3,151 +3,128 @@ import { test, expect } from "@playwright/test";
 test.describe("Settings panel", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector("[class*='hexBoard']");
+    await page.waitForSelector("[data-testid='hex-board']");
     await page.evaluate(() => localStorage.clear());
   });
 
   test("opens settings panel with comma key", async ({ page }) => {
     await page.keyboard.press(",");
-    const settingsHeading = page.getByRole("heading", { name: "Settings" });
-    await expect(settingsHeading).toBeVisible();
+    await expect(page.getByTestId("settings-panel")).toBeVisible();
   });
 
   test("closes settings panel with Escape", async ({ page }) => {
     await page.keyboard.press(",");
-    const settingsHeading = page.getByRole("heading", { name: "Settings" });
-    await expect(settingsHeading).toBeVisible();
+    const panel = page.getByTestId("settings-panel");
+    await expect(panel).toBeVisible();
 
     await page.keyboard.press("Escape");
-    await expect(settingsHeading).not.toBeVisible();
+    await expect(panel).not.toBeVisible();
   });
 
   test("closes settings panel when clicking outside", async ({ page }) => {
     await page.keyboard.press(",");
-    const settingsHeading = page.getByRole("heading", { name: "Settings" });
-    await expect(settingsHeading).toBeVisible();
+    const panel = page.getByTestId("settings-panel");
+    await expect(panel).toBeVisible();
 
-    const overlay = page.locator("[class*='settings-panel-module'][class*='overlay']");
-    await overlay.click({ position: { x: 10, y: 10 } });
-    await expect(settingsHeading).not.toBeVisible();
+    await page.getByTestId("settings-overlay").click({ position: { x: 10, y: 10 } });
+    await expect(panel).not.toBeVisible();
   });
 });
 
 test.describe("Keybinding editor", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector("[class*='hexBoard']");
+    await page.waitForSelector("[data-testid='hex-board']");
     await page.evaluate(() => localStorage.clear());
     await page.keyboard.press(",");
     await page.getByRole("button", { name: /keybindings/i }).click();
+    await expect(page.getByTestId("keybinding-editor")).toBeVisible();
   });
 
   test("opens recording overlay when clicking a keybinding", async ({ page }) => {
-    const firstComboButton = page.locator("[class*='comboButton']").first();
-    await firstComboButton.click();
-
-    const recordingOverlay = page.locator("[data-recording-overlay-root]");
-    await expect(recordingOverlay).toBeVisible();
+    await page.getByTestId("keybinding-combo-button").first().click();
+    const overlay = page.getByTestId("keybinding-recording-overlay");
+    await expect(overlay).toBeVisible();
     await expect(page.getByText("Press a key combination")).toBeVisible();
   });
 
   test("closes recording overlay when clicking outside", async ({ page }) => {
-    const firstComboButton = page.locator("[class*='comboButton']").first();
-    await firstComboButton.click();
+    await page.getByTestId("keybinding-combo-button").first().click();
+    const overlay = page.getByTestId("keybinding-recording-overlay");
+    await expect(overlay).toBeVisible();
 
-    const recordingOverlay = page.locator("[data-recording-overlay-root]");
-    await expect(recordingOverlay).toBeVisible();
-
-    await recordingOverlay.click({ position: { x: 10, y: 10 } });
-    await expect(recordingOverlay).not.toBeVisible();
+    await overlay.click({ position: { x: 10, y: 10 } });
+    await expect(overlay).not.toBeVisible();
   });
 
   test("records a new keybinding", async ({ page }) => {
-    const firstComboButton = page.locator("[class*='comboButton']").first();
-    const originalText = await firstComboButton.textContent();
+    const firstCombo = page.getByTestId("keybinding-combo-button").first();
+    const originalText = await firstCombo.textContent();
 
-    await firstComboButton.click();
+    await firstCombo.click();
     await page.keyboard.press("x");
 
-    await expect(firstComboButton).toContainText("x");
-    expect(await firstComboButton.textContent()).not.toBe(originalText);
+    await expect(firstCombo).toContainText("x");
+    expect(await firstCombo.textContent()).not.toBe(originalText);
   });
 
   test("shows conflict warning when keybinding conflicts", async ({ page }) => {
-    const moveLeftRow = page.locator("[class*='row']").filter({ hasText: "Move left" });
-    const toggleSettingsRow = page.locator("[class*='row']").filter({ hasText: "Toggle settings" });
-
-    await expect(moveLeftRow).toBeVisible();
+    const toggleSettingsRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-settings']");
     await expect(toggleSettingsRow).toBeVisible();
 
-    const settingsCombo = toggleSettingsRow.locator("[class*='comboButton']").first();
-    await settingsCombo.click();
-
-    const recordingOverlay = page.locator("[data-recording-overlay-root]");
-    await expect(recordingOverlay).toBeVisible();
+    await toggleSettingsRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
 
     await page.keyboard.press("h");
 
-    const conflictWarning = page.locator("div[class*='conflict']").first();
-    await expect(conflictWarning).toBeVisible({ timeout: 3000 });
-    await expect(conflictWarning).toContainText("Replaced binding");
-    await expect(conflictWarning).toContainText("Move left");
+    const conflict = page.getByTestId("keybinding-conflict");
+    await expect(conflict).toBeVisible({ timeout: 3000 });
+    await expect(conflict).toContainText("Replaced binding");
+    await expect(conflict).toContainText("Move left");
   });
 
   test("dismisses conflict warning without closing settings panel", async ({ page }) => {
-    const toggleSettingsRow = page.locator("[class*='row']").filter({ hasText: "Toggle settings" });
+    const toggleSettingsRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-settings']");
 
-    const settingsCombo = toggleSettingsRow.locator("[class*='comboButton']").first();
-    await settingsCombo.click();
-
-    const recordingOverlay = page.locator("[data-recording-overlay-root]");
-    await expect(recordingOverlay).toBeVisible();
+    await toggleSettingsRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
 
     await page.keyboard.press("h");
 
-    const conflictWarning = page.locator("div[class*='conflict']").first();
-    await expect(conflictWarning).toBeVisible({ timeout: 3000 });
+    const conflict = page.getByTestId("keybinding-conflict");
+    await expect(conflict).toBeVisible({ timeout: 3000 });
 
-    const dismissButton = conflictWarning.locator("button");
-    await dismissButton.click();
-
-    await expect(conflictWarning).not.toBeVisible();
-
-    const settingsHeading = page.getByRole("heading", { name: "Settings" });
-    await expect(settingsHeading).toBeVisible();
+    await page.getByTestId("keybinding-conflict-dismiss").click();
+    await expect(conflict).not.toBeVisible();
+    await expect(page.getByTestId("settings-panel")).toBeVisible();
   });
 
   test("reset action detects conflicts with current keybindings", async ({ page }) => {
-    const moveLeftRow = page.locator("[class*='row']").filter({ hasText: "Move left" });
-    const toggleSettingsRow = page.locator("[class*='row']").filter({ hasText: "Toggle settings" });
+    const moveLeftRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.move-left']");
+    const toggleSettingsRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-settings']");
 
-    const settingsCombo = toggleSettingsRow.locator("[class*='comboButton']").first();
-    await settingsCombo.click();
-
-    const recordingOverlay = page.locator("[data-recording-overlay-root]");
-    await expect(recordingOverlay).toBeVisible();
-
+    await toggleSettingsRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
     await page.keyboard.press("h");
 
-    const conflictWarning = page.locator("div[class*='conflict']").first();
-    await expect(conflictWarning).toBeVisible({ timeout: 3000 });
-    await conflictWarning.locator("button").click();
-    await expect(conflictWarning).not.toBeVisible();
+    const conflict = page.getByTestId("keybinding-conflict");
+    await expect(conflict).toBeVisible({ timeout: 3000 });
+    await page.getByTestId("keybinding-conflict-dismiss").click();
+    await expect(conflict).not.toBeVisible();
 
-    const moveLeftCombo = moveLeftRow.locator("[class*='comboButton']").first();
-    await moveLeftCombo.click();
-    await expect(recordingOverlay).toBeVisible();
+    await moveLeftRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
     await page.keyboard.press("z");
 
-    if (await conflictWarning.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await conflictWarning.locator("button").click();
+    if (await conflict.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await page.getByTestId("keybinding-conflict-dismiss").click();
     }
 
-    const resetButton = moveLeftRow.locator("[class*='resetButton']");
+    const resetButton = moveLeftRow.getByTestId("keybinding-reset");
     await expect(resetButton).toBeVisible({ timeout: 2000 });
     await resetButton.click();
 
-    await expect(conflictWarning).toBeVisible({ timeout: 3000 });
-    await expect(conflictWarning).toContainText("Toggle settings");
+    await expect(conflict).toBeVisible({ timeout: 3000 });
+    await expect(conflict).toContainText("Toggle settings");
   });
 });

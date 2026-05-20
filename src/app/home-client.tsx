@@ -470,6 +470,7 @@ export function HomeClient({ categories }: Props) {
                 ) : null}
                 <div
                   className={`${styles.hexBoard} mt-4`}
+                  data-testid="hex-board"
                   style={{
                     width: `${boardDimensions.width}px`,
                     maxWidth: "100%",

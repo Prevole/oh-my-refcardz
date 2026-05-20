@@ -89,7 +89,7 @@ function ConflictNotice({
   };
 
   return (
-    <div className={styles.conflict}>
+    <div className={styles.conflict} data-testid="keybinding-conflict">
       <span className={styles.conflictIcon}>⚠</span>
       <span className={styles.conflictText}>
         Replaced binding from &ldquo;{conflict.existingAction.label}&rdquo;
@@ -98,6 +98,7 @@ function ConflictNotice({
         className={styles.conflictDismiss}
         onClick={handleDismiss}
         aria-label="Dismiss"
+        data-testid="keybinding-conflict-dismiss"
       >
         ×
       </button>
@@ -147,6 +148,7 @@ function RecordingOverlay({
       ref={overlayRef}
       className={styles.recordingOverlay}
       data-recording-overlay-root
+      data-testid="keybinding-recording-overlay"
       onClick={onCancel}
     >
       <div className={styles.recordingContent} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
@@ -215,7 +217,7 @@ function ActionRow({
   };
 
   return (
-    <div className={`${styles.row} ${isRecording ? styles.rowRecording : ""}`}>
+    <div className={`${styles.row} ${isRecording ? styles.rowRecording : ""}`} data-testid="keybinding-row" data-action-id={action.id}>
       <div className={styles.label}>{action.label}</div>
       <div className={styles.combos}>
         {action.combos.map((combo, index) => (
@@ -226,6 +228,8 @@ function ActionRow({
               disabled={isRecording}
               aria-label={`Edit keybinding ${index + 1} for ${action.label}${index === 0 ? " (primary)" : ""}`}
               title={index > 0 ? "Shift+Click to set as primary" : "Primary keybinding"}
+              data-testid="keybinding-combo-button"
+              data-combo-index={index}
             >
               <ComboDisplay combo={combo} />
             </button>
@@ -235,6 +239,7 @@ function ActionRow({
                 onClick={() => onRemoveCombo(index)}
                 disabled={isRecording}
                 aria-label={`Remove keybinding ${index + 1}`}
+                data-testid="keybinding-combo-remove"
               >
                 ×
               </button>
@@ -247,6 +252,7 @@ function ActionRow({
             onClick={() => onStartRecording(null)}
             disabled={isRecording}
             aria-label={`Add alternative keybinding for ${action.label}`}
+            data-testid="keybinding-combo-add"
           >
             +
           </button>
@@ -260,6 +266,7 @@ function ActionRow({
             disabled={isRecording}
             aria-label={`Reset ${action.label} to default`}
             title="Reset to default"
+            data-testid="keybinding-reset"
           >
             <svg
               width="14"
@@ -454,7 +461,7 @@ export function KeybindingEditor() {
   ];
 
   return (
-    <div className={styles.editor}>
+    <div className={styles.editor} data-testid="keybinding-editor">
       {lastConflict && (
         <ConflictNotice
           conflict={lastConflict}
@@ -482,7 +489,7 @@ export function KeybindingEditor() {
       ))}
 
       <div className={styles.footer}>
-        <button className={styles.resetAllButton} onClick={handleResetAll}>
+        <button className={styles.resetAllButton} onClick={handleResetAll} data-testid="keybinding-reset-all">
           Reset all keybindings
         </button>
       </div>

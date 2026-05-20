@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Home keyboard navigation", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForSelector("[class*='hexBoard']");
+    await page.waitForSelector("[data-testid='hex-board']");
   });
 
   test("displays cheatsheet cards on home page", async ({ page }) => {
