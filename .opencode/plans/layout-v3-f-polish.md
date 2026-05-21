@@ -48,10 +48,16 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   keybindings sub-tabs inherit the new look (same primitive). No markup
   change. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
-- [ ] **FP5**. **Dense tables + compact reset buttons** (points 5, 7).
-  Reduce keybinding row padding and line-height for a tighter feel.
-  Reset action / Reset all buttons become small, right-aligned (not
-  full-width). Iterate on density.
+- [/] **FP5**. **Dense tables + compact reset buttons** (points 5, 7).
+  Keybinding rows now use `padding: space-1 spacing-compact` (down
+  from `space-2`), label font dropped from `text-base` → `text-sm`,
+  and the gap between rows replaced by a `--border-subtle` 1px hairline
+  separator (`gap: 0` on `.list`, `border-top` on `.row + .row`). Added
+  `min-height: space-7` so rows don't jump when label is shorter than
+  combo. Reset button shrunk: width container `space-7` → `space-6`,
+  button itself `space-6` → `space-5` with a 12px icon and
+  `justify-content: flex-end` on the actions cell so the small icon
+  sits flush right. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
 - [ ] **FP6**. **Sub-tabs in help modal Layout & Developer** (point
   10). Layout tab gets nested tabs: Enter / Navigation / Move /
