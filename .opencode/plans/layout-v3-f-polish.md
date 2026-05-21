@@ -24,12 +24,17 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   E2E (helper signature + `r`→`b`), `docs/keybindings.md` (cascade pattern).
   821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
-- [ ] **FP3**. **Settings panel: width + title bar + UI tab compact**
-  (points 1, 3, 8). Panel grows to 2/3 viewport width (with sensible
-  bounds). The `SETTINGS` label becomes a real title bar
-  (border-bottom, contrasted background, contains the close affordance).
-  UI tab fields wrap into a 2-column grid (or capped width) to avoid
-  visually drowning in the larger panel.
+- [/] **FP3**. **Settings panel: width + title bar + UI tab compact**
+  (points 1, 3, 8). Panel `max-width` raised from `1100px` to `1280px`
+  (66vw kept, min 720 kept). Header now has a subtle tinted background
+  (`color-mix(in srgb, var(--accent) 6%, var(--bg-elevated))`) plus a
+  stronger border-bottom (`--border-strong` instead of `--border-light`)
+  to read as a real title bar — title and close affordance already lived
+  inside it, so no markup change there. UI tab fields Color/Border/
+  Orientation wrapped in a new `.fieldGrid` (2-col grid) to avoid the
+  oversized full-width buttons on a wider panel; Random toggle and Reset
+  button kept full-width above/below. 821/821 unit ✓, 75/75 E2E ✓,
+  build ✓.
 
 - [ ] **FP4**. **Real tabs, not pills** (points 2, 4). Replace the
   current pill-styled tab buttons with a true tab strip (underline on

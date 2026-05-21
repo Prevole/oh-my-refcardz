@@ -252,63 +252,65 @@ export function SettingsPanel({
                     </span>
                   </div>
 
-                  <div className={styles.field}>
-                    <div className={styles.fieldHeader}>
-                      <span className={styles.label}>Color mode</span>
-                      <span className={styles.fieldHelp}>How card colors are derived.</span>
+                  <div className={styles.fieldGrid}>
+                    <div className={styles.field}>
+                      <div className={styles.fieldHeader}>
+                        <span className={styles.label}>Color mode</span>
+                        <span className={styles.fieldHelp}>How card colors are derived.</span>
+                      </div>
+                      <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
+                        {COLOR_MODE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => onSetColorMode(option.value)}
+                            className={`${styles.groupButton} ${styles.groupButtonFlex} ${settings.modern.colorMode === option.value ? styles.groupButtonActive : ""}`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
-                      {COLOR_MODE_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => onSetColorMode(option.value)}
-                          className={`${styles.groupButton} ${styles.groupButtonFlex} ${settings.modern.colorMode === option.value ? styles.groupButtonActive : ""}`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className={styles.field}>
-                    <div className={styles.fieldHeader}>
-                      <span className={styles.label}>Border style</span>
-                      <span className={styles.fieldHelp}>Which edges of each card carry a colored stroke.</span>
+                    <div className={styles.field}>
+                      <div className={styles.fieldHeader}>
+                        <span className={styles.label}>Border style</span>
+                        <span className={styles.fieldHelp}>Which edges of each card carry a colored stroke.</span>
+                      </div>
+                      <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
+                        {BORDER_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => onSetBorder(option.value)}
+                            className={`${styles.groupButton} ${styles.groupButtonFlex} ${settings.modern.border === option.value ? styles.groupButtonActive : ""}`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
-                      {BORDER_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => onSetBorder(option.value)}
-                          className={`${styles.groupButton} ${styles.groupButtonFlex} ${settings.modern.border === option.value ? styles.groupButtonActive : ""}`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className={`${styles.field} ${!showDirectionOptions ? styles.fieldDisabled : ""}`}>
-                    <div className={styles.fieldHeader}>
-                      <span className={styles.label}>Orientation from</span>
-                      <span className={styles.fieldHelp}>
-                        {showDirectionOptions
-                          ? "Origin used by the color gradient."
-                          : "Available when the border style is not Full."}
-                      </span>
-                    </div>
-                    <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
-                      {DIRECTION_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => showDirectionOptions && onSetDirection(option.value)}
-                          disabled={!showDirectionOptions}
-                          className={`${styles.groupButton} ${styles.groupButtonFlex} ${styles.groupButtonWithIcon} ${settings.modern.direction === option.value && showDirectionOptions ? styles.groupButtonActive : ""}`}
-                        >
-                          <span className={styles.groupButtonIcon} aria-hidden="true">{option.icon}</span>
-                          <span>{option.label}</span>
-                        </button>
-                      ))}
+                    <div className={`${styles.field} ${!showDirectionOptions ? styles.fieldDisabled : ""}`}>
+                      <div className={styles.fieldHeader}>
+                        <span className={styles.label}>Orientation from</span>
+                        <span className={styles.fieldHelp}>
+                          {showDirectionOptions
+                            ? "Origin used by the color gradient."
+                            : "Available when the border style is not Full."}
+                        </span>
+                      </div>
+                      <div className={`${styles.buttonGroup} ${styles.buttonGroupFull}`}>
+                        {DIRECTION_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => showDirectionOptions && onSetDirection(option.value)}
+                            disabled={!showDirectionOptions}
+                            className={`${styles.groupButton} ${styles.groupButtonFlex} ${styles.groupButtonWithIcon} ${settings.modern.direction === option.value && showDirectionOptions ? styles.groupButtonActive : ""}`}
+                          >
+                            <span className={styles.groupButtonIcon} aria-hidden="true">{option.icon}</span>
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 

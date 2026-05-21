@@ -14,7 +14,7 @@
   right: 0;
   width: 66vw;
   min-width: 720px;
-  max-width: 1100px;
+  max-width: 1280px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -32,7 +32,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-light);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-elevated));
+  border-bottom: 1px solid var(--border-strong);
   flex-shrink: 0;
 }
 
@@ -117,6 +118,17 @@
 }
 
 .field:first-child {
+  margin-top: 0;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-6);
+  margin-top: var(--space-5);
+}
+
+.fieldGrid .field {
   margin-top: 0;
 }
 
