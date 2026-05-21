@@ -27,7 +27,7 @@ src/components/settings/
 └── keybinding-display.tsx    # Shared keycap / combo rendering primitives (KeycapDisplayInner, ComboDisplay, HelpRow, ActionInlineBinding, useActionCombos)
 
 src/components/help/
-├── sheet-help-modal.tsx      # Reference modal opened with `?` — 4 tabs (App Shortcuts / Layout / Developer / Symbol Legend)
+├── sheet-help-modal.tsx      # Reference modal opened with `?` — 4 tabs (App Shortcuts / Layout / Developer / Symbol Legend). Layout and Developer tabs have nested sub-tabs.
 ├── keybinding-chart.tsx      # Read-only chart used by sheet-help-modal (declarative entries)
 ├── contextual-inline-help.tsx # Inline help paragraph that adapts to the active scope (SCOPE_HELP_MAP)
 └── inline-keybinding-help.tsx # InlineKeybinding atom (single binding inside running text)
@@ -244,8 +244,13 @@ useAction(ACTION_IDS.MY_NEW_ACTION, "sheet", () => {
 If the action should appear in the in-app reference modal (opened with `?`), add it to one of the entry lists in `src/components/help/sheet-help-modal.tsx`:
 
 - `NAVIGATION_ENTRIES`, `ACTION_ENTRIES`, `MISC_ENTRIES` — App Shortcuts tab
-- `LAYOUT_NAV_ENTRIES`, `LAYOUT_MOVE_ENTRIES`, `LAYOUT_RESIZE_ENTRIES`, `LAYOUT_ENTER_ENTRIES`, `LAYOUT_RESET_ENTRIES` — Layout tab
-- `DEVELOPER_TOP_ENTRIES`, `DEVELOPER_LOGS_ENTRIES`, `DEVELOPER_AXES_ENTRIES` — Developer tab
+- `LAYOUT_ENTER_ENTRIES`, `LAYOUT_RESET_ENTRIES` — Layout tab → Lifecycle sub-tab
+- `LAYOUT_NAV_ENTRIES` — Layout tab → Navigation sub-tab
+- `LAYOUT_MOVE_ENTRIES` — Layout tab → Move sub-tab
+- `LAYOUT_RESIZE_ENTRIES` — Layout tab → Resize sub-tab
+- `DEVELOPER_TOP_ENTRIES` — Developer tab → Dev sub-tab
+- `DEVELOPER_LOGS_ENTRIES` — Developer tab → Logs sub-tab
+- `DEVELOPER_AXES_ENTRIES` — Developer tab → Axes sub-tab
 
 Each list is rendered by `<KeybindingChart entries={...} cols={1|2} />`. Combos are resolved live via `useKeybindings`, so user customizations and resets reflect automatically.
 
@@ -257,7 +262,7 @@ The map is keyed by `(surface, scope | "default")`. Modal scopes (`settings`, `h
 
 ## Customization
 
-Users open the settings panel with `,`. The panel is a right slide-in (66vw, min 720 / max 1100) with two top-level tabs:
+Users open the settings panel with `,`. The panel is a right slide-in (66vw, min 720 / max 1280) with two top-level tabs:
 
 - **UI** — color mode, randomization, border style, sheet direction.
 - **Keybindings** — the keybinding editor, grouped into 5 sub-tabs:

@@ -59,10 +59,20 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   `justify-content: flex-end` on the actions cell so the small icon
   sits flush right. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
-- [ ] **FP6**. **Sub-tabs in help modal Layout & Developer** (point
-  10). Layout tab gets nested tabs: Enter / Navigation / Move /
-  Resize. Developer tab gets nested tabs: Dev / Logs / Axes. Reuses
-  the shared `<Tabs />` primitive.
+- [/] **FP6**. **Sub-tabs in help modal Layout & Developer** (point
+  10). Layout tab gets 4 nested sub-tabs: **Lifecycle** (Enter +
+  Reset grouped), **Navigation**, **Move**, **Resize**. Developer tab
+  gets 3 nested sub-tabs: **Dev**, **Logs**, **Axes**. Reuses the
+  shared `<Tabs />` primitive (after FP4 refresh) with a new
+  `testIdPrefix` prop so each sub-tab button gets
+  `data-testid="help-layout-sub-tab-{id}"` / `help-developer-sub-tab-{id}`.
+  Content blocks for each sub-tab carry
+  `data-testid="help-layout-content-{id}"` / `help-developer-content-{id}`.
+  Inline doc updates: corrected `r` → `b` for the resize key (FP2
+  rename) in the Layout intros, and updated `docs/keybindings.md`
+  section 4 to list each ENTRIES bucket against its sub-tab. Also
+  corrected the settings panel max-width (1100 → 1280) noted in
+  doc post-FP3. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
 ## Locked decisions
 

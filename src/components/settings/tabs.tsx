@@ -12,9 +12,10 @@ type TabsProps = {
   tabs: Tab[];
   activeTab: string;
   onChange: (id: string) => void;
+  testIdPrefix?: string;
 };
 
-export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
+export function Tabs({ tabs, activeTab, onChange, testIdPrefix }: TabsProps) {
   return (
     <div className={styles.tabs}>
       {tabs.map((tab) => (
@@ -23,6 +24,7 @@ export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
           className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ""} ${tab.disabled ? styles.tabDisabled : ""}`}
           onClick={() => !tab.disabled && onChange(tab.id)}
           disabled={tab.disabled}
+          data-testid={testIdPrefix ? `${testIdPrefix}-${tab.id}` : undefined}
         >
           {tab.label}
         </button>

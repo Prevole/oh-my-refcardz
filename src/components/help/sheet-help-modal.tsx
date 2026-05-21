@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { KeybindingChart, type ChartEntry } from "@/components/help/keybinding-chart";
+import { Tabs } from "@/components/settings/tabs";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS, getCombosDisplay } from "@/lib/keybindings";
 import { useActionCombos } from "@/components/settings/keybinding-display";
@@ -16,12 +17,27 @@ type Props = {
 };
 
 type Tab = "shortcuts" | "layout" | "developer" | "legend";
+type LayoutSubTab = "lifecycle" | "navigation" | "move" | "resize";
+type DeveloperSubTab = "dev" | "logs" | "axes";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "shortcuts", label: "App Shortcuts" },
   { id: "layout", label: "Layout" },
   { id: "developer", label: "Developer" },
   { id: "legend", label: "Symbol Legend" },
+];
+
+const LAYOUT_SUB_TABS: { id: LayoutSubTab; label: string }[] = [
+  { id: "lifecycle", label: "Lifecycle" },
+  { id: "navigation", label: "Navigation" },
+  { id: "move", label: "Move" },
+  { id: "resize", label: "Resize" },
+];
+
+const DEVELOPER_SUB_TABS: { id: DeveloperSubTab; label: string }[] = [
+  { id: "dev", label: "Dev" },
+  { id: "logs", label: "Logs" },
+  { id: "axes", label: "Axes" },
 ];
 
 // ---- Shortcuts tab data -------------------------------------------------
@@ -122,6 +138,8 @@ const DEVELOPER_AXES_ENTRIES: ChartEntry[] = [
 
 export function SheetHelpModal({ open, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("shortcuts");
+  const [layoutSubTab, setLayoutSubTab] = useState<LayoutSubTab>("lifecycle");
+  const [developerSubTab, setDeveloperSubTab] = useState<DeveloperSubTab>("dev");
   const toggleHelpCombos = useActionCombos(ACTION_IDS.TOGGLE_HELP);
   const toggleHelpDisplay = getCombosDisplay(toggleHelpCombos);
 
@@ -183,71 +201,113 @@ export function SheetHelpModal({ open, onClose }: Props) {
         </div>
 
         <div className={helpStyles.tabContent} data-active={activeTab === "layout"} data-testid="help-content-layout">
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Enter Layout Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Press the shortcut below to enter the modal layout editor. The mode opens in <em>navigation</em> by default; press <kbd>m</kbd> for move or <kbd>r</kbd> for resize, and <kbd>Esc</kbd> to leave.
-            </p>
-            <KeybindingChart entries={LAYOUT_ENTER_ENTRIES} cols={1} />
-          </div>
+          <Tabs
+            tabs={LAYOUT_SUB_TABS}
+            activeTab={layoutSubTab}
+            onChange={(id) => setLayoutSubTab(id as LayoutSubTab)}
+            testIdPrefix="help-layout-sub-tab"
+          />
 
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Navigation Sub-Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Move the focus between blocks. Press <kbd>m</kbd> to switch to move, <kbd>r</kbd> to switch to resize.
-            </p>
-            <KeybindingChart entries={LAYOUT_NAV_ENTRIES} />
-          </div>
+          {layoutSubTab === "lifecycle" && (
+            <div data-testid="help-layout-content-lifecycle">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Enter Layout Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Press the shortcut below to enter the modal layout editor. The mode opens in <em>navigation</em> by default; press <kbd>m</kbd> for move or <kbd>b</kbd> for resize, and <kbd>Esc</kbd> to leave.
+                </p>
+                <KeybindingChart entries={LAYOUT_ENTER_ENTRIES} cols={1} />
+              </div>
 
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Move Sub-Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Move the focused block by one grid cell at a time. Add <kbd>Alt</kbd> to refuse any wrap or push (strict move).
-            </p>
-            <KeybindingChart entries={LAYOUT_MOVE_ENTRIES} />
-          </div>
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Reset</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Discard your customizations and return to the original layout shipped with the cheatsheet.
+                </p>
+                <KeybindingChart entries={LAYOUT_RESET_ENTRIES} cols={1} />
+              </div>
+            </div>
+          )}
 
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Resize Sub-Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Grow or shrink the focused block. Plain <kbd>h/j/k/l</kbd> grows the matching edge; with <kbd>Shift</kbd> they shrink it. <kbd>Alt</kbd> enforces strict resizes (no wrap/push); <kbd>Ctrl+Shift</kbd> pulls neighbors in (compact shrink).
-            </p>
-            <KeybindingChart entries={LAYOUT_RESIZE_ENTRIES} />
-          </div>
+          {layoutSubTab === "navigation" && (
+            <div data-testid="help-layout-content-navigation">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Navigation Sub-Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Move the focus between blocks. Press <kbd>m</kbd> to switch to move, <kbd>b</kbd> to switch to resize.
+                </p>
+                <KeybindingChart entries={LAYOUT_NAV_ENTRIES} />
+              </div>
+            </div>
+          )}
 
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Reset</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Discard your customizations and return to the original layout shipped with the cheatsheet.
-            </p>
-            <KeybindingChart entries={LAYOUT_RESET_ENTRIES} cols={1} />
-          </div>
+          {layoutSubTab === "move" && (
+            <div data-testid="help-layout-content-move">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Move Sub-Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Move the focused block by one grid cell at a time. Add <kbd>Alt</kbd> to refuse any wrap or push (strict move).
+                </p>
+                <KeybindingChart entries={LAYOUT_MOVE_ENTRIES} />
+              </div>
+            </div>
+          )}
+
+          {layoutSubTab === "resize" && (
+            <div data-testid="help-layout-content-resize">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Resize Sub-Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Grow or shrink the focused block. Plain <kbd>h/j/k/l</kbd> grows the matching edge; with <kbd>Shift</kbd> they shrink it. <kbd>Alt</kbd> enforces strict resizes (no wrap/push); <kbd>Ctrl+Shift</kbd> pulls neighbors in (compact shrink).
+                </p>
+                <KeybindingChart entries={LAYOUT_RESIZE_ENTRIES} />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={helpStyles.tabContent} data-active={activeTab === "developer"} data-testid="help-content-developer">
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Developer Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Toggle Developer Mode to access the recording overlay, logs dropdown, and axes inspector. These shortcuts are active once Developer Mode is open.
-            </p>
-            <KeybindingChart entries={DEVELOPER_TOP_ENTRIES} />
-          </div>
+          <Tabs
+            tabs={DEVELOPER_SUB_TABS}
+            activeTab={developerSubTab}
+            onChange={(id) => setDeveloperSubTab(id as DeveloperSubTab)}
+            testIdPrefix="help-developer-sub-tab"
+          />
 
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Logs Sub-Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Active while the logs dropdown is open. Navigate, copy filenames, refresh, or delete recordings.
-            </p>
-            <KeybindingChart entries={DEVELOPER_LOGS_ENTRIES} />
-          </div>
+          {developerSubTab === "dev" && (
+            <div data-testid="help-developer-content-dev">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Developer Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Toggle Developer Mode to access the recording overlay, logs dropdown, and axes inspector. These shortcuts are active once Developer Mode is open.
+                </p>
+                <KeybindingChart entries={DEVELOPER_TOP_ENTRIES} />
+              </div>
+            </div>
+          )}
 
-          <div className={helpStyles.layoutSection}>
-            <h3 className="text-xl font-semibold">Axes Sub-Mode</h3>
-            <p className={helpStyles.layoutSectionIntro}>
-              Active while inspecting the grid axes. Move the cursor and toggle columns or rows on and off.
-            </p>
-            <KeybindingChart entries={DEVELOPER_AXES_ENTRIES} />
-          </div>
+          {developerSubTab === "logs" && (
+            <div data-testid="help-developer-content-logs">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Logs Sub-Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Active while the logs dropdown is open. Navigate, copy filenames, refresh, or delete recordings.
+                </p>
+                <KeybindingChart entries={DEVELOPER_LOGS_ENTRIES} />
+              </div>
+            </div>
+          )}
+
+          {developerSubTab === "axes" && (
+            <div data-testid="help-developer-content-axes">
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">Axes Sub-Mode</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Active while inspecting the grid axes. Move the cursor and toggle columns or rows on and off.
+                </p>
+                <KeybindingChart entries={DEVELOPER_AXES_ENTRIES} />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={helpStyles.tabContent} data-active={activeTab === "legend"} data-testid="help-content-legend">
