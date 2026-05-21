@@ -36,11 +36,17 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   button kept full-width above/below. 821/821 unit ✓, 75/75 E2E ✓,
   build ✓.
 
-- [ ] **FP4**. **Real tabs, not pills** (points 2, 4). Replace the
-  current pill-styled tab buttons with a true tab strip (underline on
-  active, bottom-border on the strip, consistent across top-level
-  Settings tabs and Keybindings sub-tabs). Same `<Tabs />` primitive,
-  new CSS.
+- [/] **FP4**. **Real tabs, not pills** (points 2, 4). Replaced the
+  segmented-control pill style of the shared `<Tabs />` primitive with
+  a true tab strip: transparent background, no per-tab border, accent
+  underline (`border-bottom: 2px var(--accent-2)`) on active, soft
+  bottom border (`var(--border-light)`) across the whole strip with a
+  `margin-bottom: -1px` overlap so the active underline visually merges
+  with the strip line. Aligned colour tokens (`--accent-2`, `--fg-60` /
+  `--fg-88` hover) with the help modal's tab style for visual cohesion
+  across all tabbed surfaces. Both Settings top-level tabs and
+  keybindings sub-tabs inherit the new look (same primitive). No markup
+  change. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
 - [ ] **FP5**. **Dense tables + compact reset buttons** (points 5, 7).
   Reduce keybinding row padding and line-height for a tighter feel.
