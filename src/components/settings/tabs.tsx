@@ -13,15 +13,27 @@ type TabsProps = {
   activeTab: string;
   onChange: (id: string) => void;
   testIdPrefix?: string;
+  variant?: "primary" | "secondary";
 };
 
-export function Tabs({ tabs, activeTab, onChange, testIdPrefix }: TabsProps) {
+export function Tabs({
+  tabs,
+  activeTab,
+  onChange,
+  testIdPrefix,
+  variant = "primary",
+}: TabsProps) {
+  const stripClass =
+    variant === "secondary" ? `${styles.tabs} ${styles.tabsSecondary}` : styles.tabs;
+  const tabBaseClass =
+    variant === "secondary" ? `${styles.tab} ${styles.tabSecondary}` : styles.tab;
+
   return (
-    <div className={styles.tabs}>
+    <div className={stripClass} data-variant={variant}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ""} ${tab.disabled ? styles.tabDisabled : ""}`}
+          className={`${tabBaseClass} ${activeTab === tab.id ? styles.tabActive : ""} ${tab.disabled ? styles.tabDisabled : ""}`}
           onClick={() => !tab.disabled && onChange(tab.id)}
           disabled={tab.disabled}
           data-testid={testIdPrefix ? `${testIdPrefix}-${tab.id}` : undefined}

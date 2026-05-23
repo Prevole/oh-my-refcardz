@@ -261,30 +261,29 @@ function ActionRow({
         )}
       </div>
       <div className={styles.actions}>
-        {isModified && (
-          <button
-            className={styles.resetButton}
-            onClick={onResetAction}
-            disabled={isRecording}
-            aria-label={`Reset ${action.label} to default`}
-            title="Reset to default"
-            data-testid="keybinding-reset"
+        <button
+          className={`${styles.resetButton} ${isModified ? "" : styles.resetButtonInert}`}
+          onClick={onResetAction}
+          disabled={isRecording || !isModified}
+          aria-label={isModified ? `Reset ${action.label} to default` : `${action.label} is at default`}
+          title={isModified ? "Reset to default" : "At default"}
+          data-testid="keybinding-reset"
+          data-modified={isModified}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-            </svg>
-          </button>
-        )}
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -518,7 +517,7 @@ export function KeybindingEditor() {
         />
       )}
 
-      <div data-testid="keybinding-sub-tab" data-sub-tab={activeSubTab}>
+      <div data-testid="keybinding-sub-tab" data-sub-tab={activeSubTab} className={styles.contextGrid}>
         {activeConfig.contexts.map((context) => (
           <ContextSection
             key={context}

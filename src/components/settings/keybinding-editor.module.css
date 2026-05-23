@@ -20,11 +20,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: 0;
 }
 
 .context:first-of-type {
   margin-top: 0;
+}
+
+.contextGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-5) var(--space-6);
+  align-items: start;
 }
 
 .contextTitle {
@@ -51,8 +58,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-1) var(--spacing-compact);
-  min-height: var(--space-7);
+  padding: var(--space-2) var(--spacing-compact);
+  min-height: var(--space-8);
   border-radius: var(--radius-sm);
   transition: background var(--transition-normal);
 }
@@ -71,7 +78,7 @@
 
 .label {
   flex: 1;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--fg-88);
   min-width: 0;
   overflow: hidden;
@@ -169,6 +176,15 @@
   opacity: 0.3;
 }
 
+.resetButtonInert {
+  color: var(--fg-30);
+  cursor: default;
+}
+
+.resetButtonInert:disabled {
+  opacity: 1;
+}
+
 .resetButton svg {
   width: 12px;
   height: 12px;
@@ -176,7 +192,7 @@
 
 .keycap {
   composes: keycap-base from global;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   height: 100%;
 }
 
@@ -221,10 +237,15 @@
   composes: section-footer from global;
   margin-top: 0;
   padding-top: var(--space-3);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .resetAllButton {
   composes: btn-danger from global;
+  width: auto;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
 }
 
 .conflict {

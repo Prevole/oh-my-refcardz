@@ -244,10 +244,11 @@ useAction(ACTION_IDS.MY_NEW_ACTION, "sheet", () => {
 If the action should appear in the in-app reference modal (opened with `?`), add it to one of the entry lists in `src/components/help/sheet-help-modal.tsx`:
 
 - `NAVIGATION_ENTRIES`, `ACTION_ENTRIES`, `MISC_ENTRIES` — App Shortcuts tab
-- `LAYOUT_ENTER_ENTRIES`, `LAYOUT_RESET_ENTRIES` — Layout tab → Lifecycle sub-tab
+- `LAYOUT_LIFECYCLE_ENTRIES` — Layout tab → Lifecycle sub-tab (Enter, Reset, and the three Goto sub-mode actions interleaved into a 2-column chart)
 - `LAYOUT_NAV_ENTRIES` — Layout tab → Navigation sub-tab
 - `LAYOUT_MOVE_ENTRIES` — Layout tab → Move sub-tab
-- `LAYOUT_RESIZE_ENTRIES` — Layout tab → Resize sub-tab
+- `LAYOUT_RESIZE_ENTRIES` — Layout tab → Resize sub-tab (base 8 entries)
+- `LAYOUT_RESIZE_ADVANCED_ENTRIES` — Layout tab → Resize sub-tab → "Show advanced variants" collapsible (12 entries: grow-strict, shrink-strict, shrink-compact)
 - `DEVELOPER_TOP_ENTRIES` — Developer tab → Dev sub-tab
 - `DEVELOPER_LOGS_ENTRIES` — Developer tab → Logs sub-tab
 - `DEVELOPER_AXES_ENTRIES` — Developer tab → Axes sub-tab

@@ -38,3 +38,28 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Secondary variant: smaller, softer, visually subordinate to L1 tabs. */
+.tabsSecondary {
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  border-bottom-color: var(--border-subtle);
+}
+
+.tabSecondary {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg-60);
+  border-bottom-width: 1px;
+}
+
+.tabSecondary.tabActive {
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+.tabSecondary.tabActive:hover:not(:disabled) {
+  color: var(--accent);
+}

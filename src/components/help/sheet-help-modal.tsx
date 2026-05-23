@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { KeybindingChart, type ChartEntry } from "@/components/help/keybinding-chart";
+import { Collapsible } from "@/components/help/collapsible";
 import { Tabs } from "@/components/settings/tabs";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS, getCombosDisplay } from "@/lib/keybindings";
@@ -65,15 +66,20 @@ const MISC_ENTRIES: ChartEntry[] = [
 
 // ---- Layout tab data ----------------------------------------------------
 
-const LAYOUT_ENTER_ENTRIES: ChartEntry[] = [{ id: ACTION_IDS.LAYOUT_ENTER_MODE }];
+const LAYOUT_LIFECYCLE_ENTRIES: (ChartEntry | null)[] = [
+  { id: ACTION_IDS.LAYOUT_ENTER_MODE },
+  { id: ACTION_IDS.LAYOUT_GOTO_NAVIGATION },
+  { id: ACTION_IDS.RESET_LAYOUT },
+  { id: ACTION_IDS.LAYOUT_GOTO_MOVE },
+  null,
+  { id: ACTION_IDS.LAYOUT_GOTO_RESIZE },
+];
 
 const LAYOUT_NAV_ENTRIES: ChartEntry[] = [
   { id: ACTION_IDS.LAYOUT_NAV_LEFT, label: "Focus card left" },
   { id: ACTION_IDS.LAYOUT_NAV_RIGHT, label: "Focus card right" },
   { id: ACTION_IDS.LAYOUT_NAV_UP, label: "Focus card above" },
   { id: ACTION_IDS.LAYOUT_NAV_DOWN, label: "Focus card below" },
-  { id: ACTION_IDS.LAYOUT_GOTO_MOVE },
-  { id: ACTION_IDS.LAYOUT_GOTO_RESIZE },
 ];
 
 const LAYOUT_MOVE_ENTRIES: ChartEntry[] = [
@@ -85,8 +91,6 @@ const LAYOUT_MOVE_ENTRIES: ChartEntry[] = [
   { id: ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT },
   { id: ACTION_IDS.LAYOUT_MOVE_STRICT_UP },
   { id: ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN },
-  { id: ACTION_IDS.LAYOUT_GOTO_NAVIGATION },
-  { id: ACTION_IDS.LAYOUT_GOTO_RESIZE },
 ];
 
 const LAYOUT_RESIZE_ENTRIES: ChartEntry[] = [
@@ -98,11 +102,22 @@ const LAYOUT_RESIZE_ENTRIES: ChartEntry[] = [
   { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT },
   { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP },
   { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN },
-  { id: ACTION_IDS.LAYOUT_GOTO_NAVIGATION },
-  { id: ACTION_IDS.LAYOUT_GOTO_MOVE },
 ];
 
-const LAYOUT_RESET_ENTRIES: ChartEntry[] = [{ id: ACTION_IDS.RESET_LAYOUT }];
+const LAYOUT_RESIZE_ADVANCED_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_LEFT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_RIGHT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_UP },
+  { id: ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_DOWN },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_LEFT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_RIGHT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_DOWN },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_LEFT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP },
+  { id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN },
+];
 
 // ---- Developer tab data -------------------------------------------------
 
@@ -206,24 +221,17 @@ export function SheetHelpModal({ open, onClose }: Props) {
             activeTab={layoutSubTab}
             onChange={(id) => setLayoutSubTab(id as LayoutSubTab)}
             testIdPrefix="help-layout-sub-tab"
+            variant="secondary"
           />
 
           {layoutSubTab === "lifecycle" && (
             <div data-testid="help-layout-content-lifecycle">
               <div className={helpStyles.layoutSection}>
-                <h3 className="text-xl font-semibold">Enter Layout Mode</h3>
+                <h3 className="text-xl font-semibold">Lifecycle</h3>
                 <p className={helpStyles.layoutSectionIntro}>
-                  Press the shortcut below to enter the modal layout editor. The mode opens in <em>navigation</em> by default; press <kbd>m</kbd> for move or <kbd>b</kbd> for resize, and <kbd>Esc</kbd> to leave.
+                  Enter the modal layout editor and switch between its sub-modes (navigation, move, resize). Reset discards your customizations and restores the layout shipped with the cheatsheet.
                 </p>
-                <KeybindingChart entries={LAYOUT_ENTER_ENTRIES} cols={1} />
-              </div>
-
-              <div className={helpStyles.layoutSection}>
-                <h3 className="text-xl font-semibold">Reset</h3>
-                <p className={helpStyles.layoutSectionIntro}>
-                  Discard your customizations and return to the original layout shipped with the cheatsheet.
-                </p>
-                <KeybindingChart entries={LAYOUT_RESET_ENTRIES} cols={1} />
+                <KeybindingChart entries={LAYOUT_LIFECYCLE_ENTRIES} cols={2} />
               </div>
             </div>
           )}
@@ -233,7 +241,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
               <div className={helpStyles.layoutSection}>
                 <h3 className="text-xl font-semibold">Navigation Sub-Mode</h3>
                 <p className={helpStyles.layoutSectionIntro}>
-                  Move the focus between blocks. Press <kbd>m</kbd> to switch to move, <kbd>b</kbd> to switch to resize.
+                  Move the focus between blocks. See <em>Lifecycle</em> to switch to move or resize.
                 </p>
                 <KeybindingChart entries={LAYOUT_NAV_ENTRIES} />
               </div>
@@ -245,7 +253,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
               <div className={helpStyles.layoutSection}>
                 <h3 className="text-xl font-semibold">Move Sub-Mode</h3>
                 <p className={helpStyles.layoutSectionIntro}>
-                  Move the focused block by one grid cell at a time. Add <kbd>Alt</kbd> to refuse any wrap or push (strict move).
+                  Move the focused block by one grid cell at a time. Strict variants refuse any wrap or push. See <em>Lifecycle</em> to switch to another sub-mode.
                 </p>
                 <KeybindingChart entries={LAYOUT_MOVE_ENTRIES} />
               </div>
@@ -257,9 +265,15 @@ export function SheetHelpModal({ open, onClose }: Props) {
               <div className={helpStyles.layoutSection}>
                 <h3 className="text-xl font-semibold">Resize Sub-Mode</h3>
                 <p className={helpStyles.layoutSectionIntro}>
-                  Grow or shrink the focused block. Plain <kbd>h/j/k/l</kbd> grows the matching edge; with <kbd>Shift</kbd> they shrink it. <kbd>Alt</kbd> enforces strict resizes (no wrap/push); <kbd>Ctrl+Shift</kbd> pulls neighbors in (compact shrink).
+                  Grow or shrink the focused block. Each direction and each variant has its own binding. See <em>Lifecycle</em> to switch to another sub-mode.
                 </p>
                 <KeybindingChart entries={LAYOUT_RESIZE_ENTRIES} />
+                <Collapsible summary="Show advanced variants">
+                  <p className={helpStyles.layoutSectionIntro}>
+                    Strict variants refuse any wrap or push. Compact variants pull neighbours inward when shrinking.
+                  </p>
+                  <KeybindingChart entries={LAYOUT_RESIZE_ADVANCED_ENTRIES} />
+                </Collapsible>
               </div>
             </div>
           )}
@@ -271,6 +285,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
             activeTab={developerSubTab}
             onChange={(id) => setDeveloperSubTab(id as DeveloperSubTab)}
             testIdPrefix="help-developer-sub-tab"
+            variant="secondary"
           />
 
           {developerSubTab === "dev" && (

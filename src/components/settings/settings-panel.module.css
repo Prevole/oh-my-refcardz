@@ -291,8 +291,13 @@
 .sectionReset {
   composes: section-footer from global;
   margin-top: var(--space-5);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .resetButton {
   composes: btn-danger from global;
+  width: auto;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
 }

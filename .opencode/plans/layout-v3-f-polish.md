@@ -74,9 +74,124 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   corrected the settings panel max-width (1100 → 1280) noted in
   doc post-FP3. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
+- [/] **FP7**. **Sub-tabs L2 visual variant** (refinement of FP6).
+  The `<Tabs />` primitive gained a `variant?: "primary" | "secondary"`
+  prop (default `"primary"`, current look untouched). The
+  `"secondary"` variant is smaller (`text-sm`, padding `space-1
+  space-3`), softer underline (`--accent` instead of `--accent-2`),
+  thinner active bar (1px) — visually subordinate to L1. Applied to
+  the Layout and Developer sub-tabs in `sheet-help-modal.tsx` via
+  `variant="secondary"`. Existing call sites keep `"primary"`
+  implicitly. CSS-only addition in `tabs.module.css`
+  (`.tabsSecondary` + `.tabSecondary`). 821/821 unit ✓, 75/75 E2E ✓,
+  build ✓.
+
+- [/] **FP8**. **Settings keybinding editor — auto-fit grid + help
+  sizing** (settings density refinement). The wrapper around
+  contexts in `keybinding-editor.tsx` now carries the new
+  `.contextGrid` class which uses
+  `grid-template-columns: repeat(auto-fit, minmax(360px, 1fr))`
+  with `gap: space-5 space-6`, so a sub-tab with N contexts
+  packs them into multiple columns when the FP3 1280px panel
+  allows it. Sub-tabs with a single context (Global/Home/
+  Cheatsheet) naturally degrade to one column. Row sizing
+  reverted from FP5 dense pass: label `text-sm → text-base`,
+  keycap `text-sm → text-base`, row padding `space-1 → space-2`,
+  min-height `space-7 → space-8`. Hairline separators (FP5) and
+  compact reset button (FP5) kept untouched. Result: labels and
+  combos are now legible at the help modal sizing while the
+  grid recovers the density that FP5's smaller fonts gave us.
+  821/821 unit ✓, 75/75 E2E ✓, build ✓.
+
+- [/] **FP9**. **Lifecycle becomes sub-mode hub** (refinement of FP6).
+  Help modal Layout tab → Lifecycle sub-tab now hosts 3 sections:
+  Enter, **Switch sub-mode** (new), Reset. New
+  `LAYOUT_SUBMODE_SWITCH_ENTRIES` bucket with
+  `LAYOUT_GOTO_NAVIGATION` / `LAYOUT_GOTO_MOVE` /
+  `LAYOUT_GOTO_RESIZE`. The same three entries were removed from
+  `LAYOUT_NAV_ENTRIES`, `LAYOUT_MOVE_ENTRIES`, and
+  `LAYOUT_RESIZE_ENTRIES` to kill the triple-duplication that
+  appeared after FP2 + FP6. Section intros in Navigation/Move/
+  Resize updated to redirect users to Lifecycle ("See Lifecycle
+  to switch to another sub-mode") instead of inlining the keys.
+  `docs/keybindings.md` section 4 updated to list the new bucket.
+  821/821 unit ✓, 75/75 E2E ✓, build ✓.
+
+- [/] **FP10**. **Always-visible reset icon + right-aligned
+  Reset-all** (post-FP8 visual polish). Two issues surfaced
+  during the FP8 review:
+  1. The `.actions` column reserves a fixed `space-6` width
+     for the per-row reset icon, but the icon only renders
+     when the action is modified. Result: visible blank
+     gutter on every unmodified row.
+  2. The "Reset all keybindings" button still inherits
+     `btn-danger`'s `width: 100%`, looking oversized on the
+     wider FP3 panel.
+  Fixes:
+  - `ActionRow` always renders the reset button. When the
+    action is unmodified, the button is `disabled` and styled
+    via new `.resetButtonInert` class (`color: --fg-30`, no
+    cursor, no opacity dimming). When modified, picks up the
+    FP5 standard appearance (subtle, hover → `--fg-75`).
+    Added `data-modified` attribute on the button for selector
+    granularity if needed; existing `data-testid="keybinding-reset"`
+    selector still matches and E2E spec keeps working (it asserts
+    the button is visible after modification, which is now always
+    true; the click still triggers reset because the button is
+    enabled in the modified state).
+  - `.footer` now `display: flex; justify-content: flex-end`;
+    `.resetAllButton` overrides `width: auto` with compact
+    padding (`space-1 space-3`) and `text-sm`. Aligned to the
+    right edge of the panel, takes only its natural width.
+  821/821 unit ✓, 75/75 E2E ✓, build ✓.
+
+- [/] **FP11**. **Lifecycle merge + intros cleanup + grid
+  fix + UI reset polish** (FP9/FP8/FP10 follow-ups).
+  Five targeted refinements grouped because they share the
+  same review pass:
+  1. **Lifecycle unified table** — Replaced the 3 sections
+     (Enter / Switch sub-mode / Reset) with a single
+     `<KeybindingChart cols={2}>` whose entries are
+     interleaved row-by-row to produce 2 logical columns:
+     left = lifecycle (Enter / Reset / _), right = sub-modes
+     (Goto Nav / Goto Move / Goto Resize). New
+     `LAYOUT_LIFECYCLE_ENTRIES` bucket replaces
+     `LAYOUT_ENTER_ENTRIES`, `LAYOUT_SUBMODE_SWITCH_ENTRIES`,
+     `LAYOUT_RESET_ENTRIES`.
+  2. **Move/Resize intros — keys removed from prose** —
+     All key mentions moved into the chart. Move intro
+     mentions strict semantics without naming Alt; Resize
+     intro just says "Each direction and each variant has
+     its own binding".
+  3. **Resize advanced variants exposed** — New
+     `Collapsible` widget in `src/components/help/` (minimal
+     disclosure, animated chevron, summary-only button).
+     Resize sub-tab now shows 8 base entries (grow + shrink)
+     plus a collapsed "Show advanced variants" containing 12
+     more: `LAYOUT_RESIZE_GROW_STRICT_*` ×4,
+     `LAYOUT_RESIZE_SHRINK_STRICT_*` ×4,
+     `LAYOUT_RESIZE_SHRINK_COMPACT_*` ×4. All 20 are
+     configurable in settings via `ACTION_IDS` (no schema
+     change). Move strict variants already lived in the base
+     `LAYOUT_MOVE_ENTRIES`, kept as-is.
+  4. **Single-context grid fix** — `keybinding-editor`
+     `.contextGrid` switched from `auto-fit` to `auto-fill`.
+     Lone contexts (Global / Home / Cheatsheet) now stay
+     bounded to ~360–`1fr` of a single track instead of
+     stretching across the full 1280px width. Multi-context
+     sub-tabs (Layout, Developer) keep packing into 2–3
+     columns.
+  5. **UI tab reset button** — Same pattern as FP10's
+     reset-all: `.sectionReset` becomes flex right;
+     `.resetButton` overrides `width: auto` with compact
+     padding (`space-1 space-3`) and `text-sm`. Visual
+     parity with the keybindings reset-all.
+  `docs/keybindings.md` section 4 updated to reflect the
+  new ENTRIES buckets. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
+
 ## Locked decisions
 
-- Order: FP1 → FP6, commit at each border.
+- Order: FP1 → FP11, commit at each border.
 - Architecture for shared mode-switch: approach A3 (sub-scopes
   non-modal, single action in `layout`).
 - Density: start modest, iterate with the user.
