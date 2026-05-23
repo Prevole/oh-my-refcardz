@@ -83,6 +83,7 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 |---------|-------------|-----------------|
 | `global` | Always | Navigation, help, settings |
 | `help` | Help modal open | Focus next/previous tab, descend to sub-tab row, activate focused tab |
+| `settings` | Settings panel open | Focus next/previous tab, descend to sub-tab / sub-sub-tab row, activate focused tab |
 | `home` | Home page | Search, open sheet |
 | `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout, enter layout mode |
 | `layout` | Layout modal mode (any sub-mode) | Parent scope; hosts sub-mode switching bindings (`n` / `m` / `b`) shared across all sub-modes via the cascade |

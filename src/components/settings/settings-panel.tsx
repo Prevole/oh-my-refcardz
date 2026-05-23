@@ -8,9 +8,13 @@ import type {
   UISettings,
   SettingsTopTab,
 } from "@/hooks/use-ui-settings";
+import { useUISettings } from "@/hooks/use-ui-settings";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { useKeybindings } from "@/hooks/use-keybindings";
+import { ACTION_IDS } from "@/lib/keybindings";
 import { Tabs } from "./tabs";
 import { KeybindingEditor } from "./keybinding-editor";
+import { SUB_TABS, SUB_SUB_TABS } from "./keybinding-tabs-config";
 import styles from "./settings-panel.module.css";
 
 type Props = {
@@ -88,6 +92,37 @@ export function SettingsPanel({
   const [isClosing, setIsClosing] = useState(false);
 
   const activeTab = settings.panelTabs.active;
+  const activeSubTab = settings.panelTabs.keybindingsSub;
+  const activeSubSubTab = settings.panelTabs.keybindingsSubSub;
+
+  const { setActiveKeybindingsSubTab, setActiveKeybindingsSubSubTab } = useUISettings();
+  const { matchesAction } = useKeybindings();
+
+  type FocusRow = "L1" | "L2" | "L3";
+  const [focus, setFocus] = useState<{ row: FocusRow; index: number }>({ row: "L1", index: 0 });
+
+  const showL2 = activeTab === "keybindings";
+  const showL3 = showL2 && activeSubTab === "cheatsheet";
+
+  // Reset focus to the active L1 tab whenever the panel opens. State-mirror
+  // pattern: track previous isOpen as state and react during render.
+  const [prevOpen, setPrevOpen] = useState(isOpen);
+  if (prevOpen !== isOpen) {
+    setPrevOpen(isOpen);
+    if (isOpen) {
+      const idx = TOP_TABS.findIndex((t) => t.id === activeTab);
+      setFocus({ row: "L1", index: idx >= 0 ? idx : 0 });
+    }
+  }
+
+  // If a row vanishes while focus was inside it, bubble focus up.
+  if (focus.row === "L3" && !showL3) {
+    const idx = SUB_TABS.findIndex((t) => t.id === activeSubTab);
+    setFocus({ row: "L2", index: idx >= 0 ? idx : 0 });
+  } else if (focus.row === "L2" && !showL2) {
+    const idx = TOP_TABS.findIndex((t) => t.id === activeTab);
+    setFocus({ row: "L1", index: idx >= 0 ? idx : 0 });
+  }
 
   useEffect(() => {
     return () => {
@@ -115,9 +150,97 @@ export function SettingsPanel({
       if (event.key === "Escape") {
         event.preventDefault();
         requestClose();
+        return;
+      }
+
+      // Tab navigation across the settings panel header rows.
+      if (matchesAction(event, ACTION_IDS.SETTINGS_TAB_LEFT)) {
+        event.preventDefault();
+        setFocus((prev) => {
+          const len =
+            prev.row === "L1" ? TOP_TABS.length
+            : prev.row === "L2" ? SUB_TABS.length
+            : SUB_SUB_TABS.length;
+          if (len === 0) return prev;
+          return { ...prev, index: (prev.index - 1 + len) % len };
+        });
+        return;
+      }
+
+      if (matchesAction(event, ACTION_IDS.SETTINGS_TAB_RIGHT)) {
+        event.preventDefault();
+        setFocus((prev) => {
+          const len =
+            prev.row === "L1" ? TOP_TABS.length
+            : prev.row === "L2" ? SUB_TABS.length
+            : SUB_SUB_TABS.length;
+          if (len === 0) return prev;
+          return { ...prev, index: (prev.index + 1) % len };
+        });
+        return;
+      }
+
+      if (matchesAction(event, ACTION_IDS.SETTINGS_TAB_UP)) {
+        event.preventDefault();
+        setFocus((prev) => {
+          if (prev.row === "L1") return prev;
+          if (prev.row === "L3") {
+            const idx = SUB_TABS.findIndex((t) => t.id === activeSubTab);
+            return { row: "L2", index: idx >= 0 ? idx : 0 };
+          }
+          // L2 → L1 parent
+          const idx = TOP_TABS.findIndex((t) => t.id === activeTab);
+          return { row: "L1", index: idx >= 0 ? idx : 0 };
+        });
+        return;
+      }
+
+      if (matchesAction(event, ACTION_IDS.SETTINGS_TAB_DOWN)) {
+        event.preventDefault();
+        setFocus((prev) => {
+          if (prev.row === "L1") {
+            if (!showL2) return prev;
+            const idx = SUB_TABS.findIndex((t) => t.id === activeSubTab);
+            return { row: "L2", index: idx >= 0 ? idx : 0 };
+          }
+          if (prev.row === "L2") {
+            if (!showL3) return prev;
+            const idx = SUB_SUB_TABS.findIndex((t) => t.id === activeSubSubTab);
+            return { row: "L3", index: idx >= 0 ? idx : 0 };
+          }
+          return prev;
+        });
+        return;
+      }
+
+      if (matchesAction(event, ACTION_IDS.SETTINGS_TAB_ACTIVATE)) {
+        event.preventDefault();
+        if (focus.row === "L1") {
+          const tab = TOP_TABS[focus.index];
+          if (tab) onSetActivePanelTab(tab.id);
+        } else if (focus.row === "L2") {
+          const tab = SUB_TABS[focus.index];
+          if (tab) setActiveKeybindingsSubTab(tab.id);
+        } else {
+          const tab = SUB_SUB_TABS[focus.index];
+          if (tab) setActiveKeybindingsSubSubTab(tab.id);
+        }
+        return;
       }
     },
-    [requestClose]
+    [
+      requestClose,
+      matchesAction,
+      focus,
+      showL2,
+      showL3,
+      activeTab,
+      activeSubTab,
+      activeSubSubTab,
+      onSetActivePanelTab,
+      setActiveKeybindingsSubTab,
+      setActiveKeybindingsSubSubTab,
+    ]
   );
 
   useScopedKeyboardHandler("settings", handleKeyDown, [handleKeyDown]);
@@ -222,7 +345,13 @@ export function SettingsPanel({
           <Tabs
             tabs={TOP_TABS}
             activeTab={activeTab}
-            onChange={(id) => onSetActivePanelTab(id as SettingsTopTab)}
+            onChange={(id) => {
+              onSetActivePanelTab(id as SettingsTopTab);
+              const idx = TOP_TABS.findIndex((t) => t.id === id);
+              if (idx >= 0) setFocus({ row: "L1", index: idx });
+            }}
+            focusedTabId={focus.row === "L1" ? TOP_TABS[focus.index]?.id ?? null : null}
+            testIdPrefix="settings-top-tab"
           />
         </div>
 
@@ -333,7 +462,18 @@ export function SettingsPanel({
                     Customize the keyboard shortcuts used across the app. Click a keybinding to record a new one. Press <kbd>Shift</kbd>+<kbd>Click</kbd> on a secondary binding to promote it to primary.
                   </p>
                 </header>
-                <KeybindingEditor />
+                <KeybindingEditor
+                  focusedSubTab={focus.row === "L2" ? SUB_TABS[focus.index]?.id ?? null : null}
+                  focusedSubSubTab={focus.row === "L3" ? SUB_SUB_TABS[focus.index]?.id ?? null : null}
+                  onSubTabClick={(id) => {
+                    const idx = SUB_TABS.findIndex((t) => t.id === id);
+                    if (idx >= 0) setFocus({ row: "L2", index: idx });
+                  }}
+                  onSubSubTabClick={(id) => {
+                    const idx = SUB_SUB_TABS.findIndex((t) => t.id === id);
+                    if (idx >= 0) setFocus({ row: "L3", index: idx });
+                  }}
+                />
               </section>
             </div>
           )}

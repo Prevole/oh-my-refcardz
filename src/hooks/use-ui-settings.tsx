@@ -14,11 +14,13 @@ export interface ModernSettings {
 }
 
 export type SettingsTopTab = "ui" | "keybindings";
-export type KeybindingsSubTab = "global" | "home" | "cheatsheet" | "layout" | "developer";
+export type KeybindingsSubTab = "general" | "home" | "cheatsheet";
+export type KeybindingsSubSubTab = "general" | "layout" | "developer";
 
 export interface PanelTabsState {
   active: SettingsTopTab;
   keybindingsSub: KeybindingsSubTab;
+  keybindingsSubSub: KeybindingsSubSubTab;
 }
 
 export interface UISettings {
@@ -37,7 +39,8 @@ const DEFAULT_SETTINGS: UISettings = {
   },
   panelTabs: {
     active: "ui",
-    keybindingsSub: "global",
+    keybindingsSub: "general",
+    keybindingsSubSub: "general",
   },
 };
 
@@ -55,6 +58,37 @@ function getRandomModernSettings(): ModernSettings {
 let hasRandomizedThisSession = false;
 let cachedSettings: UISettings | null = null;
 
+function migratePanelTabs(raw: unknown): PanelTabsState {
+  const base = DEFAULT_SETTINGS.panelTabs;
+  if (!raw || typeof raw !== "object") return base;
+  const partial = raw as Partial<PanelTabsState> & { keybindingsSub?: string; keybindingsSubSub?: string };
+
+  let sub: KeybindingsSubTab = base.keybindingsSub;
+  let subSub: KeybindingsSubSubTab = base.keybindingsSubSub;
+
+  const legacySub = partial.keybindingsSub;
+  if (legacySub === "general" || legacySub === "home" || legacySub === "cheatsheet") {
+    sub = legacySub;
+  } else if (legacySub === "global") {
+    sub = "general";
+  } else if (legacySub === "layout") {
+    sub = "cheatsheet";
+    subSub = "layout";
+  } else if (legacySub === "developer") {
+    sub = "cheatsheet";
+    subSub = "developer";
+  }
+
+  const legacySubSub = partial.keybindingsSubSub;
+  if (legacySubSub === "general" || legacySubSub === "layout" || legacySubSub === "developer") {
+    subSub = legacySubSub;
+  }
+
+  const active = partial.active === "keybindings" ? "keybindings" : "ui";
+
+  return { active, keybindingsSub: sub, keybindingsSubSub: subSub };
+}
+
 function loadSettings(): UISettings {
   if (typeof window === "undefined") {
     return DEFAULT_SETTINGS;
@@ -70,7 +104,7 @@ function loadSettings(): UISettings {
       const parsed = JSON.parse(stored) as Partial<UISettings>;
       const merged: UISettings = {
         modern: { ...DEFAULT_SETTINGS.modern, ...(parsed.modern ?? {}) },
-        panelTabs: { ...DEFAULT_SETTINGS.panelTabs, ...(parsed.panelTabs ?? {}) },
+        panelTabs: migratePanelTabs(parsed.panelTabs),
       };
       if (merged.modern.random && !hasRandomizedThisSession) {
         hasRandomizedThisSession = true;
@@ -131,6 +165,7 @@ interface UISettingsContextValue {
   setDirection: (direction: GradientDirection) => void;
   setActivePanelTab: (tab: SettingsTopTab) => void;
   setActiveKeybindingsSubTab: (tab: KeybindingsSubTab) => void;
+  setActiveKeybindingsSubSubTab: (tab: KeybindingsSubSubTab) => void;
   resetModern: () => void;
   resetAll: () => void;
 }
@@ -190,6 +225,15 @@ export function UISettingsProvider({ children }: ProviderProps) {
     saveSettings(newSettings);
   }, []);
 
+  const setActiveKeybindingsSubSubTab = useCallback((tab: KeybindingsSubSubTab) => {
+    const current = loadSettings();
+    const newSettings: UISettings = {
+      ...current,
+      panelTabs: { ...current.panelTabs, keybindingsSubSub: tab },
+    };
+    saveSettings(newSettings);
+  }, []);
+
   const resetModern = useCallback(() => {
     const current = loadSettings();
     const newSettings = { ...current, modern: DEFAULT_SETTINGS.modern };
@@ -209,6 +253,7 @@ export function UISettingsProvider({ children }: ProviderProps) {
     setDirection,
     setActivePanelTab,
     setActiveKeybindingsSubTab,
+    setActiveKeybindingsSubSubTab,
     resetModern,
     resetAll,
   };

@@ -292,6 +292,7 @@ function ActionRow({
 const CONTEXT_LABELS: Record<KeybindingContext, string> = {
   global: "Global Shortcuts",
   help: "Help Navigation",
+  settings: "Settings Navigation",
   home: "Home",
   sheet: "Cheatsheet",
   layout: "Layout Mode",
@@ -303,47 +304,10 @@ const CONTEXT_LABELS: Record<KeybindingContext, string> = {
   "dev-axes": "Axes sub-mode",
 };
 
-type SubTabId = "global" | "home" | "cheatsheet" | "layout" | "developer";
+type SubTabId = "general" | "home" | "cheatsheet";
+type SubSubTabId = "general" | "layout" | "developer";
 
-type SubTabConfig = {
-  id: SubTabId;
-  label: string;
-  intro: string;
-  contexts: KeybindingContext[];
-};
-
-const SUB_TABS: SubTabConfig[] = [
-  {
-    id: "global",
-    label: "Global",
-    intro: "Shortcuts active everywhere, regardless of the current page. Help Navigation bindings are scoped to the help modal but are grouped here for discoverability.",
-    contexts: ["global", "help"],
-  },
-  {
-    id: "home",
-    label: "Home",
-    intro: "Shortcuts active on the home grid.",
-    contexts: ["home"],
-  },
-  {
-    id: "cheatsheet",
-    label: "Cheatsheet",
-    intro: "Shortcuts active while browsing a cheatsheet.",
-    contexts: ["sheet"],
-  },
-  {
-    id: "layout",
-    label: "Layout Mode",
-    intro: "Shortcuts active while editing the layout of a cheatsheet. Each sub-mode (Navigation, Move, Resize) has its own set of bindings.",
-    contexts: ["layout", "layout-navigation", "layout-move", "layout-resize"],
-  },
-  {
-    id: "developer",
-    label: "Developer",
-    intro: "Shortcuts active in Developer Mode and its sub-modes.",
-    contexts: ["dev", "dev-logs", "dev-axes"],
-  },
-];
+import { SUB_TABS, SUB_SUB_TABS, getActiveContexts } from "./keybinding-tabs-config";
 
 function ContextSection({
   context,
@@ -385,7 +349,14 @@ function ContextSection({
   );
 }
 
-export function KeybindingEditor() {
+type KeybindingEditorProps = {
+  focusedSubTab: SubTabId | null;
+  focusedSubSubTab: SubSubTabId | null;
+  onSubTabClick?: (id: SubTabId) => void;
+  onSubSubTabClick?: (id: SubSubTabId) => void;
+};
+
+export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClick, onSubSubTabClick }: KeybindingEditorProps) {
   const {
     config,
     setActionCombos,
@@ -396,8 +367,9 @@ export function KeybindingEditor() {
     resetAll,
   } = useKeybindings();
 
-  const { settings, setActiveKeybindingsSubTab } = useUISettings();
+  const { settings, setActiveKeybindingsSubTab, setActiveKeybindingsSubSubTab } = useUISettings();
   const activeSubTab = settings.panelTabs.keybindingsSub;
+  const activeSubSubTab = settings.panelTabs.keybindingsSubSub;
 
   const [recording, setRecording] = useState<RecordingState>(null);
   const [lastConflict, setLastConflict] = useState<KeybindingConflict | null>(null);
@@ -496,8 +468,9 @@ export function KeybindingEditor() {
     setLastConflict(null);
   }, [resetAll]);
 
-  const activeConfig = SUB_TABS.find((tab) => tab.id === activeSubTab) ?? SUB_TABS[0];
-  const showContextHeaders = activeConfig.contexts.length > 1;
+  const { contexts: activeContexts, intro: activeIntro } = getActiveContexts(activeSubTab, activeSubSubTab);
+  const showContextHeaders = activeContexts.length > 1;
+  const showSubSubTabs = activeSubTab === "cheatsheet";
 
   return (
     <div className={styles.editor} data-testid="keybinding-editor">
@@ -505,11 +478,35 @@ export function KeybindingEditor() {
         <Tabs
           tabs={SUB_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
           activeTab={activeSubTab}
-          onChange={(id) => setActiveKeybindingsSubTab(id as SubTabId)}
+          onChange={(id) => {
+            const typed = id as SubTabId;
+            setActiveKeybindingsSubTab(typed);
+            onSubTabClick?.(typed);
+          }}
+          variant="secondary"
+          testIdPrefix="keybindings-sub-tab"
+          focusedTabId={focusedSubTab}
         />
       </div>
 
-      <p className={styles.subTabIntro}>{activeConfig.intro}</p>
+      {showSubSubTabs && (
+        <div className={styles.subSubTabsBar}>
+          <Tabs
+            tabs={SUB_SUB_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
+            activeTab={activeSubSubTab}
+            onChange={(id) => {
+              const typed = id as SubSubTabId;
+              setActiveKeybindingsSubSubTab(typed);
+              onSubSubTabClick?.(typed);
+            }}
+            variant="secondary"
+            testIdPrefix="keybindings-sub-sub-tab"
+            focusedTabId={focusedSubSubTab}
+          />
+        </div>
+      )}
+
+      <p className={styles.subTabIntro}>{activeIntro}</p>
 
       {lastConflict && (
         <ConflictNotice
@@ -518,8 +515,8 @@ export function KeybindingEditor() {
         />
       )}
 
-      <div data-testid="keybinding-sub-tab" data-sub-tab={activeSubTab} className={styles.contextGrid}>
-        {activeConfig.contexts.map((context) => (
+      <div data-testid="keybinding-sub-tab" data-sub-tab={activeSubTab} data-sub-sub-tab={showSubSubTabs ? activeSubSubTab : undefined} className={styles.contextGrid}>
+        {activeContexts.map((context) => (
           <ContextSection
             key={context}
             context={context}

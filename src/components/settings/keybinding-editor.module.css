@@ -9,6 +9,11 @@
      Keep this wrapper so future enhancements (sticky bar, etc.) have a hook. */
 }
 
+.subSubTabsBar {
+  /* Wrapper for the L3 (sub-sub) tabs strip rendered under L2 when the
+     "Cheatsheet" sub-tab is active. */
+}
+
 .subTabIntro {
   margin: 0;
   font-size: var(--text-sm);

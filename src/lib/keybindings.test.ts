@@ -547,6 +547,10 @@ describe("scopeToContext", () => {
     expect(scopeToContext("help")).toBe("help");
   });
 
+  it("maps settings scope to settings context", () => {
+    expect(scopeToContext("settings")).toBe("settings");
+  });
+
   it("maps layout sub-mode scopes to their dedicated contexts", () => {
     expect(scopeToContext("layout")).toBe("layout");
     expect(scopeToContext("layout-navigation")).toBe("layout-navigation");
@@ -555,6 +559,6 @@ describe("scopeToContext", () => {
   });
 
   it("returns null for unknown scope", () => {
-    expect(scopeToContext("settings")).toBeNull();
+    expect(scopeToContext("info")).toBeNull();
   });
 });

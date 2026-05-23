@@ -22,6 +22,7 @@ export interface KeyDisplayPart {
 export type KeybindingContext =
   | "global"
   | "help"
+  | "settings"
   | "home"
   | "sheet"
   | "layout"
@@ -38,6 +39,8 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "global";
     case "help":
       return "help";
+    case "settings":
+      return "settings";
     case "layout":
       return "layout";
     case "layout-navigation":
@@ -80,6 +83,13 @@ export const ACTION_IDS = {
   HELP_TAB_UP: "help.tab-up",
   HELP_TAB_DOWN: "help.tab-down",
   HELP_TAB_ACTIVATE: "help.tab-activate",
+
+  // Settings panel tab traversal (scope `settings` / context `settings`).
+  SETTINGS_TAB_LEFT: "settings.tab-left",
+  SETTINGS_TAB_RIGHT: "settings.tab-right",
+  SETTINGS_TAB_UP: "settings.tab-up",
+  SETTINGS_TAB_DOWN: "settings.tab-down",
+  SETTINGS_TAB_ACTIVATE: "settings.tab-activate",
 
   BACK_TO_HOME: "sheet.back-to-home",
   COPY_COMMAND: "sheet.copy",
@@ -244,6 +254,34 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
     {
       id: ACTION_IDS.HELP_TAB_ACTIVATE,
+      label: "Activate focused tab",
+      combos: [key(" "), key("Enter")],
+    },
+  ],
+
+  settings: [
+    {
+      id: ACTION_IDS.SETTINGS_TAB_LEFT,
+      label: "Focus previous tab",
+      combos: [key("ArrowLeft"), key("h")],
+    },
+    {
+      id: ACTION_IDS.SETTINGS_TAB_RIGHT,
+      label: "Focus next tab",
+      combos: [key("ArrowRight"), key("l")],
+    },
+    {
+      id: ACTION_IDS.SETTINGS_TAB_UP,
+      label: "Focus parent tab row",
+      combos: [key("ArrowUp"), key("k")],
+    },
+    {
+      id: ACTION_IDS.SETTINGS_TAB_DOWN,
+      label: "Focus sub-tab row",
+      combos: [key("ArrowDown"), key("j")],
+    },
+    {
+      id: ACTION_IDS.SETTINGS_TAB_ACTIVATE,
       label: "Activate focused tab",
       combos: [key(" "), key("Enter")],
     },
