@@ -551,6 +551,10 @@ describe("scopeToContext", () => {
     expect(scopeToContext("sheet")).toBe("sheet");
   });
 
+  it("maps modal scope to modal context", () => {
+    expect(scopeToContext("modal")).toBe("modal");
+  });
+
   it("maps help scope to help context", () => {
     expect(scopeToContext("help")).toBe("help");
   });

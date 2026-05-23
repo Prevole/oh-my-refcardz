@@ -282,13 +282,32 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   scope stack illustration updated to show `home`/`sheet` mounted
   states. 825/825 unit ✓, 75/75 E2E ✓, build ✓.
 
+- [/] **FP14b**. **Add `modal` scope**. Adds a generic `modal`
+  scope shared by `CommandCopyModal` and `ItemDetailModal`. Both
+  modals call `useKeyboardScope("modal", true, { modal: true })`
+  at mount; the `modal: true` modality blocks the cascade so
+  parent `sheet`-level handlers (in particular `BACK_TO_HOME` on
+  `Esc`) cannot run while a modal is open. The DOM-based guard
+  in `sheet-shortcuts.tsx` (`document.querySelector("[data-command-modal-overlay]")`)
+  becomes redundant but is kept for now. Modal-internal keydown
+  listeners remain `window.addEventListener` based (capturing in
+  command-copy via `stopImmediatePropagation`); they keep working
+  unchanged because they don't go through the scope dispatcher.
+  Adds `modal` to `KeybindingContext` and `KeyboardScopeId`,
+  maps 1:1 in `scopeToContext`, defines an empty
+  `DEFAULT_KEYBINDINGS.modal: []` (will be populated in FP14c),
+  fills `CONTEXT_LABELS.modal = "Modal"` for the settings editor.
+  826/826 unit ✓, 75/75 E2E ✓, build ✓.
+
 ## Notes / cross-references
 
 - F-polish FP2 changed only the modality of three scopes (`layout-*`)
-  and the action set inside the `layout` scope. FP14a expands the
+  and the action set inside the `layout` scope. FP14a expanded the
   scope inventory from 11 to 13 by adding `home` and `sheet` as
-  proper push-while-mounted scopes (preparation for FP14c MOVE_*
-  split).
+  proper push-while-mounted scopes; FP14b further added `modal`
+  (14 scopes total) to back the command-copy and item-detail
+  modals with a true modal cascade barrier (preparation for FP14c
+  MOVE_* split).
 - After FP2, `LAYOUT_NAV_TO_*` / `LAYOUT_MOVE_TO_*` / `LAYOUT_RESIZE_TO_*`
   are gone from `ACTION_IDS` — anything still referencing them
   (settings sub-tab heuristics, help modal entry lists, E2E specs)

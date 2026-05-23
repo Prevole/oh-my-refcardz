@@ -8,6 +8,7 @@ import { InlineCodeText } from "@/components/sheets/inline-code-text";
 import { ActionInlineBinding } from "@/components/settings/keybinding-display";
 import { getCopyablePayload, type CopyablePayload } from "./copyable";
 import { useKeybindings } from "@/hooks/use-keybindings";
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS } from "@/lib/keybindings";
 import { hasPlaceholders } from "@/lib/placeholder-parser";
 import type { CheatSheetEntry } from "@/lib/cheatsheet-shared";
@@ -31,6 +32,7 @@ export function ItemDetailModal({
 }: ItemDetailModalProps) {
   const registerModalOpen = useRegisterModalOpen();
   const { matchesAction } = useKeybindings();
+  useKeyboardScope("modal", true, { modal: true });
   const contentRef = useRef<HTMLDivElement>(null);
   const focusedIndexRef = useRef<number>(-1);
 

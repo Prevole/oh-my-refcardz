@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
 import { InlineCodeText } from "@/components/sheets/inline-code-text";
 import { useKeybindings } from "@/hooks/use-keybindings";
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS, matchesCombo } from "@/lib/keybindings";
 import {
   parsePlaceholders,
@@ -25,6 +26,7 @@ type CommandCopyModalProps = {
 export function CommandCopyModal({ title, value, previewPrefix = "", accentColor, onClose }: CommandCopyModalProps) {
   const registerModalOpen = useRegisterModalOpen();
   const { getAction } = useKeybindings();
+  useKeyboardScope("modal", true, { modal: true });
   const firstInputRef = useRef<HTMLInputElement>(null);
   const placeholders = parsePlaceholders(value);
   const [values, setValues] = useState<Record<string, string>>(() =>

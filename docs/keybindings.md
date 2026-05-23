@@ -86,6 +86,7 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `settings` | Settings panel open | Focus next/previous tab, descend to sub-tab / sub-sub-tab row, activate focused tab |
 | `home` | Home page | Search, open sheet |
 | `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout, enter layout mode |
+| `modal` | A command-copy or item-detail modal is open (modal scope, blocks cascade) | Modal-specific navigation, copy |
 | `layout` | Layout modal mode (any sub-mode) | Parent scope; hosts sub-mode switching bindings (`n` / `m` / `b`) shared across all sub-modes via the cascade |
 | `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down, exit |
 | `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier), exit |
@@ -111,6 +112,8 @@ Scopes form a stack of `{ scope, modal }` entries:
 [{ scope: "global", modal: false }]                       # Base (always present)
 [..., { scope: "home", modal: false }]                    # Home page mounted
 [..., { scope: "sheet", modal: false }]                   # Cheatsheet page mounted
+[..., { scope: "sheet", modal: false },
+      { scope: "modal", modal: true }]                    # Command-copy/item-detail modal open
 [..., { scope: "sheet", modal: false },
       { scope: "help",  modal: false }]                   # Help modal open over a sheet
 [..., { scope: "sheet", modal: false },

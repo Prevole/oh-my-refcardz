@@ -295,6 +295,7 @@ const CONTEXT_LABELS: Record<KeybindingContext, string> = {
   settings: "Settings Navigation",
   home: "Home",
   sheet: "Cheatsheet",
+  modal: "Modal",
   layout: "Layout Mode",
   "layout-navigation": "Navigation sub-mode",
   "layout-move": "Move sub-mode",

@@ -25,6 +25,7 @@ export type KeybindingContext =
   | "settings"
   | "home"
   | "sheet"
+  | "modal"
   | "layout"
   | "layout-navigation"
   | "layout-move"
@@ -41,6 +42,8 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "home";
     case "sheet":
       return "sheet";
+    case "modal":
+      return "modal";
     case "help":
       return "help";
     case "settings":
@@ -351,6 +354,8 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       combos: [combo("m", "ctrl")],
     },
   ],
+
+  modal: [],
 
   layout: [
     {
