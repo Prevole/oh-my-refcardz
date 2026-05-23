@@ -9,9 +9,11 @@
      Keep this wrapper so future enhancements (sticky bar, etc.) have a hook. */
 }
 
+/* Glue L3 strip immediately under L2: cancel both the parent flex gap and the
+ * L2 strip's own bottom margin (--space-4 each, applied on .tabsSecondary).
+ * The L3 strip's own bottom margin remains, separating it from the intro. */
 .subSubTabsBar {
-  /* Wrapper for the L3 (sub-sub) tabs strip rendered under L2 when the
-     "Cheatsheet" sub-tab is active. */
+  margin-top: calc(var(--space-4) * -2);
 }
 
 .subTabIntro {

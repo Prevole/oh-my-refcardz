@@ -77,3 +77,49 @@
 .tabSecondary.tabActive:hover:not(:disabled) {
   color: var(--accent);
 }
+
+/* Tertiary variant: inverted decoration (bar on TOP, rounded corners at
+ * BOTTOM) to visually hang under the secondary row above. Used for L3 tabs
+ * under the L2 "Cheatsheet" tab. Color is --accent-3 (terra-cotta) so each
+ * level has a distinct hue: L1 turquoise, L2 amber, L3 terra-cotta. */
+.tabsTertiary {
+  gap: var(--space-1);
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  border-bottom: none;
+  border-top: 1px solid var(--border-subtle);
+  padding-left: var(--l3-indent, 0);
+}
+
+.tabTertiary {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg-60);
+  /* Reset secondary's bottom border, swap to top border. */
+  border-bottom: none;
+  border-top: 2px solid transparent;
+  /* Swap radius from top to bottom corners. */
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  /* Pull the row up by 1px to overlap the parent border-bottom and the new
+   * top border, so the rows feel glued together. */
+  margin-top: -1px;
+  margin-bottom: 0;
+}
+
+.tabTertiary.tabActive {
+  color: var(--accent-3);
+  font-weight: 600;
+  border-top-color: var(--accent-3);
+}
+
+.tabTertiary.tabActive:hover:not(:disabled) {
+  color: var(--accent-3);
+}
+
+.tabTertiary[data-focused="true"] {
+  background: color-mix(in srgb, var(--accent-3) 12%, transparent);
+}

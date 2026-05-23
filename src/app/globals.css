@@ -15,6 +15,7 @@
   --surface-soft: #243b56;
   --accent: #ffb703;
   --accent-2: #00d1b2;
+  --accent-3: #e07a5f;
 
   /* ─────────────────────────────────────────────────────────────────────────────
      SEMANTIC COLORS — States and feedback
@@ -157,6 +158,7 @@ html {
   --color-surface-soft: var(--surface-soft);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
   --color-success: var(--success);
   --color-error: var(--error);
   --color-warning: var(--warning);

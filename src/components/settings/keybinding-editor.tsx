@@ -472,9 +472,36 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
   const showContextHeaders = activeContexts.length > 1;
   const showSubSubTabs = activeSubTab === "cheatsheet";
 
+  // Dynamic indent: align the L3 strip's left edge with the L2 "Cheatsheet"
+  // tab. We measure the tab's offsetLeft within the L2 strip and expose it as
+  // a CSS var on the L3 wrapper, re-measuring on resize.
+  const subTabsBarRef = useRef<HTMLDivElement>(null);
+  const subSubTabsBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSubSubTabs) return;
+    const strip = subTabsBarRef.current;
+    const target = subSubTabsBarRef.current;
+    if (!strip || !target) return;
+
+    const measure = () => {
+      const tab = strip.querySelector<HTMLElement>('[data-testid="keybindings-sub-tab-cheatsheet"]');
+      if (!tab) return;
+      const stripRect = strip.getBoundingClientRect();
+      const tabRect = tab.getBoundingClientRect();
+      const indent = Math.max(0, tabRect.left - stripRect.left);
+      target.style.setProperty("--l3-indent", `${indent}px`);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, [showSubSubTabs]);
+
   return (
     <div className={styles.editor} data-testid="keybinding-editor">
-      <div className={styles.subTabsBar}>
+      <div className={styles.subTabsBar} ref={subTabsBarRef}>
         <Tabs
           tabs={SUB_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
           activeTab={activeSubTab}
@@ -490,7 +517,7 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
       </div>
 
       {showSubSubTabs && (
-        <div className={styles.subSubTabsBar}>
+        <div className={styles.subSubTabsBar} ref={subSubTabsBarRef}>
           <Tabs
             tabs={SUB_SUB_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
             activeTab={activeSubSubTab}
@@ -499,7 +526,7 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
               setActiveKeybindingsSubSubTab(typed);
               onSubSubTabClick?.(typed);
             }}
-            variant="secondary"
+            variant="tertiary"
             testIdPrefix="keybindings-sub-sub-tab"
             focusedTabId={focusedSubSubTab}
           />
