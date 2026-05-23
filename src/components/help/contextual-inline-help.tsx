@@ -32,7 +32,8 @@ type InlineHelpEntry = {
  * Map of (surface, scope) -> inline help entry. Looked up by:
  *   1. `SCOPE_HELP_MAP[surface][activeScope]`
  *   2. fallback `SCOPE_HELP_MAP[surface].default` (which targets the
- *      surface's root scope, typically `global`)
+ *      surface's root scope: `home` on the home page, `sheet` on a
+ *      cheatsheet page)
  *
  * Scopes that are typically modal (`settings`, `help`, `info`,
  * `layout`) are intentionally absent: they mask the inline help via
@@ -40,14 +41,14 @@ type InlineHelpEntry = {
  */
 const SCOPE_HELP_MAP: Record<InlineHelpSurface, Partial<Record<KeyboardScopeId | "default", InlineHelpEntry>>> = {
   home: {
-    // Active scope `global` on the home page = the default surface help.
+    // Active scope `home` on the home page = the default surface help.
     default: {
       tokens: [
         { kind: "text", text: "Navigate with" },
-        { kind: "key", actionId: ACTION_IDS.MOVE_LEFT },
-        { kind: "key", actionId: ACTION_IDS.MOVE_DOWN },
-        { kind: "key", actionId: ACTION_IDS.MOVE_UP },
-        { kind: "key", actionId: ACTION_IDS.MOVE_RIGHT },
+        { kind: "key", actionId: ACTION_IDS.HOME_MOVE_LEFT },
+        { kind: "key", actionId: ACTION_IDS.HOME_MOVE_DOWN },
+        { kind: "key", actionId: ACTION_IDS.HOME_MOVE_UP },
+        { kind: "key", actionId: ACTION_IDS.HOME_MOVE_RIGHT },
         { kind: "text", text: ", open with" },
         { kind: "key", actionId: ACTION_IDS.OPEN_SHEET },
         { kind: "text", text: ", search with" },
@@ -67,10 +68,10 @@ const SCOPE_HELP_MAP: Record<InlineHelpSurface, Partial<Record<KeyboardScopeId |
         { kind: "text", text: "with" },
         { kind: "key", actionId: ACTION_IDS.BACK_TO_HOME, maxCombos: 2 },
         { kind: "text", text: ", navigate with" },
-        { kind: "key", actionId: ACTION_IDS.MOVE_LEFT },
-        { kind: "key", actionId: ACTION_IDS.MOVE_DOWN },
-        { kind: "key", actionId: ACTION_IDS.MOVE_UP },
-        { kind: "key", actionId: ACTION_IDS.MOVE_RIGHT },
+        { kind: "key", actionId: ACTION_IDS.SHEET_MOVE_LEFT },
+        { kind: "key", actionId: ACTION_IDS.SHEET_MOVE_DOWN },
+        { kind: "key", actionId: ACTION_IDS.SHEET_MOVE_UP },
+        { kind: "key", actionId: ACTION_IDS.SHEET_MOVE_RIGHT },
         { kind: "text", text: ", copy with" },
         { kind: "key", actionId: ACTION_IDS.COPY_COMMAND },
         { kind: "text", text: ", details with" },

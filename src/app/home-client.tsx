@@ -334,10 +334,10 @@ export function HomeClient({ categories }: Props) {
         ACTION_IDS.TOGGLE_INFO,
         ACTION_IDS.GO_TOP,
         ACTION_IDS.GO_BOTTOM,
-        ACTION_IDS.MOVE_RIGHT,
-        ACTION_IDS.MOVE_LEFT,
-        ACTION_IDS.MOVE_DOWN,
-        ACTION_IDS.MOVE_UP,
+        ACTION_IDS.HOME_MOVE_RIGHT,
+        ACTION_IDS.HOME_MOVE_LEFT,
+        ACTION_IDS.HOME_MOVE_DOWN,
+        ACTION_IDS.HOME_MOVE_UP,
         ACTION_IDS.OPEN_SHEET,
       ]);
 
@@ -385,25 +385,25 @@ export function HomeClient({ categories }: Props) {
         return;
       }
 
-      if (matchedAction === ACTION_IDS.MOVE_RIGHT) {
+      if (matchedAction === ACTION_IDS.HOME_MOVE_RIGHT) {
         event.preventDefault();
         moveSelection("right");
         return;
       }
 
-      if (matchedAction === ACTION_IDS.MOVE_LEFT) {
+      if (matchedAction === ACTION_IDS.HOME_MOVE_LEFT) {
         event.preventDefault();
         moveSelection("left");
         return;
       }
 
-      if (matchedAction === ACTION_IDS.MOVE_DOWN) {
+      if (matchedAction === ACTION_IDS.HOME_MOVE_DOWN) {
         event.preventDefault();
         moveSelection("down");
         return;
       }
 
-      if (matchedAction === ACTION_IDS.MOVE_UP) {
+      if (matchedAction === ACTION_IDS.HOME_MOVE_UP) {
         event.preventDefault();
         moveSelection("up");
         return;

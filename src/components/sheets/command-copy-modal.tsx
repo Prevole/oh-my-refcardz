@@ -74,7 +74,7 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
         return;
       }
 
-      const moveUpAction = getAction(ACTION_IDS.MOVE_UP);
+      const moveUpAction = getAction(ACTION_IDS.MODAL_MOVE_UP);
       if (moveUpAction && moveUpAction.combos[0] && matchesCombo(e, moveUpAction.combos[0])) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -82,7 +82,7 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
         return;
       }
 
-      const moveDownAction = getAction(ACTION_IDS.MOVE_DOWN);
+      const moveDownAction = getAction(ACTION_IDS.MODAL_MOVE_DOWN);
       if (moveDownAction && moveDownAction.combos[0] && matchesCombo(e, moveDownAction.combos[0])) {
         e.preventDefault();
         e.stopImmediatePropagation();

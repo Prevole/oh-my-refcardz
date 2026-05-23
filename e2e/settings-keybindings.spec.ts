@@ -69,27 +69,29 @@ test.describe("Keybinding editor", () => {
   });
 
   test("shows conflict warning when keybinding conflicts", async ({ page }) => {
-    const toggleSettingsRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-settings']");
-    await expect(toggleSettingsRow).toBeVisible();
+    // Both actions live in the `global` context, so rebinding one onto the
+    // other's combo triggers a scope-local conflict.
+    const toggleHelpRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-help']");
+    await expect(toggleHelpRow).toBeVisible();
 
-    await toggleSettingsRow.getByTestId("keybinding-combo-button").first().click();
+    await toggleHelpRow.getByTestId("keybinding-combo-button").first().click();
     await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
 
-    await page.keyboard.press("h");
+    await page.keyboard.press(",");
 
     const conflict = page.getByTestId("keybinding-conflict");
     await expect(conflict).toBeVisible({ timeout: 3000 });
     await expect(conflict).toContainText("Replaced binding");
-    await expect(conflict).toContainText("Move left");
+    await expect(conflict).toContainText("Toggle settings");
   });
 
   test("dismisses conflict warning without closing settings panel", async ({ page }) => {
-    const toggleSettingsRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-settings']");
+    const toggleHelpRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-help']");
 
-    await toggleSettingsRow.getByTestId("keybinding-combo-button").first().click();
+    await toggleHelpRow.getByTestId("keybinding-combo-button").first().click();
     await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
 
-    await page.keyboard.press("h");
+    await page.keyboard.press(",");
 
     const conflict = page.getByTestId("keybinding-conflict");
     await expect(conflict).toBeVisible({ timeout: 3000 });
@@ -100,19 +102,26 @@ test.describe("Keybinding editor", () => {
   });
 
   test("reset action detects conflicts with current keybindings", async ({ page }) => {
-    const moveLeftRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.move-left']");
+    // Two actions in the same context (`global`): toggle-help and
+    // toggle-settings. We force them into conflicting states, then verify
+    // that resetting one to its default re-triggers the conflict.
+    const toggleHelpRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-help']");
     const toggleSettingsRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-settings']");
 
-    await toggleSettingsRow.getByTestId("keybinding-combo-button").first().click();
+    // Step 1: rebind toggle-help to `,` -> conflicts with toggle-settings.
+    await toggleHelpRow.getByTestId("keybinding-combo-button").first().click();
     await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
-    await page.keyboard.press("h");
+    await page.keyboard.press(",");
 
     const conflict = page.getByTestId("keybinding-conflict");
     await expect(conflict).toBeVisible({ timeout: 3000 });
     await page.getByTestId("keybinding-conflict-dismiss").click();
     await expect(conflict).not.toBeVisible();
 
-    await moveLeftRow.getByTestId("keybinding-combo-button").first().click();
+    // Step 2: assign a free key (`z`) to toggle-settings (which lost its
+    // only combo to the replacement above). We use the "add" button because
+    // the row has no combo buttons left after the replacement.
+    await toggleSettingsRow.getByTestId("keybinding-combo-add").click();
     await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
     await page.keyboard.press("z");
 
@@ -120,11 +129,13 @@ test.describe("Keybinding editor", () => {
       await page.getByTestId("keybinding-conflict-dismiss").click();
     }
 
-    const resetButton = moveLeftRow.getByTestId("keybinding-reset");
+    // Step 3: reset toggle-settings to its default (`,`) -> conflicts with
+    // the rebound toggle-help.
+    const resetButton = toggleSettingsRow.getByTestId("keybinding-reset");
     await expect(resetButton).toBeVisible({ timeout: 2000 });
     await resetButton.click();
 
     await expect(conflict).toBeVisible({ timeout: 3000 });
-    await expect(conflict).toContainText("Toggle settings");
+    await expect(conflict).toContainText("Toggle help");
   });
 });

@@ -41,12 +41,12 @@ export function HomeHelpModal({ open, onClose }: Props) {
         </colgroup>
         <tbody>
           <tr>
-            <HelpRow actionId={ACTION_IDS.MOVE_LEFT} />
-            <HelpRow actionId={ACTION_IDS.MOVE_RIGHT} />
+            <HelpRow actionId={ACTION_IDS.HOME_MOVE_LEFT} />
+            <HelpRow actionId={ACTION_IDS.HOME_MOVE_RIGHT} />
           </tr>
           <tr>
-            <HelpRow actionId={ACTION_IDS.MOVE_DOWN} />
-            <HelpRow actionId={ACTION_IDS.MOVE_UP} />
+            <HelpRow actionId={ACTION_IDS.HOME_MOVE_DOWN} />
+            <HelpRow actionId={ACTION_IDS.HOME_MOVE_UP} />
           </tr>
           <tr>
             <HelpRow actionId={ACTION_IDS.OPEN_SHEET} />

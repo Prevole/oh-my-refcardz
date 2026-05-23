@@ -105,10 +105,10 @@ export function ItemDetailModal({
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
+      if (matchesAction(e, ACTION_IDS.MODAL_MOVE_UP)) {
         e.preventDefault();
         move("up");
-      } else if (matchesAction(e, ACTION_IDS.MOVE_DOWN)) {
+      } else if (matchesAction(e, ACTION_IDS.MODAL_MOVE_DOWN)) {
         e.preventDefault();
         move("down");
       } else if (matchesAction(e, ACTION_IDS.COPY_COMMAND)) {
@@ -152,8 +152,8 @@ export function ItemDetailModal({
         </div>
 
         <p className={sheetCommandStyles.modalFooter}>
-          <ActionInlineBinding actionId={ACTION_IDS.MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
-          <ActionInlineBinding actionId={ACTION_IDS.MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate,{" "}
+          <ActionInlineBinding actionId={ACTION_IDS.MODAL_MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
+          <ActionInlineBinding actionId={ACTION_IDS.MODAL_MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate,{" "}
           <ActionInlineBinding actionId={ACTION_IDS.COPY_COMMAND} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> copy,{" "}
           <span className={sheetCommandStyles.modalFooterBinding}>Esc</span> close.
         </p>

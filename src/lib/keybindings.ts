@@ -72,12 +72,21 @@ export type KeybindingsConfig = Record<KeybindingContext, KeybindingAction[]>;
 export const ACTION_IDS = {
   TOGGLE_HELP: "global.toggle-help",
   TOGGLE_SETTINGS: "global.toggle-settings",
-  MOVE_LEFT: "global.move-left",
-  MOVE_RIGHT: "global.move-right",
-  MOVE_UP: "global.move-up",
-  MOVE_DOWN: "global.move-down",
   GO_TOP: "global.go-top",
   GO_BOTTOM: "global.go-bottom",
+
+  HOME_MOVE_LEFT: "home.move-left",
+  HOME_MOVE_RIGHT: "home.move-right",
+  HOME_MOVE_UP: "home.move-up",
+  HOME_MOVE_DOWN: "home.move-down",
+
+  SHEET_MOVE_LEFT: "sheet.move-left",
+  SHEET_MOVE_RIGHT: "sheet.move-right",
+  SHEET_MOVE_UP: "sheet.move-up",
+  SHEET_MOVE_DOWN: "sheet.move-down",
+
+  MODAL_MOVE_UP: "modal.move-up",
+  MODAL_MOVE_DOWN: "modal.move-down",
 
   FOCUS_SEARCH: "home.focus-search",
   CLEAR_SEARCH: "home.clear-search",
@@ -207,26 +216,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       combos: [key(",")],
     },
     {
-      id: ACTION_IDS.MOVE_LEFT,
-      label: "Move left",
-      combos: [key("ArrowLeft"), key("h")],
-    },
-    {
-      id: ACTION_IDS.MOVE_RIGHT,
-      label: "Move right",
-      combos: [key("ArrowRight"), key("l")],
-    },
-    {
-      id: ACTION_IDS.MOVE_UP,
-      label: "Move up",
-      combos: [key("ArrowUp"), key("k")],
-    },
-    {
-      id: ACTION_IDS.MOVE_DOWN,
-      label: "Move down",
-      combos: [key("ArrowDown"), key("j")],
-    },
-    {
       id: ACTION_IDS.GO_TOP,
       label: "Go to top",
       combos: [sequence(key("g"), key("g"))],
@@ -296,6 +285,26 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
 
   home: [
     {
+      id: ACTION_IDS.HOME_MOVE_LEFT,
+      label: "Move left",
+      combos: [key("ArrowLeft"), key("h")],
+    },
+    {
+      id: ACTION_IDS.HOME_MOVE_RIGHT,
+      label: "Move right",
+      combos: [key("ArrowRight"), key("l")],
+    },
+    {
+      id: ACTION_IDS.HOME_MOVE_UP,
+      label: "Move up",
+      combos: [key("ArrowUp"), key("k")],
+    },
+    {
+      id: ACTION_IDS.HOME_MOVE_DOWN,
+      label: "Move down",
+      combos: [key("ArrowDown"), key("j")],
+    },
+    {
       id: ACTION_IDS.FOCUS_SEARCH,
       label: "Focus search",
       combos: [key("/")],
@@ -318,6 +327,26 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
   ],
 
   sheet: [
+    {
+      id: ACTION_IDS.SHEET_MOVE_LEFT,
+      label: "Move left",
+      combos: [key("ArrowLeft"), key("h")],
+    },
+    {
+      id: ACTION_IDS.SHEET_MOVE_RIGHT,
+      label: "Move right",
+      combos: [key("ArrowRight"), key("l")],
+    },
+    {
+      id: ACTION_IDS.SHEET_MOVE_UP,
+      label: "Move up",
+      combos: [key("ArrowUp"), key("k")],
+    },
+    {
+      id: ACTION_IDS.SHEET_MOVE_DOWN,
+      label: "Move down",
+      combos: [key("ArrowDown"), key("j")],
+    },
     {
       id: ACTION_IDS.BACK_TO_HOME,
       label: "Back to grid",
@@ -355,7 +384,18 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
   ],
 
-  modal: [],
+  modal: [
+    {
+      id: ACTION_IDS.MODAL_MOVE_UP,
+      label: "Move up",
+      combos: [key("ArrowUp"), key("k")],
+    },
+    {
+      id: ACTION_IDS.MODAL_MOVE_DOWN,
+      label: "Move down",
+      combos: [key("ArrowDown"), key("j")],
+    },
+  ],
 
   layout: [
     {

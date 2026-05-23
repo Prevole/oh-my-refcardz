@@ -51,10 +51,10 @@ const DEVELOPER_SUB_TABS: { id: DeveloperSubTab; label: string }[] = [
 // ---- General tab data ---------------------------------------------------
 
 const NAVIGATION_ENTRIES: ChartEntry[] = [
-  { id: ACTION_IDS.MOVE_LEFT },
-  { id: ACTION_IDS.MOVE_RIGHT },
-  { id: ACTION_IDS.MOVE_DOWN },
-  { id: ACTION_IDS.MOVE_UP },
+  { id: ACTION_IDS.SHEET_MOVE_LEFT },
+  { id: ACTION_IDS.SHEET_MOVE_RIGHT },
+  { id: ACTION_IDS.SHEET_MOVE_DOWN },
+  { id: ACTION_IDS.SHEET_MOVE_UP },
   { id: ACTION_IDS.CLEAR_COMMAND_FOCUS },
   { id: ACTION_IDS.BACK_TO_HOME },
   { id: ACTION_IDS.GO_TOP },

@@ -540,16 +540,16 @@ export function useCommandNavigation({ modalOpen, onShowDetails }: UseCommandNav
         return;
       }
 
-      if (matchesAction(e, ACTION_IDS.MOVE_UP)) {
+      if (matchesAction(e, ACTION_IDS.SHEET_MOVE_UP)) {
         e.preventDefault();
         move("up");
-      } else if (matchesAction(e, ACTION_IDS.MOVE_DOWN)) {
+      } else if (matchesAction(e, ACTION_IDS.SHEET_MOVE_DOWN)) {
         e.preventDefault();
         move("down");
-      } else if (matchesAction(e, ACTION_IDS.MOVE_LEFT)) {
+      } else if (matchesAction(e, ACTION_IDS.SHEET_MOVE_LEFT)) {
         e.preventDefault();
         move("left");
-      } else if (matchesAction(e, ACTION_IDS.MOVE_RIGHT)) {
+      } else if (matchesAction(e, ACTION_IDS.SHEET_MOVE_RIGHT)) {
         e.preventDefault();
         move("right");
       }
