@@ -360,6 +360,70 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
     (Sub-tab × Sub-sub-tab × Contexts). Tracker entry written
     (this entry).
 
+- [/] **FP14d**. **Section-based keybinding editor + `LAYOUT_EXIT`
+  unification**. Two coordinated changes shipped in a single commit:
+
+  1. **`LAYOUT_EXIT` unification**: the three identical exit
+     handlers (`LAYOUT_NAV_EXIT`/`LAYOUT_MOVE_EXIT`/`LAYOUT_RESIZE_EXIT`,
+     each binding `Escape` to `exitMode()` in its sub-scope) were
+     collapsed into a single `LAYOUT_EXIT` action registered on the
+     parent `layout` scope (`Escape`). Possible because (a) the
+     three handlers had identical bodies, and (b) the sub-scopes are
+     non-modal since FP2, so `Escape` cascades from the active
+     sub-scope up to the parent. Removed from `ACTION_IDS` and
+     `DEFAULT_KEYBINDINGS` for `layout-navigation`, `layout-move`,
+     `layout-resize`; `use-layout-keyboard.ts` collapsed from three
+     `useAction(... "layout-*", ...)` calls to one
+     `useAction(ACTION_IDS.LAYOUT_EXIT, "layout", ...)`. No
+     persistence migration — stored bindings referencing the three
+     obsolete ids are silently dropped by `mergeWithDefaults`.
+
+  2. **Section-based editor**: the keybinding editor moved from a
+     1:1 "one rendered block per context" model to an explicit
+     `SectionConfig[]` model. Each section declares
+     `{ id, label, description, context, actionIds }` — sections
+     own their label (replacing the previous `CONTEXT_LABELS`
+     lookup), a short description rendered under the title, and an
+     explicit ordered list of action ids. The renderer
+     (`SectionRenderer`, replacing `ContextSection`) filters
+     `config[context]` against `section.actionIds` so a single
+     context can be split across multiple sections without renaming
+     anything in the source of truth. This enables:
+     - **Resize 3-way split**: the `layout-resize` context now
+       renders as three sections — "Resize" (8 grow + shrink),
+       "Resize Strict" (8), "Resize Compact" (4) — stacked inside
+       the Cheatsheet > Layout sub-sub-tab.
+     - **Surface-specific Navigation sections**: `home` and
+       `sheet` contexts each split into a "Misc" section + a
+       "Navigation" section.
+     - **Layout (parent) section** that now hosts
+       `LAYOUT_GOTO_NAVIGATION/MOVE/RESIZE` and the new
+       `LAYOUT_EXIT` together.
+     - **Modals** section under Cheatsheet > General for
+       `MODAL_MOVE_UP/DOWN`.
+     `CONTEXT_LABELS` removed (dead). `keybinding-tabs-config.ts`
+     rewritten around `SectionConfig` and `SUB_TABS` /
+     `SUB_SUB_TABS` referencing section catalogues; intro text per
+     sub-tab/sub-sub-tab preserved. Per-section descriptions
+     authored for all 14 sections. Data attributes shifted from
+     `data-testid="keybinding-context"` + `data-context=...` to
+     `data-testid="keybinding-section"` + `data-section-id=...`
+     (no E2E was relying on the previous attributes). CSS added
+     `.sectionDescription` token-driven (`--text-sm`, `--fg-60`).
+
+  3. **Intro phrasing**: the keybinding tab intro in
+     `settings-panel.tsx` reworded from "Press
+     <kbd>Shift</kbd>+<kbd>Click</kbd>" to "Hold <kbd>Shift</kbd>
+     and click" — `Click` is not a keyboard key and rendering it
+     as a keycap was misleading.
+
+  Docs: `docs/keybindings.md` context table reworded (sub-scopes
+  no longer mention "exit"; parent `layout` entry mentions the
+  single `LAYOUT_EXIT` cascade target), "Layout cascade pattern"
+  paragraph updated. `docs/ideas-backlog.md` illustrative example
+  updated from `LAYOUT_NAV_EXIT` → `LAYOUT_EXIT`. Tracker entry
+  written (this entry). 826/826 unit ✓, 75/75 E2E ✓, build ✓.
+
 ## Notes / cross-references
 
 - F-polish FP2 changed only the modality of three scopes (`layout-*`)
@@ -382,3 +446,12 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   (dispatch sites, help UI, E2E specs) must be updated in the
   same commit and routed to the per-surface variants
   (`HOME_MOVE_*`, `SHEET_MOVE_*`, `MODAL_MOVE_*`).
+- After FP14d, `ACTION_IDS.LAYOUT_NAV_EXIT` /
+  `LAYOUT_MOVE_EXIT` / `LAYOUT_RESIZE_EXIT` are gone — anything
+  still referencing them (dispatch sites, doc examples) must be
+  rerouted to the single `ACTION_IDS.LAYOUT_EXIT` registered on
+  the parent `layout` scope. The keybinding editor no longer
+  iterates over contexts directly: callers adding new actions
+  must also declare them in a `SectionConfig` inside
+  `keybinding-tabs-config.ts` to make them visible in the
+  settings panel.

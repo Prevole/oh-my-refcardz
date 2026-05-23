@@ -400,15 +400,7 @@ export function useLayoutKeyboard({
     setMode("resize");
   });
 
-  useAction(ACTION_IDS.LAYOUT_NAV_EXIT, "layout-navigation", () => {
-    exitMode();
-  });
-
-  useAction(ACTION_IDS.LAYOUT_MOVE_EXIT, "layout-move", () => {
-    exitMode();
-  });
-
-  useAction(ACTION_IDS.LAYOUT_RESIZE_EXIT, "layout-resize", () => {
+  useAction(ACTION_IDS.LAYOUT_EXIT, "layout", () => {
     exitMode();
   });
 

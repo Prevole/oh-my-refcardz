@@ -25,7 +25,7 @@ not bind `Escape` to anything harmful, but the problem is structural.
 
 ```ts
 {
-  id: ACTION_IDS.LAYOUT_NAV_EXIT,
+  id: ACTION_IDS.LAYOUT_EXIT,
   combos: [key("Escape")],
   propagation: "stop"  // or "fall-through" (default)
 }

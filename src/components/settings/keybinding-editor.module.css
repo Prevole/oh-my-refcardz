@@ -55,6 +55,13 @@
   border-top: 1px solid var(--border-light);
 }
 
+.sectionDescription {
+  margin: calc(var(--space-1) * -1) 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--fg-60);
+  line-height: 1.4;
+}
+
 .list {
   display: flex;
   flex-direction: column;

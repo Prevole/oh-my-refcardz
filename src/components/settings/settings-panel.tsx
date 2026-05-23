@@ -459,7 +459,7 @@ export function SettingsPanel({
                 <header className={styles.tabSectionHeader}>
                   <h3 className={styles.tabSectionTitle}>Keybindings</h3>
                   <p className={styles.tabSectionLead}>
-                    Customize the keyboard shortcuts used across the app. Click a keybinding to record a new one. Press <kbd>Shift</kbd>+<kbd>Click</kbd> on a secondary binding to promote it to primary.
+                    Customize the keyboard shortcuts used across the app. Click a keybinding to record a new one. Hold <kbd>Shift</kbd> and click on a secondary binding to promote it to primary.
                   </p>
                 </header>
                 <KeybindingEditor

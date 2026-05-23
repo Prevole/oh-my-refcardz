@@ -120,13 +120,17 @@ export const ACTION_IDS = {
   LAYOUT_GOTO_NAVIGATION: "layout.goto-navigation",
   LAYOUT_GOTO_MOVE: "layout.goto-move",
   LAYOUT_GOTO_RESIZE: "layout.goto-resize",
+  // Single exit binding for layout mode, registered on the parent
+  // `layout` scope. Sub-scopes (`layout-navigation`, `layout-move`,
+  // `layout-resize`) are non-modal, so `Escape` cascades up to this
+  // action regardless of the active sub-mode.
+  LAYOUT_EXIT: "layout.exit",
 
   // Layout sub-mode: navigation (scope `layout-navigation`).
   LAYOUT_NAV_LEFT: "layout-navigation.left",
   LAYOUT_NAV_RIGHT: "layout-navigation.right",
   LAYOUT_NAV_UP: "layout-navigation.up",
   LAYOUT_NAV_DOWN: "layout-navigation.down",
-  LAYOUT_NAV_EXIT: "layout-navigation.exit",
 
   // Layout sub-mode: move (scope `layout-move`).
   LAYOUT_MOVE_LEFT: "layout-move.left",
@@ -137,7 +141,6 @@ export const ACTION_IDS = {
   LAYOUT_MOVE_STRICT_RIGHT: "layout-move.strict-right",
   LAYOUT_MOVE_STRICT_UP: "layout-move.strict-up",
   LAYOUT_MOVE_STRICT_DOWN: "layout-move.strict-down",
-  LAYOUT_MOVE_EXIT: "layout-move.exit",
 
   // Layout sub-mode: resize (scope `layout-resize`).
   LAYOUT_RESIZE_GROW_LEFT: "layout-resize.grow-left",
@@ -160,7 +163,6 @@ export const ACTION_IDS = {
   LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT: "layout-resize.shrink-compact-right",
   LAYOUT_RESIZE_SHRINK_COMPACT_UP: "layout-resize.shrink-compact-up",
   LAYOUT_RESIZE_SHRINK_COMPACT_DOWN: "layout-resize.shrink-compact-down",
-  LAYOUT_RESIZE_EXIT: "layout-resize.exit",
 
   // Developer mode top-level actions (scope `dev` / context `dev`).
   DEV_SAVE_LAYOUT: "dev.save-layout",
@@ -413,6 +415,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Switch to resize sub-mode",
       combos: [key("b")],
     },
+    {
+      id: ACTION_IDS.LAYOUT_EXIT,
+      label: "Exit layout mode",
+      combos: [key("Escape")],
+    },
   ],
 
   "layout-navigation": [
@@ -435,11 +442,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_NAV_DOWN,
       label: "Focus card below",
       combos: [key("ArrowDown"), key("j")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_NAV_EXIT,
-      label: "Exit layout mode",
-      combos: [key("Escape")],
     },
   ],
 
@@ -483,11 +485,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_MOVE_STRICT_DOWN,
       label: "Move card down (strict)",
       combos: [combo("ArrowDown", "alt"), combo("j", "alt")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_MOVE_EXIT,
-      label: "Exit layout mode",
-      combos: [key("Escape")],
     },
   ],
 
@@ -591,11 +588,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
       label: "Shrink card down (compact)",
       combos: [combo("ArrowDown", "ctrl", "shift"), combo("J", "ctrl", "shift")],
-    },
-    {
-      id: ACTION_IDS.LAYOUT_RESIZE_EXIT,
-      label: "Exit layout mode",
-      combos: [key("Escape")],
     },
   ],
 

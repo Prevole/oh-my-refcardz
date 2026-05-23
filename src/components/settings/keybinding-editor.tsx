@@ -289,40 +289,24 @@ function ActionRow({
   );
 }
 
-const CONTEXT_LABELS: Record<KeybindingContext, string> = {
-  global: "Global Shortcuts",
-  help: "Help Navigation",
-  settings: "Settings Navigation",
-  home: "Home",
-  sheet: "Cheatsheet",
-  modal: "Modal",
-  layout: "Layout Mode",
-  "layout-navigation": "Navigation sub-mode",
-  "layout-move": "Move sub-mode",
-  "layout-resize": "Resize sub-mode",
-  dev: "Developer Mode",
-  "dev-logs": "Logs sub-mode",
-  "dev-axes": "Axes sub-mode",
-};
+
 
 type SubTabId = "general" | "home" | "cheatsheet";
 type SubSubTabId = "general" | "layout" | "developer";
 
-import { SUB_TABS, SUB_SUB_TABS, getActiveContexts } from "./keybinding-tabs-config";
+import { SUB_TABS, SUB_SUB_TABS, getActiveSections, type SectionConfig } from "./keybinding-tabs-config";
 
-function ContextSection({
-  context,
+function SectionRenderer({
+  section,
   actions,
-  showHeader,
   recordingActionId,
   onStartRecording,
   onSetPrimary,
   onRemoveCombo,
   onResetAction,
 }: {
-  context: KeybindingContext;
+  section: SectionConfig;
   actions: KeybindingAction[];
-  showHeader: boolean;
   recordingActionId: string | null;
   onStartRecording: (actionId: string, comboIndex: number | null) => void;
   onSetPrimary: (actionId: string, comboIndex: number) => void;
@@ -330,13 +314,19 @@ function ContextSection({
   onResetAction: (actionId: string) => void;
 }) {
   return (
-    <div className={styles.context} data-testid="keybinding-context" data-context={context}>
-      {showHeader && <h4 className={styles.contextTitle}>{CONTEXT_LABELS[context]}</h4>}
+    <div
+      className={styles.context}
+      data-testid="keybinding-section"
+      data-section-id={section.id}
+      data-context={section.context}
+    >
+      <h4 className={styles.contextTitle}>{section.label}</h4>
+      <p className={styles.sectionDescription}>{section.description}</p>
       <div className={styles.list}>
         {actions.map((action) => (
           <ActionRow
             key={action.id}
-            context={context}
+            context={section.context}
             action={action}
             isRecording={recordingActionId === action.id}
             onStartRecording={(comboIndex) => onStartRecording(action.id, comboIndex)}
@@ -469,8 +459,7 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
     setLastConflict(null);
   }, [resetAll]);
 
-  const { contexts: activeContexts, intro: activeIntro } = getActiveContexts(activeSubTab, activeSubSubTab);
-  const showContextHeaders = activeContexts.length > 1;
+  const { sections: activeSections, intro: activeIntro } = getActiveSections(activeSubTab, activeSubSubTab);
   const showSubSubTabs = activeSubTab === "cheatsheet";
 
   // Dynamic indent: align the L3 strip's left edge with the L2 "Cheatsheet"
@@ -544,25 +533,34 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
       )}
 
       <div data-testid="keybinding-sub-tab" data-sub-tab={activeSubTab} data-sub-sub-tab={showSubSubTabs ? activeSubSubTab : undefined} className={styles.contextGrid}>
-        {activeContexts.map((context) => (
-          <ContextSection
-            key={context}
-            context={context}
-            actions={config[context]}
-            showHeader={showContextHeaders}
-            recordingActionId={recording?.context === context ? recording.actionId : null}
-            onStartRecording={(actionId, comboIndex) =>
-              handleStartRecording(context, actionId, comboIndex)
-            }
-            onSetPrimary={(actionId, comboIndex) =>
-              handleSetPrimary(context, actionId, comboIndex)
-            }
-            onRemoveCombo={(actionId, comboIndex) =>
-              handleRemoveCombo(context, actionId, comboIndex)
-            }
-            onResetAction={(actionId) => handleResetAction(context, actionId)}
-          />
-        ))}
+        {activeSections.map((section) => {
+          const contextActions = config[section.context];
+          const actionsById = new Map(contextActions.map((a) => [a.id, a]));
+          const sectionActions = section.actionIds
+            .map((id) => actionsById.get(id))
+            .filter((a): a is KeybindingAction => a !== undefined);
+
+          return (
+            <SectionRenderer
+              key={section.id}
+              section={section}
+              actions={sectionActions}
+              recordingActionId={
+                recording?.context === section.context ? recording.actionId : null
+              }
+              onStartRecording={(actionId, comboIndex) =>
+                handleStartRecording(section.context, actionId, comboIndex)
+              }
+              onSetPrimary={(actionId, comboIndex) =>
+                handleSetPrimary(section.context, actionId, comboIndex)
+              }
+              onRemoveCombo={(actionId, comboIndex) =>
+                handleRemoveCombo(section.context, actionId, comboIndex)
+              }
+              onResetAction={(actionId) => handleResetAction(section.context, actionId)}
+            />
+          );
+        })}
       </div>
 
       <div className={styles.footer}>
