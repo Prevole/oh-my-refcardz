@@ -49,7 +49,8 @@ An action is a named operation that can be triggered by keyboard shortcuts:
 ```typescript
 export const ACTION_IDS = {
   TOGGLE_HELP: "global.toggle-help",
-  MOVE_UP: "global.move-up",
+  HOME_MOVE_UP: "home.move-up",
+  SHEET_MOVE_UP: "sheet.move-up",
   COPY_COMMAND: "sheet.copy",
   DEV_SAVE_LAYOUT: "dev.save-layout",
   // ...
@@ -81,12 +82,12 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 
 | Context | When active | Example actions |
 |---------|-------------|-----------------|
-| `global` | Always | Navigation, help, settings |
+| `global` | Always | Toggle help, toggle settings, `g g` / `G` jumps |
 | `help` | Help modal open | Focus next/previous tab, descend to sub-tab row, activate focused tab |
 | `settings` | Settings panel open | Focus next/previous tab, descend to sub-tab / sub-sub-tab row, activate focused tab |
-| `home` | Home page | Search, open sheet |
-| `sheet` | Cheatsheet page | Copy, show details, back to home, reset layout, enter layout mode |
-| `modal` | A command-copy or item-detail modal is open (modal scope, blocks cascade) | Modal-specific navigation, copy |
+| `home` | Home page | Grid navigation (`home.move-*`), search, open sheet |
+| `sheet` | Cheatsheet page | Item navigation (`sheet.move-*`), copy, show details, back to home, reset layout, enter layout mode |
+| `modal` | A command-copy or item-detail modal is open (modal scope, blocks cascade) | Vertical navigation (`modal.move-up` / `modal.move-down`), copy |
 | `layout` | Layout modal mode (any sub-mode) | Parent scope; hosts sub-mode switching bindings (`n` / `m` / `b`) shared across all sub-modes via the cascade |
 | `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down, exit |
 | `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier), exit |
@@ -94,6 +95,8 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `dev` | Developer mode active | Save/reset/record/logs/axes |
 | `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |
 | `dev-axes` | Axes keyboard mode | Cursor nav, pin row/col |
+
+Movement actions (`move-left`, `move-right`, `move-up`, `move-down`) are split per surface: `home.move-*`, `sheet.move-*`, and a vertical-only `modal.move-up` / `modal.move-down`. The `global` context no longer hosts movement bindings — each surface owns its own, which lets users customize navigation independently per scope.
 
 ### Layout mode visual feedback
 
@@ -193,9 +196,9 @@ This pattern is still used in many places; prefer `useAction` for new code.
 
 ```typescript
 const matchedAction = resolveAction(event, [
-  ACTION_IDS.MOVE_UP,
-  ACTION_IDS.MOVE_DOWN,
-  ACTION_IDS.COPY_COMMAND,
+  ACTION_IDS.HOME_MOVE_UP,
+  ACTION_IDS.HOME_MOVE_DOWN,
+  ACTION_IDS.OPEN_SHEET,
 ]);
 ```
 
@@ -275,17 +278,17 @@ The map is keyed by `(surface, scope | "default")`. Modal scopes (`settings`, `h
 Users open the settings panel with `,`. The panel is a right slide-in (66vw, min 720 / max 1280) with two top-level tabs:
 
 - **UI** — color mode, randomization, border style, sheet direction.
-- **Keybindings** — the keybinding editor, grouped into 5 sub-tabs:
+- **Keybindings** — the keybinding editor, organized as a two-level navigation:
 
-  | Sub-tab | Contexts covered |
-  |---|---|
-  | Global | `global` |
-  | Home | `home` |
-  | Cheatsheet | `sheet` |
-  | Layout Mode | `layout`, `layout-navigation`, `layout-move`, `layout-resize` |
-  | Developer | `dev`, `dev-logs`, `dev-axes` |
+  | Sub-tab | Sub-sub-tab | Contexts covered |
+  |---|---|---|
+  | General | — | `global`, `help`, `settings` |
+  | Home | — | `home` |
+  | Cheatsheet | General | `sheet` |
+  | Cheatsheet | Layout | `layout`, `layout-navigation`, `layout-move`, `layout-resize` |
+  | Cheatsheet | Developer | `dev`, `dev-logs`, `dev-axes` |
 
-  Sub-tabs that cover a single context hide the context heading; multi-context sub-tabs stack `<h4>` headers per context. The selected top-level tab and Keybindings sub-tab are both persisted in `useUISettings.panelTabs` (`active` and `keybindingsSub`), so the panel reopens where the user left it.
+  Sub-tabs that cover a single context hide the context heading; multi-context sub-tabs stack `<h4>` headers per context. The selected top-level tab, Keybindings sub-tab and sub-sub-tab are all persisted in `useUISettings.panelTabs` (`active`, `keybindingsSub`, `keybindingsSubSub`), so the panel reopens where the user left it.
 
 For each action the user can:
 
@@ -299,11 +302,13 @@ Customizations are stored in localStorage under `oh-my-refcardz:keybindings`. UI
 
 ## Conflict detection
 
+Conflicts are **scope-local**: two bindings only conflict when they live in the same keybinding context. Cross-context shadowing (e.g. a `home` override masking a `global` binding while the home scope is active) is intentional and never reported as a conflict — the scope stack guarantees only one context's binding is active at a time.
+
 Two layers:
 
 ### Editor-level (definition conflicts)
 
-When adding a combo to an action that collides with another action in the same context, `findConflict()` detects it; the old binding is removed and a `KeybindingConflict` object is returned for UI feedback.
+When adding a combo to an action that collides with another action **in the same context**, `findConflict()` detects it; the old binding is removed and a `KeybindingConflict` object is returned for UI feedback.
 
 ### Dispatcher-level (runtime conflicts)
 

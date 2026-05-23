@@ -299,6 +299,67 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   fills `CONTEXT_LABELS.modal = "Modal"` for the settings editor.
   826/826 unit ✓, 75/75 E2E ✓, build ✓.
 
+- [/] **FP14c**. **Split `MOVE_*` per scope + scope-local conflict
+  model**. Three sub-steps, three commits:
+
+  - **Step 1 (`findConflict` scope-local)**: simplified
+    `findConflict()` in `keybinding-utils.ts` to only check the
+    action's own context. The defensive cross-context fallback
+    (which used to also check `global` when editing a non-global
+    binding) is removed. Cross-context shadowing — e.g. a `home`
+    binding masking a `global` binding while the home scope is
+    active — is intentional and never reported as a conflict; the
+    scope stack guarantees only one context is active at a time.
+    Tests in `keybinding-utils.test.ts` migrated to a `makeConfig()`
+    factory (full `KeybindingsConfig` shape, no legacy
+    `"sheet-layout"` key), two cross-context tests replaced by tests
+    that document the new shadowing behaviour. Also fixed a
+    pre-existing TS error in the test helper (`Modifier[]` typing).
+    826/826 unit ✓, 75/75 E2E ✓, build ✓.
+
+  - **Step 2 (split `MOVE_*`)**: removed the four
+    `global.move-{left,right,up,down}` actions and replaced them
+    with three scope-specific sets:
+    - `HOME_MOVE_{LEFT,RIGHT,UP,DOWN}` → context `home`,
+      ids `home.move-*`, defaults arrows + hjkl.
+    - `SHEET_MOVE_{LEFT,RIGHT,UP,DOWN}` → context `sheet`,
+      ids `sheet.move-*`, defaults arrows + hjkl.
+    - `MODAL_MOVE_{UP,DOWN}` → context `modal`, ids `modal.move-*`,
+      defaults arrows + j/k. No `LEFT`/`RIGHT` for modals: the two
+      modals (`CommandCopyModal`, `ItemDetailModal`) only navigate
+      a vertical list.
+    Dispatch sites migrated:
+    - `home-client.tsx` → `HOME_MOVE_*` (action filter list + 4
+      handlers).
+    - `use-command-navigation.ts` → `SHEET_MOVE_*` (variant nav of
+      copyables).
+    - `item-detail-modal.tsx`, `command-copy-modal.tsx` →
+      `MODAL_MOVE_UP`/`MODAL_MOVE_DOWN`.
+    Help UI updated: `home-help-modal.tsx` → `HOME_MOVE_*`,
+    `sheet-help-modal.tsx` → `SHEET_MOVE_*`,
+    `contextual-inline-help.tsx` surfaces `home` / `sheet` →
+    `HOME_MOVE_*` / `SHEET_MOVE_*` (commentaire jsdoc actualisé:
+    the fallback `default` now targets `home` or `sheet`, not
+    `global`). E2E `settings-keybindings.spec.ts`: three conflict
+    tests refactored to use the intra-`global` pair
+    `toggle-help`/`toggle-settings` (the previous test setup
+    relied on cross-context conflict detection which no longer
+    exists); the reset test now uses `keybinding-combo-add` after
+    the original combo is replaced. No persistence migration: the
+    app is pre-production and stored bindings referencing the old
+    `global.move-*` ids are silently dropped by `mergeWithDefaults`.
+    826/826 unit ✓, 75/75 E2E ✓, build ✓.
+
+  - **Step 3 (docs + tracker)**: `docs/keybindings.md` updated —
+    `ACTION_IDS` example reflects the split, context table mentions
+    per-surface movement actions with a note explaining the
+    rationale, `resolveAction` example uses `HOME_MOVE_*`,
+    "Conflict detection" section prefixed with an explicit
+    "scope-local" statement, and the obsolete 5-sub-tab settings
+    table replaced by the actual L2/L3 layout from FP13
+    (Sub-tab × Sub-sub-tab × Contexts). Tracker entry written
+    (this entry).
+
 ## Notes / cross-references
 
 - F-polish FP2 changed only the modality of three scopes (`layout-*`)
@@ -306,9 +367,18 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   scope inventory from 11 to 13 by adding `home` and `sheet` as
   proper push-while-mounted scopes; FP14b further added `modal`
   (14 scopes total) to back the command-copy and item-detail
-  modals with a true modal cascade barrier (preparation for FP14c
-  MOVE_* split).
+  modals with a true modal cascade barrier. FP14c put the new
+  scopes to use: `MOVE_*` actions split per-surface
+  (`HOME_MOVE_*`, `SHEET_MOVE_*`, `MODAL_MOVE_*`) and
+  `findConflict` simplified to be strictly scope-local —
+  cross-context shadowing is now the documented model.
 - After FP2, `LAYOUT_NAV_TO_*` / `LAYOUT_MOVE_TO_*` / `LAYOUT_RESIZE_TO_*`
   are gone from `ACTION_IDS` — anything still referencing them
   (settings sub-tab heuristics, help modal entry lists, E2E specs)
   must be updated in the same commit.
+- After FP14c, the original `ACTION_IDS.MOVE_LEFT` /
+  `MOVE_RIGHT` / `MOVE_UP` / `MOVE_DOWN` (ids
+  `global.move-*`) are gone — anything still referencing them
+  (dispatch sites, help UI, E2E specs) must be updated in the
+  same commit and routed to the per-surface variants
+  (`HOME_MOVE_*`, `SHEET_MOVE_*`, `MODAL_MOVE_*`).
