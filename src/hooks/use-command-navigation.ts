@@ -518,7 +518,7 @@ export function useCommandNavigation({ modalOpen, onShowDetails }: UseCommandNav
     document.addEventListener("click", handleClick);
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!isScopeActive("global")) return;
+      if (!isScopeActive("sheet")) return;
 
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;

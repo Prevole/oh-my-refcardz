@@ -162,7 +162,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   // -- Reset layout shortcut (user feature, Shift+R) -----------------------
   const { matchesAction } = useKeybindings();
   useScopedKeyboardHandler(
-    "global",
+    "sheet",
     (event: KeyboardEvent) => {
       const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
@@ -187,8 +187,8 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const axesRef = useRef<DevAxesOverlayHandle>(null);
 
   // Push the dedicated `dev` scope while developer mode is on. This makes
-  // every sheet-level keybinding inert (they are all gated on the `global`
-  // scope or via `useScopedKeyboardHandler("global", …)`), so dev-mode keys
+  // every sheet-level keybinding inert (they are all gated on the `sheet`
+  // scope or via `useScopedKeyboardHandler("sheet", …)`), so dev-mode keys
   // can be defined without conflicts.
   useKeyboardScope("dev", debugEnabled, { modal: true });
 

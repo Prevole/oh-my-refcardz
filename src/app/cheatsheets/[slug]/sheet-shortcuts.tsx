@@ -16,6 +16,7 @@ export function SheetShortcuts() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 
+  useKeyboardScope("sheet", true);
   useKeyboardScope("settings", settingsPanelOpen);
   useKeyboardScope("help", helpOpen);
 
@@ -81,7 +82,7 @@ export function SheetShortcuts() {
     [resolveAction, router]
   );
 
-  useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);
+  useScopedKeyboardHandler("sheet", handleGlobalKeyDown, [handleGlobalKeyDown]);
 
   return (
     <>

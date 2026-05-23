@@ -108,9 +108,13 @@ Entering layout mode (`Ctrl+M`) focuses the block closest to the mouse cursor (f
 Scopes form a stack of `{ scope, modal }` entries:
 
 ```
-[{ scope: "global", modal: false }]                       # Base
-[..., { scope: "help",  modal: false }]                   # Help modal open
-[..., { scope: "dev",   modal: true  },
+[{ scope: "global", modal: false }]                       # Base (always present)
+[..., { scope: "home", modal: false }]                    # Home page mounted
+[..., { scope: "sheet", modal: false }]                   # Cheatsheet page mounted
+[..., { scope: "sheet", modal: false },
+      { scope: "help",  modal: false }]                   # Help modal open over a sheet
+[..., { scope: "sheet", modal: false },
+      { scope: "dev",   modal: true  },
       { scope: "dev-logs", modal: true }]                 # Dev mode with logs open
 ```
 
@@ -239,7 +243,7 @@ useAction(ACTION_IDS.MY_NEW_ACTION, "sheet", () => {
 });
 ```
 
-(Note: as of writing, the `sheet` scope is not yet routed through the dispatcher; for that scope use the legacy `matchesAction` pattern. New sub-scopes added under developer mode flow through the registry by default.)
+(Note: most surface-level actions (`global`, `home`, `sheet`) currently use the legacy `useScopedKeyboardHandler` + `matchesAction` pattern. New sub-scopes added under modal modes like `layout` or developer mode flow through the registry by default.)
 
 ### 4. Surface the action in the help modal (optional)
 

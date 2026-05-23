@@ -59,6 +59,7 @@ export function HomeClient({ categories }: Props) {
   const hasRestoredSelectionRef = useRef(false);
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
 
+  useKeyboardScope("home", true);
   useKeyboardScope("settings", settingsPanelOpen);
   useKeyboardScope("help", helpOpen);
   useKeyboardScope("info", infoOpen);
@@ -422,7 +423,7 @@ export function HomeClient({ categories }: Props) {
     [resolveAction, moveSelection, openSheet, selectedCard]
   );
 
-  useScopedKeyboardHandler("global", handleGlobalKeyDown, [handleGlobalKeyDown]);
+  useScopedKeyboardHandler("home", handleGlobalKeyDown, [handleGlobalKeyDown]);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">

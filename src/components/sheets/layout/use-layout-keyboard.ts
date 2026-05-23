@@ -377,11 +377,11 @@ export function useLayoutKeyboard({
 
   /* ---------------- entry / sub-mode switching ---------------- */
 
-  // The `sheet` context has no dedicated scope (it lives under `global`), so
-  // the entry shortcut is matched manually like other sheet-level bindings.
+  // Entry is bound to the `sheet` scope: layout mode is only reachable
+  // from within a cheatsheet page.
   const { matchesAction } = useKeybindings();
   useScopedKeyboardHandler(
-    "global",
+    "sheet",
     (event: KeyboardEvent) => {
       if (!matchesAction(event, ACTION_IDS.LAYOUT_ENTER_MODE)) return;
       event.preventDefault();

@@ -251,11 +251,44 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
 - Per-binding propagation control: noted in `docs/ideas-backlog.md`,
   not built now.
 
+- [/] **FP13**. **Settings panel: keyboard navigation + L1/L2/L3
+  structure**. Adds 3-row focus state (L1=top tabs UI/Keybindings,
+  L2=Keybindings sub-tabs General/Home/Cheatsheet, L3=Cheatsheet
+  sub-sub-tabs General/Layout/Developer). Adds 5 actions in scope
+  `settings` (arrows + hjkl + Space/Enter), `Tabs` primitive gains
+  `tertiary` variant with new `--accent-3: #e07a5f` token, L3 strip
+  has dynamic left-indent via ResizeObserver + `--l3-indent` CSS
+  var. Persistence: `keybindingsSub` + `keybindingsSubSub` with
+  legacy migration. New module `keybinding-tabs-config.ts` exposes
+  `SUB_TABS` / `SUB_SUB_TABS` / `getActiveContexts()`. Click sync
+  via `onSubTabClick` / `onSubSubTabClick` callbacks. Persisted
+  legacy values (`global`→`general`, `layout`/`developer`→
+  `cheatsheet+subSub`) auto-migrated. 823/823 unit ✓, 75/75 E2E ✓,
+  build ✓.
+
+- [/] **FP14a**. **Add `home` and `sheet` scopes**. Preparatory
+  refactor for splitting `MOVE_*` between home and sheet (FP14c).
+  Adds two new `KeyboardScopeId` values, mapped 1:1 in
+  `scopeToContext`. `home-client.tsx` pushes `home` while mounted;
+  `sheet-shortcuts.tsx` pushes `sheet` while mounted. Three
+  `useScopedKeyboardHandler` call sites moved from `"global"` to
+  the new specific scopes: home page top-level handler, sheet
+  page top-level handler (`SheetShortcuts`), and `RESET_LAYOUT`
+  shortcut in `sheet-renderer.tsx`. Layout-mode entry handler in
+  `use-layout-keyboard.ts` also moved to scope `sheet`. The two
+  sheet-only hooks `useEntryCopy` and `useCommandNavigation` now
+  gate on `isScopeActive("sheet")` instead of `"global"`. Docs:
+  obsolete note about `sheet` scope not being routed removed;
+  scope stack illustration updated to show `home`/`sheet` mounted
+  states. 825/825 unit ✓, 75/75 E2E ✓, build ✓.
+
 ## Notes / cross-references
 
-- F-polish does not change the scope inventory (still 11 scopes), only
-  the modality of three of them and the action set inside the
-  `layout` scope.
+- F-polish FP2 changed only the modality of three scopes (`layout-*`)
+  and the action set inside the `layout` scope. FP14a expands the
+  scope inventory from 11 to 13 by adding `home` and `sheet` as
+  proper push-while-mounted scopes (preparation for FP14c MOVE_*
+  split).
 - After FP2, `LAYOUT_NAV_TO_*` / `LAYOUT_MOVE_TO_*` / `LAYOUT_RESIZE_TO_*`
   are gone from `ACTION_IDS` — anything still referencing them
   (settings sub-tab heuristics, help modal entry lists, E2E specs)

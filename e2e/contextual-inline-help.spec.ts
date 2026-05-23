@@ -6,13 +6,13 @@ import { test, expect, type Page } from "@playwright/test";
  * Verifies that the inline help line at the top of a cheatsheet page
  * adapts to the active keyboard scope:
  *
- *  - On load:                 surface=sheet, scope=global
+ *  - On load:                 surface=sheet, scope=sheet
  *  - After Ctrl+M:            surface=sheet, scope=layout-navigation
  *  - After m (in layout):     surface=sheet, scope=layout-move
  *  - After r (in layout):     surface=sheet, scope=layout-resize
- *  - After Escape:            surface=sheet, scope=global
+ *  - After Escape:            surface=sheet, scope=sheet
  *
- * Also covers the home page baseline (surface=home, scope=global).
+ * Also covers the home page baseline (surface=home, scope=home).
  *
  * Uses the dedicated `layout-e2e` fixture under
  * `content_test/cheatsheets/00-layout/`.
@@ -57,9 +57,9 @@ async function expectHelpAttributes(
 }
 
 test.describe("ContextualInlineHelp - home surface", () => {
-  test("renders with surface=home and scope=global on load", async ({ page }) => {
+  test("renders with surface=home and scope=home on load", async ({ page }) => {
     await page.goto("/");
-    await expectHelpAttributes(page, "home", "global");
+    await expectHelpAttributes(page, "home", "home");
   });
 });
 
@@ -68,8 +68,8 @@ test.describe("ContextualInlineHelp - sheet surface", () => {
     await gotoSheetReady(page);
   });
 
-  test("renders with surface=sheet and scope=global on load", async ({ page }) => {
-    await expectHelpAttributes(page, "sheet", "global");
+  test("renders with surface=sheet and scope=sheet on load", async ({ page }) => {
+    await expectHelpAttributes(page, "sheet", "sheet");
   });
 
   test("switches to layout-navigation when entering layout mode", async ({ page }) => {
@@ -89,11 +89,11 @@ test.describe("ContextualInlineHelp - sheet surface", () => {
     await expectHelpAttributes(page, "sheet", "layout-resize");
   });
 
-  test("returns to global scope after exiting layout mode with Escape", async ({ page }) => {
+  test("returns to sheet scope after exiting layout mode with Escape", async ({ page }) => {
     await enterLayoutMode(page);
     await expectHelpAttributes(page, "sheet", "layout-navigation");
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
-    await expectHelpAttributes(page, "sheet", "global");
+    await expectHelpAttributes(page, "sheet", "sheet");
   });
 });

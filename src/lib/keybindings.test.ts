@@ -543,6 +543,14 @@ describe("scopeToContext", () => {
     expect(scopeToContext("global")).toBe("global");
   });
 
+  it("maps home scope to home context", () => {
+    expect(scopeToContext("home")).toBe("home");
+  });
+
+  it("maps sheet scope to sheet context", () => {
+    expect(scopeToContext("sheet")).toBe("sheet");
+  });
+
   it("maps help scope to help context", () => {
     expect(scopeToContext("help")).toBe("help");
   });

@@ -37,6 +37,10 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
   switch (scope) {
     case "global":
       return "global";
+    case "home":
+      return "home";
+    case "sheet":
+      return "sheet";
     case "help":
       return "help";
     case "settings":

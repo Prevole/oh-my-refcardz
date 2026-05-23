@@ -1,5 +1,8 @@
 export type KeyboardScopeId =
   | "global"
+  | "home"
+  | "sheet"
+  | "modal"
   | "settings"
   | "help"
   | "info"

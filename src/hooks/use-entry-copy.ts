@@ -66,7 +66,7 @@ export function useEntryCopy({ modalOpen, onCopyWithPlaceholders }: UseEntryCopy
 
   useEffect(() => {
     const onKeyDown = async (e: KeyboardEvent) => {
-      if (!isScopeActive("global")) return;
+      if (!isScopeActive("sheet")) return;
       if (modalOpen) return;
 
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
