@@ -543,6 +543,10 @@ describe("scopeToContext", () => {
     expect(scopeToContext("global")).toBe("global");
   });
 
+  it("maps help scope to help context", () => {
+    expect(scopeToContext("help")).toBe("help");
+  });
+
   it("maps layout sub-mode scopes to their dedicated contexts", () => {
     expect(scopeToContext("layout")).toBe("layout");
     expect(scopeToContext("layout-navigation")).toBe("layout-navigation");
@@ -552,6 +556,5 @@ describe("scopeToContext", () => {
 
   it("returns null for unknown scope", () => {
     expect(scopeToContext("settings")).toBeNull();
-    expect(scopeToContext("help")).toBeNull();
   });
 });

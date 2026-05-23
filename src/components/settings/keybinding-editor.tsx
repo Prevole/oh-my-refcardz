@@ -290,7 +290,8 @@ function ActionRow({
 }
 
 const CONTEXT_LABELS: Record<KeybindingContext, string> = {
-  global: "Global",
+  global: "Global Shortcuts",
+  help: "Help Navigation",
   home: "Home",
   sheet: "Cheatsheet",
   layout: "Layout Mode",
@@ -315,8 +316,8 @@ const SUB_TABS: SubTabConfig[] = [
   {
     id: "global",
     label: "Global",
-    intro: "Shortcuts active everywhere, regardless of the current page.",
-    contexts: ["global"],
+    intro: "Shortcuts active everywhere, regardless of the current page. Help Navigation bindings are scoped to the help modal but are grouped here for discoverability.",
+    contexts: ["global", "help"],
   },
   {
     id: "home",

@@ -21,6 +21,7 @@ export interface KeyDisplayPart {
 
 export type KeybindingContext =
   | "global"
+  | "help"
   | "home"
   | "sheet"
   | "layout"
@@ -35,6 +36,8 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
   switch (scope) {
     case "global":
       return "global";
+    case "help":
+      return "help";
     case "layout":
       return "layout";
     case "layout-navigation":
@@ -70,6 +73,13 @@ export const ACTION_IDS = {
   CLEAR_SEARCH: "home.clear-search",
   TOGGLE_INFO: "home.toggle-info",
   OPEN_SHEET: "home.open-sheet",
+
+  // Help modal tab traversal (scope `help` / context `help`).
+  HELP_TAB_LEFT: "help.tab-left",
+  HELP_TAB_RIGHT: "help.tab-right",
+  HELP_TAB_UP: "help.tab-up",
+  HELP_TAB_DOWN: "help.tab-down",
+  HELP_TAB_ACTIVATE: "help.tab-activate",
 
   BACK_TO_HOME: "sheet.back-to-home",
   COPY_COMMAND: "sheet.copy",
@@ -208,6 +218,34 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.GO_BOTTOM,
       label: "Go to bottom",
       combos: [combo("G", "shift")],
+    },
+  ],
+
+  help: [
+    {
+      id: ACTION_IDS.HELP_TAB_LEFT,
+      label: "Focus previous tab",
+      combos: [key("ArrowLeft"), key("h")],
+    },
+    {
+      id: ACTION_IDS.HELP_TAB_RIGHT,
+      label: "Focus next tab",
+      combos: [key("ArrowRight"), key("l")],
+    },
+    {
+      id: ACTION_IDS.HELP_TAB_UP,
+      label: "Focus parent tab row",
+      combos: [key("ArrowUp"), key("k")],
+    },
+    {
+      id: ACTION_IDS.HELP_TAB_DOWN,
+      label: "Focus sub-tab row",
+      combos: [key("ArrowDown"), key("j")],
+    },
+    {
+      id: ACTION_IDS.HELP_TAB_ACTIVATE,
+      label: "Activate focused tab",
+      combos: [key(" "), key("Enter")],
     },
   ],
 

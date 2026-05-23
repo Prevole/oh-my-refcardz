@@ -14,6 +14,7 @@ type TabsProps = {
   onChange: (id: string) => void;
   testIdPrefix?: string;
   variant?: "primary" | "secondary";
+  focusedTabId?: string | null;
 };
 
 export function Tabs({
@@ -22,6 +23,7 @@ export function Tabs({
   onChange,
   testIdPrefix,
   variant = "primary",
+  focusedTabId = null,
 }: TabsProps) {
   const stripClass =
     variant === "secondary" ? `${styles.tabs} ${styles.tabsSecondary}` : styles.tabs;
@@ -37,6 +39,7 @@ export function Tabs({
           onClick={() => !tab.disabled && onChange(tab.id)}
           disabled={tab.disabled}
           data-testid={testIdPrefix ? `${testIdPrefix}-${tab.id}` : undefined}
+          data-focused={focusedTabId === tab.id || undefined}
         >
           {tab.label}
         </button>

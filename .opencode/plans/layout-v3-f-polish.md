@@ -189,9 +189,62 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   `docs/keybindings.md` section 4 updated to reflect the
   new ENTRIES buckets. 821/821 unit ✓, 75/75 E2E ✓, build ✓.
 
-## Locked decisions
+- [/] **FP12**. **Help modal: keyboard navigation across tabs
+  and sub-tabs**. Two-row tab grid (L1 = App Shortcuts /
+  Layout / Developer / Symbol Legend, L2 = Lifecycle / Nav /
+  Move / Resize or Dev / Logs / Axes when applicable). Adds
+  keyboard-driven focus traversal with the focus indicator
+  decoupled from the active state.
 
-- Order: FP1 → FP11, commit at each border.
+  Keybindings (scope `help`, all configurable):
+  - `HELP_TAB_LEFT` (← / h), `HELP_TAB_RIGHT` (→ / l)
+  - `HELP_TAB_UP` (↑ / k), `HELP_TAB_DOWN` (↓ / j)
+  - `HELP_TAB_ACTIVATE` (Space / Enter)
+
+  Behavior:
+  - **Open**: focus snaps to the active L1 tab (row=L1,
+    index=activeTabIndex). Reset on every open; no
+    persistence.
+  - **Left/Right**: wrap horizontally within the current
+    row. Tab count varies (L1 always 4; L2 is 4 if Layout
+    active, 3 if Developer active).
+  - **Up from L1**: no-op.
+  - **Up from L2**: focus jumps to the L1 parent tab
+    (Layout or Developer).
+  - **Down from L1**: only when the *focused* L1 tab is
+    Layout or Developer **and** also currently active
+    (i.e. L2 strip is visible). Focus lands on the L2 tab
+    currently active in that parent. Otherwise no-op.
+  - **Activate (Space/Enter)**: commits focus → active.
+    L1 focus activates the L1 tab; L2 focus activates the
+    L2 sub-tab (and ensures the parent L1 stays active).
+
+  Visual indicators (additive):
+  - **Active** (unchanged from FP4/FP7): underline accent
+    (`--accent-2` for L1, `--accent` for L2 via FP7).
+  - **Focused** (new): `outline: 2px solid` matching its
+    row's accent token, `outline-offset: 2px`. Stays
+    visible regardless of pointer focus (custom CSS, not
+    `:focus-visible`, because we drive the focus state from
+    a React state and not from `document.activeElement`).
+  - **Focused + active**: outline + underline together.
+
+  Implementation:
+  - 5 new entries in `ACTION_IDS` and `DEFAULT_KEYBINDINGS`
+    under context `help`.
+  - `SheetHelpModal` gains `focus: { row: "L1" | "L2"; index: number }`
+    state, reset to the L1 active index whenever `open` flips
+    from false to true.
+  - Handler in `useScopedKeyboardHandler("help", ...)` uses
+    `matchesAction(event, …)` for each action.
+  - Drop the inline `<Tabs />` for L1 (helpStyles tabs strip)
+    in favour of richer markup that supports both `data-active`
+    and `data-focused` attributes; same for the L2 strips via
+    the shared `<Tabs />` primitive (extended with `focusedTab`
+    prop).
+  - `home-help-modal.tsx` (also under `help` scope) gets the
+    same 5 actions wired or is left as a passive scope —
+    decide depending on whether home help has multiple tabs.
 - Architecture for shared mode-switch: approach A3 (sub-scopes
   non-modal, single action in `layout`).
 - Density: start modest, iterate with the user.

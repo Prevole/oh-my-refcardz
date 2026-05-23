@@ -22,8 +22,10 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
   cursor: pointer;
-  transition: color var(--transition-normal), border-color var(--transition-normal);
+  transition: color var(--transition-normal), border-color var(--transition-normal), background-color var(--transition-normal);
   margin-bottom: -1px;
 }
 
@@ -34,6 +36,20 @@
 .tab[data-active="true"] {
   color: var(--accent-2);
   border-bottom-color: var(--accent-2);
+}
+
+/* Tabs marked with data-position="end" are pushed to the far right of the
+ * strip, separated from the rest by an auto-grown gap. Used by the help
+ * modal to visually detach the Legend tab from the keybinding categories. */
+.tab[data-position="end"] {
+  margin-left: auto;
+}
+
+/* Focus indicator: subtle accent tint background, additive on top of the
+ * active underline. When focused + active the user sees both signals; when
+ * focused only, the tint alone indicates the keyboard cursor position. */
+.tab[data-focused="true"] {
+  background: color-mix(in srgb, var(--accent-2) 12%, transparent);
 }
 
 .tabContent {

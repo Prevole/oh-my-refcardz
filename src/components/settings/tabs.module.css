@@ -15,8 +15,10 @@
   font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color var(--transition-normal), border-color var(--transition-normal);
+  transition: color var(--transition-normal), border-color var(--transition-normal), background-color var(--transition-normal);
   border-bottom: 2px solid transparent;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
   margin-bottom: -1px;
 }
 
@@ -37,6 +39,18 @@
 .tabDisabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Focus indicator driven by external state (e.g. help modal keyboard
+ * navigation): subtle accent tint background, additive on top of the active
+ * underline. Primary variant uses --accent-2 (matches active underline);
+ * secondary variant uses --accent for the same reason. */
+.tab[data-focused="true"] {
+  background: color-mix(in srgb, var(--accent-2) 12%, transparent);
+}
+
+.tabSecondary[data-focused="true"] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* Secondary variant: smaller, softer, visually subordinate to L1 tabs. */
