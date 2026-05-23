@@ -65,6 +65,10 @@ export function dedupeCombos(combos: KeyCombo[]): KeyCombo[] {
   return result;
 }
 
+// Scope-local conflict detection: two actions conflict only when they live
+// in the same keybinding context. Cross-context "shadowing" (e.g. a `home`
+// override masking a `global` binding) is intentional and not reported as
+// a conflict here.
 export function findConflict(
   config: KeybindingsConfig,
   context: KeybindingContext,
@@ -80,20 +84,6 @@ export function findConflict(
       }
     }
   }
-
-  /* v8 ignore start -- defensive: check global context for conflicts when editing non-global bindings */
-  if (context !== "global") {
-    for (const action of config.global) {
-      if (action.id === actionId) continue;
-
-      for (const combo of action.combos) {
-        if (combosEqual(combo, newCombo)) {
-          return { existingAction: action, context: "global" };
-        }
-      }
-    }
-  }
-  /* v8 ignore stop */
 
   return null;
 }

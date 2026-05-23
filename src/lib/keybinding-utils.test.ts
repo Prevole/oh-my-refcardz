@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { mergeWithDefaults, combosEqual, dedupeCombos, findConflict } from "./keybinding-utils";
-import { DEFAULT_KEYBINDINGS, type KeybindingsConfig, type KeyCombo } from "./keybindings";
+import { DEFAULT_KEYBINDINGS, type KeybindingsConfig, type KeyCombo, type Modifier } from "./keybindings";
 
-function key(k: string, modifiers: string[] = []): KeyCombo {
+function key(k: string, modifiers: Modifier[] = []): KeyCombo {
   return { key: k, modifiers };
 }
 
@@ -184,7 +184,26 @@ describe("keybinding-utils", () => {
   });
 
   describe("findConflict", () => {
-    const baseConfig: KeybindingsConfig = {
+    function makeConfig(overrides: Partial<KeybindingsConfig>): KeybindingsConfig {
+      const empty: KeybindingsConfig = {
+        global: [],
+        help: [],
+        settings: [],
+        home: [],
+        sheet: [],
+        modal: [],
+        layout: [],
+        "layout-navigation": [],
+        "layout-move": [],
+        "layout-resize": [],
+        dev: [],
+        "dev-logs": [],
+        "dev-axes": [],
+      };
+      return { ...empty, ...overrides };
+    }
+
+    const baseConfig: KeybindingsConfig = makeConfig({
       global: [
         { id: "global.toggle-help", label: "Help", combos: [key("?")] },
         { id: "global.toggle-settings", label: "Settings", combos: [key(",", ["ctrl"])] },
@@ -193,9 +212,7 @@ describe("keybinding-utils", () => {
         { id: "home.move-left", label: "Move left", combos: [key("h"), key("ArrowLeft")] },
         { id: "home.move-right", label: "Move right", combos: [key("l")] },
       ],
-      sheet: [],
-      "sheet-layout": [],
-    };
+    });
 
     it("returns null when no conflict exists", () => {
       const result = findConflict(baseConfig, "home", "home.move-left", key("x"));
@@ -209,20 +226,21 @@ describe("keybinding-utils", () => {
       expect(result!.context).toBe("home");
     });
 
-    it("finds conflict with global context from non-global", () => {
+    it("does not flag conflict across contexts (shadowing is allowed)", () => {
+      // Rebinding home.move-left to `?` does NOT conflict with global.toggle-help
+      // because they live in different contexts. The override silently shadows
+      // the global binding when the `home` scope is active — this is intentional.
       const result = findConflict(baseConfig, "home", "home.move-left", key("?"));
-      expect(result).not.toBeNull();
-      expect(result!.existingAction.id).toBe("global.toggle-help");
-      expect(result!.context).toBe("global");
+      expect(result).toBeNull();
     });
 
-    it("does not check global when already in global context", () => {
-      const configWithSameKey: KeybindingsConfig = {
-        ...baseConfig,
+    it("does not flag conflict when global rebinds onto a non-global key", () => {
+      const configWithHomeKey = makeConfig({
+        global: [...baseConfig.global],
         home: [{ id: "home.move-left", label: "Move left", combos: [key("?")] }],
-      };
+      });
 
-      const result = findConflict(configWithSameKey, "global", "global.toggle-help", key("?"));
+      const result = findConflict(configWithHomeKey, "global", "global.toggle-help", key("?"));
       expect(result).toBeNull();
     });
 
@@ -231,10 +249,17 @@ describe("keybinding-utils", () => {
       expect(result).toBeNull();
     });
 
-    it("finds conflict with modifiers", () => {
-      const result = findConflict(baseConfig, "home", "home.move-left", key(",", ["ctrl"]));
+    it("finds conflict with modifiers within the same context", () => {
+      const configWithModifiedHome = makeConfig({
+        ...baseConfig,
+        home: [
+          { id: "home.move-left", label: "Move left", combos: [key("h")] },
+          { id: "home.move-right", label: "Move right", combos: [key(",", ["ctrl"])] },
+        ],
+      });
+      const result = findConflict(configWithModifiedHome, "home", "home.move-left", key(",", ["ctrl"]));
       expect(result).not.toBeNull();
-      expect(result!.existingAction.id).toBe("global.toggle-settings");
+      expect(result!.existingAction.id).toBe("home.move-right");
     });
 
     it("does not conflict when modifiers differ", () => {
@@ -249,29 +274,26 @@ describe("keybinding-utils", () => {
     });
 
     it("handles sequences correctly", () => {
-      const configWithSequence: KeybindingsConfig = {
+      const configWithSequence: KeybindingsConfig = makeConfig({
         ...baseConfig,
         home: [
           ...baseConfig.home,
           { id: "home.go-top", label: "Go top", combos: [sequence("g", "g")] },
         ],
-      };
+      });
 
       expect(findConflict(configWithSequence, "home", "home.move-left", sequence("g", "g"))).not.toBeNull();
       expect(findConflict(configWithSequence, "home", "home.move-left", sequence("g", "t"))).toBeNull();
       expect(findConflict(configWithSequence, "home", "home.move-left", key("g"))).toBeNull();
     });
 
-    it("returns first conflict found in context before checking global", () => {
-      const configWithMultiple: KeybindingsConfig = {
-        global: [{ id: "global.action", label: "Global", combos: [key("x")] }],
+    it("returns first conflict found in context", () => {
+      const configWithMultiple: KeybindingsConfig = makeConfig({
         home: [
           { id: "home.action1", label: "Action 1", combos: [key("x")] },
           { id: "home.action2", label: "Action 2", combos: [key("y")] },
         ],
-        sheet: [],
-        "sheet-layout": [],
-      };
+      });
 
       const result = findConflict(configWithMultiple, "home", "home.action2", key("x"));
       expect(result!.existingAction.id).toBe("home.action1");
