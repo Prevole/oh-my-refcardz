@@ -134,7 +134,7 @@ const SHEET_GENERAL_SECTIONS: SectionConfig[] = [
   {
     id: "sheet-misc",
     label: "Misc",
-    description: "Actions available while browsing a cheatsheet (outside layout mode).",
+    description: "Actions available while browsing a cheatsheet.",
     context: "sheet",
     actionIds: [
       ACTION_IDS.BACK_TO_HOME,
@@ -218,13 +218,21 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
   {
     id: "layout-move",
     label: "Move",
-    description: "Slide the selected card on the grid. Strict variants only move along one axis at a time.",
+    description: "Slide the focused card. Neighbours reflow to make room.",
     context: "layout-move",
     actionIds: [
       ACTION_IDS.LAYOUT_MOVE_LEFT,
       ACTION_IDS.LAYOUT_MOVE_RIGHT,
       ACTION_IDS.LAYOUT_MOVE_UP,
       ACTION_IDS.LAYOUT_MOVE_DOWN,
+    ],
+  },
+  {
+    id: "layout-move-strict",
+    label: "Move strict",
+    description: "Stays on a single axis; stops at the first obstacle instead of pushing neighbours.",
+    context: "layout-move",
+    actionIds: [
       ACTION_IDS.LAYOUT_MOVE_STRICT_LEFT,
       ACTION_IDS.LAYOUT_MOVE_STRICT_RIGHT,
       ACTION_IDS.LAYOUT_MOVE_STRICT_UP,
@@ -249,7 +257,7 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
   },
   {
     id: "layout-resize-strict",
-    label: "Resize Strict",
+    label: "Resize strict",
     description: "Strict resize: never pushes neighbours; stops at the first obstacle.",
     context: "layout-resize",
     actionIds: [
@@ -265,7 +273,7 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
   },
   {
     id: "layout-resize-compact",
-    label: "Resize Compact",
+    label: "Resize compact",
     description: "Shrink the card and immediately compact neighbours into the freed space.",
     context: "layout-resize",
     actionIds: [
@@ -354,7 +362,7 @@ export const SUB_SUB_TABS: SubSubTabConfig[] = [
   {
     id: "layout",
     label: "Layout",
-    intro: "Shortcuts active while editing the layout of a cheatsheet. Each sub-mode (Navigation, Move, Resize) has its own set of bindings.",
+    intro: "Shortcuts active while editing the layout of a cheatsheet.",
     sections: SHEET_LAYOUT_SECTIONS,
   },
   {
