@@ -290,7 +290,9 @@
 
 .sectionReset {
   composes: section-footer from global;
-  margin-top: var(--space-5);
+  margin-top: 0;
+  padding-top: var(--space-3);
+  border-top: none;
   display: flex;
   justify-content: flex-end;
 }
@@ -300,4 +302,18 @@
   width: auto;
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
+}
+
+.resetButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  color: var(--fg-20);
+  border-color: var(--fg-20);
+  background: transparent;
+}
+
+.resetButton:disabled:hover {
+  background: transparent;
+  border-color: var(--fg-20);
+  color: var(--fg-20);
 }

@@ -8,7 +8,7 @@ import type {
   UISettings,
   SettingsTopTab,
 } from "@/hooks/use-ui-settings";
-import { useUISettings } from "@/hooks/use-ui-settings";
+import { useUISettings, DEFAULT_MODERN_SETTINGS } from "@/hooks/use-ui-settings";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
@@ -333,6 +333,11 @@ export function SettingsPanel({
   if (!isOpen) return null;
 
   const showDirectionOptions = settings.modern.border !== "full";
+  const hasModernModifications =
+    settings.modern.random !== DEFAULT_MODERN_SETTINGS.random ||
+    settings.modern.colorMode !== DEFAULT_MODERN_SETTINGS.colorMode ||
+    settings.modern.border !== DEFAULT_MODERN_SETTINGS.border ||
+    settings.modern.direction !== DEFAULT_MODERN_SETTINGS.direction;
 
   return (
     <div className={styles.overlay} data-closing={isClosing ? "true" : undefined} data-testid="settings-overlay">
@@ -449,7 +454,13 @@ export function SettingsPanel({
                   </div>
 
                   <div className={styles.sectionReset}>
-                    <button className={styles.resetButton} onClick={onResetModern}>
+                    <button
+                      className={styles.resetButton}
+                      onClick={onResetModern}
+                      disabled={!hasModernModifications}
+                      title={hasModernModifications ? "Reset UI settings to their defaults" : "UI settings are at their defaults"}
+                      data-testid="ui-reset-settings"
+                    >
                       Reset UI settings
                     </button>
                   </div>

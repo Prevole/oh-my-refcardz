@@ -30,13 +30,15 @@ export interface UISettings {
 
 const STORAGE_KEY = "oh-my-refcardz:ui-settings";
 
+export const DEFAULT_MODERN_SETTINGS: ModernSettings = {
+  random: false,
+  colorMode: "normal",
+  border: "both",
+  direction: "l-r",
+};
+
 const DEFAULT_SETTINGS: UISettings = {
-  modern: {
-    random: false,
-    colorMode: "normal",
-    border: "both",
-    direction: "l-r",
-  },
+  modern: DEFAULT_MODERN_SETTINGS,
   panelTabs: {
     active: "ui",
     keybindingsSub: "general",
