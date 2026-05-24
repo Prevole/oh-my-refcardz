@@ -145,4 +145,44 @@ test.describe("Home keyboard navigation", () => {
     const infoModal = page.locator("[role='dialog']");
     await expect(infoModal).toBeVisible();
   });
+
+  test("home keybindings still work after navigating to a sheet and back (browser back)", async ({ page }) => {
+    // Regression test for FP14d follow-up: useKeyboardScope cleanup did not
+    // reset wasActiveRef, so StrictMode's setup/cleanup/setup cycle on the
+    // sheet route left the "sheet" scope un-pushed. On return to home, the
+    // home scope was active but no keybindings responded because the active
+    // scope reported by the stack was stale.
+    const firstCard = page.locator("[class*='hexCard']").first();
+    await expect(firstCard).toHaveAttribute("data-selected", "true");
+
+    await page.keyboard.press("Enter");
+    await expect(page).not.toHaveURL("/");
+    await page.waitForSelector("h1");
+
+    await page.goBack();
+    await expect(page).toHaveURL("/");
+    await page.waitForSelector("[data-testid='hex-board']");
+
+    // If the bug regresses, the arrow keys will be silently ignored.
+    await page.keyboard.press("ArrowRight");
+    await expect(firstCard).toHaveAttribute("data-selected", "false");
+    const selectedCard = page.locator("[class*='hexCard'][data-selected='true']");
+    await expect(selectedCard).toBeVisible();
+  });
+
+  test("home keybindings still work after navigating to a sheet and back (Backspace)", async ({ page }) => {
+    const firstCard = page.locator("[class*='hexCard']").first();
+    await expect(firstCard).toHaveAttribute("data-selected", "true");
+
+    await page.keyboard.press("Enter");
+    await expect(page).not.toHaveURL("/");
+    await page.waitForSelector("h1");
+
+    await page.keyboard.press("Backspace");
+    await expect(page).toHaveURL("/");
+    await page.waitForSelector("[data-testid='hex-board']");
+
+    await page.keyboard.press("ArrowRight");
+    await expect(firstCard).toHaveAttribute("data-selected", "false");
+  });
 });

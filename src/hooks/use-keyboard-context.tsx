@@ -109,6 +109,7 @@ export function useKeyboardScope(
     return () => {
       if (wasActiveRef.current) {
         popScope(scope);
+        wasActiveRef.current = false;
       }
     };
   }, [scope, popScope]);
