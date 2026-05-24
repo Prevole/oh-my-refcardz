@@ -383,11 +383,15 @@ describe("getPositionedItems", () => {
 // ---------------------------------------------------------------------------
 
 describe("getVerticalTarget", () => {
-  // Honeycomb layout:
-  // Row 0 (even): [A, B, C]
-  // Row 1 (odd):    [D, E]
-  // Row 2 (even): [F, G, H]
-  // Row 3 (odd):    [I, J]
+  // Honeycomb layout (visualColIndex = colIndex * 2 + parity):
+  // Row 0 (even, par 0): [A vCol 0, B vCol 2, C vCol 4]
+  // Row 1 (odd,  par 1):    [D vCol 1, E vCol 3]
+  // Row 2 (even, par 0): [F vCol 0, G vCol 2, H vCol 4]
+  // Row 3 (odd,  par 1):    [I vCol 1, J vCol 3]
+  //
+  // The algorithm picks the adjacent row (no parity skip) and selects
+  // the card with the closest visualColIndex. Ties resolve to the
+  // leftmost candidate (smaller colIndex).
 
   const rows = [
     ["A", "B", "C"],
@@ -395,69 +399,74 @@ describe("getVerticalTarget", () => {
     ["F", "G", "H"],
     ["I", "J"],
   ];
-  const rowParityByIndex = [0, 1, 0, 1]; // even, odd, even, odd
+  const rowParityByIndex = [0, 1, 0, 1];
 
-  it("moves down from even row to next even row", () => {
-    // From B (row 0, col 1) down → G (row 2, col 1)
+  it("moves down to the adjacent row and picks the closest visual column", () => {
+    // From B (row 0, col 1, vCol 2) down → row 1 [D vCol 1, E vCol 3].
+    // Distances [1, 1], tie → leftmost = D.
     const target = getVerticalTarget(rows, rowParityByIndex, 0, 1, "down");
-
-    expect(target).toBe("G");
+    expect(target).toBe("D");
   });
 
-  it("moves up from even row to previous even row", () => {
-    // From G (row 2, col 1) up → B (row 0, col 1)
+  it("moves up symmetrically with the same closest-visual-column rule", () => {
+    // From G (row 2, col 1, vCol 2) up → row 1 [D vCol 1, E vCol 3].
+    // Distances [1, 1], tie → leftmost = D.
     const target = getVerticalTarget(rows, rowParityByIndex, 2, 1, "up");
-
-    expect(target).toBe("B");
+    expect(target).toBe("D");
   });
 
-  it("moves down from odd row to next odd row", () => {
-    // From D (row 1, col 0) down → I (row 3, col 0)
+  it("favors an exact visualColIndex match over a near one", () => {
+    // From D (row 1, col 0, vCol 1) down → row 2 [F vCol 0, G vCol 2, H vCol 4].
+    // Distances [1, 1, 3], tie → leftmost = F.
     const target = getVerticalTarget(rows, rowParityByIndex, 1, 0, "down");
-
-    expect(target).toBe("I");
+    expect(target).toBe("F");
   });
 
-  it("moves up from odd row to previous odd row", () => {
-    // From J (row 3, col 1) up → E (row 1, col 1)
-    const target = getVerticalTarget(rows, rowParityByIndex, 3, 1, "up");
-
+  it("picks the rightward neighbour when the source sits past the row centre", () => {
+    // From C (row 0, col 2, vCol 4) down → row 1 [D vCol 1, E vCol 3].
+    // Distances [3, 1] → E.
+    const target = getVerticalTarget(rows, rowParityByIndex, 0, 2, "down");
     expect(target).toBe("E");
   });
 
-  it("returns null when no target row exists (up from first even)", () => {
-    const target = getVerticalTarget(rows, rowParityByIndex, 0, 0, "up");
-
-    expect(target).toBeNull();
+  it("returns null when no row exists in the requested direction", () => {
+    expect(getVerticalTarget(rows, rowParityByIndex, 0, 0, "up")).toBeNull();
+    expect(getVerticalTarget(rows, rowParityByIndex, 3, 0, "down")).toBeNull();
   });
 
-  it("returns null when no target row exists (down from last odd)", () => {
-    const target = getVerticalTarget(rows, rowParityByIndex, 3, 0, "down");
-
-    expect(target).toBeNull();
-  });
-
-  it("falls back to first item if column index exceeds target row length", () => {
-    // From C (row 0, col 2) down → row 2 only has indices 0,1,2
-    // This should work: F, G, H at indices 0, 1, 2
-    const target = getVerticalTarget(rows, rowParityByIndex, 0, 2, "down");
-
-    expect(target).toBe("H");
-  });
-
-  it("falls back to first item when column doesn't exist in target", () => {
-    // Create a scenario where target row is shorter
-    const shortRows = [
-      ["A", "B", "C"],
-      ["D"],
-      ["E"], // only 1 item
+  it("crosses category boundaries by landing on the immediately adjacent row", () => {
+    // Regression: the previous algorithm skipped rows of opposite
+    // parity, so a card in an odd row could not move down to the
+    // first row of the next category (which restarts at parity 0).
+    // With the visual-column algorithm, the adjacent row is always
+    // chosen regardless of parity.
+    //
+    // Layout mimics tooling (7 sheets, 4 cols) followed by an
+    // applications category with a single sheet:
+    //   Row 0 (par 0): [chez, dsf, direnv, docker]     (tooling)
+    //   Row 1 (par 1):     [git, mise, op]             (tooling)
+    //   Row 2 (par 0): [1pwd]                          (applications)
+    const layout = [
+      ["chez", "dsf", "direnv", "docker"],
+      ["git", "mise", "op"],
+      ["1pwd"],
     ];
     const parity = [0, 1, 0];
 
-    // From C (row 0, col 2) down → E (row 2, col 0) - falls back to first
-    const target = getVerticalTarget(shortRows, parity, 0, 2, "down");
+    // git (row 1, col 0, vCol 1), mise (col 1, vCol 3), op (col 2, vCol 5)
+    // all collapse down to 1pwd (the only card in row 2 at vCol 0).
+    expect(getVerticalTarget(layout, parity, 1, 0, "down")).toBe("1pwd");
+    expect(getVerticalTarget(layout, parity, 1, 1, "down")).toBe("1pwd");
+    expect(getVerticalTarget(layout, parity, 1, 2, "down")).toBe("1pwd");
+  });
 
-    expect(target).toBe("E");
+  it("falls back to the only available card when the adjacent row is sparse", () => {
+    // From C (row 0, col 2, vCol 4) down → row 1 [D vCol 1].
+    // Only one candidate, picked regardless of distance.
+    const shortRows = [["A", "B", "C"], ["D"], ["E"]];
+    const parity = [0, 1, 0];
+
+    expect(getVerticalTarget(shortRows, parity, 0, 2, "down")).toBe("D");
   });
 });
 

@@ -141,7 +141,7 @@ export function getVerticalTarget<T>(
   direction: "up" | "down"
 ): T | null {
   const rowStep = direction === "down" ? 1 : -1;
-  const currentParity = rowParityByIndex[rowIndex];
+  const sourceVisualCol = colIndex * 2 + (rowParityByIndex[rowIndex] ?? 0);
 
   for (
     let nextRowIndex = rowIndex + rowStep;
@@ -149,12 +149,24 @@ export function getVerticalTarget<T>(
     nextRowIndex += rowStep
   ) {
     const nextRow = rows[nextRowIndex];
-    if (nextRow.length === 0 || rowParityByIndex[nextRowIndex] !== currentParity) {
+    if (nextRow.length === 0) {
       continue;
     }
 
-    /* v8 ignore next -- defensive: fallback to first item when column out of bounds */
-    return nextRow[colIndex] ?? nextRow[0] ?? null;
+    const nextParity = rowParityByIndex[nextRowIndex] ?? 0;
+
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+    for (let candidateCol = 0; candidateCol < nextRow.length; candidateCol++) {
+      const candidateVisualCol = candidateCol * 2 + nextParity;
+      const distance = Math.abs(candidateVisualCol - sourceVisualCol);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = candidateCol;
+      }
+    }
+
+    return nextRow[bestIndex] ?? null;
   }
 
   return null;
