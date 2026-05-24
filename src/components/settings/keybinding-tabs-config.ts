@@ -21,6 +21,12 @@ export type SectionConfig = {
   context: KeybindingContext;
   /** Explicit list of action ids included in this section, in render order. */
   actionIds: readonly string[];
+  /**
+   * Optional per-action notes rendered under the row label. Useful for
+   * documenting activation conditions or caveats that don't fit in the
+   * section description.
+   */
+  notes?: Readonly<Record<string, string>>;
 };
 
 export type SubTabConfig = {
@@ -97,6 +103,9 @@ const HOME_SECTIONS: SectionConfig[] = [
       ACTION_IDS.TOGGLE_INFO,
       ACTION_IDS.OPEN_SHEET,
     ],
+    notes: {
+      [ACTION_IDS.CLEAR_SEARCH]: "Only fires while the search field is focused.",
+    },
   },
   {
     id: "home-navigation",
@@ -290,7 +299,7 @@ export const SUB_TABS: SubTabConfig[] = [
   {
     id: "general",
     label: "General",
-    intro: "Shortcuts active everywhere, regardless of the current page. Help and settings navigation bindings are scoped to their respective modals but are grouped here for discoverability.",
+    intro: "Cross-cutting shortcuts grouped for discoverability: top-level actions available everywhere, plus the navigation bindings scoped to the Help modal and the Settings panel.",
     sections: GENERAL_SECTIONS,
   },
   {

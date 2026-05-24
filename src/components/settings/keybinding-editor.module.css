@@ -91,13 +91,27 @@
 }
 
 .label {
-  flex: 1;
   font-size: var(--text-base);
   color: var(--fg-88);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.labelCell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.actionNote {
+  font-size: var(--text-xs);
+  color: var(--fg-50);
+  line-height: 1.3;
+  white-space: normal;
 }
 
 .combos {

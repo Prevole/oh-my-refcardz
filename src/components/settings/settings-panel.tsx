@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type {
   ColorMode,
   BorderStyle,
@@ -73,6 +73,14 @@ const TOP_TABS: { id: SettingsTopTab; label: string }[] = [
   { id: "ui", label: "UI" },
   { id: "keybindings", label: "Keybindings" },
 ];
+
+function InlineKeybindingHint({ children }: { children: ReactNode }) {
+  return (
+    <span className="underline decoration-dashed underline-offset-3 text-[#f8c94a]">
+      {children}
+    </span>
+  );
+}
 
 export function SettingsPanel({
   isOpen,
@@ -459,7 +467,7 @@ export function SettingsPanel({
                 <header className={styles.tabSectionHeader}>
                   <h3 className={styles.tabSectionTitle}>Keybindings</h3>
                   <p className={styles.tabSectionLead}>
-                    Customize the keyboard shortcuts used across the app. Click a keybinding to record a new one. Hold <kbd>Shift</kbd> and click on a secondary binding to promote it to primary.
+                    Customize the keyboard shortcuts used across the app. <InlineKeybindingHint>Click</InlineKeybindingHint> a keybinding to record a new one. Hold <InlineKeybindingHint>Shift</InlineKeybindingHint> and <InlineKeybindingHint>click</InlineKeybindingHint> on a secondary binding to promote it to primary.
                   </p>
                 </header>
                 <KeybindingEditor

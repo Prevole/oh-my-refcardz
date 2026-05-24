@@ -190,6 +190,7 @@ function RecordingOverlay({
 function ActionRow({
   context,
   action,
+  note,
   isRecording,
   onStartRecording,
   onSetPrimary,
@@ -198,6 +199,7 @@ function ActionRow({
 }: {
   context: KeybindingContext;
   action: KeybindingAction;
+  note?: string;
   isRecording: boolean;
   onStartRecording: (comboIndex: number | null) => void;
   onSetPrimary: (comboIndex: number) => void;
@@ -220,7 +222,10 @@ function ActionRow({
 
   return (
     <div className={`${styles.row} ${isRecording ? styles.rowRecording : ""}`} data-testid="keybinding-row" data-action-id={action.id}>
-      <div className={styles.label}>{action.label}</div>
+      <div className={styles.labelCell}>
+        <div className={styles.label}>{action.label}</div>
+        {note && <div className={styles.actionNote}>{note}</div>}
+      </div>
       <div className={styles.combos}>
         {action.combos.map((combo, index) => (
           <div key={index} className={styles.comboWrapper}>
@@ -328,6 +333,7 @@ function SectionRenderer({
             key={action.id}
             context={section.context}
             action={action}
+            note={section.notes?.[action.id]}
             isRecording={recordingActionId === action.id}
             onStartRecording={(comboIndex) => onStartRecording(action.id, comboIndex)}
             onSetPrimary={(comboIndex) => onSetPrimary(action.id, comboIndex)}
