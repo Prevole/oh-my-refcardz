@@ -194,12 +194,13 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
   {
     id: "layout-parent",
     label: "Layout",
-    description: "Enter, switch sub-mode, or exit layout mode.",
+    description: "Enter, switch sub-mode, commit changes, or exit layout mode.",
     context: "layout",
     actionIds: [
       ACTION_IDS.LAYOUT_GOTO_NAVIGATION,
       ACTION_IDS.LAYOUT_GOTO_MOVE,
       ACTION_IDS.LAYOUT_GOTO_RESIZE,
+      ACTION_IDS.LAYOUT_COMMIT,
       ACTION_IDS.LAYOUT_EXIT,
     ],
   },

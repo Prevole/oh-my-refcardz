@@ -147,6 +147,11 @@ export const ACTION_IDS = {
   // action regardless of the active sub-mode.
   LAYOUT_EXIT: "layout.exit",
 
+  // Commit the buffered keyboard layout edits to persistence and exit
+  // layout mode. Registered on the parent `layout` scope so it works
+  // from every sub-mode.
+  LAYOUT_COMMIT: "layout.commit",
+
   // Layout sub-mode: navigation (scope `layout-navigation`).
   LAYOUT_NAV_LEFT: "layout-navigation.left",
   LAYOUT_NAV_RIGHT: "layout-navigation.right",
@@ -483,6 +488,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_EXIT,
       label: "Exit layout mode",
       combos: [key("Escape")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_COMMIT,
+      label: "Commit and exit",
+      combos: [key("Enter")],
     },
   ],
 

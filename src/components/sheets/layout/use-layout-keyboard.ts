@@ -29,6 +29,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type {
+  BlockConstraints,
   Direction,
   LayoutBlock,
   MoveOperation,
@@ -39,7 +40,10 @@ import { ACTION_IDS } from "@/lib/keybindings";
 import { useAction } from "@/hooks/use-action";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
+import { debugRecorder } from "@/lib/dev-mode";
+import { getBlockConstraintsV2 } from "./block-types";
 import type { UseLayoutEditorResult } from "./use-layout-editor";
+import type { UseLayoutBufferStateResult } from "./use-layout-buffer-state";
 
 export type LayoutSubMode = "navigation" | "move" | "resize";
 
@@ -61,6 +65,8 @@ export type UseLayoutKeyboardResult = {
 type UseLayoutKeyboardOptions = {
   blocks: LayoutBlock[];
   editor: UseLayoutEditorResult;
+  bufferState: UseLayoutBufferStateResult;
+  gridColumns: number;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -298,6 +304,8 @@ export function buildResizeOperation(blockId: string, spec: ResizeSpec): ResizeO
 export function useLayoutKeyboard({
   blocks,
   editor,
+  bufferState,
+  gridColumns,
 }: UseLayoutKeyboardOptions): UseLayoutKeyboardResult {
   const [mode, setMode] = useState<LayoutSubMode | null>(null);
   const [focusedCard, setFocusedCard] = useState<LayoutKeyboardFocus | null>(null);
@@ -335,6 +343,9 @@ export function useLayoutKeyboard({
 
   const enterMode = useCallback(() => {
     setMode("navigation");
+    // Start a buffered session rooted at the currently committed layout.
+    // All keyboard ops will land in the buffer until commit or exit.
+    bufferState.start(editor.committedBlocks);
     setFocusedCard((current) => {
       if (current) return current;
       const blocks = blocksRef.current;
@@ -353,12 +364,23 @@ export function useLayoutKeyboard({
       const id = closest ?? pickTopLeftBlock(blocks);
       return id ? { blockId: id } : null;
     });
-  }, []);
+  }, [bufferState, editor.committedBlocks]);
 
-  const exitMode = useCallback(() => {
+  const commitMode = useCallback(() => {
+    const blocks = bufferState.commit();
+    if (blocks) {
+      editor.commitLayout(blocks);
+    }
     setMode(null);
     setFocusedCard(null);
-  }, []);
+  }, [bufferState, editor]);
+
+  // FA3 provisional semantics: Esc commits the buffer (matches the
+  // pre-FA behaviour where every keystroke was immediately persisted).
+  // FA4 will switch this to a discard path.
+  const exitMode = useCallback(() => {
+    commitMode();
+  }, [commitMode]);
 
   const flashManipulating = useCallback(() => {
     setIsManipulating(true);
@@ -404,6 +426,10 @@ export function useLayoutKeyboard({
     exitMode();
   });
 
+  useAction(ACTION_IDS.LAYOUT_COMMIT, "layout", () => {
+    commitMode();
+  });
+
   /* ---------------- navigation ---------------- */
 
   const navigateTo = useCallback((direction: Direction) => {
@@ -424,16 +450,32 @@ export function useLayoutKeyboard({
 
   /* ---------------- move ---------------- */
 
+  const buildApplyContext = useCallback(
+    (sourceBlocks: readonly LayoutBlock[]) => {
+      const constraints = new Map<string, BlockConstraints>();
+      for (const b of sourceBlocks) {
+        constraints.set(b.id, getBlockConstraintsV2(b.kind));
+      }
+      return {
+        gridColumns,
+        constraints,
+        emitter: debugRecorder.getEngineEmitter(),
+      };
+    },
+    [gridColumns]
+  );
+
   const submitMove = useCallback(
     (actionId: string) => {
       const spec = moveSpecFromAction(actionId);
       if (!spec) return;
       const target = focusedCard?.blockId ?? pickTopLeftBlock(blocksRef.current);
       if (!target) return;
-      editor.applyOneShot(buildMoveOperation(target, spec));
+      const op = buildMoveOperation(target, spec);
+      bufferState.apply(op, buildApplyContext(blocksRef.current));
       flashManipulating();
     },
-    [editor, focusedCard, flashManipulating]
+    [bufferState, buildApplyContext, focusedCard, flashManipulating]
   );
 
   useAction(ACTION_IDS.LAYOUT_MOVE_LEFT, "layout-move", () => submitMove(ACTION_IDS.LAYOUT_MOVE_LEFT));
@@ -453,10 +495,11 @@ export function useLayoutKeyboard({
       if (!spec) return;
       const target = focusedCard?.blockId ?? pickTopLeftBlock(blocksRef.current);
       if (!target) return;
-      editor.applyOneShot(buildResizeOperation(target, spec));
+      const op = buildResizeOperation(target, spec);
+      bufferState.apply(op, buildApplyContext(blocksRef.current));
       flashManipulating();
     },
-    [editor, focusedCard, flashManipulating]
+    [bufferState, buildApplyContext, focusedCard, flashManipulating]
   );
 
   useAction(ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT, "layout-resize", () => submitResize(ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT));

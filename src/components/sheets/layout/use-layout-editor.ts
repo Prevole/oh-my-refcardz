@@ -59,6 +59,12 @@ export type UseLayoutEditorResult = {
    * Used for keyboard moves or programmatic edits. Commits immediately.
    */
   applyOneShot: (op: Operation, options?: OperationOptions) => LayoutBlock[];
+  /**
+   * Commit a pre-computed layout directly to persistence. Unlike
+   * `setCommittedLayout`, this also fires `onCommit` (used by the
+   * keyboard buffered mode to persist the staged blocks on Return).
+   */
+  commitLayout: (blocks: readonly LayoutBlock[]) => void;
   /** Replace the committed layout directly (used by persistence). */
   setCommittedLayout: (blocks: LayoutBlock[]) => void;
 };
@@ -182,6 +188,13 @@ export function useLayoutEditor({
     setInteraction(null);
   }, []);
 
+  const commitLayout = useCallback((blocks: readonly LayoutBlock[]) => {
+    const copy = blocks.slice();
+    setCommittedBlocks(copy);
+    setInteraction(null);
+    onCommitRef.current?.(copy);
+  }, []);
+
   return {
     currentBlocks,
     committedBlocks,
@@ -192,6 +205,7 @@ export function useLayoutEditor({
     commitInteraction,
     cancelInteraction,
     applyOneShot,
+    commitLayout,
     setCommittedLayout,
   };
 }

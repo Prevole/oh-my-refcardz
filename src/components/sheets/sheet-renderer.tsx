@@ -27,6 +27,7 @@ import { ACTION_IDS } from "@/lib/keybindings";
 import {
   useLayoutPersistence,
   useLayoutEditor,
+  useLayoutBufferState,
   useCardDragV2,
   useCardResizeV2,
   useLayoutKeyboard,
@@ -153,10 +154,20 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     onResizeCancel: handleResizeCancel,
   });
 
+  // -- Keyboard buffered staging -------------------------------------------
+  // Holds the in-memory edits produced by keyboard ops while layout mode
+  // is active. The sheet renders the buffer whenever it's populated; the
+  // persisted layout is only touched on commit (Return, FA3) or on the
+  // pre-FA "always commit" path (Esc, until FA4 swaps it to discard).
+  const bufferState = useLayoutBufferState();
+  const displayedBlocks = bufferState.bufferBlocks ?? editor.currentBlocks;
+
   // -- Keyboard (Zellij modal layout mode, entered via Ctrl+M) ------------
   const { mode: layoutMode, focusedCard, setFocusedCard, isManipulating } = useLayoutKeyboard({
-    blocks: editor.currentBlocks,
+    blocks: displayedBlocks as LayoutBlock[],
     editor,
+    bufferState,
+    gridColumns: GRID_COLUMNS,
   });
 
   // -- Reset layout shortcut (user feature, Shift+R) -----------------------
@@ -254,16 +265,16 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   const debugMaxRow = useMemo(() => {
     let max = 0;
-    for (const block of editor.currentBlocks) {
+    for (const block of displayedBlocks) {
       const bottom = block.position.y + block.position.h;
       if (bottom > max) max = bottom;
     }
     return max;
-  }, [editor.currentBlocks]);
+  }, [displayedBlocks]);
 
   const currentBlocksById = useMemo(
-    () => new Map(editor.currentBlocks.map((block) => [block.id, block])),
-    [editor.currentBlocks]
+    () => new Map(displayedBlocks.map((block) => [block.id, block])),
+    [displayedBlocks]
   );
 
   const debugIdMap = useMemo(() => createDevIdMap(blocks), [blocks]);
@@ -315,6 +326,11 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   }
 
   function handleHeaderPointerDown(blockId: string, event: React.PointerEvent<HTMLElement>) {
+    // During a buffered keyboard session, mouse drags would operate on
+    // the persisted layout (out of sync with what's rendered). FA6 will
+    // upgrade this to "click discards the buffer and exits layout
+    // mode". For FA3 we simply ignore the click.
+    if (bufferState.isActive) return;
     setFocusedCard(null);
     startBlockDrag(blockId, event);
   }
@@ -324,6 +340,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     direction: ResizeHandleDirection,
     event: React.PointerEvent<HTMLElement>
   ) {
+    if (bufferState.isActive) return;
     setFocusedCard(null);
     startBlockResize(blockId, direction, event);
   }

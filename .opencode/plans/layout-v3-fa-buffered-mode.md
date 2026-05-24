@@ -128,13 +128,27 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
 
 - [/] **FA2**. **Pure buffer module**. `src/components/sheets/layout/layout-buffer.ts` exposes `createBuffer`, `applyToBuffer`, `commitBuffer` (and `ApplyContext`, `ApplyResult` types). Pure functions, no React. Every call returns a new buffer or the same reference when the engine reports no change. `changesCount` increments only when `applyOperation` produces a different layout (structural equality on id+kind+x/y/w/h). Tests in `layout-buffer.test.ts`: 9/9 covering init, successful op, immutability, accumulation, no-op preservation (including a strict resize rejection). No wiring into the keyboard hook yet — FA3 will plug the buffer into `useLayoutKeyboard` and `sheet-renderer`.
 
-- [ ] **FA3**. **Commit on Return**. Add `LAYOUT_COMMIT` action + scope
-  `layout` binding. Handler: `commitBuffer()` → calls the persistence
-  setter with `currentBuffer`, then `exitMode()`. E2E: enter, do 2
-  ops, Return, leave layout mode, layout matches the 2 ops, reload page,
-  layout still matches.
-
-- [ ] **FA4**. **Silent discard on Esc when count < 5**. Repurpose
+- [/] **FA3**. **Buffer wiring + commit on Return**. New
+  `useLayoutBufferState` hook (`src/components/sheets/layout/use-layout-buffer-state.ts`)
+  owns the `LayoutBuffer | null` cell and exposes `start / apply /
+  commit / clear`, plus convenience `bufferBlocks` and `changesCount`.
+  `useLayoutKeyboard` now takes `bufferState` and `gridColumns`
+  options: `enterMode` starts the buffer from `editor.committedBlocks`;
+  `submitMove`/`submitResize` route through `bufferState.apply` and
+  build the `ApplyContext` from `getBlockConstraintsV2` + the live
+  debug emitter; the new `commitMode` extracts the buffer, hands it
+  to a new `editor.commitLayout(blocks)` API (which persists via the
+  same `onCommit` callback as `applyOneShot`), then exits. The new
+  `LAYOUT_COMMIT` action (default `Enter`) is bound on the parent
+  `layout` scope and registered in `keybinding-tabs-config.ts`. For
+  FA3 specifically, `LAYOUT_EXIT` (Esc) is provisionally aliased to
+  `commitMode` to preserve the pre-FA "always commit" behaviour;
+  FA4 will swap it to a discard path. Mouse drag/resize is disabled
+  while `bufferState.isActive` (no-op pointer-down handlers in the
+  sheet renderer); FA6 will upgrade this to "click discards and
+  exits". Validation: 839/839 unit ✓, lint ✓, build ✓. No new unit
+  tests (the new hook is React-bound; coverage comes via the FA8
+  E2E suite).- [ ] **FA4**. **Silent discard on Esc when count < 5**. Repurpose
   `LAYOUT_*_EXIT` semantics: throw away buffer, exit mode. E2E: enter,
   do 2 ops, Esc, layout returns to entry state.
 

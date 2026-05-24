@@ -60,6 +60,9 @@ export type {
   LayoutSubMode,
 } from "./use-layout-keyboard";
 
+export { useLayoutBufferState } from "./use-layout-buffer-state";
+export type { UseLayoutBufferStateResult } from "./use-layout-buffer-state";
+
 export { LayoutModePill, LAYOUT_MODE_COLORS } from "./layout-mode-pill";
 
 // Layout snapshot: publishes the live layout for sibling consumers
