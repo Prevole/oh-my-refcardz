@@ -26,6 +26,7 @@ export type KeybindingContext =
   | "home"
   | "sheet"
   | "modal"
+  | "info"
   | "layout"
   | "layout-navigation"
   | "layout-move"
@@ -44,6 +45,8 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "sheet";
     case "modal":
       return "modal";
+    case "info":
+      return "info";
     case "help":
       return "help";
     case "settings":
@@ -90,8 +93,14 @@ export const ACTION_IDS = {
 
   FOCUS_SEARCH: "home.focus-search",
   CLEAR_SEARCH: "home.clear-search",
-  TOGGLE_INFO: "home.toggle-info",
+  SHOW_INFO: "home.show-info",
   OPEN_SHEET: "home.open-sheet",
+
+  // Info modal (scope `info`). Open via `SHOW_INFO` from the home
+  // scope; close via `INFO_CLOSE` once the modal is mounted. The
+  // perceived toggle on the `i` key is an emergent property of the
+  // two-scope split.
+  INFO_CLOSE: "info.close",
 
   // Help modal tab traversal (scope `help` / context `help`).
   HELP_TAB_LEFT: "help.tab-left",
@@ -317,14 +326,22 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       combos: [key("Escape")],
     },
     {
-      id: ACTION_IDS.TOGGLE_INFO,
-      label: "Toggle details",
+      id: ACTION_IDS.SHOW_INFO,
+      label: "Show info",
       combos: [key("i")],
     },
     {
       id: ACTION_IDS.OPEN_SHEET,
       label: "Open sheet",
       combos: [key(" "), key("Enter")],
+    },
+  ],
+
+  info: [
+    {
+      id: ACTION_IDS.INFO_CLOSE,
+      label: "Close info",
+      combos: [key("i"), key("Escape")],
     },
   ],
 

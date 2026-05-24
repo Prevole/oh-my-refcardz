@@ -192,20 +192,21 @@
   height: var(--space-5);
   border: none;
   background: transparent;
-  color: var(--fg-40);
+  color: var(--accent);
+  transition: background 120ms ease, color 120ms ease;
 }
 
 .resetButton:hover:not(:disabled) {
-  background: var(--bg-overlay-medium);
-  color: var(--fg-75);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
 }
 
 .resetButton:disabled {
-  opacity: 0.3;
+  opacity: 1;
 }
 
 .resetButtonInert {
-  color: var(--fg-30);
+  color: var(--fg-20);
   cursor: default;
 }
 

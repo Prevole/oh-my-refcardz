@@ -331,7 +331,7 @@ export function HomeClient({ categories }: Props) {
         ACTION_IDS.TOGGLE_SETTINGS,
         ACTION_IDS.CLEAR_SEARCH,
         ACTION_IDS.FOCUS_SEARCH,
-        ACTION_IDS.TOGGLE_INFO,
+        ACTION_IDS.SHOW_INFO,
         ACTION_IDS.GO_TOP,
         ACTION_IDS.GO_BOTTOM,
         ACTION_IDS.HOME_MOVE_RIGHT,
@@ -367,7 +367,7 @@ export function HomeClient({ categories }: Props) {
         return;
       }
 
-      if (matchedAction === ACTION_IDS.TOGGLE_INFO && selectedCard) {
+      if (matchedAction === ACTION_IDS.SHOW_INFO && selectedCard) {
         event.preventDefault();
         setInfoOpen(true);
         return;

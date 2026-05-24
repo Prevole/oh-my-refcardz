@@ -35,9 +35,12 @@ type InlineHelpEntry = {
  *      surface's root scope: `home` on the home page, `sheet` on a
  *      cheatsheet page)
  *
- * Scopes that are typically modal (`settings`, `help`, `info`,
- * `layout`) are intentionally absent: they mask the inline help via
- * an overlay, so silently falling back to `default` is fine.
+ * Modal scopes that fully mask the page (`settings`, `help`,
+ * `layout`) are intentionally absent: their own overlay UI carries
+ * the relevant hints, so falling back to `default` is fine. The
+ * `info` modal on the home page is small enough that the inline
+ * help line remains visible behind it, so we provide a dedicated
+ * entry that advertises the close binding.
  */
 const SCOPE_HELP_MAP: Record<InlineHelpSurface, Partial<Record<KeyboardScopeId | "default", InlineHelpEntry>>> = {
   home: {
@@ -55,8 +58,17 @@ const SCOPE_HELP_MAP: Record<InlineHelpSurface, Partial<Record<KeyboardScopeId |
         { kind: "key", actionId: ACTION_IDS.FOCUS_SEARCH },
         { kind: "text", text: ", clear with" },
         { kind: "key", actionId: ACTION_IDS.CLEAR_SEARCH },
+        { kind: "text", text: ", info with" },
+        { kind: "key", actionId: ACTION_IDS.SHOW_INFO },
         { kind: "text", text: ", help with" },
         { kind: "key", actionId: ACTION_IDS.TOGGLE_HELP },
+        { kind: "text", text: "." },
+      ],
+    },
+    info: {
+      tokens: [
+        { kind: "text", text: "Info modal: close with" },
+        { kind: "key", actionId: ACTION_IDS.INFO_CLOSE, maxCombos: 2 },
         { kind: "text", text: "." },
       ],
     },

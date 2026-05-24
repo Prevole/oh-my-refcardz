@@ -455,3 +455,13 @@ Branch: `feature/layout-v3` (continues from `78da47f`, the F9 commit).
   must also declare them in a `SectionConfig` inside
   `keybinding-tabs-config.ts` to make them visible in the
   settings panel.
+
+## Persistence migration policy (pre-release)
+
+The project currently has a single user (the author) operating in
+dev mode. Renames or removals of `ACTION_IDS` entries do NOT need
+a migration path in `mergeWithDefaults`: unknown stored ids are
+dropped silently and the user accepts that any customised binding
+on the renamed/removed id will be lost. This policy applies as
+long as the project remains in pre-release / unstable development.
+Revisit before any public release.

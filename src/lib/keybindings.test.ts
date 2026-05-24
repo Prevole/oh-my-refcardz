@@ -570,7 +570,13 @@ describe("scopeToContext", () => {
     expect(scopeToContext("layout-resize")).toBe("layout-resize");
   });
 
+  it("maps the info scope to its own context", () => {
+    expect(scopeToContext("info")).toBe("info");
+  });
+
   it("returns null for unknown scope", () => {
-    expect(scopeToContext("info")).toBeNull();
+    // The function is exhaustive over KeyboardScopeId, so we have to
+    // cast an invalid string to exercise the default branch.
+    expect(scopeToContext("nonexistent" as never)).toBeNull();
   });
 });

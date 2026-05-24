@@ -12,6 +12,7 @@ import { useUISettings } from "@/hooks/use-ui-settings";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS } from "@/lib/keybindings";
+import { InlineKey } from "@/components/help/inline-keybinding-help";
 import { Tabs } from "./tabs";
 import { KeybindingEditor } from "./keybinding-editor";
 import { SUB_TABS, SUB_SUB_TABS } from "./keybinding-tabs-config";
@@ -75,11 +76,7 @@ const TOP_TABS: { id: SettingsTopTab; label: string }[] = [
 ];
 
 function InlineKeybindingHint({ children }: { children: ReactNode }) {
-  return (
-    <span className="underline decoration-dashed underline-offset-3 text-[#f8c94a]">
-      {children}
-    </span>
-  );
+  return <InlineKey>{children}</InlineKey>;
 }
 
 export function SettingsPanel({

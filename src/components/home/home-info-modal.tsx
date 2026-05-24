@@ -3,8 +3,11 @@
 import { useCallback, type CSSProperties } from "react";
 import { Modal } from "@/components/ui/modal";
 import { TechIcon } from "@/components/ui/tech-icon";
+import { InlineKey } from "@/components/help/inline-keybinding-help";
 import type { CheatSheetMeta } from "@/lib/cheatsheet-shared";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { useKeybindings } from "@/hooks/use-keybindings";
+import { ACTION_IDS } from "@/lib/keybindings";
 import styles from "./home-info-modal.module.css";
 
 type Props = {
@@ -15,14 +18,17 @@ type Props = {
 };
 
 export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
+  const { resolveAction } = useKeybindings();
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (event.key === "Escape" || event.key === "i") {
+      const matched = resolveAction(event, [ACTION_IDS.INFO_CLOSE]);
+      if (matched === ACTION_IDS.INFO_CLOSE) {
         event.preventDefault();
         onClose();
       }
     },
-    [onClose]
+    [resolveAction, onClose]
   );
 
   useScopedKeyboardHandler("info", handleKeyDown, [handleKeyDown]);
@@ -71,8 +77,7 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
         </div>
       </div>
       <p className="mt-4 text-right text-xs text-white/75">
-        Press <span className="font-mono">i</span> or{" "}
-        <span className="font-mono">Esc</span> to close.
+        Press <InlineKey>i</InlineKey> or <InlineKey>Esc</InlineKey> to close.
       </p>
     </Modal>
   );

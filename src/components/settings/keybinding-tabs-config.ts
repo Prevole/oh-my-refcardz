@@ -100,12 +100,21 @@ const HOME_SECTIONS: SectionConfig[] = [
     actionIds: [
       ACTION_IDS.FOCUS_SEARCH,
       ACTION_IDS.CLEAR_SEARCH,
-      ACTION_IDS.TOGGLE_INFO,
+      ACTION_IDS.SHOW_INFO,
       ACTION_IDS.OPEN_SHEET,
     ],
     notes: {
       [ACTION_IDS.CLEAR_SEARCH]: "Only fires while the search field is focused.",
+      [ACTION_IDS.SHOW_INFO]: "Acts on the currently focused sheet card.",
+      [ACTION_IDS.OPEN_SHEET]: "Acts on the currently focused sheet card.",
     },
+  },
+  {
+    id: "home-info",
+    label: "Info modal",
+    description: "Bindings active while the info modal is open on the home page.",
+    context: "info",
+    actionIds: [ACTION_IDS.INFO_CLOSE],
   },
   {
     id: "home-navigation",

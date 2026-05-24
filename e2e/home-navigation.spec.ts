@@ -146,6 +146,24 @@ test.describe("Home keyboard navigation", () => {
     await expect(infoModal).toBeVisible();
   });
 
+  test("closes info modal with i (open via home.show-info, close via info.close)", async ({ page }) => {
+    await page.keyboard.press("i");
+    const infoModal = page.locator("[role='dialog']");
+    await expect(infoModal).toBeVisible();
+
+    await page.keyboard.press("i");
+    await expect(infoModal).toHaveCount(0, { timeout: 2000 });
+  });
+
+  test("closes info modal with Escape", async ({ page }) => {
+    await page.keyboard.press("i");
+    const infoModal = page.locator("[role='dialog']");
+    await expect(infoModal).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(infoModal).toHaveCount(0, { timeout: 2000 });
+  });
+
   test("home keybindings still work after navigating to a sheet and back (browser back)", async ({ page }) => {
     // Regression test for FP14d follow-up: useKeyboardScope cleanup did not
     // reset wasActiveRef, so StrictMode's setup/cleanup/setup cycle on the

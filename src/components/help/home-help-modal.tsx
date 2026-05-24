@@ -86,7 +86,7 @@ export function HomeHelpModal({ open, onClose }: Props) {
         </colgroup>
         <tbody>
           <tr>
-            <HelpRow actionId={ACTION_IDS.TOGGLE_INFO} />
+            <HelpRow actionId={ACTION_IDS.SHOW_INFO} />
             <HelpRow actionId={ACTION_IDS.TOGGLE_HELP} />
           </tr>
           <tr>
