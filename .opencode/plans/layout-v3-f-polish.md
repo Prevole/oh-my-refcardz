@@ -465,3 +465,15 @@ dropped silently and the user accepts that any customised binding
 on the renamed/removed id will be lost. This policy applies as
 long as the project remains in pre-release / unstable development.
 Revisit before any public release.
+
+## Follow-up phases
+
+- **Phase FA — Buffered keyboard layout mode**
+  (`.opencode/plans/layout-v3-fa-buffered-mode.md`). Triggered by the
+  mouse-vs-keyboard interleaving bug observed after f-polish: clicking
+  a card while in keyboard layout mode visually exits layout mode but
+  leaves `mode === "navigation"` set. FA introduces an in-memory
+  buffer for the keyboard layout session (commit with `Return`,
+  discard with `Esc` or any mouse click; confirmation modal beyond 5
+  changes; pill shows a change counter). Starts on top of the latest
+  f-polish commit.
