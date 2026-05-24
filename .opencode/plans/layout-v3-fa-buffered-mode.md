@@ -126,16 +126,7 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
   `docs/keybindings.md` (placeholder sections to be filled by FA9).
   No code changes.
 
-- [ ] **FA2**. **Buffer state in `useLayoutKeyboard` (or wrapper)**.
-  Introduce `bufferState = { initialSnapshot, currentBuffer, changesCount }`
-  inside the keyboard-layout hook. All keyboard ops (`navigateTo`,
-  `moveBlock`, `resizeBlock`, strict variants, compact variants) route
-  through the buffer and produce a new `currentBuffer` instead of
-  calling the persistent API. The sheet receives `currentBuffer` to
-  render. `changesCount` increments only when the engine actually
-  produced a different layout. Unit tests: enter → 0 changes; one move
-  → 1 change; blocked op → no increment; multiple ops → counter follows;
-  exit without commit → persisted layout unchanged.
+- [/] **FA2**. **Pure buffer module**. `src/components/sheets/layout/layout-buffer.ts` exposes `createBuffer`, `applyToBuffer`, `commitBuffer` (and `ApplyContext`, `ApplyResult` types). Pure functions, no React. Every call returns a new buffer or the same reference when the engine reports no change. `changesCount` increments only when `applyOperation` produces a different layout (structural equality on id+kind+x/y/w/h). Tests in `layout-buffer.test.ts`: 9/9 covering init, successful op, immutability, accumulation, no-op preservation (including a strict resize rejection). No wiring into the keyboard hook yet — FA3 will plug the buffer into `useLayoutKeyboard` and `sheet-renderer`.
 
 - [ ] **FA3**. **Commit on Return**. Add `LAYOUT_COMMIT` action + scope
   `layout` binding. Handler: `commitBuffer()` → calls the persistence
