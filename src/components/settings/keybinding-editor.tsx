@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { useKeybindings, type KeybindingConflict } from "@/hooks/use-keybindings";
 import { useUISettings } from "@/hooks/use-ui-settings";
@@ -234,7 +234,7 @@ function ActionRow({
               onClick={(e) => handleComboClick(e, index)}
               disabled={isRecording}
               aria-label={`Edit keybinding ${index + 1} for ${action.label}${index === 0 ? " (primary)" : ""}`}
-              title={index > 0 ? "Shift+Click to set as primary" : "Primary keybinding"}
+              title={index > 0 ? "Shift+Click to set as primary" : "Primary binding (the only one shown in contextual hints across the app)"}
               data-testid="keybinding-combo-button"
               data-combo-index={index}
             >
@@ -361,7 +361,7 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
     removeCombo,
     setPrimaryCombo,
     resetAction,
-    resetAll,
+    resetActions,
   } = useKeybindings();
 
   const { settings, setActiveKeybindingsSubTab, setActiveKeybindingsSubSubTab } = useUISettings();
@@ -460,13 +460,28 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
     [resetAction]
   );
 
-  const handleResetAll = useCallback(() => {
-    resetAll();
-    setLastConflict(null);
-  }, [resetAll]);
-
   const { sections: activeSections, intro: activeIntro } = getActiveSections(activeSubTab, activeSubSubTab);
   const showSubSubTabs = activeSubTab === "cheatsheet";
+
+  const visibleTargets = useMemo(() => {
+    return activeSections.flatMap((section) =>
+      section.actionIds.map((actionId) => ({ context: section.context, actionId }))
+    );
+  }, [activeSections]);
+
+  const hasVisibleModifications = useMemo(() => {
+    return visibleTargets.some(({ context, actionId }) => {
+      const currentAction = config[context]?.find((a) => a.id === actionId);
+      const defaultAction = DEFAULT_KEYBINDINGS[context]?.find((a) => a.id === actionId);
+      if (!currentAction || !defaultAction) return false;
+      return JSON.stringify(currentAction.combos) !== JSON.stringify(defaultAction.combos);
+    });
+  }, [visibleTargets, config]);
+
+  const handleResetVisible = useCallback(() => {
+    const conflict = resetActions(visibleTargets);
+    setLastConflict(conflict);
+  }, [resetActions, visibleTargets]);
 
   // Dynamic indent: align the L3 strip's left edge with the L2 "Cheatsheet"
   // tab. We measure the tab's offsetLeft within the L2 strip and expose it as
@@ -570,8 +585,14 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.resetAllButton} onClick={handleResetAll} data-testid="keybinding-reset-all">
-          Reset all keybindings
+        <button
+          className={styles.resetAllButton}
+          onClick={handleResetVisible}
+          disabled={!hasVisibleModifications}
+          title={hasVisibleModifications ? "Reset the bindings shown above to their defaults" : "Bindings shown above are at their defaults"}
+          data-testid="keybinding-reset-visible"
+        >
+          Reset bindings
         </button>
       </div>
 

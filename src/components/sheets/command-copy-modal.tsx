@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useRegisterModalOpen } from "@/components/sheets/sheet-commands-shell";
 import { InlineCodeText } from "@/components/sheets/inline-code-text";
+import { ActionInlineBinding } from "@/components/settings/keybinding-display";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { useKeyboardScope } from "@/hooks/use-keyboard-context";
-import { ACTION_IDS, matchesCombo } from "@/lib/keybindings";
+import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { ACTION_IDS } from "@/lib/keybindings";
 import {
   parsePlaceholders,
   buildCommand,
@@ -25,8 +26,8 @@ type CommandCopyModalProps = {
 
 export function CommandCopyModal({ title, value, previewPrefix = "", accentColor, onClose }: CommandCopyModalProps) {
   const registerModalOpen = useRegisterModalOpen();
-  const { getAction } = useKeybindings();
-  useKeyboardScope("modal", true, { modal: true });
+  const { matchesAction } = useKeybindings();
+  useKeyboardScope("cheat-copy-modal", true, { modal: true });
   const firstInputRef = useRef<HTMLInputElement>(null);
   const placeholders = parsePlaceholders(value);
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -43,57 +44,29 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
     firstInputRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    function moveFocus(direction: "up" | "down") {
-      const root = firstInputRef.current?.form;
-      const inputs = root
-        ? Array.from(root.querySelectorAll<HTMLInputElement>("[data-copy-modal-input='true']"))
-        : [];
-      if (inputs.length === 0) {
-        return;
-      }
-
-      const currentIndex = inputs.findIndex((input) => input === document.activeElement);
-      if (currentIndex === -1) {
-        inputs[0]?.focus();
-        return;
-      }
-
-      const nextIndex = direction === "down"
-        ? Math.min(currentIndex + 1, inputs.length - 1)
-        : Math.max(currentIndex - 1, 0);
-
-      inputs[nextIndex]?.focus();
+  const moveFocus = useCallback((direction: "up" | "down") => {
+    const root = firstInputRef.current?.form;
+    const inputs = root
+      ? Array.from(root.querySelectorAll<HTMLInputElement>("[data-copy-modal-input='true']"))
+      : [];
+    if (inputs.length === 0) {
+      return;
     }
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        onClose();
-        return;
-      }
+    const currentIndex = inputs.findIndex((input) => input === document.activeElement);
+    if (currentIndex === -1) {
+      inputs[0]?.focus();
+      return;
+    }
 
-      const moveUpAction = getAction(ACTION_IDS.MODAL_MOVE_UP);
-      if (moveUpAction && moveUpAction.combos[0] && matchesCombo(e, moveUpAction.combos[0])) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        moveFocus("up");
-        return;
-      }
+    const nextIndex = direction === "down"
+      ? Math.min(currentIndex + 1, inputs.length - 1)
+      : Math.max(currentIndex - 1, 0);
 
-      const moveDownAction = getAction(ACTION_IDS.MODAL_MOVE_DOWN);
-      if (moveDownAction && moveDownAction.combos[0] && matchesCombo(e, moveDownAction.combos[0])) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        moveFocus("down");
-      }
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [getAction, onClose]);
+    inputs[nextIndex]?.focus();
+  }, []);
 
-  async function handleCopy() {
+  const handleCopy = useCallback(async () => {
     const resolved = buildCommand(value, values);
     await navigator.clipboard.writeText(resolved);
     setCopied(true);
@@ -101,7 +74,41 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
       setCopied(false);
       onClose();
     }, 900);
-  }
+  }, [value, values, onClose]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (matchesAction(e, ACTION_IDS.CHEAT_COPY_MODAL_CANCEL)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        onClose();
+        return;
+      }
+
+      if (matchesAction(e, ACTION_IDS.CHEAT_COPY_MODAL_SUBMIT)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        handleCopy();
+        return;
+      }
+
+      if (matchesAction(e, ACTION_IDS.CHEAT_COPY_MODAL_MOVE_UP)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        moveFocus("up");
+        return;
+      }
+
+      if (matchesAction(e, ACTION_IDS.CHEAT_COPY_MODAL_MOVE_DOWN)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        moveFocus("down");
+      }
+    },
+    [matchesAction, onClose, handleCopy, moveFocus]
+  );
+
+  useScopedKeyboardHandler("cheat-copy-modal", handleKeyDown, [handleKeyDown]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -146,11 +153,11 @@ export function CommandCopyModal({ title, value, previewPrefix = "", accentColor
 
           <div className={sheetCommandStyles.modalActions}>
             <button type="button" className={sheetCommandStyles.modalCloseButton} onClick={onClose}>
-              Cancel <kbd>Esc</kbd>
+              Cancel <kbd><ActionInlineBinding actionId={ACTION_IDS.CHEAT_COPY_MODAL_CANCEL} maxCombos={1} /></kbd>
             </button>
             <button type="submit" className={`${sheetCommandStyles.modalSubmitButton} ${copied ? sheetCommandStyles.modalSubmitButtonCopied : ""}`}>
               {copied ? "Copied!" : "Copy"}
-              {!copied && <kbd>↩</kbd>}
+              {!copied && <kbd><ActionInlineBinding actionId={ACTION_IDS.CHEAT_COPY_MODAL_SUBMIT} maxCombos={1} /></kbd>}
             </button>
           </div>
         </form>

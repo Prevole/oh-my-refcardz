@@ -574,6 +574,14 @@ describe("scopeToContext", () => {
     expect(scopeToContext("info")).toBe("info");
   });
 
+  it("maps the cheat-info-modal scope to its own context", () => {
+    expect(scopeToContext("cheat-info-modal")).toBe("cheat-info-modal");
+  });
+
+  it("maps the cheat-copy-modal scope to its own context", () => {
+    expect(scopeToContext("cheat-copy-modal")).toBe("cheat-copy-modal");
+  });
+
   it("returns null for unknown scope", () => {
     // The function is exhaustive over KeyboardScopeId, so we have to
     // cast an invalid string to exercise the default branch.

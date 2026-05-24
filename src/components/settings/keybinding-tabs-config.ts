@@ -145,6 +145,12 @@ const SHEET_GENERAL_SECTIONS: SectionConfig[] = [
       ACTION_IDS.RESET_LAYOUT,
       ACTION_IDS.LAYOUT_ENTER_MODE,
     ],
+    notes: {
+      [ACTION_IDS.COPY_COMMAND]: "Only fires when the focused entry exposes a copyable value.",
+      [ACTION_IDS.SHOW_EXAMPLE]: "Only fires when the focused entry has additional details to show.",
+      [ACTION_IDS.CLEAR_COMMAND_FOCUS]: "Only fires while an entry is focused.",
+      [ACTION_IDS.RESET_LAYOUT]: "Only fires when the layout has been modified from its original state.",
+    },
   },
   {
     id: "sheet-navigation",
@@ -159,13 +165,27 @@ const SHEET_GENERAL_SECTIONS: SectionConfig[] = [
     ],
   },
   {
-    id: "sheet-modal",
-    label: "Modals",
-    description: "Vertical navigation inside command-copy and item-detail modals opened from a cheatsheet.",
-    context: "modal",
+    id: "cheat-info-modal",
+    label: "Info modal",
+    description: "Bindings active inside the item-detail modal opened from a cheatsheet entry.",
+    context: "cheat-info-modal",
     actionIds: [
-      ACTION_IDS.MODAL_MOVE_UP,
-      ACTION_IDS.MODAL_MOVE_DOWN,
+      ACTION_IDS.CHEAT_INFO_MODAL_MOVE_UP,
+      ACTION_IDS.CHEAT_INFO_MODAL_MOVE_DOWN,
+      ACTION_IDS.CHEAT_INFO_MODAL_COPY,
+      ACTION_IDS.CHEAT_INFO_MODAL_CLOSE,
+    ],
+  },
+  {
+    id: "cheat-copy-modal",
+    label: "Copy modal",
+    description: "Bindings active inside the command-copy modal opened from a cheatsheet entry.",
+    context: "cheat-copy-modal",
+    actionIds: [
+      ACTION_IDS.CHEAT_COPY_MODAL_MOVE_UP,
+      ACTION_IDS.CHEAT_COPY_MODAL_MOVE_DOWN,
+      ACTION_IDS.CHEAT_COPY_MODAL_SUBMIT,
+      ACTION_IDS.CHEAT_COPY_MODAL_CANCEL,
     ],
   },
 ];

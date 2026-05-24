@@ -3,7 +3,7 @@
 import { useCallback, type CSSProperties } from "react";
 import { Modal } from "@/components/ui/modal";
 import { TechIcon } from "@/components/ui/tech-icon";
-import { InlineKey } from "@/components/help/inline-keybinding-help";
+import { InlineKeybinding } from "@/components/help/inline-keybinding-help";
 import type { CheatSheetMeta } from "@/lib/cheatsheet-shared";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
@@ -77,7 +77,7 @@ export function HomeInfoModal({ open, onClose, sheet, accentColor }: Props) {
         </div>
       </div>
       <p className="mt-4 text-right text-xs text-white/75">
-        Press <InlineKey>i</InlineKey> or <InlineKey>Esc</InlineKey> to close.
+        Press <InlineKeybinding actionId={ACTION_IDS.INFO_CLOSE} maxCombos={3} /> to close.
       </p>
     </Modal>
   );

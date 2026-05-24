@@ -115,6 +115,9 @@ interface KeybindingsContextValue {
   ) => void;
 
   resetAction: (context: KeybindingContext, actionId: string) => KeybindingConflict | null;
+  resetActions: (
+    targets: ReadonlyArray<{ context: KeybindingContext; actionId: string }>
+  ) => KeybindingConflict | null;
   resetAll: () => void;
   checkConflict: (
     context: KeybindingContext,
@@ -386,6 +389,56 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
     [config]
   );
 
+  const resetActions = useCallback(
+    (
+      targets: ReadonlyArray<{ context: KeybindingContext; actionId: string }>
+    ): KeybindingConflict | null => {
+      let working = { ...config };
+      let firstConflict: KeybindingConflict | null = null;
+      let changed = false;
+
+      for (const { context, actionId } of targets) {
+        const defaultAction = DEFAULT_KEYBINDINGS[context].find((a) => a.id === actionId);
+        if (!defaultAction) continue;
+
+        for (const combo of defaultAction.combos) {
+          const conflict = findConflict(working, context, actionId, combo);
+          if (conflict) {
+            if (!firstConflict) {
+              firstConflict = conflict;
+            }
+            working = { ...working };
+            working[conflict.context] = working[conflict.context].map((a) => {
+              if (a.id === conflict.existingAction.id) {
+                return {
+                  ...a,
+                  combos: a.combos.filter((c) => !combosEqual(c, combo)),
+                };
+              }
+              return a;
+            });
+            changed = true;
+          }
+        }
+
+        working = { ...working };
+        working[context] = working[context].map((action) => {
+          if (action.id === actionId) {
+            return { ...action, combos: defaultAction.combos };
+          }
+          return action;
+        });
+        changed = true;
+      }
+
+      if (changed) {
+        saveKeybindings(working);
+      }
+      return firstConflict;
+    },
+    [config]
+  );
+
   const resetAll = useCallback(() => {
     cachedConfig = null;
     localStorage.removeItem(STORAGE_KEY);
@@ -404,6 +457,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       removeCombo,
       setPrimaryCombo,
       resetAction,
+      resetActions,
       resetAll,
       checkConflict,
     }),
@@ -418,6 +472,7 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       removeCombo,
       setPrimaryCombo,
       resetAction,
+      resetActions,
       resetAll,
       checkConflict,
     ]

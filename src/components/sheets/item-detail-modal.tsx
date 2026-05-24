@@ -8,7 +8,7 @@ import { InlineCodeText } from "@/components/sheets/inline-code-text";
 import { ActionInlineBinding } from "@/components/settings/keybinding-display";
 import { getCopyablePayload, type CopyablePayload } from "./copyable";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { useKeyboardScope } from "@/hooks/use-keyboard-context";
+import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS } from "@/lib/keybindings";
 import { hasPlaceholders } from "@/lib/placeholder-parser";
 import type { CheatSheetEntry } from "@/lib/cheatsheet-shared";
@@ -32,7 +32,7 @@ export function ItemDetailModal({
 }: ItemDetailModalProps) {
   const registerModalOpen = useRegisterModalOpen();
   const { matchesAction } = useKeybindings();
-  useKeyboardScope("modal", true, { modal: true });
+  useKeyboardScope("cheat-info-modal", true, { modal: true });
   const contentRef = useRef<HTMLDivElement>(null);
   const focusedIndexRef = useRef<number>(-1);
 
@@ -94,9 +94,9 @@ export function ItemDetailModal({
     }, 1500);
   }, [getItems, onCopyWithPlaceholders]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (matchesAction(e, ACTION_IDS.CHEAT_INFO_MODAL_CLOSE)) {
         e.preventDefault();
         onClose();
         return;
@@ -105,20 +105,21 @@ export function ItemDetailModal({
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      if (matchesAction(e, ACTION_IDS.MODAL_MOVE_UP)) {
+      if (matchesAction(e, ACTION_IDS.CHEAT_INFO_MODAL_MOVE_UP)) {
         e.preventDefault();
         move("up");
-      } else if (matchesAction(e, ACTION_IDS.MODAL_MOVE_DOWN)) {
+      } else if (matchesAction(e, ACTION_IDS.CHEAT_INFO_MODAL_MOVE_DOWN)) {
         e.preventDefault();
         move("down");
-      } else if (matchesAction(e, ACTION_IDS.COPY_COMMAND)) {
+      } else if (matchesAction(e, ACTION_IDS.CHEAT_INFO_MODAL_COPY)) {
         e.preventDefault();
         copyFocused();
       }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose, matchesAction, move, copyFocused]);
+    },
+    [onClose, matchesAction, move, copyFocused]
+  );
+
+  useScopedKeyboardHandler("cheat-info-modal", handleKeyDown, [handleKeyDown]);
 
   const hasAliases = detailedEntries.some(
     (entry) => "alias" in entry || "aliases" in entry
@@ -152,10 +153,10 @@ export function ItemDetailModal({
         </div>
 
         <p className={sheetCommandStyles.modalFooter}>
-          <ActionInlineBinding actionId={ACTION_IDS.MODAL_MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
-          <ActionInlineBinding actionId={ACTION_IDS.MODAL_MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate,{" "}
-          <ActionInlineBinding actionId={ACTION_IDS.COPY_COMMAND} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> copy,{" "}
-          <span className={sheetCommandStyles.modalFooterBinding}>Esc</span> close.
+          <ActionInlineBinding actionId={ACTION_IDS.CHEAT_INFO_MODAL_MOVE_UP} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} />/
+          <ActionInlineBinding actionId={ACTION_IDS.CHEAT_INFO_MODAL_MOVE_DOWN} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> navigate,{" "}
+          <ActionInlineBinding actionId={ACTION_IDS.CHEAT_INFO_MODAL_COPY} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> copy,{" "}
+          <ActionInlineBinding actionId={ACTION_IDS.CHEAT_INFO_MODAL_CLOSE} maxCombos={1} className={sheetCommandStyles.modalFooterBinding} /> close.
         </p>
       </div>
     </div>,

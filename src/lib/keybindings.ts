@@ -26,6 +26,8 @@ export type KeybindingContext =
   | "home"
   | "sheet"
   | "modal"
+  | "cheat-info-modal"
+  | "cheat-copy-modal"
   | "info"
   | "layout"
   | "layout-navigation"
@@ -45,6 +47,10 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "sheet";
     case "modal":
       return "modal";
+    case "cheat-info-modal":
+      return "cheat-info-modal";
+    case "cheat-copy-modal":
+      return "cheat-copy-modal";
     case "info":
       return "info";
     case "help":
@@ -88,8 +94,14 @@ export const ACTION_IDS = {
   SHEET_MOVE_UP: "sheet.move-up",
   SHEET_MOVE_DOWN: "sheet.move-down",
 
-  MODAL_MOVE_UP: "modal.move-up",
-  MODAL_MOVE_DOWN: "modal.move-down",
+  CHEAT_INFO_MODAL_MOVE_UP: "cheat-info-modal.move-up",
+  CHEAT_INFO_MODAL_MOVE_DOWN: "cheat-info-modal.move-down",
+  CHEAT_INFO_MODAL_COPY: "cheat-info-modal.copy",
+  CHEAT_INFO_MODAL_CLOSE: "cheat-info-modal.close",
+  CHEAT_COPY_MODAL_MOVE_UP: "cheat-copy-modal.move-up",
+  CHEAT_COPY_MODAL_MOVE_DOWN: "cheat-copy-modal.move-down",
+  CHEAT_COPY_MODAL_SUBMIT: "cheat-copy-modal.submit",
+  CHEAT_COPY_MODAL_CANCEL: "cheat-copy-modal.cancel",
 
   FOCUS_SEARCH: "home.focus-search",
   CLEAR_SEARCH: "home.clear-search",
@@ -403,16 +415,51 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
   ],
 
-  modal: [
+  modal: [],
+
+  "cheat-info-modal": [
     {
-      id: ACTION_IDS.MODAL_MOVE_UP,
+      id: ACTION_IDS.CHEAT_INFO_MODAL_MOVE_UP,
       label: "Move up",
       combos: [key("ArrowUp"), key("k")],
     },
     {
-      id: ACTION_IDS.MODAL_MOVE_DOWN,
+      id: ACTION_IDS.CHEAT_INFO_MODAL_MOVE_DOWN,
       label: "Move down",
       combos: [key("ArrowDown"), key("j")],
+    },
+    {
+      id: ACTION_IDS.CHEAT_INFO_MODAL_COPY,
+      label: "Copy focused item",
+      combos: [key("y")],
+    },
+    {
+      id: ACTION_IDS.CHEAT_INFO_MODAL_CLOSE,
+      label: "Cancel",
+      combos: [key("Escape")],
+    },
+  ],
+
+  "cheat-copy-modal": [
+    {
+      id: ACTION_IDS.CHEAT_COPY_MODAL_MOVE_UP,
+      label: "Move up",
+      combos: [key("ArrowUp"), key("k")],
+    },
+    {
+      id: ACTION_IDS.CHEAT_COPY_MODAL_MOVE_DOWN,
+      label: "Move down",
+      combos: [key("ArrowDown"), key("j")],
+    },
+    {
+      id: ACTION_IDS.CHEAT_COPY_MODAL_SUBMIT,
+      label: "Confirm",
+      combos: [key("Enter")],
+    },
+    {
+      id: ACTION_IDS.CHEAT_COPY_MODAL_CANCEL,
+      label: "Cancel",
+      combos: [key("Escape")],
     },
   ],
 

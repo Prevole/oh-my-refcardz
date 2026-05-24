@@ -164,6 +164,37 @@ test.describe("Home keyboard navigation", () => {
     await expect(infoModal).toHaveCount(0, { timeout: 2000 });
   });
 
+  test("info modal inline hint reflects custom info.close bindings", async ({ page }) => {
+    // Regression test: the modal used to hardcode "i or Esc" in the inline
+    // hint. After adding a custom combo (e.g. `a`) to info.close, the hint
+    // must reflect the actual configured bindings.
+    await page.keyboard.press(",");
+    await page.getByRole("button", { name: /keybindings/i }).click();
+    await expect(page.getByTestId("keybinding-editor")).toBeVisible();
+
+    // info.close is exposed under the Home sub-tab, section "Info modal".
+    await page.getByTestId("keybindings-sub-tab-home").click();
+
+    const infoCloseRow = page.locator("[data-testid='keybinding-row'][data-action-id='info.close']");
+    await expect(infoCloseRow).toBeVisible();
+
+    await infoCloseRow.getByTestId("keybinding-combo-add").click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
+    await page.keyboard.press("a");
+
+    // Close settings and open the info modal.
+    await page.getByTestId("settings-close").click();
+    await expect(page.getByTestId("settings-panel")).not.toBeVisible();
+
+    await page.keyboard.press("i");
+    const infoModal = page.locator("[role='dialog']");
+    await expect(infoModal).toBeVisible();
+
+    // The inline hint must mention `a` (the new combo) in addition to i/Esc.
+    await expect(infoModal).toContainText("a");
+    await expect(infoModal.locator("text=/Press/")).toBeVisible();
+  });
+
   test("home keybindings still work after navigating to a sheet and back (browser back)", async ({ page }) => {
     // Regression test for FP14d follow-up: useKeyboardScope cleanup did not
     // reset wasActiveRef, so StrictMode's setup/cleanup/setup cycle on the

@@ -153,15 +153,22 @@ export function InlineBindingText({
   separatorClassName,
 }: InlineBindingTextProps) {
   const displayCombos = maxCombos ? combos.slice(0, maxCombos) : combos;
+  const lastIndex = displayCombos.length - 1;
 
   return (
     <>
       {displayCombos.map((combo, index) => {
         const sequence = getComboSequenceDisplayParts(combo);
+        const separator =
+          index === 0
+            ? null
+            : index === lastIndex
+              ? <span className={separatorClassName}>or</span>
+              : <span className={separatorClassName} style={{ marginLeft: 0 }}>, </span>;
 
         return (
         <span key={index}>
-          {index > 0 ? <span className={separatorClassName}>or</span> : null}
+          {separator}
           {sequence.map((step, stepIndex) => (
             <span key={stepIndex}>
               {stepIndex > 0 ? " " : null}

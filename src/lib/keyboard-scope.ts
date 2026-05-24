@@ -3,6 +3,8 @@ export type KeyboardScopeId =
   | "home"
   | "sheet"
   | "modal"
+  | "cheat-info-modal"
+  | "cheat-copy-modal"
   | "settings"
   | "help"
   | "info"

@@ -138,4 +138,64 @@ test.describe("Keybinding editor", () => {
     await expect(conflict).toBeVisible({ timeout: 3000 });
     await expect(conflict).toContainText("Toggle help");
   });
+
+  test("'Reset bindings' button is disabled when no visible binding is modified", async ({ page }) => {
+    const resetVisible = page.getByTestId("keybinding-reset-visible");
+    await expect(resetVisible).toBeVisible();
+    await expect(resetVisible).toBeDisabled();
+  });
+
+  test("'Reset bindings' restores ALL modified visible bindings in a single click", async ({ page }) => {
+    // Regression test: previously, resetting multiple actions in a single
+    // synchronous loop only restored the last one because each call read
+    // `config` from a stale closure and the final `saveKeybindings` wiped
+    // the intermediate updates. The fix introduces `resetActions(targets)`
+    // which applies all resets to a single working snapshot.
+    const toggleHelpRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-help']");
+    const goBottomRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.go-bottom']");
+
+    // Modify toggle-help (default: `?`) -> `q` (free key).
+    await toggleHelpRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
+    await page.keyboard.press("q");
+    await expect(toggleHelpRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "true");
+
+    // Modify go-bottom (default: Shift+G) -> `w` (free key).
+    await goBottomRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
+    await page.keyboard.press("w");
+    await expect(goBottomRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "true");
+
+    // Reset button is now active.
+    const resetVisible = page.getByTestId("keybinding-reset-visible");
+    await expect(resetVisible).toBeEnabled();
+
+    // One click -> BOTH actions return to their defaults.
+    await resetVisible.click();
+
+    await expect(toggleHelpRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "false");
+    await expect(goBottomRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "false");
+    await expect(resetVisible).toBeDisabled();
+  });
+
+  test("'Reset bindings' does not touch bindings outside the visible sections", async ({ page }) => {
+    // Modify a binding in the default (General) sub-tab.
+    const toggleHelpRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-help']");
+    await toggleHelpRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
+    await page.keyboard.press("q");
+    await expect(toggleHelpRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "true");
+
+    // Switch to a different sub-tab so global.toggle-help is no longer visible.
+    await page.getByTestId("keybindings-sub-tab-home").click();
+    await expect(toggleHelpRow).not.toBeVisible();
+
+    // Reset on a sub-tab where everything is default should be disabled.
+    const resetVisible = page.getByTestId("keybinding-reset-visible");
+    await expect(resetVisible).toBeDisabled();
+
+    // Switch back: the modification on toggle-help must still be there.
+    await page.getByTestId("keybindings-sub-tab-general").click();
+    await expect(toggleHelpRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "true");
+  });
 });

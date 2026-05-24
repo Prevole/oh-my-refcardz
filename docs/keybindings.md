@@ -296,6 +296,8 @@ For each action the user can:
 - Set the primary combo (shown in UI)
 - Reset individual actions or all actions to defaults
 
+**Primary combo contract.** The first combo in an action's list is the "primary" binding. Contextual inline hints across the app (modal footers, dev mode bar, info modals, contextual help line) show **only the primary**, never the full list, to keep the UI compact. Settings highlights the primary with an amber-tinted background and exposes the contract through its tooltip; `Shift+Click` on any other combo promotes it to primary. If you add a custom combo and want it to appear in hints, set it as primary.
+
 Conflicts are auto-resolved (new binding wins) and surfaced as a dismissible warning via `[data-testid="keybinding-conflict"]`.
 
 Customizations are stored in localStorage under `oh-my-refcardz:keybindings`. UI settings (including the panel's tab state) live under `oh-my-refcardz:ui-settings`.
