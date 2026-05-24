@@ -117,7 +117,7 @@ interface KeybindingsContextValue {
   resetAction: (context: KeybindingContext, actionId: string) => KeybindingConflict | null;
   resetActions: (
     targets: ReadonlyArray<{ context: KeybindingContext; actionId: string }>
-  ) => KeybindingConflict | null;
+  ) => void;
   resetAll: () => void;
   checkConflict: (
     context: KeybindingContext,
@@ -392,34 +392,13 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
   const resetActions = useCallback(
     (
       targets: ReadonlyArray<{ context: KeybindingContext; actionId: string }>
-    ): KeybindingConflict | null => {
+    ): void => {
       let working = { ...config };
-      let firstConflict: KeybindingConflict | null = null;
       let changed = false;
 
       for (const { context, actionId } of targets) {
         const defaultAction = DEFAULT_KEYBINDINGS[context].find((a) => a.id === actionId);
         if (!defaultAction) continue;
-
-        for (const combo of defaultAction.combos) {
-          const conflict = findConflict(working, context, actionId, combo);
-          if (conflict) {
-            if (!firstConflict) {
-              firstConflict = conflict;
-            }
-            working = { ...working };
-            working[conflict.context] = working[conflict.context].map((a) => {
-              if (a.id === conflict.existingAction.id) {
-                return {
-                  ...a,
-                  combos: a.combos.filter((c) => !combosEqual(c, combo)),
-                };
-              }
-              return a;
-            });
-            changed = true;
-          }
-        }
 
         working = { ...working };
         working[context] = working[context].map((action) => {
@@ -434,7 +413,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       if (changed) {
         saveKeybindings(working);
       }
-      return firstConflict;
     },
     [config]
   );

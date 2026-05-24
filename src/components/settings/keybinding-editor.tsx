@@ -479,8 +479,7 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
   }, [visibleTargets, config]);
 
   const handleResetVisible = useCallback(() => {
-    const conflict = resetActions(visibleTargets);
-    setLastConflict(conflict);
+    resetActions(visibleTargets);
   }, [resetActions, visibleTargets]);
 
   // Dynamic indent: align the L3 strip's left edge with the L2 "Cheatsheet"

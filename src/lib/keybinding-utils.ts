@@ -69,19 +69,39 @@ export function dedupeCombos(combos: KeyCombo[]): KeyCombo[] {
 // in the same keybinding context. Cross-context "shadowing" (e.g. a `home`
 // override masking a `global` binding) is intentional and not reported as
 // a conflict here.
+//
+// Intra-scope intentional overlap: when two actions in the same context
+// share a combo in their DEFAULT_KEYBINDINGS (e.g. `Escape` on both
+// `sheet.back-to-home` and `sheet.clear-focus`, disambiguated at runtime
+// by application state), that pair is treated as designed coexistence and
+// not reported as a conflict either.
 export function findConflict(
   config: KeybindingsConfig,
   context: KeybindingContext,
   actionId: string,
   newCombo: KeyCombo
 ): KeybindingConflict | null {
+  const defaultsInContext = DEFAULT_KEYBINDINGS[context];
+  const newActionDefaults = defaultsInContext.find((a) => a.id === actionId);
+  const newActionHasDefault =
+    newActionDefaults?.combos.some((c) => combosEqual(c, newCombo)) ?? false;
+
   for (const action of config[context]) {
     if (action.id === actionId) continue;
 
     for (const combo of action.combos) {
-      if (combosEqual(combo, newCombo)) {
-        return { existingAction: action, context };
+      if (!combosEqual(combo, newCombo)) continue;
+
+      if (newActionHasDefault) {
+        const existingDefaults = defaultsInContext.find((a) => a.id === action.id);
+        const existingHasDefault =
+          existingDefaults?.combos.some((c) => combosEqual(c, newCombo)) ?? false;
+        if (existingHasDefault) {
+          continue;
+        }
       }
+
+      return { existingAction: action, context };
     }
   }
 

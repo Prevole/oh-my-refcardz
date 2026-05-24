@@ -299,5 +299,34 @@ describe("keybinding-utils", () => {
       expect(result!.existingAction.id).toBe("home.action1");
       expect(result!.context).toBe("home");
     });
+
+    it("does not report a conflict for intentional intra-scope default overlaps", () => {
+      // `sheet.back-to-home` defaults: [Backspace, Escape].
+      // `sheet.clear-focus` defaults: [Escape].
+      // Both share `Escape` by design (disambiguated at runtime).
+      // Restoring `Escape` on either action while the other already has it
+      // must not be reported as a conflict.
+      const conflict = findConflict(
+        DEFAULT_KEYBINDINGS as unknown as KeybindingsConfig,
+        "sheet",
+        "sheet.clear-focus",
+        key("Escape")
+      );
+      expect(conflict).toBeNull();
+    });
+
+    it("still reports a real conflict when the combo is not in the existing action's defaults", () => {
+      // `sheet.copy` defaults to `y`. If the user adds `Escape` to it,
+      // and `sheet.clear-focus` already has `Escape`, this IS a conflict:
+      // the overlap is not part of either set of defaults for `sheet.copy`.
+      const conflict = findConflict(
+        DEFAULT_KEYBINDINGS as unknown as KeybindingsConfig,
+        "sheet",
+        "sheet.copy",
+        key("Escape")
+      );
+      expect(conflict).not.toBeNull();
+      expect(conflict!.existingAction.id).toBe("sheet.back-to-home");
+    });
   });
 });

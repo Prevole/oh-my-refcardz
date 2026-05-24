@@ -178,6 +178,38 @@ test.describe("Keybinding editor", () => {
     await expect(resetVisible).toBeDisabled();
   });
 
+  test("'Reset bindings' restores intentionally overlapping defaults (Esc on both clear-focus and back-to-home)", async ({ page }) => {
+    // Regression: BACK_TO_HOME defaults to [Backspace, Escape] and
+    // CLEAR_COMMAND_FOCUS defaults to [Escape]. The previous implementation
+    // ran findConflict during a bulk reset and stripped the conflicting
+    // combo from one of the actions, making it impossible to recover both
+    // Esc bindings via a single reset. The fix makes bulk reset apply the
+    // defaults verbatim without conflict detection.
+    await page.getByTestId("keybindings-sub-tab-cheatsheet").click();
+
+    const clearFocusRow = page.locator("[data-testid='keybinding-row'][data-action-id='sheet.clear-focus']");
+    const backToHomeRow = page.locator("[data-testid='keybinding-row'][data-action-id='sheet.back-to-home']");
+
+    // Modify clear-focus to free up Esc on this action, leaving only the one on back-to-home.
+    await clearFocusRow.getByTestId("keybinding-combo-button").first().click();
+    await expect(page.getByTestId("keybinding-recording-overlay")).toBeVisible();
+    await page.keyboard.press("x");
+    await expect(clearFocusRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "true");
+
+    // Reset all visible bindings in this sub-tab.
+    const resetVisible = page.getByTestId("keybinding-reset-visible");
+    await expect(resetVisible).toBeEnabled();
+    await resetVisible.click();
+
+    // Both actions must have their original defaults: clear-focus = [Escape], back-to-home = [Backspace, Escape].
+    await expect(clearFocusRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "false");
+    await expect(backToHomeRow.getByTestId("keybinding-reset")).toHaveAttribute("data-modified", "false");
+
+    // Verify back-to-home still has BOTH Backspace and Escape combos rendered.
+    const backCombos = backToHomeRow.getByTestId("keybinding-combo-button");
+    await expect(backCombos).toHaveCount(2);
+  });
+
   test("'Reset bindings' does not touch bindings outside the visible sections", async ({ page }) => {
     // Modify a binding in the default (General) sub-tab.
     const toggleHelpRow = page.locator("[data-testid='keybinding-row'][data-action-id='global.toggle-help']");
