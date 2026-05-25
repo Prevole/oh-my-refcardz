@@ -367,3 +367,48 @@ test.describe("Layout mode — keyboard reset (LAYOUT_RESET)", () => {
     );
   });
 });
+
+test.describe("Layout mode — buffer reset floating button", () => {
+  test.beforeEach(async ({ page }) => {
+    await clearLayoutStorage(page);
+  });
+
+  test("Button is hidden on entry and appears after the first buffered edit", async ({ page }) => {
+    await enterLayoutMode(page);
+    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+
+    await page.keyboard.press("j");
+    await page.keyboard.press("j");
+    await switchSubMode(page, "b", "resize");
+    await page.keyboard.press("j");
+
+    await expect(page.getByTestId("layout-buffer-reset-button")).toBeVisible();
+  });
+
+  test("Shift+R hides the button along with resetting the buffer", async ({ page }) => {
+    await focusBottomLeft(page);
+    await stageGrowSouth(page, 2);
+    await expect(page.getByTestId("layout-buffer-reset-button")).toBeVisible();
+
+    await page.keyboard.press("Shift+R");
+
+    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+    await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
+      "data-changes-count",
+      "0",
+    );
+  });
+
+  test("Clicking the button resets the buffer and keeps layout mode active", async ({ page }) => {
+    await focusBottomLeft(page);
+    const initial = await findById(page, "sheet-card-bottom-left");
+    await stageGrowSouth(page, 2);
+
+    await page.getByTestId("layout-buffer-reset-button").click();
+
+    const after = await findById(page, "sheet-card-bottom-left");
+    expect(after.rowSpan).toBe(initial.rowSpan);
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+  });
+});

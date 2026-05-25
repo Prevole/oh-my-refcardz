@@ -40,6 +40,7 @@ import {
 } from "./layout";
 import type { DragMove } from "./layout/use-card-drag-v2";
 import type { ResizeMove } from "./layout/use-card-resize-v2";
+import { LayoutBufferResetButton } from "./layout/layout-buffer-reset-button";
 import { LayoutResetButton } from "./layout/layout-reset-button";
 import { LayoutModePill, LAYOUT_MODE_COLORS } from "./layout/layout-mode-pill";
 import { LayoutDiscardConfirm } from "./layout/layout-discard-confirm";
@@ -468,7 +469,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
-      {hydrated && isModifiedFromOriginal && !debugEnabled ? (
+      {layoutMode !== null && bufferState.changesCount > 0 && !debugEnabled ? (
+        <LayoutBufferResetButton onClick={bufferState.reset} />
+      ) : layoutMode === null && hydrated && isModifiedFromOriginal && !debugEnabled ? (
         <LayoutResetButton onClick={resetToOriginal} />
       ) : null}
       {layoutMode !== null && !debugEnabled ? (
