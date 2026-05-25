@@ -167,7 +167,7 @@ export function InlineBindingText({
               : <span className={separatorClassName} style={{ marginLeft: 0 }}>, </span>;
 
         return (
-        <span key={index}>
+        <span key={index} className="whitespace-nowrap">
           {separator}
           {sequence.map((step, stepIndex) => (
             <span key={stepIndex}>

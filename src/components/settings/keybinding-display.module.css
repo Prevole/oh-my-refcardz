@@ -14,6 +14,8 @@
 }
 
 .keycapArrow {
+  display: inline-block;
+  vertical-align: text-bottom;
   width: 1em;
   height: 1em;
   stroke: currentColor;
