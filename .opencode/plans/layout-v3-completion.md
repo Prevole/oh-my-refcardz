@@ -183,12 +183,32 @@ SCOPE_HELP_MAP entries:
 - [x] F1. **Pre-flight test-id hardening** — `7f4c0ac`. Stable `data-testid` on SettingsPanel, KeybindingEditor (rows expose `data-action-id`), hex-board. `settings-keybindings.spec.ts` rewritten via `getByTestId`; `home-navigation.spec.ts` migrated for the hex board selector. Lint clean, 821/821 unit, 69/69 E2E.
 - [x] F2. **SettingsPanel structural refactor** — `6d4e0a8`. Slide-in widened to 66vw (min 720px, max 1100px); accordions replaced by top-level `UI | Keybindings` tabs. Persisted active tab in `useUISettings` (`panelTabs.active`). Backward-compatible migration: old `accordion` field silently dropped. Inline explanation labels and a per-tab lead paragraph added. Removed unused `toggleAccordion`/`AccordionState` API; `AccordionItem` component left in place for potential reuse (purge candidate in G8). Lint clean, 821/821 unit, 69/69 E2E across 3 runs.
 - [x] F3. **KeybindingEditor regroup into 5 sub-tabs** — `c2d3342`. Global / Home / Cheatsheet / Layout Mode / Developer via the shared `<Tabs>` component. Multi-context sub-tabs (Layout, Developer) stack their sections with discreet `<h4>` headers; mono-context sub-tabs hide the header. Sub-tab persisted via `useUISettings.panelTabs.keybindingsSub`. Each sub-tab carries an intro paragraph. Recording logic untouched. New `data-testid` on `keybinding-context` (with `data-context`) and `keybinding-sub-tab` (with `data-sub-tab`). Lint clean, 821/821 unit, 69/69 E2E across 3 runs.
-- [/] F4. **`<KeybindingChart />` extraction** — `src/components/help/keybinding-chart.tsx`. Read-only props: `entries: Array<ChartEntry | null>`, `cols?: 1 | 2` (default 2), optional `testId`. Resolves combos via `useKeybindings` (so customisations and resets reflect live). Pads incomplete rows with empty cells. `null` entries leave deliberate blanks. Backed by existing `HelpRow` for cell rendering. Not wired into UI yet (F5 picks it up). Pending commit (F4 + F5 typically batch in one commit; defer commit decision to user).
-- [/] F5. **SheetHelpModal refactor** — adopted `<KeybindingChart />` across all tabs (eliminates ~150 lines of repeated `<HelpRow>` table boilerplate). Added 4th tab `Developer` with 3 sections: Developer Mode (top-level dev actions), Logs Sub-Mode (`dev-logs`), Axes Sub-Mode (`dev-axes`). Tabs now driven by a `TABS` declarative config. Added `data-testid="help-tab-{id}"` and `data-testid="help-content-{id}"` for F8 specs. Legend tab preserved verbatim. Modal `[role='dialog']` contract unchanged. Pending commit.
-- [/] F6. **`<ContextualInlineHelp surface scope?className? />`** — surface (`home` | `sheet`) prop disambiguates pages that share `global` scope. Reads `activeScope` via existing `useKeyboardContext()` (no new hook needed — projection on existing API). `SCOPE_HELP_MAP` is nested `Record<surface, Record<scope | "default", InlineHelpEntry>>`. Each entry is a token list (`text` | `key` | `link`) for declarative ordering. Covers 8 scopes per plan: home/default, sheet/default, sheet/layout-navigation, sheet/layout-move, sheet/layout-resize, sheet/dev, sheet/dev-logs, sheet/dev-axes. Modal scopes (settings/help/info/layout) silently fall back to `default`. Adds `data-testid="contextual-inline-help"` with `data-surface` and `data-scope` for F8 specs. Not wired to UI yet (F7).
-- [/] F7. **Replace `HomeInlineHelp` and `SheetInlineHelp`** — swapped in `home-client.tsx` (`<ContextualInlineHelp surface="home" />`) and `cheatsheets/[slug]/page.tsx` (`<ContextualInlineHelp surface="sheet" />`). `dev-mode-bar.tsx` left untouched: it uses the atomic `<InlineKeybinding />` for a single binding, not a paragraph. `inline-keybinding-help.tsx` trimmed to only export `InlineKeybinding` (still consumed by `dev-mode-bar` and by `ContextualInlineHelp` internals). KeyboardContextProvider already mounts globally in `providers.tsx`, so server-component import of `<ContextualInlineHelp />` works as before. Pending commit (bundled with F6).
-- [/] F8. **E2E coverage** — new `e2e/contextual-inline-help.spec.ts` (6 tests): home/global baseline + sheet/global baseline + 3 layout sub-mode transitions + Escape return. Asserts `data-surface` and `data-scope` on the rendered help paragraph. Uses the `layout-e2e` fixture and aligns on `keyboard-layout.spec.ts` patterns (click grid + 30ms scope-commit yield after Control+m / sub-mode switches) to avoid scope-commit race. Stable 30/30 with `--repeat-each=5`. Full suite: 75 passed / 0 failed / 8 pre-existing skipped. No other E2E needed adaptation (no spec referenced `HomeInlineHelp` / `SheetInlineHelp` selectors directly). Pending commit.
-- [/] F9. **Doc update** — `docs/keybindings.md` updated: architecture diagram now lists settings/ and help/ trees including KeybindingChart and ContextualInlineHelp; sections 4 (help modal) and 5 (contextual inline help) describe how to surface a new action in each surface (entry lists in sheet-help-modal.tsx, token append in SCOPE_HELP_MAP); Customization section rewritten to describe the slide-in panel structure (66vw, UI vs Keybindings top tabs, 5 keybindings sub-tabs mapping to contexts) and the dual persistence keys (`oh-my-refcardz:keybindings`, `oh-my-refcardz:ui-settings`). `docs/architecture.md` reviewed: no stale references — no update needed. Pending commit.
+- [x] F4. **`<KeybindingChart />` extraction** — `af29f48`. `src/components/help/keybinding-chart.tsx`. Read-only props: `entries: Array<ChartEntry | null>`, `cols?: 1 | 2` (default 2), optional `testId`. Resolves combos via `useKeybindings` (so customisations and resets reflect live). Pads incomplete rows with empty cells. `null` entries leave deliberate blanks. Backed by existing `HelpRow` for cell rendering.
+- [x] F5. **SheetHelpModal refactor** — `af28f48` + `cb95ab8` (nested sub-tabs for Layout and Developer). Adopted `<KeybindingChart />` across all tabs (eliminates ~150 lines of repeated `<HelpRow>` table boilerplate). 4th tab `Developer` with 3 sections (Developer Mode, Logs, Axes). Tabs driven by a `TABS` declarative config. `data-testid="help-tab-{id}"` / `data-testid="help-content-{id}"` for E2E. Legend preserved.
+- [x] F6. **`<ContextualInlineHelp />`** — `f0f895c`. Surface (`home` | `sheet`) prop disambiguates pages sharing `global` scope. Reads `activeScope` via existing `useKeyboardContext()`. `SCOPE_HELP_MAP` is nested `Record<surface, Record<scope | "default", InlineHelpEntry>>`. Each entry is a token list (`text` | `key` | `link`). Covers 8 scopes: home/default, sheet/default, sheet/layout-navigation, sheet/layout-move, sheet/layout-resize, sheet/dev, sheet/dev-logs, sheet/dev-axes. Modal scopes silently fall back to `default`. `data-testid="contextual-inline-help"` with `data-surface` and `data-scope`.
+- [x] F7. **Replace `HomeInlineHelp` and `SheetInlineHelp`** — `f0f895c`. Swapped in `home-client.tsx` and `cheatsheets/[slug]/page.tsx`. `dev-mode-bar.tsx` left untouched (uses atomic `<InlineKeybinding />`). `inline-keybinding-help.tsx` trimmed to only export `InlineKeybinding`.
+- [x] F8. **E2E coverage** — `d654022`. New `e2e/contextual-inline-help.spec.ts` (6 tests): home/global baseline + sheet/global baseline + 3 layout sub-mode transitions + Escape return. Stable 30/30 with `--repeat-each=5`.
+- [x] F9. **Doc update** — `78da47f`. `docs/keybindings.md` architecture diagram now lists settings/ and help/ trees including KeybindingChart and ContextualInlineHelp; sections describe how to surface a new action in each surface. Customization section rewritten to describe the slide-in panel structure (66vw, UI vs Keybindings top tabs, 5 keybindings sub-tabs).
+
+### Sub-phases — Phase F polish (post-F9)
+
+Detailed tracker: [`layout-v3-f-polish.md`](./layout-v3-f-polish.md).
+
+- [x] FP10-14. Settings layout + scope refactor (modal scope, MOVE_* split, section-based editor) — commits `e5d26a5` → `f8b7c6e`
+- [x] FP15. Inline help cross-category nav and per-action notes — `7809436` + earlier polish commits
+- [x] FP16+. Keybindings reset UX, intentional overlap preservation, settings reset alignment — `b691724`, `9ec1326`, `c146d4a`, `4458bf8`
+
+### Phase FA — Buffered keyboard mode
+
+Detailed tracker: [`layout-v3-fa-buffered-mode.md`](./layout-v3-fa-buffered-mode.md).
+
+- [x] FA1-6. Pure staging module, dispatcher wiring, Enter-commit, Esc-discard (silent + modal), mouse-click discard — `e0eef20` → `9a442b5`
+- [x] FA polish. Inline-help glyph wrap, floating reset, layout-mode global reachability, race-free scope stack — `d0b0c66`, `c5b327f`, `86273d4`, `c47684b`
+- [x] FA closeout. Documentation + E2E consolidation — `b9b125e`
+
+### Post-FA fix
+
+- [x] Shrink direction inversion (arrow indicates edge movement) — `2250169`
 
 ### Acceptance criteria
 
@@ -208,14 +228,18 @@ SCOPE_HELP_MAP entries:
 
 ## Phase G — Final validation
 
-- [ ] G1. `npm run lint` clean (fix any unrelated lint debt that surfaces)
-- [ ] G2. `npm run test` green; coverage ≥ existing thresholds (engine ≥ 99% lines/funcs)
-- [ ] G3. `npm run test:e2e` green
-- [ ] G4. `npm run build` OK
-- [ ] G5. `npm run validate:cheatsheets` OK
-- [ ] G6. Docs aligned with reality (`layout-engine.md`, `layout-actions.md`, `keybindings.md`, `architecture.md`)
-- [ ] G7. `layout-v2-bugfixes.md` finalised: every item either done (with commit) or explicitly `[~]` deferred
-- [ ] G8. Dead code purge (any leftover `CARD_*`, inert hooks, unused CSS classes)
+- [x] G1. `npm run lint` clean — verified during G6/G8 iterations
+- [x] G2. `npm run test` green; coverage ≥ existing thresholds — 842/842 unit tests; engine `step.ts` 100% lines / 92.03% branches after `55bf48c` covers the dead-end branch in shrink absorption
+- [x] G3. `npm run test:e2e` green (pre-existing flaky `home-navigation.spec.ts:137` tolerated)
+- [x] G4. `npm run build` OK
+- [x] G5. `npm run validate:cheatsheets` OK
+- [x] G6. Docs aligned with reality — `5e45768`. Full pass on `layout-actions.md` (resize sub-mode `r`→`b`, real `ACTION_IDS.LAYOUT_*` table, session lifecycle, `DEV_SAVE_LAYOUT`), `layout-engine.md` (`OperationResult` 3-field shape, `shrunk` value type, `EventCause` rename + `compact` variant, `wrap-axis` `"x"|"y"`, `block.resize` event, `EngineOptions.opId`), `keybindings.md` (`scope-stack-manager.ts` listed, raw-listener exception narrowed to `Ctrl+Shift+D`), `entry-renderers.md` (explicit imports, slim barrel surface). `architecture.md` scanned — no stale references.
+- [x] G7. Tracker finalisation — this commit. Both `layout-v2-bugfixes.md` and this file aligned with reality on `feature/layout-v3`.
+- [x] G8. Dead code purge — split by category:
+  - G8.1 — files, functions, hooks (`bf5599b`, −470 lines, −12 obsolete card-navigation tests)
+  - G8.2 — type/interface internalisations (`43c129e`, 29 types)
+  - G8.3 — orphan CSS classes (`3b99cd3`, −342 lines / 36 classes / 7 module.css files)
+  - G8.4 — barrel pruning (`19c2433`, net −83 lines across 6 barrels)
 
 ## Phase H — Undo/Redo
 

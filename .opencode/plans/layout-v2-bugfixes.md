@@ -20,9 +20,9 @@ This document tracks the bugs and improvements identified during manual testing 
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Solver core: push vs shrink behavior | Done — addressed at engine level (commits `143ef35`, `b415f5b`, `cd7d62e`, `cdc6a01`, `341b584`); bug 1.4 verified in Phase B (engine clamps to last valid state by design; integration tests added) |
-| 2 | Snapshot & heading navigation | Pending — `feature/layout-v3` Phase C |
-| 3 | Keyboard behavior overhaul | Pending — supersedes flat scheme with Zellij modal model (see [`layout-v3-completion.md`](./layout-v3-completion.md) Phase E and `docs/layout-actions.md`) |
-| 4 | UI polish & persistence model | Partial — Save / Reset done in dev bar; buffer-vs-saved semantics, indicator, compact mode, focus near cursor pending (Phases D + E.5 + F) |
+| 2 | Snapshot & heading navigation | Done — `feature/layout-v3` Phase C, commit `afdaab4` |
+| 3 | Keyboard behavior overhaul | Done — Phase E in Zellij modal model: core `c5e7654`, polish `2cdf566`, tests/docs in subsequent commits; focus-near-cursor (bug 3.6) wired in E5 |
+| 4 | UI polish & persistence model | Done — buffer/saved/original split landed in Phase D (`d7e27b6`), unsaved indicator + LayoutModePill in E (`2cdf566`), focus-near-cursor in E5, compact mode visual handled by sub-mode color theming |
 
 ---
 
@@ -100,9 +100,9 @@ Possible causes:
 
 ### Acceptance Criteria
 
-- [ ] Heading nav updates order when headings are moved via drag
-- [ ] Heading nav updates order when headings are moved via keyboard
-- [ ] Order updates in real-time during drag (preview), not just on commit
+- [x] Heading nav updates order when headings are moved via drag — Phase C `afdaab4`
+- [x] Heading nav updates order when headings are moved via keyboard — Phase C `afdaab4`
+- [x] Order updates in real-time during drag (preview), not just on commit — `LayoutSnapshotProvider` publishes on every commit; immediate-commit model means each drag step is a commit
 
 ---
 
@@ -128,12 +128,12 @@ The keyboard interaction model needs significant changes:
 
 | Bug | Description | Expected Behavior | Status |
 |-----|-------------|-------------------|--------|
-| 3.1 | Viewport doesn't follow keyboard navigation | View should scroll to focused card | Pending — Phase E.7 |
-| 3.2 | Move doesn't push blocks back when reversed | ~~Preview should recompute from start state~~ Each keystroke commits; undo handled by history (Phase H) | Pending — Phase E + H |
-| 3.3 | Escape doesn't cancel keyboard edit | `Escape` exits the active layout sub-mode | Pending — Phase E.1 |
-| 3.4 | Resize keybindings are confusing | Zellij `r` sub-mode with `h/j/k/l` (+ `Shift` to shrink, `Alt` strict, `Ctrl` compact) | Pending — Phase E.2 |
-| 3.5 | Enter doesn't validate keyboard changes | Obsolete: no commit boundary in immediate-commit model | Resolved by design |
-| 3.6 | Focus should start near cursor position | Track mouse position for initial focus | Pending — Phase E.5 |
+| 3.1 | Viewport doesn't follow keyboard navigation | View should scroll to focused card | Done — Phase E.7 `2cdf566` (`scrollIntoView({ block: "nearest", behavior: "smooth" })` on focus/position change) |
+| 3.2 | Move doesn't push blocks back when reversed | ~~Preview should recompute from start state~~ Each keystroke commits; undo handled by history (Phase H) | Done by design in Phase E; full undo deferred to Phase H |
+| 3.3 | Escape doesn't cancel keyboard edit | `Escape` exits the active layout sub-mode | Done — Phase E.1 `c5e7654` (modal scope cascade with Esc → exit sub-mode → exit master) |
+| 3.4 | Resize keybindings are confusing | Zellij `b` sub-mode with `h/j/k/l` (+ `Shift` to shrink, `Alt` strict, `Ctrl` compact) | Done — Phase E.2 `c5e7654`; resize sub-mode key is `b` (not `r`, which is reserved for dev recording). Shrink direction inverted in `2250169` so the arrow always indicates edge movement. |
+| 3.5 | Enter doesn't validate keyboard changes | Obsolete: no commit boundary in immediate-commit model | Resolved by design. Re-introduced selectively as buffered keyboard mode in Phase FA (`cfec8c5` → `9a442b5`): `Enter` commits buffer, `Esc` discards. |
+| 3.6 | Focus should start near cursor position | Track mouse position for initial focus | Done — Phase E.5 `2cdf566` (closest-rect-to-pointer, fallback viewport center → top-left) |
 
 ### New Keybinding Scheme (~~superseded by Zellij — kept for history~~)
 
@@ -179,13 +179,13 @@ Ctrl+M → enter "layout" master mode
 
 ### Acceptance Criteria (revised)
 
-- [ ] Viewport scrolls to follow focused card (3.1)
-- [ ] Moving card and then back returns to a structurally identical layout (3.2)
-- [ ] Escape exits the current sub-mode without side-effects (3.3)
-- [ ] Resize sub-mode `r` works with bare key = grow, `Shift` = shrink, `Alt` = strict, `Ctrl` = compact (3.4)
-- [ ] No preview mode: each keystroke commits (3.5 resolved by design)
-- [ ] First keyboard focus targets card nearest to cursor (3.6)
-- [ ] Old `CARD_*` IDs removed, no leftover bindings in localStorage (Phase E.3)
+- [x] Viewport scrolls to follow focused card (3.1) — `2cdf566`
+- [x] Moving card and then back returns to a structurally identical layout (3.2) — Phase E (deterministic re-application from snapshot); deeper history coverage deferred to Phase H
+- [x] Escape exits the current sub-mode without side-effects (3.3) — `c5e7654`
+- [x] Resize sub-mode `b` works with bare key = grow, `Shift` = shrink, `Alt` = strict, `Ctrl` = compact (3.4) — `c5e7654` + `2250169` (shrink direction inversion)
+- [x] No preview mode: each keystroke commits (3.5 resolved by design); buffered mode opt-in via Phase FA — `e0eef20` → `9a442b5`
+- [x] First keyboard focus targets card nearest to cursor (3.6) — `2cdf566`
+- [x] Old `CARD_*` IDs removed, no leftover bindings in localStorage (Phase E.3) — `c5e7654`
 
 ---
 
@@ -248,10 +248,10 @@ Pending — Phase E.5.
 
 - [x] ~~No auto-save to localStorage on each edit~~ → superseded: auto-save kept (Vim model)
 - [x] Save button visible and functional (dev only) — done in dev bar
-- [x] Reset button clears localStorage and reloads JSON — done in dev bar
-- [ ] "Unsaved changes" indicator when buffer differs from saved (Phase D.2)
-- [ ] Compact mode shows visual indicator (Phase E.6)
-- [ ] First focus targets card nearest cursor (Phase E.5)
+- [x] Reset button clears localStorage and reloads JSON — done in dev bar, plus user-facing floating reset in Phase D `d7e27b6` (action `sheet.reset-layout`, default `Shift+R`)
+- [x] "Unsaved changes" indicator when buffer differs from saved — Phase D split (`originalLayout` vs current); user-facing `LayoutResetButton` appears only when modified, which is the chosen indicator
+- [x] Compact mode shows visual indicator — Phase E.6 `2cdf566` (`--layout-mode-color` CSS var on grid root + `LayoutModePill` reflect active sub-mode including compact via `Ctrl` modifier)
+- [x] First focus targets card nearest cursor — Phase E.5 `2cdf566`
 
 ---
 
