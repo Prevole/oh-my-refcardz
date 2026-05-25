@@ -118,7 +118,6 @@ interface KeybindingsContextValue {
   resetActions: (
     targets: ReadonlyArray<{ context: KeybindingContext; actionId: string }>
   ) => void;
-  resetAll: () => void;
   checkConflict: (
     context: KeybindingContext,
     actionId: string,
@@ -417,12 +416,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
     [config]
   );
 
-  const resetAll = useCallback(() => {
-    cachedConfig = null;
-    localStorage.removeItem(STORAGE_KEY);
-    window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
-  }, []);
-
   const value = useMemo<KeybindingsContextValue>(
     () => ({
       config,
@@ -436,7 +429,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       setPrimaryCombo,
       resetAction,
       resetActions,
-      resetAll,
       checkConflict,
     }),
     [
@@ -451,7 +443,6 @@ export function KeybindingsProvider({ children }: { children: ReactNode }) {
       setPrimaryCombo,
       resetAction,
       resetActions,
-      resetAll,
       checkConflict,
     ]
   );
@@ -469,14 +460,4 @@ export function useKeybindings(): KeybindingsContextValue {
     throw new Error("useKeybindings must be used within a KeybindingsProvider");
   }
   return context;
-}
-
-export function useContextKeybindings(context: KeybindingContext): KeybindingAction[] {
-  const { getActionsForContext } = useKeybindings();
-  return getActionsForContext(context);
-}
-
-export function useActionMatcher() {
-  const { matchesAction } = useKeybindings();
-  return matchesAction;
 }

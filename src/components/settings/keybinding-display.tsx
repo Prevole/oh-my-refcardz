@@ -84,7 +84,7 @@ type CombosDisplayProps = {
   maxCombos?: number;
 };
 
-export function CombosDisplay({ combos, variant = "inline", maxCombos }: CombosDisplayProps) {
+function CombosDisplay({ combos, variant = "inline", maxCombos }: CombosDisplayProps) {
   const displayCombos = maxCombos ? combos.slice(0, maxCombos) : combos;
 
   return (
@@ -97,27 +97,6 @@ export function CombosDisplay({ combos, variant = "inline", maxCombos }: CombosD
       ))}
     </span>
   );
-}
-
-type ActionKeybindingProps = {
-  actionId: ActionId;
-  variant?: KeycapVariant;
-  maxCombos?: number;
-};
-
-export function ActionKeybinding({
-  actionId,
-  variant = "inline",
-  maxCombos,
-}: ActionKeybindingProps) {
-  const { getAction } = useKeybindings();
-  const action = getAction(actionId);
-
-  if (!action || action.combos.length === 0) {
-    return null;
-  }
-
-  return <CombosDisplay combos={action.combos} variant={variant} maxCombos={maxCombos} />;
 }
 
 type InlineBindingTextProps = {
@@ -146,7 +125,7 @@ function InlineBindingPart({ part, className }: { part: KeyDisplayPart; classNam
   return <span className={className}>{part.value}</span>;
 }
 
-export function InlineBindingText({
+function InlineBindingText({
   combos,
   maxCombos,
   className,
@@ -217,21 +196,6 @@ export function ActionInlineBinding({
   );
 }
 
-type ActionLabelProps = {
-  actionId: ActionId;
-};
-
-export function ActionLabel({ actionId }: ActionLabelProps) {
-  const { getAction } = useKeybindings();
-  const action = getAction(actionId);
-
-  if (!action) {
-    return null;
-  }
-
-  return <>{action.label}</>;
-}
-
 type HelpRowProps = {
   actionId: ActionId;
   label?: string;
@@ -259,10 +223,4 @@ export function useActionCombos(actionId: ActionId): KeyCombo[] {
   const { getAction } = useKeybindings();
   const action = getAction(actionId);
   return useMemo(() => action?.combos ?? [], [action]);
-}
-
-export function useActionLabel(actionId: ActionId): string {
-  const { getAction } = useKeybindings();
-  const action = getAction(actionId);
-  return action?.label ?? "";
 }

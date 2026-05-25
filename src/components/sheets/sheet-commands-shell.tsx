@@ -37,10 +37,6 @@ export function useRegisterModalOpen() {
   return useContext(CommandNavigationContext).registerModalOpen;
 }
 
-export function useShowDetail() {
-  return useContext(CommandNavigationContext).showDetail;
-}
-
 export function useShowCopyModal() {
   return useContext(CommandNavigationContext).showCopyModal;
 }

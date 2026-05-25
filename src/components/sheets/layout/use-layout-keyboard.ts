@@ -58,7 +58,7 @@ export type LayoutKeyboardFocus = {
  * user's investment is small enough that the safeguard is more noise
  * than help.
  */
-export const DISCARD_CONFIRM_THRESHOLD = 5;
+const DISCARD_CONFIRM_THRESHOLD = 5;
 
 export type UseLayoutKeyboardResult = {
   /** Current sub-mode, or `null` when layout mode is not active. */

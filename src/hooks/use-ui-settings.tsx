@@ -169,7 +169,6 @@ interface UISettingsContextValue {
   setActiveKeybindingsSubTab: (tab: KeybindingsSubTab) => void;
   setActiveKeybindingsSubSubTab: (tab: KeybindingsSubSubTab) => void;
   resetModern: () => void;
-  resetAll: () => void;
 }
 
 const UISettingsContext = createContext<UISettingsContextValue | null>(null);
@@ -242,10 +241,6 @@ export function UISettingsProvider({ children }: ProviderProps) {
     saveSettings(newSettings);
   }, []);
 
-  const resetAll = useCallback(() => {
-    saveSettings(DEFAULT_SETTINGS);
-  }, []);
-
   const value: UISettingsContextValue = {
     settings,
     isLoaded: true, // Always loaded with useSyncExternalStore
@@ -257,7 +252,6 @@ export function UISettingsProvider({ children }: ProviderProps) {
     setActiveKeybindingsSubTab,
     setActiveKeybindingsSubSubTab,
     resetModern,
-    resetAll,
   };
 
   return (

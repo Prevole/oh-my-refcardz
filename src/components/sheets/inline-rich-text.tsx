@@ -82,7 +82,7 @@ export function resolveInlineReferenceToken(token: string, knownSlugs: Set<strin
   };
 }
 
-export function renderInlineRichText(text: string, knownSlugs: Set<string>) {
+function renderInlineRichText(text: string, knownSlugs: Set<string>) {
   return text.split(/(`[^`]*`|\[\[[^\]]+\]\])/g).map((part, index) => {
     if (!part) {
       return null;
