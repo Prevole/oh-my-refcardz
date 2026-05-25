@@ -321,6 +321,66 @@ Implementation is deferred to a later step. The engine contract is sufficient: i
 
 ---
 
+## Buffered keyboard editing
+
+The keyboard layout mode is a **buffered editor** layered on top of the engine. It absorbs every move/resize operation in memory and either commits the result to the persisted layout (`Enter`) or throws it away (`Esc`, mouse click, or via the confirmation modal at the 5-change threshold). This eliminates the dual-driver ambiguity that arose when mouse and keyboard interleaved their writes to the persistent state.
+
+### Vocabulary
+
+- **Buffer**: in-memory `LayoutBlock[]` snapshot owned by `useLayoutBufferState`. Never touches `localStorage`.
+- **Entry snapshot**: the persisted layout at the moment `Ctrl+M` is pressed. Captured once and reused by `Shift+R` to rewind.
+- **Commit**: apply the buffer over the persisted layout through the same path mouse-driven edits take (`useLayoutPersistence.setBlockLayouts`), then exit the mode.
+- **Discard**: throw away the buffer. Persisted layout is unchanged. Silent below the threshold, gated by `LayoutDiscardConfirm` otherwise.
+- **Changes count**: number of buffer mutations the user has produced since entering the mode. Drives the pill counter, the floating reset button visibility, and the discard-confirm threshold.
+
+### Lifecycle
+
+1. **Entry** (`Ctrl+M`, `LAYOUT_ENTER_MODE` on `sheet` scope):
+   - Take the entry snapshot from `editor.committedBlocks`.
+   - Initialise `currentBuffer = entrySnapshot`, `changesCount = 0`.
+   - Push the `layout` scope + the initial `layout-navigation` sub-scope.
+   - Pill appears (`Navigation`, no counter yet).
+2. **Buffered op** (keyboard move/resize/strict, scopes `layout-move` / `layout-resize`):
+   - The engine resolves the op against the current buffer.
+   - If the engine returns a structurally distinct layout (id+kind+x/y/w/h equality), the buffer advances and `changesCount` is incremented by 1.
+   - Engine no-ops (rejection by constraints, identical result) do NOT increment.
+   - The sheet renders `currentBuffer`, not the persisted layout.
+3. **Reset** (`Shift+R`, `LAYOUT_RESET` on `layout`):
+   - Replace `currentBuffer` with `entrySnapshot`, set `changesCount = 0`.
+   - Stay in the mode; the user keeps editing from the entry state.
+4. **Commit** (`Enter`, `LAYOUT_COMMIT` on `layout`):
+   - Persist `currentBuffer` via `editor.commitLayout(blocks)`.
+   - Clear the buffer, exit the mode (pop the `layout-*` scopes, hide the pill).
+5. **Discard** (`Esc`, mouse click on any card / on the empty grid):
+   - If `changesCount < 5`: silent. Clear buffer, exit mode.
+   - If `changesCount >= 5`: open `LayoutDiscardConfirm` (modal scope `layout-discard-confirm`). `Enter` inside the modal confirms the discard; `Esc` cancels and returns to the editing session with the buffer intact.
+
+### Counter semantics
+
+- **Granularity**: 1 increment per user-perceived action, not per engine displacement. A `compact` op that moves several neighbours still counts as `1`.
+- **No net-diff tracking**: an op that perfectly undoes a previous one still increments (the counter tracks user effort, not net distance from the entry snapshot).
+- **No-ops**: when the engine rejects the op or returns the exact same layout, the counter is unchanged. This keeps "pressed a key that did nothing" off the counter.
+
+### Mouse interaction during a buffered session
+
+Drag and resize via mouse are disabled while the buffer is active. `handleHeaderPointerDown` and `handleResizePointerDown` route any pointer-down to the discard path (silent or modal-gated per the threshold) and return early before the manipulation handlers can start. The grid's empty area triggers the same path through `onEmptyPointerDown`. This enforces "no mouse/keyboard mixing during a buffered session" at the entry point: the user is in keyboard mode by deliberate choice.
+
+### Scope stack interaction
+
+The scope stack is driven by an imperative `ScopeStackManager` (`src/lib/scope-stack-manager.ts`) shared between the React provider and the keyboard dispatcher. Children's `useKeyboardScope` effects push their scope before the parent's mount effect runs; the manager exposes `current` as a synchronous getter so the dispatcher reads the live stack on every keydown rather than a closed-over React state value. This is what makes the modal-confirm Enter route to `LAYOUT_DISCARD_CONFIRM` instead of falling through to `LAYOUT_COMMIT` on the parent `layout` scope.
+
+### Files
+
+- `src/components/sheets/layout/layout-buffer.ts` — pure buffer helpers (`createBuffer`, `applyToBuffer`, `commitBuffer`, `resetBuffer`) and types.
+- `src/components/sheets/layout/use-layout-buffer-state.ts` — React wrapper exposing `start / apply / commit / clear / reset / bufferBlocks / changesCount / isActive`.
+- `src/components/sheets/layout/use-layout-keyboard.ts` — keyboard hook wiring entry/commit/discard/reset to the buffer.
+- `src/components/sheets/layout/layout-discard-confirm.tsx` — modal component, scope `layout-discard-confirm`.
+- `src/components/sheets/layout/layout-mode-pill.tsx` — pill with optional `changesCount` suffix.
+- `src/components/sheets/layout/layout-buffer-reset-button.tsx` — floating reset button shown while the buffer is dirty.
+- `src/lib/scope-stack-manager.ts` — imperative scope stack used by `use-keyboard-context` and `KeyboardDispatcher`.
+
+---
+
 ## Engine API (public)
 
 ```ts

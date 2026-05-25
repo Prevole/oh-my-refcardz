@@ -412,3 +412,34 @@ test.describe("Layout mode — buffer reset floating button", () => {
     await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
   });
 });
+
+test.describe("Layout mode — commit path (LAYOUT_COMMIT)", () => {
+  test.beforeEach(async ({ page }) => {
+    await clearLayoutStorage(page);
+  });
+
+  test("Enter persists the buffered changes and exits layout mode", async ({ page }) => {
+    await focusBottomLeft(page);
+    const initial = await findById(page, "sheet-card-bottom-left");
+    await stageGrowSouth(page, 2);
+    const staged = await findById(page, "sheet-card-bottom-left");
+    expect(staged.rowSpan).toBe(initial.rowSpan + 2);
+
+    await page.keyboard.press("Enter");
+
+    await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+    // Persistence is confirmed by the regular reset button surfacing.
+    await expect(page.getByTestId("layout-reset-button")).toBeVisible();
+    const persisted = await findById(page, "sheet-card-bottom-left");
+    expect(persisted.rowSpan).toBe(staged.rowSpan);
+  });
+
+  test("Enter on a clean buffer exits layout mode without persisting anything", async ({ page }) => {
+    await enterLayoutMode(page);
+    await page.keyboard.press("Enter");
+
+    await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+    await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
+    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+  });
+});

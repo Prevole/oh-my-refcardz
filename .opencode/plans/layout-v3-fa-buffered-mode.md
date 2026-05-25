@@ -316,14 +316,36 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
   layout-buffered-mode E2E ✓ (sequential), 95/95 full E2E ✓
   (8 skipped, 0 failed), build ✓.
 
-- [ ] **FA8**. **E2E coverage consolidation**. Group all FA2–FA7
+- [/] **FA8**. **E2E coverage consolidation**. Group all FA2–FA7
   E2E in a single spec file `e2e/layout-buffered-mode.spec.ts`
   (commit, silent discard, modal discard, mouse-click discard,
   pill counter visible).
+  - All FA2–FA7 paths already grouped in `e2e/layout-buffered-mode.spec.ts`
+    by the time FA8 starts (15 tests + 3 buffer-reset-button tests
+    added incidentally).
+  - Added a final `Layout mode — commit path (LAYOUT_COMMIT)`
+    describe block with 2 tests: `Enter` persists the buffer and
+    surfaces the regular `LayoutResetButton`; `Enter` on a clean
+    buffer exits the mode without touching the persisted layout.
+  - The persistence-side `keyboard-layout.spec.ts:398` ("layout
+    reset button only appears once the layout is mutated") is
+    kept in place: it tests `LayoutResetButton` (persistence
+    surface) rather than the buffer contract per se, so its
+    natural home stays in the keyboard suite.
+  - Validation: 20/20 layout-buffered-mode E2E ✓.
 
-- [ ] **FA9**. **Final documentation pass**. Update `docs/layout-engine.md`
+- [/] **FA9**. **Final documentation pass**. Update `docs/layout-engine.md`
   with the buffered-mode contract; update `docs/keybindings.md` with
   the new action IDs and the `layout-discard-confirm` scope.
+  - `docs/keybindings.md`: enriched `Layout mode visual feedback`
+    with the pill counter and the floating reset button; new
+    `Buffered editing model` section summarising the
+    enter/commit/discard/reset contract and linking to the engine
+    doc for the full details.
+  - `docs/layout-engine.md`: new `Buffered keyboard editing`
+    section (vocabulary, lifecycle, counter semantics, mouse
+    interaction, scope-stack rationale, file map) placed between
+    `Undo/redo (future)` and `Engine API (public)`.
 
 ## Open points (decide while implementing)
 

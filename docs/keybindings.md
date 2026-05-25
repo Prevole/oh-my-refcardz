@@ -102,10 +102,22 @@ Movement actions (`move-left`, `move-right`, `move-up`, `move-down`) are split p
 
 When a `layout-*` scope is active, two visual cues confirm the current sub-mode:
 
-- A floating **mode pill** in the top-right corner (`LayoutModePill`) shows the sub-mode label and a color: navigation = sheet accent, move = `--success`, resize = `--warning`.
+- A floating **mode pill** in the top-right corner (`LayoutModePill`) shows the sub-mode label and a color: navigation = sheet accent, move = `--success`, resize = `--warning`. As soon as the buffered editor accumulates at least one staged change, the pill appends ` · N change(s)` in a muted style (singular for `N === 1`, plural otherwise).
 - The focused block highlight uses the same color via the `--layout-mode-color` CSS variable, set on the `<SheetGrid>` root and consumed by `.cardKeyboardFocused` / `.headingBlockKeyboardFocused`.
 
 Entering layout mode (`Ctrl+M`) focuses the block closest to the mouse cursor (fallback: viewport center, then top-left). On every focus change or move/resize, the focused block is scrolled into view (`block: "nearest"`).
+
+A floating **reset button** (`LayoutBufferResetButton`) appears in the bottom-right corner whenever the buffer holds at least one staged change. Clicking it (or pressing `Shift+R`) rewinds the buffer to the snapshot captured on mode entry without exiting layout mode. The button hides again when the change count drops back to zero (via `Shift+R`, commit, or discard). It is mutually exclusive with the regular `LayoutResetButton`, which only surfaces outside layout mode when the persisted layout differs from the original YAML.
+
+### Buffered editing model
+
+Keyboard layout mode is a **buffered editor**: every move/resize/strict operation is applied to an in-memory snapshot, never directly to the persisted layout. The user explicitly leaves the mode either by:
+
+- `Enter` (`LAYOUT_COMMIT`, scope `layout`): copies the buffer over the persisted layout via the same `useLayoutPersistence` path used by mouse-driven edits, then exits.
+- `Esc` (`LAYOUT_EXIT`, scope `layout-*`) or any mouse click on a card / on the empty grid: discards the buffer and exits. When the buffer holds 5+ staged changes the discard is gated by the `LayoutDiscardConfirm` modal (scope `layout-discard-confirm`, modal); below the threshold the discard is silent.
+- `Shift+R` (`LAYOUT_RESET`, scope `layout`): rewinds the buffer to the entry snapshot without exiting the mode. The change count returns to zero.
+
+The pill counter and the floating reset button described above are the only UI surfaces of the buffer state. The full contract (counter semantics, op-equality rules, scope-stack interaction) lives in [`docs/layout-engine.md`](./layout-engine.md#buffered-keyboard-editing).
 
 ### Scopes
 
