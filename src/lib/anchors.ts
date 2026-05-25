@@ -2,7 +2,7 @@ export const anchorIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 type EntryLike = Record<string, unknown>;
 
-export type InlineReferenceTarget = {
+type InlineReferenceTarget = {
   slug: string | null;
   anchor: string | null;
 };

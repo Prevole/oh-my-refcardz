@@ -16,7 +16,7 @@ import { InlineKeybinding } from "./inline-keybinding-help";
  * scope (notably `global`) but want different inline help, so we need
  * both axes to resolve the right entry.
  */
-export type InlineHelpSurface = "home" | "sheet";
+type InlineHelpSurface = "home" | "sheet";
 
 type InlineHelpToken =
   | { kind: "text"; text: string }

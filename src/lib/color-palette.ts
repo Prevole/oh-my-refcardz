@@ -37,7 +37,7 @@ export const CATEGORY_GRADIENT_PAIRS = [
   { from: "#BEF264", to: "#F5D0FE" }, // 10 - Lime → Lavender pastel
 ] as const;
 
-export type SheetGradient = {
+type SheetGradient = {
   from: string;
   to: string;
 };

@@ -18,14 +18,14 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   return false;
 }
 
-export interface DispatchDeps {
+interface DispatchDeps {
   /** Resolve the action set bound to a keybinding context. */
   getActionsForContext: (context: KeybindingContext) => KeybindingAction[];
   /** Read all handlers currently bound to a scope. */
   getHandlersForScope?: (scope: KeyboardScopeId) => BoundHandler[];
 }
 
-export type DispatchOutcome =
+type DispatchOutcome =
   | { kind: "ignored-editable" }
   | { kind: "no-match" }
   | { kind: "blocked-modal"; scope: KeyboardScopeId }

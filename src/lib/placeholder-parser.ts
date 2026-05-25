@@ -1,4 +1,4 @@
-export type PlaceholderType = "string" | "int";
+type PlaceholderType = "string" | "int";
 
 export type Placeholder = {
   raw: string;

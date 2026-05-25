@@ -24,7 +24,7 @@ import {
 
 export type { KeyboardScopeId } from "@/lib/keyboard-scope";
 
-export interface PushScopeOptions {
+interface PushScopeOptions {
   /** Modal scopes block unmatched events from cascading to lower scopes. */
   modal?: boolean;
 }

@@ -15,7 +15,7 @@ import type { GridPosition, LayoutBlock, LayoutBlockKind } from "./engine";
 /**
  * Old card layout format (1-indexed coordinates).
  */
-export type OldCardLayoutState = {
+type OldCardLayoutState = {
   colStart: number;
   rowStart: number;
   colSpan: number;

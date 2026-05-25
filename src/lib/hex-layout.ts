@@ -5,9 +5,9 @@ import {
   HEX_VERTICAL_GAP_RATIO,
 } from "@/lib/constants";
 
-export type HexRows<T = CheatSheetMeta> = T[][];
+type HexRows<T = CheatSheetMeta> = T[][];
 
-export type HexMetrics = {
+type HexMetrics = {
   hexCardWidth: number;
   hexCardHeight: number;
   hexShapeHeight: number;
@@ -17,7 +17,7 @@ export type HexMetrics = {
   verticalStep: number;
 };
 
-export type HexBoardDimensions = {
+type HexBoardDimensions = {
   width: number;
   height: number;
 };

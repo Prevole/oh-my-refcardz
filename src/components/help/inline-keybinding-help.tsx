@@ -9,7 +9,7 @@ import { ACTION_IDS } from "@/lib/keybindings";
  * running text. Single source of truth so the dashed amber underline stays
  * consistent across the app (modals, settings, dev bar, contextual help).
  */
-export const INLINE_KEY_CLASS =
+const INLINE_KEY_CLASS =
   "underline decoration-dashed underline-offset-3 text-[#f8c94a]";
 
 /**

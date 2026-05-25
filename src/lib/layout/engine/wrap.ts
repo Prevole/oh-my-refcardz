@@ -25,12 +25,12 @@ export type WrappableInput = {
   initialX: number;
 };
 
-export type SouthFallbackInput = {
+type SouthFallbackInput = {
   primary: GridPosition;
   wrappables: readonly WrappableInput[];
 };
 
-export type SouthFallbackPlacement = {
+type SouthFallbackPlacement = {
   id: string;
   target: GridPosition;
   /** 0 = first placed (farthest), then ascending. */

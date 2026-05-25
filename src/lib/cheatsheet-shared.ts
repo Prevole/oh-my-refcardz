@@ -15,15 +15,15 @@ export type SavedSectionLayout = {
 };
 
 export type TitleEntry = { title: string };
-export type CommandEntry = { command: string };
+type CommandEntry = { command: string };
 export type AliasEntry = { alias: { content: string; copy?: string } };
-export type CommandExampleEntry = { commandExample: string };
-export type CommandExamplesEntry = { commandExamples: string[] };
+type CommandExampleEntry = { commandExample: string };
+type CommandExamplesEntry = { commandExamples: string[] };
 export type TextEntry = { text: string };
 export type AnchorEntry = { anchor: string };
 export type KeysEntry = { keys: string[] };
-export type FileEntry = { file: string };
-export type WhereEntry = { where: string };
+type FileEntry = { file: string };
+type WhereEntry = { where: string };
 export type ContentEntry = { content: string };
 export type ContentExampleEntry = { contentExample: string };
 export type SettingsEntry = { settings: string[] };
@@ -77,8 +77,8 @@ export type CheatSheetHeading = {
   text?: string;
 };
 
-export type CheatSheetHeadingBlock = { heading: CheatSheetHeading };
-export type CheatSheetCardBlock = { card: CheatSheetCard };
+type CheatSheetHeadingBlock = { heading: CheatSheetHeading };
+type CheatSheetCardBlock = { card: CheatSheetCard };
 export type CheatSheetBlock = CheatSheetHeadingBlock | CheatSheetCardBlock;
 
 export type YamlCheatSheet = {
@@ -105,11 +105,11 @@ export type CheatSheetMeta = {
   icon?: string;
 };
 
-export type RenderableHeadingBlock = CheatSheetHeading & { kind: "heading" };
-export type RenderableCardBlock = CheatSheetCard & { kind: "card" };
+type RenderableHeadingBlock = CheatSheetHeading & { kind: "heading" };
+type RenderableCardBlock = CheatSheetCard & { kind: "card" };
 export type RenderableBlock = RenderableHeadingBlock | RenderableCardBlock;
 
-export type HeadingGroup = {
+type HeadingGroup = {
   id: string;
   title: string;
   text?: string;

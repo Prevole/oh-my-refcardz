@@ -29,7 +29,7 @@ export type SectionConfig = {
   notes?: Readonly<Record<string, string>>;
 };
 
-export type SubTabConfig = {
+type SubTabConfig = {
   id: KeybindingsSubTab;
   label: string;
   intro: string;
@@ -37,7 +37,7 @@ export type SubTabConfig = {
   sections?: SectionConfig[];
 };
 
-export type SubSubTabConfig = {
+type SubSubTabConfig = {
   id: KeybindingsSubSubTab;
   label: string;
   intro: string;

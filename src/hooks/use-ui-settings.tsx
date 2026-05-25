@@ -6,7 +6,7 @@ export type ColorMode = "hexa" | "grid" | "category" | "normal";
 export type BorderStyle = "full" | "left" | "right" | "both";
 export type GradientDirection = "tl-br" | "tr-bl" | "l-r";
 
-export interface ModernSettings {
+interface ModernSettings {
   random: boolean;
   colorMode: ColorMode;
   border: BorderStyle;
@@ -17,7 +17,7 @@ export type SettingsTopTab = "ui" | "keybindings";
 export type KeybindingsSubTab = "general" | "home" | "cheatsheet";
 export type KeybindingsSubSubTab = "general" | "layout" | "developer";
 
-export interface PanelTabsState {
+interface PanelTabsState {
   active: SettingsTopTab;
   keybindingsSub: KeybindingsSubTab;
   keybindingsSubSub: KeybindingsSubSubTab;

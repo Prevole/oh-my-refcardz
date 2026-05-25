@@ -35,7 +35,7 @@ export type StepContext = {
   stepIndex: number;
 };
 
-export type StepResult = {
+type StepResult = {
   accepted: boolean;
   reason?: string;
   affected: {
