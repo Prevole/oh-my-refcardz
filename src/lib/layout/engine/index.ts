@@ -36,7 +36,6 @@ export type {
 // --- Types: directions ------------------------------------------------------
 
 export type { Axis, Direction } from "./types";
-export { axisOf, oppositeDirection } from "./types";
 
 // --- Types: events ----------------------------------------------------------
 
