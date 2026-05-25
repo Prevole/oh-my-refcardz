@@ -284,12 +284,6 @@
   font-weight: 600;
 }
 
-.statsHint {
-  color: var(--fg-50);
-  margin-left: var(--space-3);
-  font-style: italic;
-}
-
 .statsSep {
   display: inline-block;
   width: 1px;
@@ -406,11 +400,6 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-}
-
-.toolbarShortcutKey {
-  color: var(--fg-75);
-  font-weight: 600;
 }
 
 /* ------------------------------------------------------------------------- */

@@ -113,11 +113,6 @@
   text-align: center;
 }
 
-.hexTitleCentered {
-  font-size: clamp(0.9rem, 3vw, 1.3rem);
-  -webkit-line-clamp: 3;
-}
-
 .hexTitleGradient {
   background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
   -webkit-background-clip: text;
