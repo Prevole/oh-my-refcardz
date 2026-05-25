@@ -284,6 +284,16 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
       ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
     ],
   },
+  {
+    id: "layout-discard-confirm",
+    label: "Discard confirm",
+    description: "Bindings active inside the discard-confirm modal opened when exiting layout mode with unsaved keyboard edits.",
+    context: "layout-discard-confirm",
+    actionIds: [
+      ACTION_IDS.LAYOUT_DISCARD_CONFIRM,
+      ACTION_IDS.LAYOUT_DISCARD_CANCEL,
+    ],
+  },
 ];
 
 const SHEET_DEVELOPER_SECTIONS: SectionConfig[] = [

@@ -12,6 +12,7 @@ export type KeyboardScopeId =
   | "layout-navigation"
   | "layout-move"
   | "layout-resize"
+  | "layout-discard-confirm"
   | "dev"
   | "dev-logs"
   | "dev-axes";

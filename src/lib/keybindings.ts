@@ -33,6 +33,7 @@ export type KeybindingContext =
   | "layout-navigation"
   | "layout-move"
   | "layout-resize"
+  | "layout-discard-confirm"
   | "dev"
   | "dev-logs"
   | "dev-axes";
@@ -65,6 +66,8 @@ export function scopeToContext(scope: KeyboardScopeId): KeybindingContext | null
       return "layout-move";
     case "layout-resize":
       return "layout-resize";
+    case "layout-discard-confirm":
+      return "layout-discard-confirm";
     case "dev":
       return "dev";
     case "dev-logs":
@@ -151,6 +154,13 @@ export const ACTION_IDS = {
   // layout mode. Registered on the parent `layout` scope so it works
   // from every sub-mode.
   LAYOUT_COMMIT: "layout.commit",
+
+  // Discard-confirm modal (scope `layout-discard-confirm`). Opened
+  // when the user requests an exit (`Esc`) while the buffer holds at
+  // least 5 staged changes. Confirms whether to throw away the
+  // unsaved keyboard edits.
+  LAYOUT_DISCARD_CONFIRM: "layout-discard-confirm.confirm",
+  LAYOUT_DISCARD_CANCEL: "layout-discard-confirm.cancel",
 
   // Layout sub-mode: navigation (scope `layout-navigation`).
   LAYOUT_NAV_LEFT: "layout-navigation.left",
@@ -662,6 +672,19 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
       label: "Shrink from bottom",
       combos: [combo("ArrowDown", "ctrl", "shift"), combo("J", "ctrl", "shift")],
+    },
+  ],
+
+  "layout-discard-confirm": [
+    {
+      id: ACTION_IDS.LAYOUT_DISCARD_CONFIRM,
+      label: "Discard changes",
+      combos: [key("Enter")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_DISCARD_CANCEL,
+      label: "Keep editing",
+      combos: [key("Escape")],
     },
   ],
 

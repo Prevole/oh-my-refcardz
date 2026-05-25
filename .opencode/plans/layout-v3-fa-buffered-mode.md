@@ -171,6 +171,39 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
   ops, Esc → modal appears; `Return` → buffer discarded, layout reverts;
   Esc → modal closes, buffer intact.
 
+  Split into FA5a (component + scope + actions, no wiring) and FA5b
+  (wiring from `discardMode` + E2E).
+
+  - [/] **FA5a**. **Component + scope + actions, no wiring**.
+    - `src/lib/keyboard-scope.ts`: registered `layout-discard-confirm`.
+    - `src/lib/keybindings.ts`: extended `KeybindingContext`,
+      `scopeToContext`, added `ACTION_IDS.LAYOUT_DISCARD_CONFIRM` /
+      `LAYOUT_DISCARD_CANCEL`, defaults block (`Enter` confirms,
+      `Escape` cancels).
+    - `src/components/settings/keybinding-tabs-config.ts`: new
+      section `Discard confirm` at the end of `SHEET_LAYOUT_SECTIONS`.
+    - `src/components/sheets/layout/layout-discard-confirm.tsx`: new
+      modal component, autonomous `createPortal` pattern (no
+      dependency on `useRegisterModalOpen` which is shell-commands
+      specific); `useKeyboardScope("layout-discard-confirm", open, { modal: true })`;
+      focuses the `Discard` button on open (primary action).
+      Body text is generic (`All changes made so far will be lost.`),
+      intentionally no `N` count to avoid wiring buffer state into
+      the modal contract.
+    - `src/components/sheets/layout/layout-discard-confirm.module.css`:
+      warning style (border + title in `--warning`, `Discard` button
+      in `--error`, `Cancel` button neutral).
+    - Not wired anywhere yet; modal is unreachable. FA5b will plug
+      it into the discard path.
+    - Validation: lint ✓, 839/839 unit ✓, build ✓.
+
+  - [ ] **FA5b**. **Wiring + E2E**. Split `discardMode` in
+    `useLayoutKeyboard` into `requestDiscard` (decides silent vs
+    modal based on `changesCount >= 5`) and the existing silent
+    discard path. Mount `LayoutDiscardConfirm` from the sheet
+    renderer with `open` state owned alongside `bufferState`. E2E
+    covers the 3 paths (silent < 5, modal confirm, modal cancel).
+
 - [ ] **FA6**. **Mouse click discards buffer**. Modify
   `handleHeaderPointerDown` and `handleResizePointerDown` in
   `sheet-renderer.tsx`: when `mode !== null`, call the discard path
