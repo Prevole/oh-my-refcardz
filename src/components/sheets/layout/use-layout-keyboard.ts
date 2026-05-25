@@ -75,6 +75,14 @@ export type UseLayoutKeyboardResult = {
   handleDiscardConfirm: () => void;
   /** Cancels the pending discard: close the modal, keep buffer + layout mode. */
   handleDiscardCancel: () => void;
+  /**
+   * Generic exit entrypoint for non-keyboard triggers (mouse click on a
+   * card header / resize handle / empty grid area while layout mode is
+   * active). Routes through the same silent-vs-modal logic as the
+   * keyboard `Esc` path, so the discard confirm safeguard applies
+   * uniformly.
+   */
+  exitLayoutMode: () => void;
 };
 
 type UseLayoutKeyboardOptions = {
@@ -595,7 +603,16 @@ export function useLayoutKeyboard({
       discardConfirmOpen,
       handleDiscardConfirm,
       handleDiscardCancel,
+      exitLayoutMode: requestDiscard,
     }),
-    [mode, focusedCard, isManipulating, discardConfirmOpen, handleDiscardConfirm, handleDiscardCancel]
+    [
+      mode,
+      focusedCard,
+      isManipulating,
+      discardConfirmOpen,
+      handleDiscardConfirm,
+      handleDiscardCancel,
+      requestDiscard,
+    ]
   );
 }

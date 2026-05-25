@@ -172,6 +172,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     discardConfirmOpen,
     handleDiscardConfirm,
     handleDiscardCancel,
+    exitLayoutMode,
   } = useLayoutKeyboard({
     blocks: displayedBlocks as LayoutBlock[],
     editor,
@@ -335,11 +336,15 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   }
 
   function handleHeaderPointerDown(blockId: string, event: React.PointerEvent<HTMLElement>) {
-    // During a buffered keyboard session, mouse drags would operate on
-    // the persisted layout (out of sync with what's rendered). FA6 will
-    // upgrade this to "click discards the buffer and exits layout
-    // mode". For FA3 we simply ignore the click.
-    if (bufferState.isActive) return;
+    // During a buffered keyboard session, mouse drags would operate
+    // on the persisted layout (out of sync with what's rendered).
+    // FA6 routes the click through the same discard path as `Esc`:
+    // silent below the threshold, modal at/above it. Drag is never
+    // started in this case.
+    if (bufferState.isActive) {
+      exitLayoutMode();
+      return;
+    }
     setFocusedCard(null);
     startBlockDrag(blockId, event);
   }
@@ -349,7 +354,10 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     direction: ResizeHandleDirection,
     event: React.PointerEvent<HTMLElement>
   ) {
-    if (bufferState.isActive) return;
+    if (bufferState.isActive) {
+      exitLayoutMode();
+      return;
+    }
     setFocusedCard(null);
     startBlockResize(blockId, direction, event);
   }
@@ -381,6 +389,13 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         debugMode={debugEnabled}
         layoutReady={hydrated}
         onMetricsChange={updateGridMetrics}
+        onEmptyPointerDown={
+          bufferState.isActive
+            ? () => {
+                exitLayoutMode();
+              }
+            : undefined
+        }
         style={
           layoutMode !== null
             ? ({ "--layout-mode-color": LAYOUT_MODE_COLORS[layoutMode] } as CSSProperties)

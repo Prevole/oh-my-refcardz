@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 export const GRID_GAP_PX = 16;
@@ -19,6 +19,13 @@ type SheetGridProps = {
   layoutReady?: boolean;
   onMetricsChange?: (metrics: SheetGridMetrics) => void;
   style?: CSSProperties;
+  /**
+   * Fires when a pointerdown lands on the grid background — that is,
+   * anywhere outside a `[data-layout-card]` descendant. Used by the
+   * sheet renderer to exit a buffered keyboard layout session when
+   * the user clicks on the empty grid area (Phase FA6).
+   */
+  onEmptyPointerDown?: (event: ReactPointerEvent<HTMLElement>) => void;
 };
 
 export function SheetGrid({
@@ -28,6 +35,7 @@ export function SheetGrid({
   layoutReady = false,
   onMetricsChange,
   style,
+  onEmptyPointerDown,
 }: SheetGridProps) {
   const ref = useRef<HTMLElement | null>(null);
 
@@ -59,6 +67,16 @@ export function SheetGrid({
     return () => observer.disconnect();
   }, [onMetricsChange]);
 
+  function handlePointerDown(event: ReactPointerEvent<HTMLElement>) {
+    if (!onEmptyPointerDown) return;
+    // Only fire when the pointerdown originated on the grid itself
+    // (or its non-card whitespace), not when it bubbled up from a
+    // card. `closest` walks ancestors including the target itself.
+    if (!(event.target instanceof Element)) return;
+    if (event.target.closest("[data-layout-card]")) return;
+    onEmptyPointerDown(event);
+  }
+
   return (
     <section
       ref={ref}
@@ -72,6 +90,7 @@ export function SheetGrid({
         .filter(Boolean)
         .join(" ")}
       style={style}
+      onPointerDown={handlePointerDown}
     >
       {children}
     </section>

@@ -196,3 +196,66 @@ test.describe("Layout buffered mode — discard paths (Phase FA5b)", () => {
     expect(stillBuffered.rowSpan).toBe(before.rowSpan + 5);
   });
 });
+
+test.describe("Layout buffered mode — mouse click discard (Phase FA6)", () => {
+  test.beforeEach(async ({ page }) => {
+    await clearLayoutStorage(page);
+  });
+
+  test("Click on a card header with fewer than 5 changes discards silently", async ({ page }) => {
+    await focusBottomLeft(page);
+    const before = await findById(page, "sheet-card-bottom-left");
+
+    await stageGrowSouth(page, 2);
+    const buffered = await findById(page, "sheet-card-bottom-left");
+    expect(buffered.rowSpan).toBe(before.rowSpan + 2);
+
+    // Click on a card header (top-right is a safe target distant from
+    // the focused bottom-left block).
+    await page
+      .locator("article[data-layout-block-id='sheet-card-top-right'] h2")
+      .click();
+
+    // No modal, layout mode exits, persistent layout untouched.
+    await expect(page.getByTestId("layout-discard-confirm-overlay")).toHaveCount(0);
+    await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+
+    const after = await findById(page, "sheet-card-bottom-left");
+    expect(after.rowSpan).toBe(before.rowSpan);
+    await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
+  });
+
+  test("Click on a card header with 5+ changes opens the discard confirm modal", async ({ page }) => {
+    await focusBottomLeft(page);
+    await stageGrowSouth(page, 5);
+
+    await page
+      .locator("article[data-layout-block-id='sheet-card-top-right'] h2")
+      .click();
+
+    await expect(page.getByTestId("layout-discard-confirm-overlay")).toBeVisible();
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+  });
+
+  test("Click on the empty grid area triggers the same discard path", async ({ page }) => {
+    await focusBottomLeft(page);
+    const before = await findById(page, "sheet-card-bottom-left");
+
+    await stageGrowSouth(page, 2);
+
+    // The fixture has a 2-column layout (top-left/top-right,
+    // bottom-left/bottom-right). The center vertical line of the grid
+    // falls in the gap between the two columns — empty grid area, no
+    // card underneath. Click there at mid-height.
+    const grid = page.locator("[data-sheet-grid]");
+    const box = await grid.boundingBox();
+    if (!box) throw new Error("grid bounding box unavailable");
+    await grid.click({ position: { x: box.width / 2, y: box.height / 2 } });
+
+    await expect(page.getByTestId("layout-discard-confirm-overlay")).toHaveCount(0);
+    await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+
+    const after = await findById(page, "sheet-card-bottom-left");
+    expect(after.rowSpan).toBe(before.rowSpan);
+  });
+});

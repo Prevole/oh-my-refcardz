@@ -224,13 +224,35 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
     - Validation: lint ✓, 839/839 unit ✓, 20/20 keyboard-layout +
       4/4 layout-buffered-mode E2E ✓, build ✓.
 
-- [ ] **FA6**. **Mouse click discards buffer**. Modify
-  `handleHeaderPointerDown` and `handleResizePointerDown` in
-  `sheet-renderer.tsx`: when `mode !== null`, call the discard path
-  (with modal if applicable) and DO NOT start drag/resize. Outside
-  layout mode (`mode === null`), behaviour unchanged. E2E: enter
-  layout mode, click on a card header → exits silently (if < 5
-  changes) or shows modal.
+- [/] **FA6**. **Mouse click discards buffer**.
+  - `src/components/sheets/layout/use-layout-keyboard.ts`: expose a
+    new public `exitLayoutMode` callback aliased to `requestDiscard`.
+    This gives non-keyboard triggers (mouse clicks here, possibly
+    other UI elements later) a single routing entrypoint that honours
+    the same silent-vs-modal contract as `LAYOUT_EXIT`.
+  - `src/components/sheets/sheet-renderer.tsx`:
+    - `handleHeaderPointerDown` and `handleResizePointerDown`: when
+      `bufferState.isActive`, call `exitLayoutMode()` and return
+      early instead of no-op'ing. The drag/resize is not started in
+      that case (the click only consumes the discard).
+    - Pass a new `onEmptyPointerDown` to `<SheetGrid>`, wired to
+      `exitLayoutMode` whenever the buffer is active. Empty-area
+      clicks now follow the same path as header clicks.
+  - `src/components/sheets/sheet-grid.tsx`: extend the API with an
+    optional `onEmptyPointerDown(event)`. The grid attaches a single
+    `onPointerDown` handler that filters out events whose target is
+    inside a `[data-layout-card]` (those are handled by per-card
+    pointer-down). Type imported as `PointerEvent as ReactPointerEvent`
+    to keep the import block tidy.
+  - `e2e/layout-buffered-mode.spec.ts`: new "mouse click discard"
+    describe-block (3 tests):
+    - `Click on a card header with fewer than 5 changes discards silently`
+    - `Click on a card header with 5+ changes opens the discard confirm modal`
+    - `Click on the empty grid area triggers the same discard path`
+      (uses the vertical gap between the two columns at mid-height as
+      a guaranteed-empty target since the fixture is a 2-column grid).
+  - Validation: lint ✓, 839/839 unit ✓, 20/20 keyboard-layout +
+    7/7 layout-buffered-mode E2E ✓, build ✓.
 
 - [ ] **FA7**. **Pill counter**. Update `LayoutModePill` to render
   `Navigation · 3 changes` etc. Style the counter slightly muted.
