@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ActionInlineBinding } from "@/components/settings/keybinding-display";
-import { useKeybindings } from "@/hooks/use-keybindings";
-import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { useAction } from "@/hooks/use-action";
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
 import { ACTION_IDS } from "@/lib/keybindings";
 import styles from "./layout-discard-confirm.module.css";
 
@@ -21,7 +21,6 @@ type LayoutDiscardConfirmProps = {
 // pending change count because the buffer is private to the keyboard
 // session and the count adds no actionable information.
 export function LayoutDiscardConfirm({ open, onConfirm, onCancel }: LayoutDiscardConfirmProps) {
-  const { matchesAction } = useKeybindings();
   useKeyboardScope("layout-discard-confirm", open, { modal: true });
   const discardButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -31,24 +30,31 @@ export function LayoutDiscardConfirm({ open, onConfirm, onCancel }: LayoutDiscar
     }
   }, [open]);
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (matchesAction(e, ACTION_IDS.LAYOUT_DISCARD_CONFIRM)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        onConfirm();
-        return;
-      }
-      if (matchesAction(e, ACTION_IDS.LAYOUT_DISCARD_CANCEL)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        onCancel();
-      }
-    },
-    [matchesAction, onConfirm, onCancel],
-  );
+  // Bind the two modal actions through the central registry/dispatcher
+  // so they participate in scope cascade and modality. Handlers must
+  // stay no-ops while the modal is closed because actions stay bound
+  // for the component's lifetime; the cascade will skip them as soon
+  // as the `layout-discard-confirm` scope leaves the active stack.
+  const handleConfirmAction = useCallback(() => {
+    if (!open) return;
+    onConfirm();
+  }, [open, onConfirm]);
 
-  useScopedKeyboardHandler("layout-discard-confirm", handleKeyDown, [handleKeyDown]);
+  const handleCancelAction = useCallback(() => {
+    if (!open) return;
+    onCancel();
+  }, [open, onCancel]);
+
+  useAction(
+    ACTION_IDS.LAYOUT_DISCARD_CONFIRM,
+    "layout-discard-confirm",
+    handleConfirmAction,
+  );
+  useAction(
+    ACTION_IDS.LAYOUT_DISCARD_CANCEL,
+    "layout-discard-confirm",
+    handleCancelAction,
+  );
 
   if (!open) return null;
 

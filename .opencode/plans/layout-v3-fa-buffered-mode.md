@@ -254,9 +254,67 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
   - Validation: lint ✓, 839/839 unit ✓, 20/20 keyboard-layout +
     7/7 layout-buffered-mode E2E ✓, build ✓.
 
-- [ ] **FA7**. **Pill counter**. Update `LayoutModePill` to render
+- [/] **FA7**. **Pill counter**. Update `LayoutModePill` to render
   `Navigation · 3 changes` etc. Style the counter slightly muted.
-  Snapshot/unit test on the component.
+  - `src/components/sheets/layout/format-changes-count.ts`: new pure
+    helper exporting `formatChangesCount(count)` → `"1 change"` |
+    `"N changes"`. Extracted from the component so the singular/
+    plural rule is unit-testable without RTL.
+  - `src/components/sheets/layout/format-changes-count.test.ts`: 3
+    unit tests (singular, plural, zero defensive).
+  - `src/components/sheets/layout/layout-mode-pill.tsx`: new
+    `changesCount?: number` prop (default `0`); the muted counter
+    span is rendered only when `count > 0`. Exposes
+    `data-changes-count` attribute and `data-testid="layout-mode-pill-counter"`
+    on the suffix span for E2E.
+  - `src/components/sheets/layout/layout-mode-pill.module.css`:
+    `gap`, new classes `.label` / `.counter` / `.separator`. Counter
+    color uses `color-mix(in srgb, currentColor 65%, transparent)`
+    so the mode name keeps full pill foreground prominence.
+  - `src/components/sheets/sheet-renderer.tsx`: passes
+    `changesCount={bufferState.changesCount}` to `<LayoutModePill>`.
+  - `e2e/layout-buffered-mode.spec.ts`: 3 new tests under
+    `Layout buffered mode — pill counter (Phase FA7)` (counter
+    hidden at 0, "1 change" singular, plural).
+
+  **Bonus: keyboard dispatch race fix** uncovered while validating
+  FA7 in sequential mode. Pre-existing `Modal Confirm (Enter)` test
+  failed deterministically when the spec ran in order (workers=1).
+  Root cause: `KeyboardDispatcher` closed over the React `scopeStack`
+  state via `useEffect`. A handler that pushed a modal scope (Esc →
+  open discard modal) scheduled a `setState`; React batched it and
+  the next key event (Enter) was dispatched against the stale stack,
+  matching `LAYOUT_COMMIT` in the parent `layout` scope instead of
+  hitting the modal block.
+
+  Fix:
+  - `src/lib/scope-stack-manager.ts` (new): imperative store with
+    `push`, `pop`, `subscribe`, `current` (synchronous getter). Pure,
+    no React.
+  - `src/lib/scope-stack-manager.test.ts` (new): 9 unit tests
+    covering sync reads, listener notifications, no-op deduplication,
+    and the FA5b race regression case.
+  - `src/hooks/use-keyboard-context.tsx`: provider owns one
+    `ScopeStackManager`. React state is mirrored via
+    `useSyncExternalStore` so children re-render on changes AND the
+    initial state is read from the live manager (children's
+    `useKeyboardScope` effects run before the parent's, so any push
+    performed during the child mount is visible). New
+    `scopeStackRef` field on the context exposes the manager's
+    `current` getter to the dispatcher.
+  - `src/components/keyboard/keyboard-dispatcher.tsx`: reads
+    `scopeStackRef.current` per keydown instead of a closed-over
+    state value. The dispatcher is now race-free.
+  - `src/components/sheets/layout/layout-discard-confirm.tsx`:
+    `LAYOUT_DISCARD_CONFIRM` / `LAYOUT_DISCARD_CANCEL` bound through
+    `useAction` (canonical dispatcher path) instead of
+    `useScopedKeyboardHandler` + `matchesAction` direct, for
+    consistency with the rest of the system.
+
+  Validation: lint ✓, 851/851 unit ✓ (+3 `formatChangesCount`,
+  +9 `scope-stack-manager`), 30/30 keyboard-layout +
+  layout-buffered-mode E2E ✓ (sequential), 95/95 full E2E ✓
+  (8 skipped, 0 failed), build ✓.
 
 - [ ] **FA8**. **E2E coverage consolidation**. Group all FA2–FA7
   E2E in a single spec file `e2e/layout-buffered-mode.spec.ts`

@@ -5,6 +5,7 @@
   z-index: var(--z-modal);
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   height: 2.5rem;
   padding: 0 var(--space-4);
   border-radius: var(--radius-full);
@@ -20,4 +21,25 @@
   user-select: none;
   pointer-events: none;
   transition: background var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
+}
+
+.label {
+  /* Primary information: mode name keeps the full pill foreground. */
+  display: inline-flex;
+  align-items: center;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  /* Muted so the mode name stays primary. */
+  color: color-mix(in srgb, currentColor 65%, transparent);
+}
+
+.separator {
+  color: color-mix(in srgb, currentColor 50%, transparent);
 }

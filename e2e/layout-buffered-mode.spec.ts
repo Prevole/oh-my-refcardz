@@ -259,3 +259,40 @@ test.describe("Layout buffered mode — mouse click discard (Phase FA6)", () => 
     expect(after.rowSpan).toBe(before.rowSpan);
   });
 });
+
+test.describe("Layout buffered mode — pill counter (Phase FA7)", () => {
+  test.beforeEach(async ({ page }) => {
+    await clearLayoutStorage(page);
+  });
+
+  test("Pill counter is hidden when no changes are staged", async ({ page }) => {
+    await enterLayoutMode(page);
+    // Just entered: buffer is active but changesCount === 0.
+    const pill = page.getByTestId("layout-mode-pill");
+    await expect(pill).toBeVisible();
+    await expect(pill).toHaveAttribute("data-changes-count", "0");
+    await expect(page.getByTestId("layout-mode-pill-counter")).toHaveCount(0);
+  });
+
+  test("Pill counter shows '1 change' after a single buffered op", async ({ page }) => {
+    await focusBottomLeft(page);
+    await stageGrowSouth(page, 1);
+
+    const pill = page.getByTestId("layout-mode-pill");
+    await expect(pill).toHaveAttribute("data-changes-count", "1");
+    const counter = page.getByTestId("layout-mode-pill-counter");
+    await expect(counter).toBeVisible();
+    await expect(counter).toContainText("1 change");
+    await expect(counter).not.toContainText("changes");
+  });
+
+  test("Pill counter shows the plural form after several ops", async ({ page }) => {
+    await focusBottomLeft(page);
+    await stageGrowSouth(page, 3);
+
+    const pill = page.getByTestId("layout-mode-pill");
+    await expect(pill).toHaveAttribute("data-changes-count", "3");
+    const counter = page.getByTestId("layout-mode-pill-counter");
+    await expect(counter).toContainText("3 changes");
+  });
+});

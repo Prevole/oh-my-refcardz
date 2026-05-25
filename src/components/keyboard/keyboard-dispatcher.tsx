@@ -9,16 +9,21 @@ import { dispatchKeyEvent } from "@/lib/keyboard-dispatch";
  * Mounts a single global `keydown` listener that delegates to the pure
  * `dispatchKeyEvent` routine. See `src/lib/keyboard-dispatch.ts` for the
  * cascade and modality semantics.
+ *
+ * The listener reads the scope stack from `scopeStackRef.current` so
+ * that an update triggered by the previous keydown (e.g. pushing a
+ * modal scope) is visible to the very next key event, even if React
+ * has not committed the corresponding state update yet.
  */
 export function KeyboardDispatcher() {
-  const { scopeStack } = useKeyboardContext();
+  const { scopeStackRef } = useKeyboardContext();
   const { getActionsForContext } = useKeybindings();
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       dispatchKeyEvent(
         event,
-        scopeStack,
+        scopeStackRef.current,
         { getActionsForContext },
         (scope, ids) => {
           console.warn(
@@ -30,7 +35,7 @@ export function KeyboardDispatcher() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [scopeStack, getActionsForContext]);
+  }, [scopeStackRef, getActionsForContext]);
 
   return null;
 }

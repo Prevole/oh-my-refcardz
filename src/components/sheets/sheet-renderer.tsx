@@ -471,7 +471,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
       {hydrated && isModifiedFromOriginal && !debugEnabled ? (
         <LayoutResetButton onClick={resetToOriginal} />
       ) : null}
-      {layoutMode !== null && !debugEnabled ? <LayoutModePill mode={layoutMode} /> : null}
+      {layoutMode !== null && !debugEnabled ? (
+        <LayoutModePill mode={layoutMode} changesCount={bufferState.changesCount} />
+      ) : null}
       <LayoutDiscardConfirm
         open={discardConfirmOpen}
         onConfirm={handleDiscardConfirm}
