@@ -113,6 +113,26 @@ export function commitBuffer(buffer: LayoutBuffer): readonly LayoutBlock[] {
 }
 
 /**
+ * Reset the buffer to its initial snapshot without dropping it. The
+ * caller stays in layout mode; only the staged edits are forgotten.
+ * `changesCount` is zeroed. If the buffer is already at the initial
+ * snapshot, the same reference is returned.
+ */
+export function resetBuffer(buffer: LayoutBuffer): LayoutBuffer {
+  if (
+    buffer.changesCount === 0 &&
+    buffer.currentBuffer === buffer.initialSnapshot
+  ) {
+    return buffer;
+  }
+  return {
+    initialSnapshot: buffer.initialSnapshot,
+    currentBuffer: buffer.initialSnapshot,
+    changesCount: 0,
+  };
+}
+
+/**
  * Structural equality on the fields the engine produces: id, kind, and
  * position (x, y, w, h). Block order is treated as significant — the
  * engine is deterministic about ordering, so a permutation would itself

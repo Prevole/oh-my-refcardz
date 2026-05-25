@@ -35,6 +35,7 @@ import { ContextualInlineHelp } from "@/components/help/contextual-inline-help";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { useAction } from "@/hooks/use-action";
 import styles from "./home-client.module.css";
 
 type Props = {
@@ -60,9 +61,9 @@ export function HomeClient({ categories }: Props) {
   const boardMeasureRef = useRef<HTMLDivElement | null>(null);
 
   useKeyboardScope("home", true);
-  useKeyboardScope("settings", settingsPanelOpen);
-  useKeyboardScope("help", helpOpen);
-  useKeyboardScope("info", infoOpen);
+  useKeyboardScope("settings", settingsPanelOpen, { modal: true });
+  useKeyboardScope("help", helpOpen, { modal: true });
+  useKeyboardScope("info", infoOpen, { modal: true });
 
   const {
     settings: uiSettings,
@@ -327,31 +328,15 @@ export function HomeClient({ categories }: Props) {
       const isInInput = target?.tagName === "INPUT";
 
       const matchedAction = resolveAction(event, [
-        ACTION_IDS.TOGGLE_HELP,
-        ACTION_IDS.TOGGLE_SETTINGS,
         ACTION_IDS.CLEAR_SEARCH,
         ACTION_IDS.FOCUS_SEARCH,
         ACTION_IDS.SHOW_INFO,
-        ACTION_IDS.GO_TOP,
-        ACTION_IDS.GO_BOTTOM,
         ACTION_IDS.HOME_MOVE_RIGHT,
         ACTION_IDS.HOME_MOVE_LEFT,
         ACTION_IDS.HOME_MOVE_DOWN,
         ACTION_IDS.HOME_MOVE_UP,
         ACTION_IDS.OPEN_SHEET,
       ]);
-
-      if (matchedAction === ACTION_IDS.TOGGLE_HELP) {
-        event.preventDefault();
-        setHelpOpen(true);
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.TOGGLE_SETTINGS) {
-        event.preventDefault();
-        setSettingsPanelOpen(true);
-        return;
-      }
 
       if (isInInput) {
         if (matchedAction === ACTION_IDS.CLEAR_SEARCH) {
@@ -370,18 +355,6 @@ export function HomeClient({ categories }: Props) {
       if (matchedAction === ACTION_IDS.SHOW_INFO && selectedCard) {
         event.preventDefault();
         setInfoOpen(true);
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.GO_TOP) {
-        event.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.GO_BOTTOM) {
-        event.preventDefault();
-        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
         return;
       }
 
@@ -424,6 +397,21 @@ export function HomeClient({ categories }: Props) {
   );
 
   useScopedKeyboardHandler("home", handleGlobalKeyDown, [handleGlobalKeyDown]);
+
+  // Global UI shortcuts: open help/settings, scroll. Bound on the
+  // `global` scope so they cascade past non-modal sub-modes.
+  useAction(ACTION_IDS.TOGGLE_HELP, "global", () => {
+    setHelpOpen(true);
+  });
+  useAction(ACTION_IDS.TOGGLE_SETTINGS, "global", () => {
+    setSettingsPanelOpen(true);
+  });
+  useAction(ACTION_IDS.GO_TOP, "global", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  useAction(ACTION_IDS.GO_BOTTOM, "global", () => {
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+  });
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden px-6 py-10 md:px-12">

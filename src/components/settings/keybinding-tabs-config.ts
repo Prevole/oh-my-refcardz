@@ -74,6 +74,7 @@ const GENERAL_SECTIONS: SectionConfig[] = [
       ACTION_IDS.HELP_TAB_UP,
       ACTION_IDS.HELP_TAB_DOWN,
       ACTION_IDS.HELP_TAB_ACTIVATE,
+      ACTION_IDS.HELP_CLOSE,
     ],
   },
   {
@@ -87,6 +88,7 @@ const GENERAL_SECTIONS: SectionConfig[] = [
       ACTION_IDS.SETTINGS_TAB_UP,
       ACTION_IDS.SETTINGS_TAB_DOWN,
       ACTION_IDS.SETTINGS_TAB_ACTIVATE,
+      ACTION_IDS.SETTINGS_CLOSE,
     ],
   },
 ];
@@ -194,13 +196,14 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
   {
     id: "layout-parent",
     label: "Layout",
-    description: "Enter, switch sub-mode, commit changes, or exit layout mode.",
+    description: "Enter, switch sub-mode, commit, reset, or exit layout mode.",
     context: "layout",
     actionIds: [
       ACTION_IDS.LAYOUT_GOTO_NAVIGATION,
       ACTION_IDS.LAYOUT_GOTO_MOVE,
       ACTION_IDS.LAYOUT_GOTO_RESIZE,
       ACTION_IDS.LAYOUT_COMMIT,
+      ACTION_IDS.LAYOUT_RESET,
       ACTION_IDS.LAYOUT_EXIT,
     ],
   },

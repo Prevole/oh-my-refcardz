@@ -123,6 +123,7 @@ export const ACTION_IDS = {
   HELP_TAB_UP: "help.tab-up",
   HELP_TAB_DOWN: "help.tab-down",
   HELP_TAB_ACTIVATE: "help.tab-activate",
+  HELP_CLOSE: "help.close",
 
   // Settings panel tab traversal (scope `settings` / context `settings`).
   SETTINGS_TAB_LEFT: "settings.tab-left",
@@ -130,6 +131,7 @@ export const ACTION_IDS = {
   SETTINGS_TAB_UP: "settings.tab-up",
   SETTINGS_TAB_DOWN: "settings.tab-down",
   SETTINGS_TAB_ACTIVATE: "settings.tab-activate",
+  SETTINGS_CLOSE: "settings.close",
 
   BACK_TO_HOME: "sheet.back-to-home",
   COPY_COMMAND: "sheet.copy",
@@ -154,6 +156,11 @@ export const ACTION_IDS = {
   // layout mode. Registered on the parent `layout` scope so it works
   // from every sub-mode.
   LAYOUT_COMMIT: "layout.commit",
+
+  // Reset the layout buffer to its initial state without exiting
+  // layout mode. Registered on the parent `layout` scope so it works
+  // from every sub-mode. Distinct from discard which exits the mode.
+  LAYOUT_RESET: "layout.reset",
 
   // Discard-confirm modal (scope `layout-discard-confirm`). Opened
   // when the user requests an exit (`Esc`) while the buffer holds at
@@ -291,6 +298,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Activate focused tab",
       combos: [key(" "), key("Enter")],
     },
+    {
+      id: ACTION_IDS.HELP_CLOSE,
+      label: "Close help",
+      combos: [key("Escape"), key("?")],
+    },
   ],
 
   settings: [
@@ -318,6 +330,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.SETTINGS_TAB_ACTIVATE,
       label: "Activate focused tab",
       combos: [key(" "), key("Enter")],
+    },
+    {
+      id: ACTION_IDS.SETTINGS_CLOSE,
+      label: "Close settings",
+      combos: [key("Escape")],
     },
   ],
 
@@ -503,6 +520,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_COMMIT,
       label: "Commit and exit",
       combos: [key("Enter")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESET,
+      label: "Reset layout buffer",
+      combos: [combo("R", "shift")],
     },
   ],
 

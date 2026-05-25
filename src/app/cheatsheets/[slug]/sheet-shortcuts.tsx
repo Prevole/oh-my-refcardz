@@ -8,7 +8,8 @@ import { SettingsButton } from "@/components/settings/settings-button";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 import { useUISettings } from "@/hooks/use-ui-settings";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
+import { useAction } from "@/hooks/use-action";
 import { ACTION_IDS } from "@/lib/keybindings";
 
 export function SheetShortcuts() {
@@ -17,8 +18,8 @@ export function SheetShortcuts() {
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 
   useKeyboardScope("sheet", true);
-  useKeyboardScope("settings", settingsPanelOpen);
-  useKeyboardScope("help", helpOpen);
+  useKeyboardScope("settings", settingsPanelOpen, { modal: true });
+  useKeyboardScope("help", helpOpen, { modal: true });
 
   const {
     settings: uiSettings,
@@ -32,57 +33,40 @@ export function SheetShortcuts() {
 
   const { resolveAction } = useKeybindings();
 
-  const handleGlobalKeyDown = useCallback(
+  // Global UI shortcuts (open help/settings, scroll). Bound on the
+  // `global` scope so they keep working even when a non-modal sub-mode
+  // (e.g. layout) is on top of the stack; the dispatcher cascades down
+  // through non-modal scopes until it finds a match.
+  useAction(ACTION_IDS.TOGGLE_HELP, "global", () => {
+    setHelpOpen(true);
+  });
+  useAction(ACTION_IDS.TOGGLE_SETTINGS, "global", () => {
+    setSettingsPanelOpen(true);
+  });
+  useAction(ACTION_IDS.GO_TOP, "global", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  useAction(ACTION_IDS.GO_BOTTOM, "global", () => {
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+  });
+
+  // Back-to-home is sheet-scoped: it should only fire while the sheet
+  // scope is reachable, and is preempted by clear-focus when a card is
+  // currently selected via keyboard navigation.
+  const handleBackToHome = useCallback(
     (event: KeyboardEvent) => {
-      const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
-      if (tag === "input" || tag === "textarea" || tag === "select") return;
-
-      const matchedAction = resolveAction(event, [
-        ACTION_IDS.TOGGLE_HELP,
-        ACTION_IDS.TOGGLE_SETTINGS,
-        ACTION_IDS.BACK_TO_HOME,
-        ACTION_IDS.GO_TOP,
-        ACTION_IDS.GO_BOTTOM,
-        ACTION_IDS.CLEAR_COMMAND_FOCUS,
-      ]);
-
-      if (matchedAction === ACTION_IDS.TOGGLE_HELP) {
-        event.preventDefault();
-        setHelpOpen(true);
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.TOGGLE_SETTINGS) {
-        event.preventDefault();
-        setSettingsPanelOpen(true);
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.GO_TOP) {
-        event.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.GO_BOTTOM) {
-        event.preventDefault();
-        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
-        return;
-      }
-
-      if (matchedAction === ACTION_IDS.BACK_TO_HOME) {
-        event.preventDefault();
-        if (document.querySelector("[data-command-modal-overlay]")) return;
-        const hasSelection = document.querySelector("[data-item][data-nav-focused='true'], [data-copyable][data-nav-focused='true']");
-        const isClearFocusKey = resolveAction(event, [ACTION_IDS.CLEAR_COMMAND_FOCUS]) === ACTION_IDS.CLEAR_COMMAND_FOCUS;
-        if (hasSelection && isClearFocusKey) return;
-        router.push("/");
-      }
+      if (document.querySelector("[data-command-modal-overlay]")) return;
+      const hasSelection = document.querySelector(
+        "[data-item][data-nav-focused='true'], [data-copyable][data-nav-focused='true']",
+      );
+      const isClearFocusKey =
+        resolveAction(event, [ACTION_IDS.CLEAR_COMMAND_FOCUS]) === ACTION_IDS.CLEAR_COMMAND_FOCUS;
+      if (hasSelection && isClearFocusKey) return;
+      router.push("/");
     },
-    [resolveAction, router]
+    [resolveAction, router],
   );
-
-  useScopedKeyboardHandler("sheet", handleGlobalKeyDown, [handleGlobalKeyDown]);
+  useAction(ACTION_IDS.BACK_TO_HOME, "sheet", handleBackToHome);
 
   return (
     <>

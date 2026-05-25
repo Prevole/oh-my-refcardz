@@ -88,7 +88,7 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `home` | Home page | Grid navigation (`home.move-*`), search, open sheet |
 | `sheet` | Cheatsheet page | Item navigation (`sheet.move-*`), copy, show details, back to home, reset layout, enter layout mode |
 | `modal` | A command-copy or item-detail modal is open (modal scope, blocks cascade) | Vertical navigation (`modal.move-up` / `modal.move-down`), copy |
-| `layout` | Layout modal mode (any sub-mode) | Parent scope; hosts sub-mode switching bindings (`n` / `m` / `b`) and the single exit binding (`Escape` → `LAYOUT_EXIT`) shared across all sub-modes via the cascade |
+| `layout` | Layout editing mode (any sub-mode) | Parent (non-modal) scope; hosts sub-mode switching bindings (`n` / `m` / `b`), the exit binding (`Escape` → `LAYOUT_EXIT`), the commit binding (`Enter` → `LAYOUT_COMMIT`) and the reset binding (`Shift+R` → `LAYOUT_RESET`) shared across all sub-modes via the cascade |
 | `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down |
 | `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier) |
 | `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants) |
@@ -112,16 +112,19 @@ Entering layout mode (`Ctrl+M`) focuses the block closest to the mouse cursor (f
 Scopes form a stack of `{ scope, modal }` entries:
 
 ```
-[{ scope: "global", modal: false }]                       # Base (always present)
-[..., { scope: "home", modal: false }]                    # Home page mounted
-[..., { scope: "sheet", modal: false }]                   # Cheatsheet page mounted
+[..., { scope: "global", modal: false }]                       # Base (always present)
+[..., { scope: "home", modal: false }]                          # Home page mounted
+[..., { scope: "sheet", modal: false }]                         # Cheatsheet page mounted
 [..., { scope: "sheet", modal: false },
-      { scope: "modal", modal: true }]                    # Command-copy/item-detail modal open
+      { scope: "modal", modal: true }]                          # Command-copy/item-detail modal open
 [..., { scope: "sheet", modal: false },
-      { scope: "help",  modal: false }]                   # Help modal open over a sheet
+      { scope: "help",  modal: true  }]                         # Help modal open over a sheet
+[..., { scope: "sheet", modal: false },
+      { scope: "layout", modal: false },
+      { scope: "layout-navigation", modal: false }]              # Layout mode (sub-mode navigation)
 [..., { scope: "sheet", modal: false },
       { scope: "dev",   modal: true  },
-      { scope: "dev-logs", modal: true }]                 # Dev mode with logs open
+      { scope: "dev-logs", modal: true }]                       # Dev mode with logs open
 ```
 
 #### Modality (cascade blocking)
@@ -139,7 +142,11 @@ useKeyboardScope("dev-logs", open, { modal: true });
 
 The dispatcher cascade walks the stack top-down and stops on the first scope that yields a match. If a modal scope yields no match, the cascade halts there (preventing leak to lower scopes such as the parent `dev` mode).
 
-**Layout cascade pattern**: the `layout` parent scope is modal (it blocks sheet/global bindings while in layout mode), but its sub-scopes (`layout-navigation`, `layout-move`, `layout-resize`) are **non-modal**. This lets sub-mode-switch keys (`n`, `m`, `b`) and the exit binding (`Escape` → `LAYOUT_EXIT`) live exclusively on `layout` and reach all three sub-modes by cascading from the active sub-scope up to the parent. There is a single `LAYOUT_EXIT` action (instead of one exit per sub-mode), so users can rebind layout exit once and it applies everywhere.
+**Layout cascade pattern**: the `layout` parent scope and its sub-scopes (`layout-navigation`, `layout-move`, `layout-resize`) are all **non-modal**. Layout mode is an *editing mode* rather than a UI modal: visually nothing is overlaid, so the user's perception is that the rest of the UI (the help button, settings button, theme toggle, etc.) remains reachable. Keeping `layout` non-modal lets configurable global shortcuts such as `?` (`TOGGLE_HELP`) and `,` (`TOGGLE_SETTINGS`) cascade down past it and reach the `global` scope where they are bound. Conflicting keys (`hjkl`, arrows, `m`, `r`, `n`, `Enter`, `Escape`, …) are explicitly bound in `layout-navigation`/`layout-move`/`layout-resize` or in the parent `layout` scope, so the dispatcher stops at the first match top-down and edit keys never leak to `sheet`.
+
+In contrast, true UI modals — `help`, `settings`, `info`, `cheat-info-modal`, `cheat-copy-modal`, `layout-discard-confirm`, `dev`, `dev-logs`, `dev-axes` — push their scope as modal so that unrelated keystrokes are captured (not allowed to fall through). Their close action (`HELP_CLOSE`, `SETTINGS_CLOSE`, `INFO_CLOSE`, …) is bound inside the modal scope itself and routes `Escape` to the modal's close handler instead of letting it cascade to a parent scope.
+
+There is a single `LAYOUT_EXIT` action (instead of one exit per sub-mode), so users can rebind layout exit once and it applies everywhere.
 
 ## Usage
 

@@ -17,6 +17,7 @@ import {
   applyToBuffer,
   commitBuffer,
   createBuffer,
+  resetBuffer,
   type ApplyContext,
   type ApplyResult,
   type LayoutBuffer,
@@ -46,6 +47,13 @@ export type UseLayoutBufferStateResult = {
   commit: () => readonly LayoutBlock[] | null;
   /** Drop the buffer without producing any output. */
   clear: () => void;
+  /**
+   * Reset the buffer to its initial snapshot without ending the
+   * session. The user stays in layout mode; staged edits are
+   * forgotten and `changesCount` returns to 0. Returns the initial
+   * snapshot blocks, or `null` when no session is active.
+   */
+  reset: () => readonly LayoutBlock[] | null;
 };
 
 export function useLayoutBufferState(): UseLayoutBufferStateResult {
@@ -92,6 +100,17 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
     setBuffer(null);
   }, []);
 
+  const reset = useCallback((): readonly LayoutBlock[] | null => {
+    const current = bufferRef.current;
+    if (!current) return null;
+    const next = resetBuffer(current);
+    if (next !== current) {
+      bufferRef.current = next;
+      setBuffer(next);
+    }
+    return next.currentBuffer;
+  }, []);
+
   return useMemo(
     () => ({
       buffer,
@@ -102,7 +121,8 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
       apply,
       commit,
       clear,
+      reset,
     }),
-    [buffer, start, apply, commit, clear],
+    [buffer, start, apply, commit, clear, reset],
   );
 }

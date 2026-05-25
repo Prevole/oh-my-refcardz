@@ -4,6 +4,7 @@ import {
   applyToBuffer,
   commitBuffer,
   createBuffer,
+  resetBuffer,
   type ApplyContext,
 } from "./layout-buffer";
 
@@ -156,5 +157,35 @@ describe("commitBuffer", () => {
     const snapshot = [block("a", 0, 0)];
     const buffer = createBuffer(snapshot);
     expect(commitBuffer(buffer)).toBe(snapshot);
+  });
+});
+
+describe("resetBuffer", () => {
+  it("returns the same buffer reference when no edits have been staged", () => {
+    const snapshot = [block("a", 0, 0)];
+    const buffer = createBuffer(snapshot);
+    expect(resetBuffer(buffer)).toBe(buffer);
+  });
+
+  it("rewinds currentBuffer to the initial snapshot and zeroes the counter", () => {
+    const snapshot = [block("a", 5, 0)];
+    const buffer = createBuffer(snapshot);
+    const op: MoveOperation = { kind: "move", blockId: "a", dx: 1, dy: 0 };
+    const staged = applyToBuffer(buffer, op, ctxFor(snapshot)).buffer;
+    expect(staged.changesCount).toBe(1);
+    const reset = resetBuffer(staged);
+    expect(reset.currentBuffer).toBe(snapshot);
+    expect(reset.changesCount).toBe(0);
+    expect(reset.initialSnapshot).toBe(snapshot);
+  });
+
+  it("does not mutate the input buffer", () => {
+    const snapshot = [block("a", 5, 0)];
+    const buffer = createBuffer(snapshot);
+    const op: MoveOperation = { kind: "move", blockId: "a", dx: 1, dy: 0 };
+    const staged = applyToBuffer(buffer, op, ctxFor(snapshot)).buffer;
+    resetBuffer(staged);
+    expect(staged.currentBuffer[0].position.x).toBe(6);
+    expect(staged.changesCount).toBe(1);
   });
 });

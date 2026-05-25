@@ -360,7 +360,17 @@ export function useLayoutKeyboard({
   // `b`) only live in `layout`; sub-scopes provide their movement and Exit
   // bindings exclusively. The dispatcher walks top-down so sub-mode wins
   // on conflicts.
-  useKeyboardScope("layout", mode !== null, { modal: true });
+  // The `layout` scope is intentionally non-modal: it carries the edit
+  // mode's shared bindings (LAYOUT_EXIT, LAYOUT_COMMIT, sub-mode
+  // switches) but does NOT block unrelated keys from cascading down to
+  // the `sheet` scope. This lets global UI shortcuts (`?`, `,`, theme
+  // toggles, etc.) keep working while the user is in layout mode —
+  // which matches the user perception that layout is an editing mode,
+  // not a full UI modal. Touch-capture for edit keys (hjkl, arrows,
+  // m/r/n, Enter, Escape, …) is achieved by binding them explicitly
+  // in this scope or its sub-scopes; the dispatcher stops at the first
+  // match top-down, so conflicting `sheet` bindings never fire.
+  useKeyboardScope("layout", mode !== null);
   useKeyboardScope("layout-navigation", mode === "navigation");
   useKeyboardScope("layout-move", mode === "move");
   useKeyboardScope("layout-resize", mode === "resize");
@@ -481,6 +491,10 @@ export function useLayoutKeyboard({
 
   useAction(ACTION_IDS.LAYOUT_COMMIT, "layout", () => {
     commitMode();
+  });
+
+  useAction(ACTION_IDS.LAYOUT_RESET, "layout", () => {
+    bufferState.reset();
   });
 
   /* ---------------- navigation ---------------- */

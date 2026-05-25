@@ -296,3 +296,74 @@ test.describe("Layout buffered mode — pill counter (Phase FA7)", () => {
     await expect(counter).toContainText("3 changes");
   });
 });
+
+test.describe("Layout mode — global shortcuts cascade through non-modal layout scope", () => {
+  test.beforeEach(async ({ page }) => {
+    await clearLayoutStorage(page);
+  });
+
+  test("`?` opens the help modal from layout mode without exiting it", async ({ page }) => {
+    await enterLayoutMode(page);
+    await page.keyboard.press("Shift+?");
+    // Help modal mounts as a dialog; layout mode pill is still rendered.
+    await expect(page.locator("[role='dialog']")).toBeVisible();
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+  });
+
+  test("Esc closes the help modal opened over layout mode and keeps the mode active", async ({ page }) => {
+    await enterLayoutMode(page);
+    await page.keyboard.press("Shift+?");
+    await expect(page.locator("[role='dialog']")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[role='dialog']")).toBeHidden();
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+  });
+
+  test("Esc in the settings panel (opened by mouse during layout mode) closes settings, not layout", async ({ page }) => {
+    await enterLayoutMode(page);
+    await page.getByRole("button", { name: /settings/i }).click();
+    await expect(page.getByTestId("settings-overlay")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("settings-overlay")).toBeHidden();
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+  });
+});
+
+test.describe("Layout mode — keyboard reset (LAYOUT_RESET)", () => {
+  test.beforeEach(async ({ page }) => {
+    await clearLayoutStorage(page);
+  });
+
+  test("Shift+R rewinds the buffer to the initial snapshot and keeps layout mode active", async ({ page }) => {
+    await focusBottomLeft(page);
+    const initial = await findById(page, "sheet-card-bottom-left");
+    await stageGrowSouth(page, 3);
+
+    const grown = await findById(page, "sheet-card-bottom-left");
+    expect(grown.rowSpan).toBeGreaterThan(initial.rowSpan);
+    await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
+      "data-changes-count",
+      "3",
+    );
+
+    await page.keyboard.press("Shift+R");
+
+    const after = await findById(page, "sheet-card-bottom-left");
+    expect(after.rowSpan).toBe(initial.rowSpan);
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+    await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
+      "data-changes-count",
+      "0",
+    );
+  });
+
+  test("Shift+R on a clean buffer is a no-op (no error, no exit)", async ({ page }) => {
+    await enterLayoutMode(page);
+    await page.keyboard.press("Shift+R");
+    await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
+    await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
+      "data-changes-count",
+      "0",
+    );
+  });
+});

@@ -152,7 +152,7 @@ export function SettingsPanel({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (matchesAction(event, ACTION_IDS.SETTINGS_CLOSE)) {
         event.preventDefault();
         requestClose();
         return;

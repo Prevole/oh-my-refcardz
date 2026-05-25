@@ -212,7 +212,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (event.key === "Escape" || event.key === "?") {
+      if (matchesAction(event, ACTION_IDS.HELP_CLOSE)) {
         event.preventDefault();
         onClose();
         return;

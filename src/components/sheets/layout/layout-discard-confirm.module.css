@@ -97,6 +97,13 @@
   color: var(--error-light);
 }
 
+/* Suppress the shared `.actionButton:focus-visible` outline so the
+ * Discard button shows a single red border instead of stacking a
+ * separate outline ring on top of it. */
+.discardButton:focus-visible {
+  outline: none;
+}
+
 .discardButton kbd {
   background: color-mix(in srgb, var(--error) 15%, transparent);
   color: var(--error-light);
