@@ -406,6 +406,33 @@ test.describe("Keyboard layout mode — visual integration (Phase E3)", () => {
     const after = await findById(page, "sheet-card-bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan + 1);
 
+    // Keyboard edits stage in a buffer (Phase FA). The reset button is
+    // wired to the persisted layout, so it only appears after commit
+    // (Enter), not while the buffer is still pending.
+    await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
+
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
     await expect(page.getByTestId("layout-reset-button")).toBeVisible();
+  });
+
+  test("Escape discards keyboard edits and leaves the persisted layout untouched", async ({ page }) => {
+    await focusBottomLeft(page);
+    await switchSubMode(page, "b", "resize");
+
+    const before = await findById(page, "sheet-card-bottom-left");
+    await page.keyboard.press("j");
+    const buffered = await findById(page, "sheet-card-bottom-left");
+    // While the buffer is live, the DOM reflects the staged edit.
+    expect(buffered.rowSpan).toBe(before.rowSpan + 1);
+
+    // Esc discards the buffer.
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+
+    const after = await findById(page, "sheet-card-bottom-left");
+    expect(after.rowSpan).toBe(before.rowSpan);
+    // No mutation persisted → reset button stays hidden.
+    await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
   });
 });

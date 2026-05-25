@@ -148,9 +148,21 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
   sheet renderer); FA6 will upgrade this to "click discards and
   exits". Validation: 839/839 unit ✓, lint ✓, build ✓. No new unit
   tests (the new hook is React-bound; coverage comes via the FA8
-  E2E suite).- [ ] **FA4**. **Silent discard on Esc when count < 5**. Repurpose
-  `LAYOUT_*_EXIT` semantics: throw away buffer, exit mode. E2E: enter,
-  do 2 ops, Esc, layout returns to entry state.
+  E2E suite). _Committed as `cfec8c5`._
+
+- [/] **FA4**. **Silent discard on Esc**. `LAYOUT_EXIT` semantics
+  swap: it no longer aliases `commitMode`. New `discardMode` handler
+  clears the buffer and exits layout mode without persisting. For
+  FA4 in isolation the discard is silent regardless of
+  `changesCount` (the modal at the 5-change threshold lands in FA5).
+  E2E `keyboard-layout.spec.ts:419` covers: focus a block, switch to
+  resize, press `j`, observe the buffered DOM update, press `Esc` →
+  pill disappears, block returns to its initial rowSpan, reset
+  button stays hidden (no mutation persisted). The existing reset-
+  button test (`keyboard-layout.spec.ts:398`) was adapted to require
+  an explicit `Enter` to commit the resize before asserting the
+  reset button is visible. Validation: 20/20 E2E ✓ (keyboard-layout
+  suite), 839/839 unit ✓, lint ✓, build ✓.
 
 - [ ] **FA5**. **`LayoutDiscardConfirm` modal**. New component,
   module CSS, scope `layout-discard-confirm`, two actions, focus trap,

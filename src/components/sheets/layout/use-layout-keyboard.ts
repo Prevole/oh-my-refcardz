@@ -375,12 +375,20 @@ export function useLayoutKeyboard({
     setFocusedCard(null);
   }, [bufferState, editor]);
 
-  // FA3 provisional semantics: Esc commits the buffer (matches the
-  // pre-FA behaviour where every keystroke was immediately persisted).
-  // FA4 will switch this to a discard path.
+  // Discard the staged edits and exit layout mode without persisting.
+  // FA4 ships silent discard regardless of `changesCount`; FA5 will
+  // introduce a confirmation modal once the threshold is reached.
+  const discardMode = useCallback(() => {
+    bufferState.clear();
+    setMode(null);
+    setFocusedCard(null);
+  }, [bufferState]);
+
+  // `exitMode` is the public name used by the LAYOUT_EXIT action. From
+  // FA4 onward it is a discard, not a commit.
   const exitMode = useCallback(() => {
-    commitMode();
-  }, [commitMode]);
+    discardMode();
+  }, [discardMode]);
 
   const flashManipulating = useCallback(() => {
     setIsManipulating(true);
