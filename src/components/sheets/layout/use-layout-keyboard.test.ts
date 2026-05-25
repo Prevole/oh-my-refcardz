@@ -140,14 +140,14 @@ describe("action → spec lookup", () => {
     });
     expect(resizeSpecFromAction(ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP)).toEqual({
       kind: "resize",
-      edge: "north",
+      edge: "south",
       delta: -1,
       strict: true,
       compact: false,
     });
     expect(resizeSpecFromAction(ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT)).toEqual({
       kind: "resize",
-      edge: "east",
+      edge: "west",
       delta: -1,
       strict: false,
       compact: true,

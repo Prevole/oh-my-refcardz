@@ -91,7 +91,7 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `layout` | Layout editing mode (any sub-mode) | Parent (non-modal) scope; hosts sub-mode switching bindings (`n` / `m` / `b`), the exit binding (`Escape` → `LAYOUT_EXIT`), the commit binding (`Enter` → `LAYOUT_COMMIT`) and the reset binding (`Shift+R` → `LAYOUT_RESET`) shared across all sub-modes via the cascade |
 | `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down |
 | `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier) |
-| `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants) |
+| `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants). The arrow always indicates the direction in which the moving edge travels: `h` / `←` grows leftward (extends the west edge to the west); `Shift+H` / `Shift+←` shrinks leftward (pulls the east edge to the west). Same convention on the vertical axis. This keeps grow and shrink directionally symmetric on the keyboard, even though they touch opposite edges internally. |
 | `dev` | Developer mode active | Save/reset/record/logs/axes |
 | `dev-logs` | Logs dropdown open | Cursor nav, copy, delete |
 | `dev-axes` | Axes keyboard mode | Cursor nav, pin row/col |

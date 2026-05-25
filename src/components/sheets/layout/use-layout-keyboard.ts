@@ -238,26 +238,27 @@ const RESIZE_ACTIONS: ReadonlyMap<string, ResizeSpec> = new Map([
   [ACTION_IDS.LAYOUT_RESIZE_GROW_RIGHT, { kind: "resize", edge: "east", delta: 1, strict: false, compact: false }],
   [ACTION_IDS.LAYOUT_RESIZE_GROW_UP, { kind: "resize", edge: "north", delta: 1, strict: false, compact: false }],
   [ACTION_IDS.LAYOUT_RESIZE_GROW_DOWN, { kind: "resize", edge: "south", delta: 1, strict: false, compact: false }],
-  // shrink: pull the edge inward (negative delta on the same edge).
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT, { kind: "resize", edge: "west", delta: -1, strict: false, compact: false }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT, { kind: "resize", edge: "east", delta: -1, strict: false, compact: false }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP, { kind: "resize", edge: "north", delta: -1, strict: false, compact: false }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN, { kind: "resize", edge: "south", delta: -1, strict: false, compact: false }],
+  // shrink: pull the OPPOSITE edge inward (arrow indicates the direction the
+  // moving edge travels, e.g. SHRINK_LEFT pulls the east edge leftward).
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT, { kind: "resize", edge: "east", delta: -1, strict: false, compact: false }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT, { kind: "resize", edge: "west", delta: -1, strict: false, compact: false }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP, { kind: "resize", edge: "south", delta: -1, strict: false, compact: false }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN, { kind: "resize", edge: "north", delta: -1, strict: false, compact: false }],
   // grow strict
   [ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_LEFT, { kind: "resize", edge: "west", delta: 1, strict: true, compact: false }],
   [ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_RIGHT, { kind: "resize", edge: "east", delta: 1, strict: true, compact: false }],
   [ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_UP, { kind: "resize", edge: "north", delta: 1, strict: true, compact: false }],
   [ACTION_IDS.LAYOUT_RESIZE_GROW_STRICT_DOWN, { kind: "resize", edge: "south", delta: 1, strict: true, compact: false }],
-  // shrink strict
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_LEFT, { kind: "resize", edge: "west", delta: -1, strict: true, compact: false }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_RIGHT, { kind: "resize", edge: "east", delta: -1, strict: true, compact: false }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP, { kind: "resize", edge: "north", delta: -1, strict: true, compact: false }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_DOWN, { kind: "resize", edge: "south", delta: -1, strict: true, compact: false }],
-  // shrink compact (pulls neighbors in)
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_LEFT, { kind: "resize", edge: "west", delta: -1, strict: false, compact: true }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT, { kind: "resize", edge: "east", delta: -1, strict: false, compact: true }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP, { kind: "resize", edge: "north", delta: -1, strict: false, compact: true }],
-  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN, { kind: "resize", edge: "south", delta: -1, strict: false, compact: true }],
+  // shrink strict (same inversion as base shrink)
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_LEFT, { kind: "resize", edge: "east", delta: -1, strict: true, compact: false }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_RIGHT, { kind: "resize", edge: "west", delta: -1, strict: true, compact: false }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP, { kind: "resize", edge: "south", delta: -1, strict: true, compact: false }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_DOWN, { kind: "resize", edge: "north", delta: -1, strict: true, compact: false }],
+  // shrink compact (same inversion; compact pulls neighbours in afterwards)
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_LEFT, { kind: "resize", edge: "east", delta: -1, strict: false, compact: true }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT, { kind: "resize", edge: "west", delta: -1, strict: false, compact: true }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP, { kind: "resize", edge: "south", delta: -1, strict: false, compact: true }],
+  [ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN, { kind: "resize", edge: "north", delta: -1, strict: false, compact: true }],
 ]);
 
 const NAV_ACTIONS: ReadonlyMap<string, Direction> = new Map([

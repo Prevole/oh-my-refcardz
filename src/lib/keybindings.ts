@@ -617,22 +617,22 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_LEFT,
-      label: "Shrink from left",
+      label: "Shrink to left",
       combos: [combo("ArrowLeft", "shift"), combo("H", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_RIGHT,
-      label: "Shrink from right",
+      label: "Shrink to right",
       combos: [combo("ArrowRight", "shift"), combo("L", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_UP,
-      label: "Shrink from top",
+      label: "Shrink to top",
       combos: [combo("ArrowUp", "shift"), combo("K", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_DOWN,
-      label: "Shrink from bottom",
+      label: "Shrink to bottom",
       combos: [combo("ArrowDown", "shift"), combo("J", "shift")],
     },
     {
@@ -657,42 +657,42 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_LEFT,
-      label: "Shrink from left",
+      label: "Shrink to left",
       combos: [combo("ArrowLeft", "alt", "shift"), combo("H", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_RIGHT,
-      label: "Shrink from right",
+      label: "Shrink to right",
       combos: [combo("ArrowRight", "alt", "shift"), combo("L", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_UP,
-      label: "Shrink from top",
+      label: "Shrink to top",
       combos: [combo("ArrowUp", "alt", "shift"), combo("K", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_STRICT_DOWN,
-      label: "Shrink from bottom",
+      label: "Shrink to bottom",
       combos: [combo("ArrowDown", "alt", "shift"), combo("J", "alt", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_LEFT,
-      label: "Shrink from left",
+      label: "Shrink to left",
       combos: [combo("ArrowLeft", "ctrl", "shift"), combo("H", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_RIGHT,
-      label: "Shrink from right",
+      label: "Shrink to right",
       combos: [combo("ArrowRight", "ctrl", "shift"), combo("L", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_UP,
-      label: "Shrink from top",
+      label: "Shrink to top",
       combos: [combo("ArrowUp", "ctrl", "shift"), combo("K", "ctrl", "shift")],
     },
     {
       id: ACTION_IDS.LAYOUT_RESIZE_SHRINK_COMPACT_DOWN,
-      label: "Shrink from bottom",
+      label: "Shrink to bottom",
       combos: [combo("ArrowDown", "ctrl", "shift"), combo("J", "ctrl", "shift")],
     },
   ],

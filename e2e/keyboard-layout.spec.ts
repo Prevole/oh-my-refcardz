@@ -334,7 +334,7 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
     expect(after.rowStart).toBe(before.rowStart);
   });
 
-  test("Shift+J shrinks the south edge by 1 row", async ({ page }) => {
+  test("Shift+J shrinks downward (pulls the north edge down) by 1 row", async ({ page }) => {
     await focusBottomLeft(page);
     await switchSubMode(page, "b", "resize");
 
@@ -365,7 +365,7 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
     expect(after.rowStart).toBe(before.rowStart);
   });
 
-  test("Ctrl+Shift+J is compact shrink (pulls the south edge in)", async ({ page }) => {
+  test("Ctrl+Shift+J is compact shrink downward (pulls the north edge in)", async ({ page }) => {
     await focusBottomLeft(page);
     await switchSubMode(page, "b", "resize");
 
