@@ -42,6 +42,7 @@ import type { DragMove } from "./layout/use-card-drag-v2";
 import type { ResizeMove } from "./layout/use-card-resize-v2";
 import { LayoutResetButton } from "./layout/layout-reset-button";
 import { LayoutModePill, LAYOUT_MODE_COLORS } from "./layout/layout-mode-pill";
+import { LayoutDiscardConfirm } from "./layout/layout-discard-confirm";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
 type Props = {
@@ -163,7 +164,15 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const displayedBlocks = bufferState.bufferBlocks ?? editor.currentBlocks;
 
   // -- Keyboard (Zellij modal layout mode, entered via Ctrl+M) ------------
-  const { mode: layoutMode, focusedCard, setFocusedCard, isManipulating } = useLayoutKeyboard({
+  const {
+    mode: layoutMode,
+    focusedCard,
+    setFocusedCard,
+    isManipulating,
+    discardConfirmOpen,
+    handleDiscardConfirm,
+    handleDiscardCancel,
+  } = useLayoutKeyboard({
     blocks: displayedBlocks as LayoutBlock[],
     editor,
     bufferState,
@@ -448,6 +457,11 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         <LayoutResetButton onClick={resetToOriginal} />
       ) : null}
       {layoutMode !== null && !debugEnabled ? <LayoutModePill mode={layoutMode} /> : null}
+      <LayoutDiscardConfirm
+        open={discardConfirmOpen}
+        onConfirm={handleDiscardConfirm}
+        onCancel={handleDiscardCancel}
+      />
     </>
   );
 }

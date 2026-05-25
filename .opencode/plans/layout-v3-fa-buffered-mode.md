@@ -197,12 +197,32 @@ in from `DEFAULT_KEYBINDINGS` by `mergeWithDefaults` on next load.
       it into the discard path.
     - Validation: lint ✓, 839/839 unit ✓, build ✓.
 
-  - [ ] **FA5b**. **Wiring + E2E**. Split `discardMode` in
-    `useLayoutKeyboard` into `requestDiscard` (decides silent vs
-    modal based on `changesCount >= 5`) and the existing silent
-    discard path. Mount `LayoutDiscardConfirm` from the sheet
-    renderer with `open` state owned alongside `bufferState`. E2E
-    covers the 3 paths (silent < 5, modal confirm, modal cancel).
+  - [/] **FA5b**. **Wiring + E2E**.
+    - `src/components/sheets/layout/use-layout-keyboard.ts`:
+      - new constant `DISCARD_CONFIRM_THRESHOLD = 5` (exported).
+      - new state `discardConfirmOpen`.
+      - `discardMode` kept; it is the shared "actually clear the
+        buffer and exit" primitive used by both the silent path and
+        the modal-confirm path.
+      - new `requestDiscard` routes: opens the modal when
+        `bufferState.changesCount >= DISCARD_CONFIRM_THRESHOLD`,
+        silent `discardMode` otherwise.
+      - `LAYOUT_EXIT` (`Esc`) now calls `requestDiscard`.
+      - new public handlers `handleDiscardConfirm` (closes modal +
+        runs `discardMode`) and `handleDiscardCancel` (closes modal,
+        buffer + layout mode untouched).
+      - hook result extended with `discardConfirmOpen`,
+        `handleDiscardConfirm`, `handleDiscardCancel`.
+    - `src/components/sheets/sheet-renderer.tsx`: consumes the three
+      new props and mounts `<LayoutDiscardConfirm open onConfirm
+      onCancel />` next to `<LayoutModePill>`. The modal is rendered
+      unconditionally — its own `open` prop gates it and matches the
+      scope registration.
+    - `e2e/layout-buffered-mode.spec.ts`: new consolidated spec
+      (replaces FA8's "TBD" entry). 4 tests cover the silent path,
+      the modal opening, modal Confirm (Enter), modal Cancel (Esc).
+    - Validation: lint ✓, 839/839 unit ✓, 20/20 keyboard-layout +
+      4/4 layout-buffered-mode E2E ✓, build ✓.
 
 - [ ] **FA6**. **Mouse click discards buffer**. Modify
   `handleHeaderPointerDown` and `handleResizePointerDown` in

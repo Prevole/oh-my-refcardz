@@ -87,7 +87,7 @@
 
 .discardButton {
   composes: actionButton;
-  border-color: color-mix(in srgb, var(--error) 50%, var(--border-medium));
+  border-color: var(--error);
   color: var(--error);
 }
 

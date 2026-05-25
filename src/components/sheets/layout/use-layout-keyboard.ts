@@ -51,6 +51,15 @@ export type LayoutKeyboardFocus = {
   blockId: string;
 };
 
+/**
+ * Number of staged buffer changes from which exiting layout mode opens
+ * the `LayoutDiscardConfirm` modal instead of silently throwing the
+ * edits away. Below this threshold, `Esc` discards silently — the
+ * user's investment is small enough that the safeguard is more noise
+ * than help.
+ */
+export const DISCARD_CONFIRM_THRESHOLD = 5;
+
 export type UseLayoutKeyboardResult = {
   /** Current sub-mode, or `null` when layout mode is not active. */
   mode: LayoutSubMode | null;
@@ -60,6 +69,12 @@ export type UseLayoutKeyboardResult = {
   setFocusedCard: Dispatch<SetStateAction<LayoutKeyboardFocus | null>>;
   /** True while a keystroke-driven move/resize is happening. */
   isManipulating: boolean;
+  /** Whether the discard-confirm modal should be rendered. */
+  discardConfirmOpen: boolean;
+  /** Confirms the pending discard: clear the buffer and exit layout mode. */
+  handleDiscardConfirm: () => void;
+  /** Cancels the pending discard: close the modal, keep buffer + layout mode. */
+  handleDiscardCancel: () => void;
 };
 
 type UseLayoutKeyboardOptions = {
@@ -310,6 +325,7 @@ export function useLayoutKeyboard({
   const [mode, setMode] = useState<LayoutSubMode | null>(null);
   const [focusedCard, setFocusedCard] = useState<LayoutKeyboardFocus | null>(null);
   const [isManipulating, setIsManipulating] = useState(false);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const manipulatingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep a live ref to blocks for handlers (they capture once per scope id).
@@ -376,19 +392,40 @@ export function useLayoutKeyboard({
   }, [bufferState, editor]);
 
   // Discard the staged edits and exit layout mode without persisting.
-  // FA4 ships silent discard regardless of `changesCount`; FA5 will
-  // introduce a confirmation modal once the threshold is reached.
+  // Used by the silent-discard path (changes count below the
+  // threshold) and by the modal-confirm path once the user accepts.
   const discardMode = useCallback(() => {
     bufferState.clear();
     setMode(null);
     setFocusedCard(null);
   }, [bufferState]);
 
-  // `exitMode` is the public name used by the LAYOUT_EXIT action. From
-  // FA4 onward it is a discard, not a commit.
-  const exitMode = useCallback(() => {
+  // Routing entrypoint for `Esc` and (later) for the mouse-click
+  // discard. Decides silent discard vs opening the confirm modal
+  // based on the current `changesCount`.
+  const requestDiscard = useCallback(() => {
+    if (bufferState.changesCount >= DISCARD_CONFIRM_THRESHOLD) {
+      setDiscardConfirmOpen(true);
+      return;
+    }
+    discardMode();
+  }, [bufferState.changesCount, discardMode]);
+
+  const handleDiscardConfirm = useCallback(() => {
+    setDiscardConfirmOpen(false);
     discardMode();
   }, [discardMode]);
+
+  const handleDiscardCancel = useCallback(() => {
+    setDiscardConfirmOpen(false);
+  }, []);
+
+  // `exitMode` is the public name used by the LAYOUT_EXIT action.
+  // From FA5b onward it routes through `requestDiscard`, which opens
+  // the confirm modal when the buffer holds enough staged changes.
+  const exitMode = useCallback(() => {
+    requestDiscard();
+  }, [requestDiscard]);
 
   const flashManipulating = useCallback(() => {
     setIsManipulating(true);
@@ -555,7 +592,10 @@ export function useLayoutKeyboard({
       focusedCard,
       setFocusedCard,
       isManipulating,
+      discardConfirmOpen,
+      handleDiscardConfirm,
+      handleDiscardCancel,
     }),
-    [mode, focusedCard, isManipulating]
+    [mode, focusedCard, isManipulating, discardConfirmOpen, handleDiscardConfirm, handleDiscardCancel]
   );
 }
