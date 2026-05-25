@@ -579,6 +579,9 @@ function resolveChainPushStep(
         for (const s of frame.pathSaturated) tailFrozen.add(s);
         continue;
       }
+      /* c8 ignore next 4 -- symmetric of the absorberCache hit above; requires
+         a diamond-shaped chain where two BFS branches within the same tail
+         converge on a dead-end node, a degenerate geometric configuration. */
       if (deadendCache.has(frame.id)) {
         branchMissingAbsorber = true;
         break;

@@ -837,3 +837,47 @@ describe("Engine integration: resize against grid limit", () => {
     expect(final.position).toEqual({ x: 0, y: 0, w: 36, h: 2 });
   });
 });
+
+// -----------------------------------------------------------------------------
+// Shrink absorption — no-absorber branches (wrap forced)
+// -----------------------------------------------------------------------------
+
+describe("integration — shrink absorption with no absorber falls back to wrap", () => {
+  it("wraps the tail when every saturated ancestor's only upstream is the primary", () => {
+    // Configuration: a contiguous east chain of three blocks, all at minW=1,
+    // anchored to the east boundary.
+    //
+    //   A = primary at (33, 0, 1, 1), minW=1
+    //   S = saturated mid-chain at (34, 0, 1, 1), minW=1
+    //   T = saturated tail at (35, 0, 1, 1), minW=1
+    //
+    // Push A east by 1. The chain is A → S → T. Both S and T are saturated
+    // (cannot shrink east further), so T's wrap action triggers the absorber
+    // search. BFS from T's parents finds S; S's only upstream is the primary A,
+    // so the branch is a dead-end → wrap is forced for T.
+    //
+    // This exercises the dead-end branch in `step.ts` (lines 607-609) where a
+    // saturated member's `filteredParents` is empty.
+    const initial: LayoutBlock[] = [
+      block("A", 33, 0, 1, 1),
+      block("S", 34, 0, 1, 1),
+      block("T", 35, 0, 1, 1),
+    ];
+
+    const op: Operation = { kind: "move", blockId: "A", dx: 1, dy: 0 };
+
+    const options = makeOptions(initial, {
+      A: { minW: 1 },
+      S: { minW: 1 },
+      T: { minW: 1 },
+    });
+
+    const result = applyOperation(initial, op, options);
+
+    expect(result.accepted).toBe(true);
+    // T was wrapped (no absorber available on its branch).
+    expect(result.affected.wrapped.has("T")).toBe(true);
+    // S did not shrink — it had no absorber to delegate to.
+    expect(result.affected.shrunk.has("S")).toBe(false);
+  });
+});
