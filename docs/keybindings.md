@@ -7,7 +7,8 @@ The keybindings system provides configurable keyboard shortcuts with scope manag
 ```
 src/lib/
 ├── keybindings.ts            # Action IDs, default config, key matching
-├── keyboard-scope.ts         # Scope stack management
+├── keyboard-scope.ts         # Scope types and helpers
+├── scope-stack-manager.ts    # Imperative scope stack (shared by provider + dispatcher)
 ├── keyboard-dispatch.ts      # Pure cascade + modality + conflict routine
 ├── action-handler-registry.ts # (actionId, scope) -> handler singleton
 └── keybinding-utils.ts       # Merge, conflict detection utilities
@@ -383,7 +384,7 @@ global → dev (modal) → dev-logs (modal)
 global → dev (modal) → dev-axes (modal)
 ```
 
-Because `dev` is modal, all sheet/global shortcuts are inert while in dev mode. The two exceptions are `Ctrl+Shift+D` (toggle dev mode) and `Ctrl+Shift+S` (layout dev save), which run on dedicated listeners and bypass the dispatcher.
+Because `dev` is modal, all sheet/global shortcuts are inert while in dev mode. The exception is `Ctrl+Shift+D` (toggle dev mode), which runs on a dedicated `window` listener and bypasses the dispatcher so dev mode can always be toggled off.
 
 ### Scope `dev` actions (bare keys)
 

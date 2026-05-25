@@ -93,15 +93,19 @@ These flags are the **single abstraction** between input source (mouse/keyboard)
 type OperationResult = {
   blocks: LayoutBlock[];          // new full state
   accepted: boolean;              // did anything change?
-  appliedDelta: { dx: number; dy: number } | number;  // what was actually applied
+  appliedDx: number;              // cells actually applied on the horizontal axis (move ops)
+  appliedDy: number;              // cells actually applied on the vertical axis (move ops)
+  appliedDelta: number;           // signed cells actually applied on the resize edge (resize ops)
   affected: {
     moved: Set<string>;           // ids of non-manipulated blocks that were pushed
-    shrunk: Map<string, GridPosition>;  // ids → their initial size before shrink
+    shrunk: Map<string, { w: number; h: number }>;  // ids → their initial size before shrink
     wrapped: Set<string>;         // ids that were wrapped
   };
   rejected?: { reason: string };  // present when accepted = false
 };
 ```
+
+`appliedDx`/`appliedDy` are populated for `move` operations only; `appliedDelta` is populated for `resize` operations. The unused field stays at `0`.
 
 The `shrunk` map carries each shrunken block's size **at the start of the current session**, so the engine can restore it during wrap.
 
@@ -116,18 +120,22 @@ type EngineEvent =
   | { type: "step.start";    opId: string; stepIndex: number; direction: Direction }
   | { type: "step.end";      opId: string; stepIndex: number; accepted: boolean }
   | { type: "chain.computed";opId: string; stepIndex: number; direction: Direction; members: string[] }
-  | { type: "block.move";    opId: string; stepIndex: number; blockId: string; from: GridPosition; to: GridPosition; cause: Cause }
-  | { type: "block.shrink";  opId: string; stepIndex: number; blockId: string; fromSize: { w: number; h: number }; toSize: { w: number; h: number }; cause: Cause }
-  | { type: "block.wrap";    opId: string; stepIndex: number; blockId: string; from: GridPosition; to: GridPosition; restoredSize: { w: number; h: number }; cause: Cause }
+  | { type: "block.move";    opId: string; stepIndex: number; blockId: string; from: GridPosition; to: GridPosition; cause: EventCause }
+  | { type: "block.shrink";  opId: string; stepIndex: number; blockId: string; fromSize: { w: number; h: number }; toSize: { w: number; h: number }; cause: EventCause }
+  | { type: "block.wrap";    opId: string; stepIndex: number; blockId: string; from: GridPosition; to: GridPosition; restoredSize: { w: number; h: number }; cause: EventCause }
+  | { type: "block.resize";  opId: string; stepIndex: number; blockId: string; from: GridPosition; to: GridPosition; fromSize: { w: number; h: number }; toSize: { w: number; h: number }; edge: Direction; delta: number; cause: EventCause }
   | { type: "block.reject";  opId: string; stepIndex: number; blockId: string; reason: string };
 
-type Cause =
+type EventCause =
   | { kind: "primary" }                          // the manipulated block itself
   | { kind: "push"; sourceId: string }           // pushed by another block in the chain
   | { kind: "shrink-cascade"; sourceId: string } // shrunk because pushed by another block
   | { kind: "wrap-fallback-south" }              // wrapped via south fallback
-  | { kind: "wrap-axis"; axis: Axis };           // wrapped in main axis
+  | { kind: "wrap-axis"; axis: "x" | "y" }       // wrapped in main axis ("x" = horizontal, "y" = vertical)
+  | { kind: "compact"; sourceId: string };       // moved by the compact pass
 ```
+
+`block.resize` is emitted for the primary block on resize operations (one event per accepted unit step). `block.move`, `block.shrink`, `block.wrap` describe chain effects.
 
 A consumer subscribes by providing an `EngineEventEmitter` in engine options. The default is a noop.
 
@@ -394,6 +402,7 @@ type EngineOptions = {
   gridColumns: number;                          // typically GRID_COLUMNS = 36
   constraints: Map<string, BlockConstraints>;   // per-block constraints
   emitter?: EngineEventEmitter;                 // optional, defaults to noop
+  opId?: string;                                // optional explicit session id; auto-generated otherwise
 };
 ```
 

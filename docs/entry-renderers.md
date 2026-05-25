@@ -7,8 +7,8 @@ The entry-renderers system provides a modular architecture for rendering cheatsh
 ```
 src/components/sheets/entry-renderers/
 ├── entry-registry.ts      # Core registry + registerHandler() + renderEntry()
-├── entry-renderer.tsx     # Main component + auto-discovery via require.context
-├── index.ts               # Public exports
+├── entry-renderer.tsx     # Main component + explicit imports of each *-entry file
+├── index.ts               # Public surface (re-exports `EntryRenderer` only)
 ├── anchor-entry.tsx       # Renders: anchor
 ├── title-entry.tsx        # Renders: title
 ├── command-entry.tsx      # Renders: command, alias, commandExample, commandExamples
@@ -55,14 +55,18 @@ registerHandler("title", (value) => <TitleEntry value={value} />);
 
 ### 3. Import Registration (`entry-renderer.tsx`)
 
-The main component explicitly imports all `*-entry.tsx` files to trigger their self-registration:
+The main component explicitly imports every `*-entry.tsx` file to trigger their self-registration:
 
 ```typescript
+import "./anchor-entry";
 import "./command-entry";
 import "./content-entry";
 import "./keys-entry";
+import "./link-entry";
 import "./path-entry";
 import "./settings-entry";
+import "./step-entry";
+import "./table-entry";
 import "./text-entry";
 import "./title-entry";
 ```

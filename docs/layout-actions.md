@@ -88,7 +88,7 @@ After the master key is pressed, the next keystroke selects the sub-mode:
 |---|---|
 | `n` | navigation |
 | `m` | move |
-| `r` | resize |
+| `b` | resize |
 | `Escape` | exit layout mode |
 
 The current mode is reflected in a visible indicator (status bar / overlay). Within a mode, the user can perform multiple actions; `Escape` exits back to normal navigation.
@@ -101,7 +101,7 @@ The current mode is reflected in a visible indicator (status bar / overlay). Wit
 | `Alt` | Strict: `allowWrap=false, allowShrink=false` | move, resize |
 | `Ctrl` | Compact: `compact=true` (resize-shrink only) | resize only |
 
-`Shift` is repurposed as a **sense modifier**, not a mode modifier. This is unambiguous because mode switching (`n`/`m`/`r`) is done with bare keys.
+`Shift` is repurposed as a **sense modifier**, not a mode modifier. This is unambiguous because mode switching (`n`/`m`/`b`) is done with bare keys.
 
 ### Within `navigation` mode
 
@@ -113,7 +113,7 @@ The current mode is reflected in a visible indicator (status bar / overlay). Wit
 | `j` / `ArrowDown` | Focus the card below |
 | `Escape` | Exit layout mode |
 | `m` | Switch to move mode (keeps focus) |
-| `r` | Switch to resize mode (keeps focus) |
+| `b` | Switch to resize mode (keeps focus) |
 
 ### Within `move` mode
 
@@ -129,7 +129,7 @@ The current mode is reflected in a visible indicator (status bar / overlay). Wit
 | `Alt+j` / `Alt+ArrowDown` | strict | strict move south |
 | `Escape` | — | Exit layout mode |
 | `n` | — | Switch to navigation mode |
-| `r` | — | Switch to resize mode |
+| `b` | — | Switch to resize mode |
 
 ### Within `resize` mode
 
@@ -163,25 +163,21 @@ Bare keys grow the corresponding edge. `Shift` flips to shrink.
 
 `Ctrl` (compact) is only meaningful on shrink (`Shift+`). `Ctrl` on bare (grow) is ignored.
 
-### Replacing existing keybindings
+### Action IDs
 
-The existing `CARD_NAV_*`, `CARD_MOVE_*`, `CARD_SHRINK_*`, `CARD_GROW_*` action IDs in `src/lib/keybindings.ts` were designed for a flat (non-modal) model and are **deprecated** by this design. They will be replaced by:
+All layout shortcuts are declared in `src/lib/keybindings.ts` as `ACTION_IDS.LAYOUT_*` and grouped by sub-scope:
 
-| New action ID | Default |
+| Scope | Action IDs |
 |---|---|
-| `LAYOUT_ENTER_MODE` | `Ctrl+M` (configurable) |
-| `LAYOUT_SUB_NAVIGATION` | `n` |
-| `LAYOUT_SUB_MOVE` | `m` |
-| `LAYOUT_SUB_RESIZE` | `r` |
-| `LAYOUT_EXIT_MODE` | `Escape` |
-| `LAYOUT_DIRECTION_LEFT` | `h` and `ArrowLeft` (modifier-free; modifiers applied dynamically) |
-| `LAYOUT_DIRECTION_RIGHT` | `l` and `ArrowRight` |
-| `LAYOUT_DIRECTION_UP` | `k` and `ArrowUp` |
-| `LAYOUT_DIRECTION_DOWN` | `j` and `ArrowDown` |
-| `LAYOUT_DEV_SAVE` | (dev only, see [Persistence](#persistence)) |
-| `TOGGLE_DEVELOPER_MODE` | `Ctrl+Shift+D` (see [Keybindings](./keybindings.md#developer-mode)) |
+| `sheet` | `LAYOUT_ENTER_MODE` (default `Ctrl+M`) |
+| `layout` | `LAYOUT_GOTO_NAVIGATION` (`n`), `LAYOUT_GOTO_MOVE` (`m`), `LAYOUT_GOTO_RESIZE` (`b`), `LAYOUT_EXIT` (`Escape`), `LAYOUT_COMMIT` (`Enter`), `LAYOUT_RESET` (`Shift+R`) |
+| `layout-navigation` | `LAYOUT_NAV_LEFT/RIGHT/UP/DOWN` (`h/l/k/j` + arrows) |
+| `layout-move` | `LAYOUT_MOVE_LEFT/RIGHT/UP/DOWN` (`h/l/k/j` + arrows); `LAYOUT_MOVE_STRICT_*` (`Alt`-prefixed) |
+| `layout-resize` | `LAYOUT_RESIZE_GROW_*` / `SHRINK_*` (bare / `Shift`); `GROW_STRICT_*` / `SHRINK_STRICT_*` (`Alt`); `SHRINK_COMPACT_*` (`Ctrl+Shift`) |
+| `dev` | `DEV_SAVE_LAYOUT` (`s`) |
+| `sheet` (raw listener) | `TOGGLE_DEVELOPER_MODE` (`Ctrl+Shift+D` — see [Keybindings](./keybindings.md#developer-mode)) |
 
-Modifiers (`Shift`, `Alt`, `Ctrl`) are read from the event at action time, not bound separately. This keeps the action set small.
+Modifiers (`Shift`, `Alt`, `Ctrl`) are encoded into separate action IDs (one per modifier combination per direction) rather than read dynamically at dispatch time. This keeps each binding individually configurable by the user.
 
 Conflict check with non-layout features:
 - Global navigation `h/j/k/l` (ACTION_IDS `MOVE_LEFT/...`): active only outside layout mode — no conflict.
@@ -216,7 +212,7 @@ A session corresponds to one user gesture:
 
 The session boundary determines the scope of the **initial-size memory** used by wrap-restore. Once a session ends, the next gesture starts a fresh memory.
 
-For mouse drag/resize: the input layer calls the engine on every meaningful pointer move during a single session. The engine snapshots initial sizes only on the **first call** of the session; subsequent calls within the same session reuse the snapshot. The input layer signals session boundaries through the engine (mechanism: TBD in implementation; likely an explicit `session.begin()` / `session.end()` or a session ID threaded through `EngineOptions`).
+For mouse drag/resize: the input layer calls the engine repeatedly during a gesture, but each call is a self-contained `applyOperation` invocation. The engine treats each call as an independent session (snapshotting initial sizes on entry, restoring them on wrap, releasing them on exit). The input layer is responsible for funnelling all intermediate steps into a single, accumulated operation when wrap-restore needs to read sizes from before the gesture began (e.g. `use-card-drag-v2` recomputes the operation from the gesture's anchor position, not from the previous step). See `src/components/sheets/layout/use-card-drag-v2.ts` and `use-card-resize-v2.ts` for the pattern.
 
 ---
 
@@ -239,14 +235,13 @@ This behavior is **identical to V1** and is not in scope for the engine rewrite.
 
 In development mode (`NODE_ENV === "development"`), the user can save the current layout as a `.layout.json` file next to the `.yaml` cheatsheet. This is consumed by `getRenderableBlocks` at build time so the YAML "ships with" its layout.
 
-The existing implementation in `src/lib/dev-layout-sync.ts` does this **automatically** (debounced 1s after every change). For V2, **this becomes manual**:
+The save is **manual**, gated by `process.env.NODE_ENV`:
 
-- **Trigger**: explicit user action via the `LAYOUT_DEV_SAVE` keybinding (default: TBD, suggested `Ctrl+S` while in layout mode, or a dedicated key once not in layout mode but only in dev).
-- **Endpoint**: `POST /api/dev/layouts/[slug]` (unchanged).
-- **Feedback**: a transient toast or status indicator confirming the save (e.g. "Layout saved to disk").
-- **Disabled in production**: the keybinding is registered but does nothing if `NODE_ENV !== "development"`.
+- **Trigger**: explicit user action via the `DEV_SAVE_LAYOUT` action (scope `dev`, default `s`). Mounted in `src/components/sheets/sheet-renderer.tsx` via `useAction`.
+- **Endpoint**: `POST /api/dev/layouts/[slug]`.
+- **Disabled in production**: the handler short-circuits when `NODE_ENV !== "development"`.
 
-The existing `syncLayoutToDev` function will be refactored to remove the auto-debounce and expose a `saveLayoutToDev(slug, layouts)` that is called only on explicit user action.
+The underlying call is `syncLayoutToDev(slug, layouts)` in `src/lib/dev-layout-sync.ts`. The previous debounced auto-sync has been removed.
 
 ---
 
