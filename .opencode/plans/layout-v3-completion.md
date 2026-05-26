@@ -230,7 +230,7 @@ Detailed tracker: [`layout-v3-fa-buffered-mode.md`](./layout-v3-fa-buffered-mode
 
 - [x] G1. `npm run lint` clean — verified during G6/G8 iterations
 - [x] G2. `npm run test` green; coverage ≥ existing thresholds — 842/842 unit tests; engine `step.ts` 100% lines / 92.03% branches after `55bf48c` covers the dead-end branch in shrink absorption
-- [x] G3. `npm run test:e2e` green (pre-existing flaky `home-navigation.spec.ts:137` tolerated)
+- [x] G3. `npm run test:e2e` green
 - [x] G4. `npm run build` OK
 - [x] G5. `npm run validate:cheatsheets` OK
 - [x] G6. Docs aligned with reality — `5e45768`. Full pass on `layout-actions.md` (resize sub-mode `r`→`b`, real `ACTION_IDS.LAYOUT_*` table, session lifecycle, `DEV_SAVE_LAYOUT`), `layout-engine.md` (`OperationResult` 3-field shape, `shrunk` value type, `EventCause` rename + `compact` variant, `wrap-axis` `"x"|"y"`, `block.resize` event, `EngineOptions.opId`), `keybindings.md` (`scope-stack-manager.ts` listed, raw-listener exception narrowed to `Ctrl+Shift+D`), `entry-renderers.md` (explicit imports, slim barrel surface). `architecture.md` scanned — no stale references.

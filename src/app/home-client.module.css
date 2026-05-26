@@ -7,6 +7,10 @@
   transition: filter var(--transition-normal), transform var(--transition-normal);
 }
 
+.hexCard:focus-visible {
+  outline: none;
+}
+
 .hexCell {
   width: var(--hex-cell-size);
   height: var(--hex-cell-size);

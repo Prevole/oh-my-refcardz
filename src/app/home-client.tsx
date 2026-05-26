@@ -518,6 +518,7 @@ export function HomeClient({ categories }: Props) {
                             }
                           }}
                           onMouseEnter={() => setSelectedIndex(index)}
+                          onFocus={() => setSelectedIndex(index)}
                           data-selected={isSelected}
                           data-has-icon={!!sheet.icon}
                           className={`${styles.hexCard} text-left`}
