@@ -292,35 +292,49 @@ Open with `,` (action `TOGGLE_SETTINGS`) from home or sheet. Universal action �
 
 ## 14. Help modal (scope: `help`)
 
-Open with `?`.
+Open with `?` (action `TOGGLE_HELP`). Universal action — pierces modals, mutually exclusive with Settings.
 
-- [ ] Modal centered, traps focus
-- [ ] Tabs: Shortcuts | Layout | Developer | Legend
-- [ ] Layout tab has nested sub-tabs (Enter/Nav/Move/Resize/Reset per `cb95ab8`)
-- [ ] Developer tab has nested sub-tabs (top-level / logs / axes)
-- [ ] Arrows / Tab navigate tabs
-- [ ] `Enter` activates focused tab
-- [ ] `KeybindingChart` rows display combos correctly (no stale customizations)
-- [ ] After changing a binding in settings, help reflects the new value
-- [ ] Legend tab shows symbol explanations
-- [ ] `Escape` — closes
+- [x] Modal centered, traps focus (shared `Modal` overlay at `--z-popover`)
+- [x] L1 tabs: General | Layout | Developer | Help | Legend (5 tabs; Legend is detached on the right via `data-position="end"`)
+- [x] L2 sub-tabs appear directly under the active L1 tab (inverted amber strip, indented to match active L1 via `useActiveTabIndent`):
+  - General → Navigation | Misc
+  - Layout → Lifecycle | Navigation | Move | Resize
+  - Developer → Dev | Logs | Axes
+  - Help / Legend → no L2 row
+- [x] `ArrowLeft` / `h` — focus previous tab in the current row (`HELP_TAB_LEFT`)
+- [x] `ArrowRight` / `l` — focus next tab in the current row (`HELP_TAB_RIGHT`)
+- [x] `ArrowUp` / `k` — focus parent row from L2 (`HELP_TAB_UP`)
+- [x] `ArrowDown` / `j` — descend into the L2 row when visible (`HELP_TAB_DOWN`)
+- [x] `Space` / `Enter` — activate focused tab (`HELP_TAB_ACTIVATE`)
+- [x] `KeybindingChart` rows display combos correctly (no stale customizations)
+- [x] After changing a binding in settings, help reflects the new value
+- [x] Legend tab shows symbol explanations (⌘ ⌥ ^ ⇧ ↩ ⎋ arrows)
+- [x] `Escape` / `?` — close modal (`HELP_CLOSE`)
 
 ### Findings (help)
 
-_(empty)_
+- **Note H-1 (applied earlier this session)** — Reworked the L1/L2 layout: L2 strips were previously rendered inside each L1 panel (`Tabs variant="secondary"`), producing two stacked rows visually disconnected from L1. They are now lifted into a single shared strip rendered just below L1 using the new `Tabs variant="secondaryInverted"` (amber color, inverted decoration: top border + bottom radius) and aligned under the active L1 tab via the shared `useActiveTabIndent` hook. The L1 row (including Legend's right-detached position) is unchanged.
 
 ---
 
 ## 15. Cheat command modals (`cheat-info-modal`, `cheat-copy-modal`)
 
-Triggered from sheet card `e` / `c` (?) — verify entry points.
+Triggered from a focused sheet card: `i` opens the info modal (action `SHOW_EXAMPLE`); `y` opens the copy modal when the command has placeholders, otherwise copies directly (action `COPY_COMMAND`). True UI modals at `--z-modal` (100).
 
-- [ ] Info modal: `j/k` move, `c` copy, `Escape` close
-- [ ] Copy modal with placeholders: `j/k` move between fields, Enter submit, Escape cancel
-- [ ] Placeholder escaping (see `docs/placeholders.md`)
-- [ ] Background sheet remains inert while modal open
+- [x] Info modal (`cheat-info-modal` scope):
+  - [x] `j` / `ArrowDown` — move down (`CHEAT_INFO_MODAL_MOVE_DOWN`)
+  - [x] `k` / `ArrowUp` — move up (`CHEAT_INFO_MODAL_MOVE_UP`)
+  - [x] `y` — copy focused item (`CHEAT_INFO_MODAL_COPY`)
+  - [x] `Escape` — close (`CHEAT_INFO_MODAL_CLOSE`)
+- [x] Copy modal with placeholders (`cheat-copy-modal` scope):
+  - [x] `j` / `ArrowDown` — move down (`CHEAT_COPY_MODAL_MOVE_DOWN`)
+  - [x] `k` / `ArrowUp` — move up (`CHEAT_COPY_MODAL_MOVE_UP`)
+  - [x] `Enter` — submit and copy with substituted values (`CHEAT_COPY_MODAL_SUBMIT`)
+  - [x] `Escape` — cancel (`CHEAT_COPY_MODAL_CANCEL`)
+- [x] Placeholder escaping behaves per `docs/placeholders.md`
+- [x] Background sheet remains inert while a modal is open (modal scope cascade)
 
-### Findings (cheat-modals)
+### Findings (cheat modals)
 
 _(empty)_
 
@@ -334,14 +348,22 @@ _(empty)_
 - [ ] Section titles lowercase modifier ("Move strict", not "Move Strict")
 - [ ] No emoji anywhere in UI (project convention)
 - [ ] Console warnings/errors absent during normal flows
-- [ ] Pre-existing TS errors only in `yaml-cheatsheets.integration.test.ts` and `keyboard-dispatch.test.ts`
+- [x] `tsc --noEmit` clean across the whole repo (previously had ~80 errors in 8 test files; see finding CC-1)
 - [ ] No layout overlap reported by `findConflict` for intentional overlaps
 - [ ] Browser back/forward preserves state correctly
 - [ ] LocalStorage keys: `oh-my-refcardz:keybindings`, `oh-my-refcardz:ui-settings`, layouts
 
 ### Findings (cross-cutting)
 
-_(empty)_
+- **Fix CC-1 (applied)** — Repaired pre-existing TypeScript errors across 8 test files so `npx tsc --noEmit` is now clean. None of the test runtimes were broken (`npm run test` was already green at 847/847), but the type-check pass was leaking false negatives. Files touched:
+  - `src/app/api/dev/layouts/[slug]/route.test.ts`: replace `process.env.NODE_ENV = …` with `vi.stubEnv("NODE_ENV", …)` (Vitest helper for readonly env vars).
+  - `src/components/sheets/layout/layout-algorithms.test.ts`: type the test fixtures explicitly as `BlockLayoutState[]` and drop the no-longer-needed `as const` (the type annotation already preserves the literal `kind`).
+  - `src/components/sheets/layout/layout-persistence.test.ts`: same `BlockLayoutState[]` annotation on the stored-layout fixture.
+  - `src/lib/dev-mode/dev-mode-storage.test.ts`: globalThis casts via `as unknown as` to bypass the strict overlap check.
+  - `src/lib/keybinding-utils.test.ts`: extend the `KeybindingsConfig` test fixture with the missing scopes (`cheat-info-modal`, `cheat-copy-modal`, `info`, `layout-discard-confirm`).
+  - `src/lib/keyboard-dispatch.test.ts`: (a) `ACTION_IDS.OPEN_COMMAND_PALETTE` no longer exists — replaced by `ACTION_IDS.GO_TOP` everywhere (the test only cares about a unique global action id, the combo `Ctrl+K` stays); (b) `"sheet-layout"` scope was removed long ago — dropped from the fixture and added all currently-defined scopes instead; (c) `NODE_ENV` writes converted to `vi.stubEnv`; (d) `FakeHTMLElement` gained no-op `addEventListener` / `removeEventListener` / `dispatchEvent` stubs to satisfy the `EventTarget` shape expected by `isEditableTarget(target: EventTarget | null)`.
+  - `src/lib/yaml-cheatsheets.integration.test.ts`: helpers `hasEntryType` and `findEntryWithKey` widened from `K extends keyof CheatSheetEntry` to `K extends string` (the entry type is a discriminated union, so `keyof` collapses to `never`); call sites cast the `unknown` field to the expected shape before reading `.length` / `.content`.
+  - `src/lib/yaml-cheatsheets.test.ts`: switched from `delete noTitle.title` (forbidden on non-optional fields) to a typed `Record<string, unknown>` then `delete`.
 
 ---
 

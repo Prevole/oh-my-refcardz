@@ -20,11 +20,12 @@ const originalNodeEnv = process.env.NODE_ENV;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  process.env.NODE_ENV = "development";
+  vi.stubEnv("NODE_ENV", "development");
 });
 
 afterEach(() => {
-  process.env.NODE_ENV = originalNodeEnv;
+  vi.stubEnv("NODE_ENV", originalNodeEnv ?? "");
+  vi.unstubAllEnvs();
 });
 
 function createMockRequest(body: unknown): Request {
@@ -61,7 +62,7 @@ blocks:
 
 describe("POST /api/dev/layouts/[slug]", () => {
   it("returns 404 when not in development", async () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     const request = createMockRequest(sampleLayout);
     const response = await POST(request, { params: createMockParams("git") });

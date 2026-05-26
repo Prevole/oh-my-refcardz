@@ -57,6 +57,14 @@ class FakeHTMLElement {
     this.tagName = tagName.toUpperCase();
     this.isContentEditable = isContentEditable;
   }
+  // Stubs to satisfy the EventTarget shape expected by isEditableTarget's
+  // signature. We never call these in the tests; the dispatcher only does
+  // `instanceof HTMLElement` and reads tagName / isContentEditable.
+  addEventListener(): void {}
+  removeEventListener(): void {}
+  dispatchEvent(): boolean {
+    return false;
+  }
 }
 
 // Expose to the global scope so `target instanceof HTMLElement` works.
@@ -109,7 +117,7 @@ function defaultActions(): Record<KeybindingContext, KeybindingAction[]> {
   return {
     global: [
       {
-        id: ACTION_IDS.OPEN_COMMAND_PALETTE,
+        id: ACTION_IDS.GO_TOP,
         label: "Open palette",
         combos: [combo("k", "ctrl")],
       },
@@ -126,7 +134,17 @@ function defaultActions(): Record<KeybindingContext, KeybindingAction[]> {
     ],
     home: [],
     sheet: [],
-    "sheet-layout": [],
+    help: [],
+    settings: [],
+    modal: [],
+    info: [],
+    "cheat-info-modal": [],
+    "cheat-copy-modal": [],
+    layout: [],
+    "layout-navigation": [],
+    "layout-move": [],
+    "layout-resize": [],
+    "layout-discard-confirm": [],
     dev: [
       {
         id: ACTION_IDS.DEV_SAVE_LAYOUT,
@@ -222,7 +240,7 @@ describe("dispatchKeyEvent", () => {
   describe("cascade", () => {
     it("falls through to a lower scope when top has no matches (non-modal)", () => {
       const globalHandler = vi.fn();
-      registry.bind(ACTION_IDS.OPEN_COMMAND_PALETTE, "global", globalHandler);
+      registry.bind(ACTION_IDS.GO_TOP, "global", globalHandler);
       const stack: ScopeEntry[] = [ROOT, s("dev", false)];
       const out = dispatch(makeEvent("k", { ctrlKey: true }), stack);
       expect(globalHandler).toHaveBeenCalledOnce();
@@ -231,7 +249,7 @@ describe("dispatchKeyEvent", () => {
 
     it("falls through a scope that maps to no context (e.g. home, non-modal)", () => {
       const globalHandler = vi.fn();
-      registry.bind(ACTION_IDS.OPEN_COMMAND_PALETTE, "global", globalHandler);
+      registry.bind(ACTION_IDS.GO_TOP, "global", globalHandler);
       const stack: ScopeEntry[] = [ROOT, s("home", false)];
       const out = dispatch(makeEvent("k", { ctrlKey: true }), stack);
       expect(globalHandler).toHaveBeenCalledOnce();
@@ -242,7 +260,7 @@ describe("dispatchKeyEvent", () => {
   describe("modality", () => {
     it("blocks cascade when a modal scope has no matches", () => {
       const globalHandler = vi.fn();
-      registry.bind(ACTION_IDS.OPEN_COMMAND_PALETTE, "global", globalHandler);
+      registry.bind(ACTION_IDS.GO_TOP, "global", globalHandler);
       const stack: ScopeEntry[] = [ROOT, s("dev", true)];
       const out = dispatch(makeEvent("k", { ctrlKey: true }), stack);
       expect(globalHandler).not.toHaveBeenCalled();
@@ -251,7 +269,7 @@ describe("dispatchKeyEvent", () => {
 
     it("blocks cascade when a modal scope maps to null context", () => {
       const globalHandler = vi.fn();
-      registry.bind(ACTION_IDS.OPEN_COMMAND_PALETTE, "global", globalHandler);
+      registry.bind(ACTION_IDS.GO_TOP, "global", globalHandler);
       const stack: ScopeEntry[] = [ROOT, s("home", true)];
       const out = dispatch(makeEvent("k", { ctrlKey: true }), stack);
       expect(globalHandler).not.toHaveBeenCalled();
@@ -282,10 +300,11 @@ describe("dispatchKeyEvent", () => {
   describe("conflicts", () => {
     const originalEnv = process.env.NODE_ENV;
     beforeEach(() => {
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
     });
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      vi.stubEnv("NODE_ENV", originalEnv ?? "");
+      vi.unstubAllEnvs();
     });
 
     it("throws in development when two handlers match the same event", () => {
@@ -306,7 +325,7 @@ describe("dispatchKeyEvent", () => {
     });
 
     it("calls onConflict and runs first match in non-dev environments", () => {
-      process.env.NODE_ENV = "production";
+      vi.stubEnv("NODE_ENV", "production");
       actions.dev = [
         ...actions.dev,
         {
@@ -373,7 +392,7 @@ describe("dispatchKeyEvent", () => {
 
     it("does not pierce modals for non-universal global actions", () => {
       const handler = vi.fn();
-      registry.bind(ACTION_IDS.OPEN_COMMAND_PALETTE, "global", handler);
+      registry.bind(ACTION_IDS.GO_TOP, "global", handler);
       const out = dispatch(makeEvent("k", { ctrlKey: true }), [
         ROOT,
         s("dev", true),
@@ -420,7 +439,7 @@ describe("dispatchKeyEvent", () => {
     });
 
     it("returns false for non-HTMLElement targets", () => {
-      expect(isEditableTarget({})).toBe(false);
+      expect(isEditableTarget({} as EventTarget)).toBe(false);
     });
   });
 });

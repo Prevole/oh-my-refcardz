@@ -10,6 +10,7 @@ import {
 } from "./layout-algorithms";
 import { GRID_COLUMNS, GRID_GAP_PX } from "../sheet-grid";
 import { MAX_ROW_SPAN } from "./layout-types";
+import type { BlockLayoutState } from "./layout-types";
 
 describe("clamp", () => {
   it("returns value when within range", () => {
@@ -216,7 +217,7 @@ describe("placeCardAtNearestSlot", () => {
 
 describe("resolveBlockLayout", () => {
   it("places non-overlapping blocks without changes", () => {
-    const cards = [
+    const cards: BlockLayoutState[] = [
       { id: "a", kind: "card", colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
       { id: "b", kind: "card", colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
     ];
@@ -226,7 +227,7 @@ describe("resolveBlockLayout", () => {
   });
 
   it("repositions overlapping blocks", () => {
-    const cards = [
+    const cards: BlockLayoutState[] = [
       { id: "a", kind: "card", colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
       { id: "b", kind: "card", colStart: 1, rowStart: 1, colSpan: 6, rowSpan: 2 },
     ];
@@ -238,7 +239,7 @@ describe("resolveBlockLayout", () => {
   });
 
   it("respects pinned block position", () => {
-    const cards = [
+    const cards: BlockLayoutState[] = [
       { id: "a", kind: "card", colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
       { id: "b", kind: "card", colStart: 5, rowStart: 1, colSpan: 4, rowSpan: 2 },
     ];
@@ -255,7 +256,7 @@ describe("resolveBlockLayout", () => {
   });
 
   it("clamps invalid block positions during resolution", () => {
-    const cards = [
+    const cards: BlockLayoutState[] = [
       { id: "a", kind: "card", colStart: -5, rowStart: -2, colSpan: 100, rowSpan: 100 },
     ];
     const result = resolveBlockLayout(cards);
@@ -266,11 +267,11 @@ describe("resolveBlockLayout", () => {
   });
 
   it("keeps headings fixed when a card is reflowed", () => {
-    const blocks = [
+    const blocks: BlockLayoutState[] = [
       { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
       { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
       { id: "card-b", kind: "card", colStart: 13, rowStart: 3, colSpan: 12, rowSpan: 4 },
-    ] as const;
+    ];
 
     const result = resolveBlockLayout([...blocks], "card-a", {
       colStart: 1,
@@ -289,10 +290,10 @@ describe("resolveBlockLayout", () => {
   });
 
   it("allows a pinned heading to move when the heading itself is manipulated", () => {
-    const blocks = [
+    const blocks: BlockLayoutState[] = [
       { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
       { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
-    ] as const;
+    ];
 
     const result = resolveBlockLayout([...blocks], "heading", {
       colStart: 1,
@@ -306,11 +307,11 @@ describe("resolveBlockLayout", () => {
 
   describe("initial layout mode (no pinnedBlockId)", () => {
     it("places multiple headings sequentially without overlap", () => {
-      const blocks = [
+      const blocks: BlockLayoutState[] = [
         { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
         { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
         { id: "heading-3", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-      ] as const;
+      ];
 
       const result = resolveBlockLayout([...blocks]);
 
@@ -320,13 +321,13 @@ describe("resolveBlockLayout", () => {
     });
 
     it("places cards under their section heading, not in earlier gaps", () => {
-      const blocks = [
+      const blocks: BlockLayoutState[] = [
         { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
         { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
         { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
         { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
         { id: "card-c", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
-      ] as const;
+      ];
 
       const result = resolveBlockLayout([...blocks]);
 
@@ -342,12 +343,12 @@ describe("resolveBlockLayout", () => {
     });
 
     it("respects document order for interleaved headings and cards", () => {
-      const blocks = [
+      const blocks: BlockLayoutState[] = [
         { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
         { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 4 },
         { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
         { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 4 },
-      ] as const;
+      ];
 
       const result = resolveBlockLayout([...blocks]);
 

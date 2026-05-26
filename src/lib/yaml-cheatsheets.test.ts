@@ -52,7 +52,7 @@ describe("yamlCheatSheetSchema", () => {
   });
 
   it("rejects missing title", () => {
-    const noTitle = { ...validSheet };
+    const noTitle: Record<string, unknown> = { ...validSheet };
     delete noTitle.title;
     const result = yamlCheatSheetSchema.safeParse(noTitle);
 
@@ -66,7 +66,7 @@ describe("yamlCheatSheetSchema", () => {
   });
 
   it("rejects missing summary", () => {
-    const noSummary = { ...validSheet };
+    const noSummary: Record<string, unknown> = { ...validSheet };
     delete noSummary.summary;
     const result = yamlCheatSheetSchema.safeParse(noSummary);
 
@@ -74,7 +74,7 @@ describe("yamlCheatSheetSchema", () => {
   });
 
   it("rejects missing color", () => {
-    const noColor = { ...validSheet };
+    const noColor: Record<string, unknown> = { ...validSheet };
     delete noColor.color;
     const result = yamlCheatSheetSchema.safeParse(noColor);
 

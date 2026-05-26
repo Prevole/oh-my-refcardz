@@ -12,14 +12,14 @@ import {
 // Helper to check if an entry has a specific key
 // ---------------------------------------------------------------------------
 
-function hasEntryType<K extends keyof CheatSheetEntry>(
+function hasEntryType<K extends string>(
   entry: CheatSheetEntry,
   key: K
 ): entry is CheatSheetEntry & Record<K, unknown> {
   return key in entry;
 }
 
-function findEntryWithKey<K extends keyof CheatSheetEntry>(
+function findEntryWithKey<K extends string>(
   entries: CheatSheetEntry[],
   key: K
 ): (CheatSheetEntry & Record<K, unknown>) | undefined {
@@ -85,7 +85,7 @@ describe("yaml-cheatsheets integration", () => {
       const contentEntry = findEntryWithKey(allEntries, "content");
 
       expect(contentEntry).toBeDefined();
-      expect(contentEntry?.content.length).toBeGreaterThan(0);
+      expect((contentEntry?.content as unknown[]).length).toBeGreaterThan(0);
     });
 
     it("parses where entries correctly", async () => {
@@ -107,7 +107,7 @@ describe("yaml-cheatsheets integration", () => {
       const settingsEntry = findEntryWithKey(allEntries, "settings");
 
       expect(settingsEntry).toBeDefined();
-      expect(settingsEntry?.settings.length).toBeGreaterThan(0);
+      expect((settingsEntry?.settings as unknown[]).length).toBeGreaterThan(0);
     });
 
     it("parses alias entries correctly", async () => {
@@ -118,7 +118,7 @@ describe("yaml-cheatsheets integration", () => {
       const aliasEntry = findEntryWithKey(allEntries, "alias");
 
       expect(aliasEntry).toBeDefined();
-      expect(aliasEntry?.alias.content).toBeDefined();
+      expect((aliasEntry?.alias as { content?: unknown }).content).toBeDefined();
     });
 
     it("includes optional icon field when present", async () => {

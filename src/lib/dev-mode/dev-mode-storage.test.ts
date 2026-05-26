@@ -32,7 +32,7 @@ describe("dev-mode-storage", () => {
 
   beforeEach(() => {
     storage = makeFakeStorage();
-    (globalThis as { window: { localStorage: FakeStorage } }).window = {
+    (globalThis as unknown as { window: { localStorage: FakeStorage } }).window = {
       localStorage: storage,
     };
   });
@@ -70,7 +70,7 @@ describe("dev-mode-storage", () => {
     });
 
     it("returns false when localStorage access throws", () => {
-      (globalThis as { window: { localStorage: { getItem: () => never } } }).window = {
+      (globalThis as unknown as { window: { localStorage: { getItem: () => never } } }).window = {
         localStorage: {
           getItem: () => {
             throw new Error("denied");
@@ -102,7 +102,7 @@ describe("dev-mode-storage", () => {
       const setSpy = vi.fn(() => {
         throw new Error("quota");
       });
-      (globalThis as {
+      (globalThis as unknown as {
         window: { localStorage: { setItem: () => never; removeItem: () => never } };
       }).window = {
         localStorage: {

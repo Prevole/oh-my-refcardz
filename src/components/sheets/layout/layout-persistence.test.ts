@@ -136,7 +136,7 @@ describe("parseStoredLayouts", () => {
   it("returns merged layouts for version 3 block storage", () => {
     const sheet = createMockSheet([1]);
     const defaults = createValidLayout([1]);
-    const stored = [
+    const stored: BlockLayoutState[] = [
       { id: "section-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
       { id: "card-1-1", kind: "card", colStart: 13, rowStart: 7, colSpan: 18, rowSpan: 12 },
     ];
