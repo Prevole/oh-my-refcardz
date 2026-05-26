@@ -169,13 +169,15 @@ All layout shortcuts are declared in `src/lib/keybindings.ts` as `ACTION_IDS.LAY
 
 | Scope | Action IDs |
 |---|---|
-| `sheet` | `LAYOUT_ENTER_MODE` (default `Ctrl+M`) |
-| `layout` | `LAYOUT_GOTO_NAVIGATION` (`n`), `LAYOUT_GOTO_MOVE` (`m`), `LAYOUT_GOTO_RESIZE` (`b`), `LAYOUT_EXIT` (`Escape`), `LAYOUT_COMMIT` (`Enter`), `LAYOUT_RESET` (`Shift+R`) |
+| `sheet` | `LAYOUT_ENTER_MODE` (default `Ctrl+M`); `LAYOUT_UNDO` (`u`), `LAYOUT_REDO` (`Ctrl+Shift+Z`) |
+| `layout` | `LAYOUT_GOTO_NAVIGATION` (`n`), `LAYOUT_GOTO_MOVE` (`m`), `LAYOUT_GOTO_RESIZE` (`b`), `LAYOUT_EXIT` (`Escape`), `LAYOUT_COMMIT` (`Enter`), `LAYOUT_RESET` (`Shift+R`), `LAYOUT_UNDO` (`u`), `LAYOUT_REDO` (`Ctrl+Shift+Z`) |
 | `layout-navigation` | `LAYOUT_NAV_LEFT/RIGHT/UP/DOWN` (`h/l/k/j` + arrows) |
 | `layout-move` | `LAYOUT_MOVE_LEFT/RIGHT/UP/DOWN` (`h/l/k/j` + arrows); `LAYOUT_MOVE_STRICT_*` (`Alt`-prefixed) |
 | `layout-resize` | `LAYOUT_RESIZE_GROW_*` / `SHRINK_*` (bare / `Shift`); `GROW_STRICT_*` / `SHRINK_STRICT_*` (`Alt`); `SHRINK_COMPACT_*` (`Ctrl+Shift`) |
 | `dev` | `DEV_SAVE_LAYOUT` (`s`) |
 | `sheet` (raw listener) | `TOGGLE_DEVELOPER_MODE` (`Ctrl+Shift+D` — see [Keybindings](./keybindings.md#developer-mode)) |
+
+`LAYOUT_UNDO` and `LAYOUT_REDO` are bound on both `sheet` and `layout` so a single history pile is reachable from both interaction modes (mouse drag/resize outside layout mode; keyboard edits inside it). See [layout-engine.md](./layout-engine.md) for the history contract.
 
 Modifiers (`Shift`, `Alt`, `Ctrl`) are encoded into separate action IDs (one per modifier combination per direction) rather than read dynamically at dispatch time. This keeps each binding individually configurable by the user.
 

@@ -162,6 +162,16 @@ export const ACTION_IDS = {
   // from every sub-mode. Distinct from discard which exits the mode.
   LAYOUT_RESET: "layout.reset",
 
+  // Undo the last layout mutation (move or resize). Registered on
+  // both `sheet` (for mouse-driven edits) and `layout` (inherited by
+  // every layout sub-scope). Navigation-only operations are NOT
+  // undoable. Silent no-op when the history is empty.
+  LAYOUT_UNDO: "layout.undo",
+
+  // Redo the last undone layout mutation. Same scope coverage as
+  // LAYOUT_UNDO. Silent no-op when there is nothing to redo.
+  LAYOUT_REDO: "layout.redo",
+
   // Discard-confirm modal (scope `layout-discard-confirm`). Opened
   // when the user requests an exit (`Esc`) while the buffer holds at
   // least 5 staged changes. Confirms whether to throw away the
@@ -445,6 +455,16 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       label: "Enter layout mode",
       combos: [combo("m", "ctrl")],
     },
+    {
+      id: ACTION_IDS.LAYOUT_UNDO,
+      label: "Undo last edit",
+      combos: [key("u")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_REDO,
+      label: "Redo last undone edit",
+      combos: [combo("z", "ctrl", "shift")],
+    },
   ],
 
   modal: [],
@@ -525,6 +545,16 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_RESET,
       label: "Reset layout buffer",
       combos: [combo("R", "shift")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_UNDO,
+      label: "Undo last edit",
+      combos: [key("u")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_REDO,
+      label: "Redo last undone edit",
+      combos: [combo("z", "ctrl", "shift")],
     },
   ],
 
