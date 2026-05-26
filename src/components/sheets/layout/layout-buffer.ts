@@ -90,7 +90,7 @@ export function applyToBuffer(
     emitter: ctx.emitter,
   });
 
-  if (areBlocksEqual(buffer.currentBuffer, result.blocks)) {
+  if (blocksEqual(buffer.currentBuffer, result.blocks)) {
     return { buffer, blocks: buffer.currentBuffer };
   }
 
@@ -133,12 +133,40 @@ export function resetBuffer(buffer: LayoutBuffer): LayoutBuffer {
 }
 
 /**
+ * Replace the buffer's current contents with `snapshot` and adjust
+ * `changesCount` by `delta` (can be negative). `changesCount` is
+ * clamped to `[0, +Infinity)`. If the resulting snapshot equals
+ * `initialSnapshot` structurally, `changesCount` is forced to 0.
+ *
+ * Used by the history layer (Phase H) to apply an undo/redo step
+ * inside an active buffered session.
+ */
+export function replaceBufferContents(
+  buffer: LayoutBuffer,
+  snapshot: readonly LayoutBlock[],
+  delta: number,
+): LayoutBuffer {
+  const nextCount = blocksEqual(snapshot, buffer.initialSnapshot)
+    ? 0
+    : Math.max(0, buffer.changesCount + delta);
+  return {
+    initialSnapshot: buffer.initialSnapshot,
+    currentBuffer: snapshot,
+    changesCount: nextCount,
+  };
+}
+
+/**
  * Structural equality on the fields the engine produces: id, kind, and
  * position (x, y, w, h). Block order is treated as significant — the
  * engine is deterministic about ordering, so a permutation would itself
  * be a meaningful change.
+ *
+ * Exposed publicly because the history layer (Phase H) needs the same
+ * notion of equality to decide whether a restored snapshot is identical
+ * to the initial buffer (which would imply zero changes).
  */
-function areBlocksEqual(
+export function blocksEqual(
   a: readonly LayoutBlock[],
   b: readonly LayoutBlock[],
 ): boolean {

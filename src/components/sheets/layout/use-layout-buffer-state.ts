@@ -17,6 +17,7 @@ import {
   applyToBuffer,
   commitBuffer,
   createBuffer,
+  replaceBufferContents,
   resetBuffer,
   type ApplyContext,
   type ApplyResult,
@@ -54,6 +55,20 @@ export type UseLayoutBufferStateResult = {
    * snapshot blocks, or `null` when no session is active.
    */
   reset: () => readonly LayoutBlock[] | null;
+  /**
+   * Replace the buffer's current contents with `snapshot` and adjust
+   * `changesCount` by `delta` (typically -1 for undo, +1 for redo).
+   * `changesCount` is clamped to >= 0 and forced to 0 when the new
+   * snapshot equals the initial snapshot structurally. Returns the
+   * new buffer blocks, or `null` when no session is active.
+   *
+   * Used by the history layer to apply an undo/redo step inside an
+   * active buffered keyboard session.
+   */
+  replaceContents: (
+    snapshot: readonly LayoutBlock[],
+    delta: number,
+  ) => readonly LayoutBlock[] | null;
 };
 
 export function useLayoutBufferState(): UseLayoutBufferStateResult {
@@ -111,6 +126,21 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
     return next.currentBuffer;
   }, []);
 
+  const replaceContents = useCallback(
+    (
+      snapshot: readonly LayoutBlock[],
+      delta: number,
+    ): readonly LayoutBlock[] | null => {
+      const current = bufferRef.current;
+      if (!current) return null;
+      const next = replaceBufferContents(current, snapshot, delta);
+      bufferRef.current = next;
+      setBuffer(next);
+      return next.currentBuffer;
+    },
+    [],
+  );
+
   return useMemo(
     () => ({
       buffer,
@@ -122,7 +152,8 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
       commit,
       clear,
       reset,
+      replaceContents,
     }),
-    [buffer, start, apply, commit, clear, reset],
+    [buffer, start, apply, commit, clear, reset, replaceContents],
   );
 }
