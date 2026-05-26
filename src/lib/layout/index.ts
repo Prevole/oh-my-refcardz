@@ -6,4 +6,5 @@
  */
 
 export * from "./engine";
+export * from "./history";
 export * from "./migration";

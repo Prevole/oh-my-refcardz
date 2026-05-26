@@ -1,0 +1,233 @@
+/**
+ * LayoutHistory tests (Phase H).
+ *
+ * Covers the cursor-based history that backs the layout undo/redo system.
+ *
+ * Conceptual model:
+ *   past: [s0, s1, ..., sn-1]   present: sn    future: [sn+1, ...]
+ *
+ *  - `push(s)` drops `future`, moves `present` into `past`, and makes `s` the
+ *    new present. The very first push is the initial anchor (no past, no
+ *    future).
+ *  - `undo()` pops the last entry from `past` into `present`, and pushes the
+ *    previous present onto the front of `future`. Returns the new present, or
+ *    `null` if `past` is empty.
+ *  - `redo()` does the reverse. Returns `null` if `future` is empty.
+ *  - The capacity caps the length of `past` only; oldest entries are dropped.
+ *  - Snapshots are stored by reference (the caller must not mutate them).
+ */
+
+import { describe, expect, it } from "vitest";
+
+import { createLayoutHistory } from "./history";
+import type { LayoutBlock } from "./engine";
+
+function block(id: string, x: number, y: number): LayoutBlock {
+  return { id, kind: "card", position: { x, y, w: 1, h: 1 } };
+}
+
+function snap(...blocks: LayoutBlock[]): readonly LayoutBlock[] {
+  return blocks;
+}
+
+describe("createLayoutHistory — empty state", () => {
+  it("starts with canUndo=false and canRedo=false", () => {
+    const h = createLayoutHistory();
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+  });
+
+  it("reports size {past: 0, future: 0} when empty", () => {
+    const h = createLayoutHistory();
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+
+  it("undo() on empty history returns null", () => {
+    const h = createLayoutHistory();
+    expect(h.undo()).toBeNull();
+  });
+
+  it("redo() on empty history returns null", () => {
+    const h = createLayoutHistory();
+    expect(h.redo()).toBeNull();
+  });
+});
+
+describe("createLayoutHistory — anchoring", () => {
+  it("first push establishes the present without enabling undo", () => {
+    const h = createLayoutHistory();
+    h.push(snap(block("a", 0, 0)));
+
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+});
+
+describe("createLayoutHistory — push and undo", () => {
+  it("two pushes enable undo, undo returns the first snapshot", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    h.push(s0);
+    h.push(s1);
+
+    expect(h.canUndo()).toBe(true);
+    expect(h.canRedo()).toBe(false);
+    expect(h.size()).toEqual({ past: 1, future: 0 });
+
+    const result = h.undo();
+    expect(result).toBe(s0);
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(true);
+    expect(h.size()).toEqual({ past: 0, future: 1 });
+  });
+
+  it("undo preserves snapshot reference (no defensive cloning)", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    h.push(s0);
+    h.push(s1);
+
+    expect(h.undo()).toBe(s0);
+  });
+
+  it("multiple undos walk back through the past in order", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s0);
+    h.push(s1);
+    h.push(s2);
+
+    expect(h.undo()).toBe(s1);
+    expect(h.undo()).toBe(s0);
+    expect(h.undo()).toBeNull();
+  });
+});
+
+describe("createLayoutHistory — redo", () => {
+  it("redo after undo returns the snapshot that was undone", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    h.push(s0);
+    h.push(s1);
+
+    h.undo();
+    expect(h.canRedo()).toBe(true);
+
+    const result = h.redo();
+    expect(result).toBe(s1);
+    expect(h.canRedo()).toBe(false);
+    expect(h.canUndo()).toBe(true);
+  });
+
+  it("redo() without a prior undo returns null", () => {
+    const h = createLayoutHistory();
+    h.push(snap(block("a", 0, 0)));
+    h.push(snap(block("a", 1, 0)));
+
+    expect(h.redo()).toBeNull();
+  });
+
+  it("multiple undos then multiple redos restore the original sequence", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s0);
+    h.push(s1);
+    h.push(s2);
+
+    h.undo();
+    h.undo();
+    expect(h.redo()).toBe(s1);
+    expect(h.redo()).toBe(s2);
+    expect(h.canRedo()).toBe(false);
+  });
+});
+
+describe("createLayoutHistory — push truncates future (divergent branch)", () => {
+  it("pushing after an undo drops the future entries", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s0);
+    h.push(s1);
+    h.push(s2);
+    h.undo(); // present = s1, future = [s2]
+    expect(h.canRedo()).toBe(true);
+
+    const sBranch = snap(block("a", 9, 9));
+    h.push(sBranch);
+
+    expect(h.canRedo()).toBe(false);
+    expect(h.size().future).toBe(0);
+    // Undo from the new branch returns the previous present, not s2.
+    expect(h.undo()).toBe(s1);
+  });
+});
+
+describe("createLayoutHistory — capacity", () => {
+  it("caps the past length at the configured capacity", () => {
+    const h = createLayoutHistory({ capacity: 3 });
+    const snaps = [0, 1, 2, 3, 4, 5].map((i) => snap(block("a", i, 0)));
+
+    // Push 6 snapshots. After: present = s5, past should hold at most 3.
+    snaps.forEach((s) => h.push(s));
+
+    expect(h.size().past).toBe(3);
+    // Undo three times walks back to snaps[2] (oldest still in past = snaps[2]).
+    expect(h.undo()).toBe(snaps[4]);
+    expect(h.undo()).toBe(snaps[3]);
+    expect(h.undo()).toBe(snaps[2]);
+    // No further undo: snaps[0] and snaps[1] were dropped.
+    expect(h.undo()).toBeNull();
+  });
+
+  it("falls back to a sensible default capacity when not provided", () => {
+    const h = createLayoutHistory();
+    // Push 250 snapshots; default cap should hold at least 100.
+    for (let i = 0; i < 250; i++) h.push(snap(block("a", i, 0)));
+    expect(h.size().past).toBeGreaterThanOrEqual(100);
+  });
+
+  it("rejects a capacity < 1", () => {
+    expect(() => createLayoutHistory({ capacity: 0 })).toThrow();
+    expect(() => createLayoutHistory({ capacity: -5 })).toThrow();
+  });
+});
+
+describe("createLayoutHistory — clear", () => {
+  it("clear() resets past and future and disables undo/redo", () => {
+    const h = createLayoutHistory();
+    h.push(snap(block("a", 0, 0)));
+    h.push(snap(block("a", 1, 0)));
+    h.push(snap(block("a", 2, 0)));
+    h.undo();
+    expect(h.canUndo()).toBe(true);
+    expect(h.canRedo()).toBe(true);
+
+    h.clear();
+
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+
+  it("after clear, the next push behaves as the initial anchor", () => {
+    const h = createLayoutHistory();
+    h.push(snap(block("a", 0, 0)));
+    h.push(snap(block("a", 1, 0)));
+    h.clear();
+
+    const s0 = snap(block("b", 0, 0));
+    h.push(s0);
+    expect(h.canUndo()).toBe(false);
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+});
