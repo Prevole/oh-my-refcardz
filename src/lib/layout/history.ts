@@ -4,7 +4,15 @@
  * See docs/layout-engine.md (history contract) for the broader picture.
  *
  * Conceptual model (1-based for the comment, 0-based in code):
- *   past: [s0, s1, ..., sn-1]   present: sn    future: [sn+1, sn+2, ...]
+ *   past: [e0, e1, ..., en-1]   present: en    future: [en+1, en+2, ...]
+ *
+ * Each entry carries:
+ *  - `snapshot`: the layout array AFTER the operation that produced this entry.
+ *  - `source`: which interaction mode produced the entry — `"mouse"` (gesture
+ *    commit) or `"keyboard"` (buffered keystroke). This is consumed by the
+ *    owner of the history to decide where to write back on undo/redo (mouse
+ *    commits persist immediately; keyboard pushes wait for the buffered
+ *    session to commit, unless they cross-reflect a mouse step).
  *
  * Invariants:
  *  - A history with no snapshot has `present === null`. The first `push` only
@@ -22,6 +30,13 @@ import type { LayoutBlock } from "./engine";
 
 const DEFAULT_CAPACITY = 100;
 
+export type LayoutHistorySource = "mouse" | "keyboard";
+
+export interface LayoutHistoryEntry {
+  snapshot: readonly LayoutBlock[];
+  source: LayoutHistorySource;
+}
+
 export interface LayoutHistoryOptions {
   /** Maximum number of past entries kept. Defaults to 100. Must be >= 1. */
   capacity?: number;
@@ -29,21 +44,21 @@ export interface LayoutHistoryOptions {
 
 export interface LayoutHistory {
   /**
-   * Record a new snapshot. The first call after construction (or after
+   * Record a new entry. The first call after construction (or after
    * `clear()`) becomes the present without enabling undo. Subsequent calls
    * push the previous present onto `past` and drop any `future` entries
    * (divergent branch).
    */
-  push(snapshot: readonly LayoutBlock[]): void;
+  push(snapshot: readonly LayoutBlock[], source: LayoutHistorySource): void;
   /**
    * Walk one step back. Returns the new present, or `null` if `past` is empty.
    */
-  undo(): readonly LayoutBlock[] | null;
+  undo(): LayoutHistoryEntry | null;
   /**
    * Walk one step forward. Returns the new present, or `null` if `future` is
    * empty.
    */
-  redo(): readonly LayoutBlock[] | null;
+  redo(): LayoutHistoryEntry | null;
   canUndo(): boolean;
   canRedo(): boolean;
   /**
@@ -63,15 +78,16 @@ export function createLayoutHistory(
     throw new Error(`LayoutHistory: capacity must be >= 1, got ${capacity}`);
   }
 
-  let past: Array<readonly LayoutBlock[]> = [];
-  let present: readonly LayoutBlock[] | null = null;
-  let future: Array<readonly LayoutBlock[]> = [];
+  let past: LayoutHistoryEntry[] = [];
+  let present: LayoutHistoryEntry | null = null;
+  let future: LayoutHistoryEntry[] = [];
 
   return {
-    push(snapshot) {
+    push(snapshot, source) {
+      const entry: LayoutHistoryEntry = { snapshot, source };
       if (present === null) {
         // Initial anchor: just set the present.
-        present = snapshot;
+        present = entry;
         return;
       }
       past.push(present);
@@ -79,14 +95,14 @@ export function createLayoutHistory(
       if (past.length > capacity) {
         past = past.slice(past.length - capacity);
       }
-      present = snapshot;
+      present = entry;
       // Pushing on a diverging branch drops the future.
       future = [];
     },
 
     undo() {
       if (past.length === 0 || present === null) return null;
-      const previous = past.pop() as readonly LayoutBlock[];
+      const previous = past.pop() as LayoutHistoryEntry;
       future.unshift(present);
       present = previous;
       return present;
@@ -94,7 +110,7 @@ export function createLayoutHistory(
 
     redo() {
       if (future.length === 0 || present === null) return null;
-      const next = future.shift() as readonly LayoutBlock[];
+      const next = future.shift() as LayoutHistoryEntry;
       past.push(present);
       present = next;
       return present;

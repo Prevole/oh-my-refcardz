@@ -4,17 +4,19 @@
  * Covers the cursor-based history that backs the layout undo/redo system.
  *
  * Conceptual model:
- *   past: [s0, s1, ..., sn-1]   present: sn    future: [sn+1, ...]
+ *   past: [e0, e1, ..., en-1]   present: en    future: [en+1, ...]
  *
- *  - `push(s)` drops `future`, moves `present` into `past`, and makes `s` the
- *    new present. The very first push is the initial anchor (no past, no
- *    future).
+ *  - `push(snapshot, source)` drops `future`, moves `present` into `past`, and
+ *    makes a new entry `{ snapshot, source }` the new present. The very first
+ *    push is the initial anchor (no past, no future).
  *  - `undo()` pops the last entry from `past` into `present`, and pushes the
  *    previous present onto the front of `future`. Returns the new present, or
  *    `null` if `past` is empty.
  *  - `redo()` does the reverse. Returns `null` if `future` is empty.
  *  - The capacity caps the length of `past` only; oldest entries are dropped.
  *  - Snapshots are stored by reference (the caller must not mutate them).
+ *  - Each entry carries a `source` ("mouse" | "keyboard") so the owner can
+ *    decide where to write back on undo/redo.
  */
 
 import { describe, expect, it } from "vitest";
@@ -56,7 +58,7 @@ describe("createLayoutHistory — empty state", () => {
 describe("createLayoutHistory — anchoring", () => {
   it("first push establishes the present without enabling undo", () => {
     const h = createLayoutHistory();
-    h.push(snap(block("a", 0, 0)));
+    h.push(snap(block("a", 0, 0)), "mouse");
 
     expect(h.canUndo()).toBe(false);
     expect(h.canRedo()).toBe(false);
@@ -65,19 +67,19 @@ describe("createLayoutHistory — anchoring", () => {
 });
 
 describe("createLayoutHistory — push and undo", () => {
-  it("two pushes enable undo, undo returns the first snapshot", () => {
+  it("two pushes enable undo, undo returns the first snapshot and its source", () => {
     const h = createLayoutHistory();
     const s0 = snap(block("a", 0, 0));
     const s1 = snap(block("a", 1, 0));
-    h.push(s0);
-    h.push(s1);
+    h.push(s0, "mouse");
+    h.push(s1, "keyboard");
 
     expect(h.canUndo()).toBe(true);
     expect(h.canRedo()).toBe(false);
     expect(h.size()).toEqual({ past: 1, future: 0 });
 
     const result = h.undo();
-    expect(result).toBe(s0);
+    expect(result).toEqual({ snapshot: s0, source: "mouse" });
     expect(h.canUndo()).toBe(false);
     expect(h.canRedo()).toBe(true);
     expect(h.size()).toEqual({ past: 0, future: 1 });
@@ -87,48 +89,48 @@ describe("createLayoutHistory — push and undo", () => {
     const h = createLayoutHistory();
     const s0 = snap(block("a", 0, 0));
     const s1 = snap(block("a", 1, 0));
-    h.push(s0);
-    h.push(s1);
+    h.push(s0, "mouse");
+    h.push(s1, "mouse");
 
-    expect(h.undo()).toBe(s0);
+    expect(h.undo()?.snapshot).toBe(s0);
   });
 
-  it("multiple undos walk back through the past in order", () => {
+  it("multiple undos walk back through the past in order, preserving sources", () => {
     const h = createLayoutHistory();
     const s0 = snap(block("a", 0, 0));
     const s1 = snap(block("a", 1, 0));
     const s2 = snap(block("a", 2, 0));
-    h.push(s0);
-    h.push(s1);
-    h.push(s2);
+    h.push(s0, "mouse");
+    h.push(s1, "keyboard");
+    h.push(s2, "mouse");
 
-    expect(h.undo()).toBe(s1);
-    expect(h.undo()).toBe(s0);
+    expect(h.undo()).toEqual({ snapshot: s1, source: "keyboard" });
+    expect(h.undo()).toEqual({ snapshot: s0, source: "mouse" });
     expect(h.undo()).toBeNull();
   });
 });
 
 describe("createLayoutHistory — redo", () => {
-  it("redo after undo returns the snapshot that was undone", () => {
+  it("redo after undo returns the entry that was undone", () => {
     const h = createLayoutHistory();
     const s0 = snap(block("a", 0, 0));
     const s1 = snap(block("a", 1, 0));
-    h.push(s0);
-    h.push(s1);
+    h.push(s0, "mouse");
+    h.push(s1, "keyboard");
 
     h.undo();
     expect(h.canRedo()).toBe(true);
 
     const result = h.redo();
-    expect(result).toBe(s1);
+    expect(result).toEqual({ snapshot: s1, source: "keyboard" });
     expect(h.canRedo()).toBe(false);
     expect(h.canUndo()).toBe(true);
   });
 
   it("redo() without a prior undo returns null", () => {
     const h = createLayoutHistory();
-    h.push(snap(block("a", 0, 0)));
-    h.push(snap(block("a", 1, 0)));
+    h.push(snap(block("a", 0, 0)), "mouse");
+    h.push(snap(block("a", 1, 0)), "mouse");
 
     expect(h.redo()).toBeNull();
   });
@@ -138,14 +140,14 @@ describe("createLayoutHistory — redo", () => {
     const s0 = snap(block("a", 0, 0));
     const s1 = snap(block("a", 1, 0));
     const s2 = snap(block("a", 2, 0));
-    h.push(s0);
-    h.push(s1);
-    h.push(s2);
+    h.push(s0, "mouse");
+    h.push(s1, "mouse");
+    h.push(s2, "mouse");
 
     h.undo();
     h.undo();
-    expect(h.redo()).toBe(s1);
-    expect(h.redo()).toBe(s2);
+    expect(h.redo()?.snapshot).toBe(s1);
+    expect(h.redo()?.snapshot).toBe(s2);
     expect(h.canRedo()).toBe(false);
   });
 });
@@ -156,19 +158,19 @@ describe("createLayoutHistory — push truncates future (divergent branch)", () 
     const s0 = snap(block("a", 0, 0));
     const s1 = snap(block("a", 1, 0));
     const s2 = snap(block("a", 2, 0));
-    h.push(s0);
-    h.push(s1);
-    h.push(s2);
+    h.push(s0, "mouse");
+    h.push(s1, "mouse");
+    h.push(s2, "mouse");
     h.undo(); // present = s1, future = [s2]
     expect(h.canRedo()).toBe(true);
 
     const sBranch = snap(block("a", 9, 9));
-    h.push(sBranch);
+    h.push(sBranch, "keyboard");
 
     expect(h.canRedo()).toBe(false);
     expect(h.size().future).toBe(0);
     // Undo from the new branch returns the previous present, not s2.
-    expect(h.undo()).toBe(s1);
+    expect(h.undo()?.snapshot).toBe(s1);
   });
 });
 
@@ -178,13 +180,13 @@ describe("createLayoutHistory — capacity", () => {
     const snaps = [0, 1, 2, 3, 4, 5].map((i) => snap(block("a", i, 0)));
 
     // Push 6 snapshots. After: present = s5, past should hold at most 3.
-    snaps.forEach((s) => h.push(s));
+    snaps.forEach((s) => h.push(s, "mouse"));
 
     expect(h.size().past).toBe(3);
     // Undo three times walks back to snaps[2] (oldest still in past = snaps[2]).
-    expect(h.undo()).toBe(snaps[4]);
-    expect(h.undo()).toBe(snaps[3]);
-    expect(h.undo()).toBe(snaps[2]);
+    expect(h.undo()?.snapshot).toBe(snaps[4]);
+    expect(h.undo()?.snapshot).toBe(snaps[3]);
+    expect(h.undo()?.snapshot).toBe(snaps[2]);
     // No further undo: snaps[0] and snaps[1] were dropped.
     expect(h.undo()).toBeNull();
   });
@@ -192,7 +194,7 @@ describe("createLayoutHistory — capacity", () => {
   it("falls back to a sensible default capacity when not provided", () => {
     const h = createLayoutHistory();
     // Push 250 snapshots; default cap should hold at least 100.
-    for (let i = 0; i < 250; i++) h.push(snap(block("a", i, 0)));
+    for (let i = 0; i < 250; i++) h.push(snap(block("a", i, 0)), "mouse");
     expect(h.size().past).toBeGreaterThanOrEqual(100);
   });
 
@@ -205,9 +207,9 @@ describe("createLayoutHistory — capacity", () => {
 describe("createLayoutHistory — clear", () => {
   it("clear() resets past and future and disables undo/redo", () => {
     const h = createLayoutHistory();
-    h.push(snap(block("a", 0, 0)));
-    h.push(snap(block("a", 1, 0)));
-    h.push(snap(block("a", 2, 0)));
+    h.push(snap(block("a", 0, 0)), "mouse");
+    h.push(snap(block("a", 1, 0)), "mouse");
+    h.push(snap(block("a", 2, 0)), "mouse");
     h.undo();
     expect(h.canUndo()).toBe(true);
     expect(h.canRedo()).toBe(true);
@@ -221,13 +223,41 @@ describe("createLayoutHistory — clear", () => {
 
   it("after clear, the next push behaves as the initial anchor", () => {
     const h = createLayoutHistory();
-    h.push(snap(block("a", 0, 0)));
-    h.push(snap(block("a", 1, 0)));
+    h.push(snap(block("a", 0, 0)), "mouse");
+    h.push(snap(block("a", 1, 0)), "keyboard");
     h.clear();
 
     const s0 = snap(block("b", 0, 0));
-    h.push(s0);
+    h.push(s0, "keyboard");
     expect(h.canUndo()).toBe(false);
     expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+});
+
+describe("createLayoutHistory — source tracking", () => {
+  it("preserves the source through undo and redo round-trips", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s0, "mouse");
+    h.push(s1, "keyboard");
+    h.push(s2, "mouse");
+
+    expect(h.undo()?.source).toBe("keyboard");
+    expect(h.undo()?.source).toBe("mouse");
+    expect(h.redo()?.source).toBe("keyboard");
+    expect(h.redo()?.source).toBe("mouse");
+  });
+
+  it("distinguishes mouse from keyboard pushes even with identical snapshots", () => {
+    const h = createLayoutHistory();
+    const s = snap(block("a", 0, 0));
+    h.push(s, "mouse");
+    h.push(s, "keyboard");
+
+    const result = h.undo();
+    expect(result?.snapshot).toBe(s);
+    expect(result?.source).toBe("mouse");
   });
 });
