@@ -159,6 +159,19 @@ The dispatcher cascade walks the stack top-down and stops on the first scope tha
 
 In contrast, true UI modals — `help`, `settings`, `info`, `cheat-info-modal`, `cheat-copy-modal`, `layout-discard-confirm`, `dev`, `dev-logs`, `dev-axes` — push their scope as modal so that unrelated keystrokes are captured (not allowed to fall through). Their close action (`HELP_CLOSE`, `SETTINGS_CLOSE`, `INFO_CLOSE`, …) is bound inside the modal scope itself and routes `Escape` to the modal's close handler instead of letting it cascade to a parent scope.
 
+#### Universal actions (pierce modal scopes)
+
+A small allowlist of action IDs in `keyboard-dispatch.ts` — `UNIVERSAL_ACTION_IDS` — is resolved *before* the regular cascade. An event matching a universal action fires its `global`-scope handler immediately, regardless of how many modal scopes are stacked on top.
+
+The current set is intentionally minimal:
+
+- `TOGGLE_HELP` (`?`)
+- `TOGGLE_SETTINGS` (`,`)
+
+Rationale: these toggle UI surfaces that are conceptually always-available, even from inside `dev` mode or modals. Without the pre-pass, a modal scope would block them and require duplicate `useAction(ID, scope, …)` bindings in every modal — duplication that defeats the purpose of a single configurable keybinding.
+
+The pre-pass is short-circuiting: if a universal fires, no further handler in the scope stack runs for that event. Universals that have no `global` handler bound are silently ignored.
+
 There is a single `LAYOUT_EXIT` action (instead of one exit per sub-mode), so users can rebind layout exit once and it applies everywhere.
 
 ## Usage

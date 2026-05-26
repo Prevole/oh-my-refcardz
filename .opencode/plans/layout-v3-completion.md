@@ -269,6 +269,7 @@ Detailed tracker: [`layout-v3-fa-buffered-mode.md`](./layout-v3-fa-buffered-mode
 
 ## Open questions / parking
 
+- **8 skipped E2E tests in `e2e/layout-persistence.spec.ts`** : surfaced while running the full suite after the universals/help-settings fixes (`?`/`,` pre-pass + z-index + mutual exclusion). The skips predate this work and were not introduced by it. They cover: layout overlay activation on focus, Escape clears overlay, heading block focus, keyboard nav across blocks, resize → localStorage persistence, layout reset, reload persistence, and back-from-home persistence. **TODO**: review each skip during or right after Phase H — decide unskip / rewrite / delete. Many likely became obsolete with the V3 layout engine and the `[data-layout-ready='true']` selector convention from B1.
 - **Layout overlay selector** : `layout-persistence.spec.ts` E2Es wait on `[class*='layoutToolbar']`. **Resolved in B1** — replaced by `[data-sheet-grid][data-layout-ready='true']` (option b from the decision matrix). The grid emits `data-layout-ready` once `useLayoutPersistence` reports `hydrated`. Dev-mode-independent.
 - **Flaky vim j/k test** : `cheatsheet-navigation.spec.ts:25` failed once in the full suite but passed in isolation. **Re-verified in B4: now passes consistently** (the noisy environment from the broken layout tests was the likely culprit). Will keep an eye on it in subsequent phases.
 - **Help modal E2E fails (2 tests, surfaced in B4)** :

@@ -38,10 +38,12 @@ export function SheetShortcuts() {
   // (e.g. layout) is on top of the stack; the dispatcher cascades down
   // through non-modal scopes until it finds a match.
   useAction(ACTION_IDS.TOGGLE_HELP, "global", () => {
-    setHelpOpen(true);
+    setSettingsPanelOpen(false);
+    setHelpOpen((prev) => !prev);
   });
   useAction(ACTION_IDS.TOGGLE_SETTINGS, "global", () => {
-    setSettingsPanelOpen(true);
+    setHelpOpen(false);
+    setSettingsPanelOpen((prev) => !prev);
   });
   useAction(ACTION_IDS.GO_TOP, "global", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });

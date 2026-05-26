@@ -16,6 +16,10 @@
   transition: color var(--transition-normal), background var(--transition-normal);
 }
 
+.overlay {
+  z-index: var(--z-popover);
+}
+
 .dismiss:hover {
   color: var(--fg-88);
   background: var(--bg-overlay-subtle);

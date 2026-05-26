@@ -329,13 +329,13 @@
 }
 
 .toolbarButtonPrimary {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-medium));
-  color: var(--accent);
+  border-color: color-mix(in srgb, var(--warning) 60%, var(--border-medium));
+  color: var(--warning);
 }
 
 .toolbarButtonPrimary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border-color: var(--accent);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  border-color: var(--warning);
 }
 
 /* Grouped buttons share a single rounded outline; inner edges collapse. */

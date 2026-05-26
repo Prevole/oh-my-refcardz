@@ -25,22 +25,23 @@ Branch: `feature/layout-v3` @ `c44cefb`. Dev server: `npm run dev` →
 
 ## 1. Home page (scope: `home`)
 
-- [ ] Page loads with hex board visible, search input present
-- [ ] `h` / `ArrowLeft` — move selection left (cross-row at edges?)
-- [ ] `l` / `ArrowRight` — move selection right
-- [ ] `k` / `ArrowUp` — move selection up (cross-category at top edge)
-- [ ] `j` / `ArrowDown` — move selection down (cross-category at bottom edge)
-- [ ] `/` — focus search input
-- [ ] `Escape` (while search focused) — clear + blur search
-- [ ] `i` — show info modal for selected cheatsheet
-- [ ] `Enter` — open selected cheatsheet
-- [ ] Contextual inline help reads "Home" surface; updates if search focused (input scope inert here?)
-- [ ] Settings (`,`) and Help (`?`) reachable from home
+- [x] Page loads with hex board visible, search input present
+- [x] `h` / `ArrowLeft` — move selection left (cross-row at edges?)
+- [x] `l` / `ArrowRight` — move selection right
+- [x] `k` / `ArrowUp` — move selection up (cross-category at top edge)
+- [x] `j` / `ArrowDown` — move selection down (cross-category at bottom edge)
+- [x] `/` — focus search input
+- [x] `Escape` (while search focused) — clear + blur search
+- [x] `i` — show info modal for selected cheatsheet
+- [x] `Enter` — open selected cheatsheet
+- [x] Contextual inline help reads "Home" surface; updates if search focused (input scope inert here?)
+- [x] Settings (`,`) and Help (`?`) reachable from home
 - [x] ~~Pre-existing flaky test: `home-navigation.spec.ts:137`~~ — verified 2025-05: 105/105 full suite + 10/10 isolated, no longer flaky
 
 ### Findings (home)
 
-_(empty)_
+- H-1 (POLISH, fixed): browser focus ring on hex cards replaced by [data-selected] affordance via onFocus → setSelectedIndex + outline:none on .hexCard:focus-visible
+- H-2 (KNOWN, resolved): legacy flaky test note removed — no longer reproduces
 
 ---
 
@@ -48,15 +49,15 @@ _(empty)_
 
 Opened with `i` from home.
 
-- [ ] Modal opens centered, traps focus
-- [ ] Modal scope active in inline help (or fallback to default — check)
-- [ ] `Escape` — closes modal, returns focus to home selection
-- [ ] Background scroll locked while open
-- [ ] Click outside — closes? (verify intentional behavior)
+- [x] Modal opens centered, traps focus
+- [x] Modal scope active in inline help (or fallback to default — check)
+- [x] `Escape` — closes modal, returns focus to home selection
+- [x] Background scroll locked while open
+- [x] Click outside — closes? (verify intentional behavior)
 
 ### Findings (info)
 
-_(empty)_
+- All checks green. `i` and `Escape` both close (combos defined together for INFO_CLOSE). Backdrop click closes via Modal.tsx onClick on outer div.
 
 ---
 
@@ -67,13 +68,13 @@ Open any cheatsheet (e.g. `git`).
 - [ ] Layout renders, headings visible, no flash of unstyled content
 - [ ] `h/j/k/l` and arrows — move selection across cards
 - [ ] Heading nav sidebar order matches visual Y order
-- [ ] `b` — back to home
-- [ ] `c` — copy command (does it require selection? what's copied?)
-- [ ] `e` — show example (modal opens?)
-- [ ] `Escape` — clear command focus / exit current state
+- [ ] `Backspace` / `Escape` — back to home (action `BACK_TO_HOME`)
+- [ ] `y` — copy command (vim yank; needs a focused command card?)
+- [ ] `i` — show example / details (modal opens?)
+- [ ] `Escape` — clear command focus / exit current state (also bound to back-to-home; intentional overlap)
 - [ ] `Shift+R` — reset layout (floating button appears only when modified)
 - [ ] `?` — opens help modal
-- [ ] `s` — opens settings panel
+- [ ] `,` — opens settings panel
 - [ ] `Ctrl+M` — enters layout mode (verify `LayoutModePill` appears top-right)
 - [ ] `Ctrl+Shift+D` — toggles dev mode (dev bar appears)
 - [ ] Floating reset button: only visible when layout differs from original
@@ -81,7 +82,17 @@ Open any cheatsheet (e.g. `git`).
 
 ### Findings (sheet)
 
-_(empty)_
+- **Fix S-1 (applied)** — `?` and `,` did not work from inside `dev` mode because the `dev` scope is modal and shadows the `global` bindings. Implemented **piste A** in `src/lib/keyboard-dispatch.ts`: new `UNIVERSAL_ACTION_IDS = [TOGGLE_HELP, TOGGLE_SETTINGS]` resolved in a pre-pass before the scope cascade. Unit tests added in `src/lib/keyboard-dispatch.test.ts` (5 new tests, 21/21 green). Docs updated in `docs/keybindings.md` ("Universal actions" subsection). `dev` scope stays `modal: true` so `Escape` still closes dev cleanly instead of cascading to `BACK_TO_HOME`.
+- **Fix S-1b (applied)** — Side-effect of S-1: opening Help (`?`) from inside `cheat-info-modal`/`cheat-copy-modal` rendered Help **behind** the info/copy overlay. Root cause: shared `Modal` (used by Help) had Tailwind `z-30` while cheat command modals use `--z-modal` (=100). Promoted the shared `Modal` overlay to `--z-popover` (=150) via a new `.overlay` class in `src/components/ui/modal.module.css` so Help always layers above any open `--z-modal` surface. Behavior of `,` reaching Settings into an existing modal is acceptable as-is (Settings overlay uses `--z-toast` and was already above).
+- **Fix S-1c (applied)** — Side-effect of S-1: Help and Settings could be open simultaneously, with Settings (`--z-toast` = 200) always rendering above Help (`--z-popover` = 150) regardless of which was opened last. Resolution: `TOGGLE_HELP` and `TOGGLE_SETTINGS` handlers now close the other panel before toggling. Also switched both handlers from `setX(true)` to `setX(prev => !prev)` so a second press of `?` (or `,`) closes the panel from anywhere, including from within a modal scope reached via the universal pre-pass. Applied symmetrically in `src/app/home-client.tsx` and `src/app/cheatsheets/[slug]/sheet-shortcuts.tsx`.
+- **Regression coverage (applied)** — Added `e2e/help-settings-interaction.spec.ts` (8 tests) covering S-1 (universal pre-pass: `?` from item-detail modal), S-1b (z-index: Help layers above cheat command modals — asserted via computed `z-index` comparison), and S-1c (mutual exclusion + re-toggle, on both home and sheet pages). Full E2E suite: 113 passed, 8 skipped (105 → 113, no regressions).
+- **Fix S-2 (applied)** — Dev mode bar "Save layout to server" button used `var(--accent)` (sheet-tinted) instead of the fixed DEV pill yellow. Changed `.toolbarButtonPrimary` in `src/components/sheets/dev-overlay/dev-overlay.module.css` to `var(--warning)` for border/color/hover. The button now stays visually consistent across sheets regardless of accent color.
+- Checklist combo corrections applied (none of these were bugs, just doc drift in the checklist itself):
+  - `BACK_TO_HOME` = `Backspace` / `Escape` (not `b`).
+  - `TOGGLE_SETTINGS` = `,` (not `s`).
+  - `COPY_COMMAND` = `y` (not `c`).
+  - `SHOW_EXAMPLE` = `i` (not `e`).
+  - `CLEAR_COMMAND_FOCUS` = `Escape` (intentional overlap with `BACK_TO_HOME`).
 
 ---
 

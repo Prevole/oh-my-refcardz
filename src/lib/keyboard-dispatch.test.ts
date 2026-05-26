@@ -113,6 +113,16 @@ function defaultActions(): Record<KeybindingContext, KeybindingAction[]> {
         label: "Open palette",
         combos: [combo("k", "ctrl")],
       },
+      {
+        id: ACTION_IDS.TOGGLE_HELP,
+        label: "Toggle help",
+        combos: [key("?")],
+      },
+      {
+        id: ACTION_IDS.TOGGLE_SETTINGS,
+        label: "Toggle settings",
+        combos: [key(",")],
+      },
     ],
     home: [],
     sheet: [],
@@ -323,6 +333,69 @@ describe("dispatchKeyEvent", () => {
         kind: "matched",
         scope: "dev",
         actionId: ACTION_IDS.DEV_SAVE_LAYOUT,
+      });
+    });
+  });
+
+  describe("universals", () => {
+    it("fires TOGGLE_HELP from a modal scope even when the cascade would be blocked", () => {
+      const handler = vi.fn();
+      registry.bind(ACTION_IDS.TOGGLE_HELP, "global", handler);
+      const out = dispatch(makeEvent("?"), [ROOT, s("dev", true)]);
+      expect(handler).toHaveBeenCalledOnce();
+      expect(out).toMatchObject({
+        kind: "matched",
+        scope: "global",
+        actionId: ACTION_IDS.TOGGLE_HELP,
+      });
+    });
+
+    it("fires TOGGLE_SETTINGS from a deep modal stack", () => {
+      const handler = vi.fn();
+      registry.bind(ACTION_IDS.TOGGLE_SETTINGS, "global", handler);
+      const out = dispatch(makeEvent(","), [
+        ROOT,
+        s("dev", true),
+        s("dev-logs", true),
+      ]);
+      expect(handler).toHaveBeenCalledOnce();
+      expect(out).toMatchObject({
+        kind: "matched",
+        scope: "global",
+        actionId: ACTION_IDS.TOGGLE_SETTINGS,
+      });
+    });
+
+    it("does not fire a universal when no global handler is bound", () => {
+      const out = dispatch(makeEvent("?"), [ROOT, s("dev", true)]);
+      expect(out).toEqual({ kind: "blocked-modal", scope: "dev" });
+    });
+
+    it("does not pierce modals for non-universal global actions", () => {
+      const handler = vi.fn();
+      registry.bind(ACTION_IDS.OPEN_COMMAND_PALETTE, "global", handler);
+      const out = dispatch(makeEvent("k", { ctrlKey: true }), [
+        ROOT,
+        s("dev", true),
+      ]);
+      expect(handler).not.toHaveBeenCalled();
+      expect(out).toEqual({ kind: "blocked-modal", scope: "dev" });
+    });
+
+    it("runs the universal only once, not the top-scope handler too", () => {
+      const globalHandler = vi.fn();
+      const devHandler = vi.fn();
+      registry.bind(ACTION_IDS.TOGGLE_HELP, "global", globalHandler);
+      // Hypothetical: dev also bound to ? (won't happen in practice but
+      // verifies pre-pass short-circuits the cascade).
+      registry.bind(ACTION_IDS.TOGGLE_HELP, "dev", devHandler);
+      const out = dispatch(makeEvent("?"), [ROOT, s("dev", true)]);
+      expect(globalHandler).toHaveBeenCalledOnce();
+      expect(devHandler).not.toHaveBeenCalled();
+      expect(out).toMatchObject({
+        kind: "matched",
+        scope: "global",
+        actionId: ACTION_IDS.TOGGLE_HELP,
       });
     });
   });

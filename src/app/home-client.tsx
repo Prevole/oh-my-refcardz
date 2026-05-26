@@ -401,10 +401,12 @@ export function HomeClient({ categories }: Props) {
   // Global UI shortcuts: open help/settings, scroll. Bound on the
   // `global` scope so they cascade past non-modal sub-modes.
   useAction(ACTION_IDS.TOGGLE_HELP, "global", () => {
-    setHelpOpen(true);
+    setSettingsPanelOpen(false);
+    setHelpOpen((prev) => !prev);
   });
   useAction(ACTION_IDS.TOGGLE_SETTINGS, "global", () => {
-    setSettingsPanelOpen(true);
+    setHelpOpen(false);
+    setSettingsPanelOpen((prev) => !prev);
   });
   useAction(ACTION_IDS.GO_TOP, "global", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });

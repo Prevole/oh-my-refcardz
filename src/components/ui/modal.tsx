@@ -68,7 +68,7 @@ export function Modal({ open, onClose, children, className = "" }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-center justify-center bg-[#03060ecc] px-6"
+      className={`fixed inset-0 flex items-center justify-center bg-[#03060ecc] px-6 ${styles.overlay}`}
       onClick={onClose}
     >
       <div
