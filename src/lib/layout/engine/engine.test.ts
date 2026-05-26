@@ -508,3 +508,95 @@ describe("applyOperation — 3.9.8 defaults", () => {
     expect(events.some((e) => e.type === "step.start")).toBe(false);
   });
 });
+
+// -----------------------------------------------------------------------------
+// 3.9.9 — Immutability hard contract (Phase H pre-flight)
+//
+// These tests freeze the input array, every block, and every position. If any
+// engine code path attempts to mutate the input, the engine call will throw a
+// TypeError in strict mode. Together with the reference-identity assertions,
+// this elevates the engine's purity from "by convention" to "hard contract".
+// -----------------------------------------------------------------------------
+
+function deepFreeze(blocks: LayoutBlock[]): readonly LayoutBlock[] {
+  for (const b of blocks) {
+    Object.freeze(b.position);
+    Object.freeze(b);
+  }
+  return Object.freeze(blocks);
+}
+
+function expectFreshReferences(
+  result: readonly LayoutBlock[],
+  input: readonly LayoutBlock[]
+): void {
+  expect(result).not.toBe(input);
+  for (let i = 0; i < input.length; i++) {
+    expect(result[i]).not.toBe(input[i]);
+    expect(result[i].position).not.toBe(input[i].position);
+  }
+}
+
+describe("applyOperation — 3.9.9 immutability hard contract", () => {
+  it("does not mutate frozen input on a trivial move (no cascade)", () => {
+    const blocks = [block("a", 2, 2)];
+    const frozen = deepFreeze(blocks);
+    const op: Operation = { kind: "move", blockId: "a", dx: 0, dy: 1 };
+
+    expect(() => applyOperation(frozen, op, makeOptions(blocks))).not.toThrow();
+  });
+
+  it("does not mutate frozen input on a push cascade", () => {
+    // a pushes b east twice.
+    const blocks = [block("a", 0, 0), block("b", 1, 0)];
+    const frozen = deepFreeze(blocks);
+    const op: Operation = { kind: "move", blockId: "a", dx: 2, dy: 0 };
+
+    expect(() => applyOperation(frozen, op, makeOptions(blocks))).not.toThrow();
+  });
+
+  it("does not mutate frozen input on a shrink cascade", () => {
+    // grid=10. a at (0,0,1,1). b at (1,0,9,1) fills the rest.
+    // Push east: chain saturates → b shrinks on its west edge.
+    const blocks = [block("a", 0, 0, 1, 1), block("b", 1, 0, 9, 1)];
+    const frozen = deepFreeze(blocks);
+    const op: Operation = { kind: "move", blockId: "a", dx: 2, dy: 0 };
+
+    expect(() => applyOperation(frozen, op, makeOptions(blocks))).not.toThrow();
+  });
+
+  it("does not mutate frozen input on a wrap (south fallback)", () => {
+    // a (8,0,1,1) pushes b (9,0,1,1) at east edge → b can't push, can't shrink
+    // (minW=1), so b wraps to next row.
+    const blocks = [block("a", 8, 0, 1, 1), block("b", 9, 0, 1, 1)];
+    const frozen = deepFreeze(blocks);
+    const op: Operation = { kind: "move", blockId: "a", dx: 1, dy: 0 };
+
+    expect(() => applyOperation(frozen, op, makeOptions(blocks))).not.toThrow();
+  });
+
+  it("does not mutate frozen input on a resize-shrink with compact=true", () => {
+    // Primary (0,0,3,2) with neighbor (3,0,1,2). Shrink east by 1 → neighbor
+    // pulled west. Compact path exercises compact.ts.
+    const blocks = [block("a", 0, 0, 3, 2), block("b", 3, 0, 1, 2)];
+    const frozen = deepFreeze(blocks);
+    const op: Operation = {
+      kind: "resize",
+      blockId: "a",
+      edge: "east",
+      delta: -1,
+      options: { compact: true },
+    };
+
+    expect(() => applyOperation(frozen, op, makeOptions(blocks))).not.toThrow();
+  });
+
+  it("returns fresh references: result.blocks !== input, and each block/position is a new object", () => {
+    // Use a cascade scenario so multiple blocks are touched.
+    const blocks = [block("a", 0, 0), block("b", 1, 0), block("c", 5, 5)];
+    const op: Operation = { kind: "move", blockId: "a", dx: 1, dy: 0 };
+    const result = applyOperation(blocks, op, makeOptions(blocks));
+
+    expectFreshReferences(result.blocks, blocks);
+  });
+});

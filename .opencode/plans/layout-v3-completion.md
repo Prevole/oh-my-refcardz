@@ -243,13 +243,26 @@ Detailed tracker: [`layout-v3-fa-buffered-mode.md`](./layout-v3-fa-buffered-mode
 
 ## Phase H — Undo/Redo
 
-- [ ] H1. Immutability audit of `applyOperation` — formal check that input `blocks[]` is never mutated
-- [ ] H2. Design `LayoutHistory` data structure (pure, push/pop, capped size)
-- [ ] H3. Reserve `ACTION_IDS.LAYOUT_UNDO` and `LAYOUT_REDO`; bind defaults (`u` / `Ctrl+R` or chosen alternatives) in the `layout` scope
-- [ ] H4. Wire `LayoutHistory` into `LayoutEditor` at commit boundaries (one Vim keystroke = one undo step)
-- [ ] H5. UI: indicate undo/redo availability (status pill or inline)
-- [ ] H6. Tests: unit (`LayoutHistory`), integration (commit → undo → state matches pre-commit snapshot), E2E
-- [ ] H7. Doc: extend `docs/layout-engine.md` with the history contract; mention in `docs/layout-actions.md`
+### Scope decisions (locked)
+
+- **Single history buffer** per cheatsheet page session (alive from mount to unmount of the sheet route).
+- The buffer is **shared** between keyboard mode (layout mode + sub-scopes) and mouse mode (drag/resize in the `sheet` scope without layout mode). Source of the mutation is irrelevant.
+- **Undoable operations**: MOVE (free + strict) and RESIZE (grow/shrink in all variants: free, strict, compact). LAYOUT_RESET is also a step.
+- **Non-undoable**: navigation-only operations (`LAYOUT_NAV_*`, sub-mode switches `LAYOUT_GOTO_*`, focus changes), `LAYOUT_COMMIT`, `LAYOUT_EXIT` (they don't mutate the layout buffer in a way that the user wants to undo separately).
+- COMMIT / EXIT **do not touch the history pile** — the buffer survives sub-mode boundaries.
+- Empty pile → keystroke is a silent no-op.
+- Default combos: `LAYOUT_UNDO` = `u` (Vim convention) ; `LAYOUT_REDO` = `Ctrl+Shift+z` (standard OS).
+- Binding scopes: `layout` (master, inherited by `layout-navigation` / `layout-move` / `layout-resize`) **and** `sheet` (for mouse-driven undo outside layout mode).
+
+### Steps
+
+- [ ] H1. Immutability audit of `applyOperation` — formal check that input `blocks[]` is never mutated (prerequisite for safe snapshot reuse).
+- [ ] H2. Design `LayoutHistory` data structure (pure, push/pop/peek, capped size, cursor-based redo semantics). Unit-test in isolation.
+- [ ] H3. Reserve `ACTION_IDS.LAYOUT_UNDO` and `LAYOUT_REDO`; bind defaults `u` and `Ctrl+Shift+z` in scopes `layout` and `sheet`. Update keyboard dispatcher fixtures.
+- [ ] H4. Wire `LayoutHistory` into the page-level layout owner (sheet page route) so the same instance is consumed by both the keyboard `LayoutEditor` and the mouse drag/resize hooks. One mutating operation (keyboard keystroke or mouse drop/release) = one history step.
+- [ ] H5. UI: indicate undo/redo availability (visual cue — status pill, inline hint, or disabled state on undo/redo affordances if any).
+- [ ] H6. Tests: unit (`LayoutHistory`), integration (operation → undo → state matches pre-op snapshot; cross-mode undo: mouse op then `u` in layout mode), E2E (keyboard + mouse scenarios).
+- [ ] H7. Doc: extend `docs/layout-engine.md` with the history contract (single buffer, shared across modes, what's undoable); update `docs/layout-actions.md` (combos + behaviour); update `docs/keybindings.md`.
 
 ## Architectural invariants (must hold throughout)
 
