@@ -32,12 +32,24 @@ export type UseLayoutPersistenceResult = {
   originalLayout: BlockLayoutState[];
   isModifiedFromOriginal: boolean;
   resetToOriginal: () => void;
+  /**
+   * Promote the current `blockLayouts` to be the new "original" baseline
+   * for the rest of the session. After this call, `isModifiedFromOriginal`
+   * becomes `false` until the layout is further mutated. The localStorage
+   * mirror is cleared so a reload picks up the (presumably newly-saved)
+   * server baseline cleanly.
+   *
+   * Used after a successful `syncLayoutToDev` so the user-facing reset
+   * button hides immediately without waiting for a page reload to rehydrate
+   * `sheet.savedBlockLayout`.
+   */
+  promoteCurrentAsBaseline: () => void;
 };
 
 export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWithMeta): UseLayoutPersistenceResult {
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot);
 
-  const originalLayout = useMemo(() => {
+  const inferredOriginalLayout = useMemo(() => {
     const inferredLayouts = buildDefaultBlockLayouts(sheet);
 
     if (sheet.savedBlockLayout) {
@@ -45,6 +57,21 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
     }
     return inferredLayouts;
   }, [sheet]);
+
+  // Session-local override of the baseline. Set when the user promotes the
+  // current layout (typically after a successful dev-save). Stored together
+  // with the inferred baseline it was promoted against, so a server-side
+  // baseline change (page reload / sheet swap) invalidates the override
+  // automatically without a useEffect.
+  const [override, setOverride] = useState<{
+    base: BlockLayoutState[];
+    promoted: BlockLayoutState[];
+  } | null>(null);
+
+  const baselineOverride =
+    override && override.base === inferredOriginalLayout ? override.promoted : null;
+
+  const originalLayout = baselineOverride ?? inferredOriginalLayout;
 
   const [blockLayouts, setBlockLayouts] = useState(originalLayout);
   const [storageHydrated, setStorageHydrated] = useState(false);
@@ -84,6 +111,13 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
     setBlockLayouts(originalLayout);
   }
 
+  function promoteCurrentAsBaseline() {
+    if (!hydrated) return;
+
+    window.localStorage.removeItem(buildStorageKey(sheetSlug));
+    setOverride({ base: inferredOriginalLayout, promoted: blockLayouts });
+  }
+
   return {
     blockLayouts,
     setBlockLayouts,
@@ -91,5 +125,6 @@ export function useLayoutPersistence(sheetSlug: string, sheet: YamlCheatSheetWit
     originalLayout,
     isModifiedFromOriginal,
     resetToOriginal,
+    promoteCurrentAsBaseline,
   };
 }

@@ -719,7 +719,7 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.DEV_RESET_LAYOUT,
       label: "Reset layout",
-      combos: [key("w")],
+      combos: [combo("R", "shift")],
     },
     {
       id: ACTION_IDS.DEV_TOGGLE_RECORDING,

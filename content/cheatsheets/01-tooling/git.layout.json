@@ -2,191 +2,153 @@
   {
     "id": "inspect-and-diff",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 0,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "status",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 2,
-      "w": 18,
-      "h": 13
-    }
+    "colStart": 1,
+    "rowStart": 6,
+    "colSpan": 18,
+    "rowSpan": 13
   },
   {
     "id": "diff",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 2,
-      "w": 18,
-      "h": 13
-    }
+    "colStart": 19,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 13
   },
   {
     "id": "branching-and-commits",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 15,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 19,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "branch-moves",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 17,
-      "w": 18,
-      "h": 21
-    }
+    "colStart": 1,
+    "rowStart": 21,
+    "colSpan": 18,
+    "rowSpan": 21
   },
   {
     "id": "stage-and-commit",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 17,
-      "w": 18,
-      "h": 21
-    }
+    "colStart": 19,
+    "rowStart": 21,
+    "colSpan": 18,
+    "rowSpan": 21
   },
   {
     "id": "history-and-inspection",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 38,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 42,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "log-views",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 40,
-      "w": 18,
-      "h": 22
-    }
+    "colStart": 1,
+    "rowStart": 44,
+    "colSpan": 18,
+    "rowSpan": 22
   },
   {
     "id": "config",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 40,
-      "w": 18,
-      "h": 22
-    }
+    "colStart": 19,
+    "rowStart": 44,
+    "colSpan": 18,
+    "rowSpan": 22
   },
   {
     "id": "remote-and-cleanup",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 62,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 66,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "sync-and-push",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 64,
-      "w": 18,
-      "h": 21
-    }
+    "colStart": 1,
+    "rowStart": 68,
+    "colSpan": 18,
+    "rowSpan": 21
   },
   {
     "id": "merged-branch-cleanup",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 64,
-      "w": 18,
-      "h": 21
-    }
+    "colStart": 19,
+    "rowStart": 68,
+    "colSpan": 18,
+    "rowSpan": 21
   },
   {
     "id": "configuration",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 85,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 89,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "inspect-config",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 87,
-      "w": 12,
-      "h": 11
-    }
+    "colStart": 1,
+    "rowStart": 91,
+    "colSpan": 12,
+    "rowSpan": 11
   },
   {
     "id": "diff-pager",
     "kind": "card",
-    "position": {
-      "x": 12,
-      "y": 113,
-      "w": 24,
-      "h": 19
-    }
+    "colStart": 13,
+    "rowStart": 117,
+    "colSpan": 24,
+    "rowSpan": 19
   },
   {
     "id": "conditional-includes",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 111,
-      "w": 12,
-      "h": 12
-    }
+    "colStart": 1,
+    "rowStart": 115,
+    "colSpan": 12,
+    "rowSpan": 12
   },
   {
     "id": "identity-and-signing",
     "kind": "card",
-    "position": {
-      "x": 12,
-      "y": 87,
-      "w": 24,
-      "h": 26
-    }
+    "colStart": 13,
+    "rowStart": 91,
+    "colSpan": 24,
+    "rowSpan": 26
   },
   {
     "id": "aliases",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 98,
-      "w": 12,
-      "h": 13
-    }
+    "colStart": 1,
+    "rowStart": 102,
+    "colSpan": 12,
+    "rowSpan": 13
   },
   {
     "id": "global-defaults",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 132,
-      "w": 36,
-      "h": 31
-    }
+    "colStart": 1,
+    "rowStart": 136,
+    "colSpan": 36,
+    "rowSpan": 31
   }
 ]

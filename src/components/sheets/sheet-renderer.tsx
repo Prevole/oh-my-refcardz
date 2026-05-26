@@ -55,10 +55,14 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const blocks = getRenderableBlocks(sheet);
   const [gridMetrics, setGridMetrics] = useState<GridMetricsState>(FALLBACK_METRICS);
 
-  const { blockLayouts, setBlockLayouts, hydrated, isModifiedFromOriginal, resetToOriginal } = useLayoutPersistence(
-    sheetSlug,
-    sheet
-  );
+  const {
+    blockLayouts,
+    setBlockLayouts,
+    hydrated,
+    isModifiedFromOriginal,
+    resetToOriginal,
+    promoteCurrentAsBaseline,
+  } = useLayoutPersistence(sheetSlug, sheet);
 
   const initialBlocksV2 = useMemo(() => migrateBlockLayouts(blockLayouts), [blockLayouts]);
 
@@ -249,10 +253,24 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   // therefore only active in that mode and never collide with sheet/global
   // bindings.
   const saveLayoutToDev = useCallback(() => {
-    syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks)).catch((err) => {
-      console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
-    });
-  }, [editor.committedBlocks, sheetSlug]);
+    syncLayoutToDev(sheetSlug, toOldBlockLayouts(editor.committedBlocks))
+      .then((response) => {
+        if (!response.ok) {
+          console.warn(
+            `[dev] Save layout for ${sheetSlug} returned ${response.status}`
+          );
+          return;
+        }
+        // The server-side YAML is now in sync with the current committed
+        // layout. Promote it locally so `isModifiedFromOriginal` flips back
+        // to false and the user-facing reset button hides immediately,
+        // without waiting for a page reload to rehydrate sheet props.
+        promoteCurrentAsBaseline();
+      })
+      .catch((err) => {
+        console.warn(`[dev] Failed to save layout for ${sheetSlug}:`, err);
+      });
+  }, [editor.committedBlocks, sheetSlug, promoteCurrentAsBaseline]);
 
   useAction(ACTION_IDS.DEV_SAVE_LAYOUT, "dev", () => {
     if (process.env.NODE_ENV === "development") saveLayoutToDev();

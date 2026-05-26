@@ -136,7 +136,7 @@ function defaultActions(): Record<KeybindingContext, KeybindingAction[]> {
       {
         id: ACTION_IDS.DEV_RESET_LAYOUT,
         label: "Reset",
-        combos: [key("w")],
+        combos: [combo("R", "shift")],
       },
     ],
     "dev-logs": [
