@@ -88,7 +88,7 @@
   margin-bottom: var(--space-4);
   border-bottom: none;
   border-top: 1px solid var(--border-subtle);
-  padding-left: var(--l3-indent, 0);
+  padding-left: var(--child-tab-indent, 0);
 }
 
 .tabTertiary {
@@ -122,4 +122,37 @@
 
 .tabTertiary[data-focused="true"] {
   background: color-mix(in srgb, var(--accent-3) 12%, transparent);
+}
+
+/* SecondaryInverted variant: secondary colors/sizing (amber), but with the
+ * inverted decoration of tertiary (border on TOP, rounded corners at
+ * BOTTOM). Used in contexts that have only two tab levels (e.g. the help
+ * modal) where we want L2 to visually "hang" under L1 without introducing
+ * a third color (which would imply a third hierarchical level).
+ *
+ * Composes via stacked classes: .tabsSecondary + .tabsSecondaryInverted on
+ * the strip, .tabSecondary + .tabSecondaryInverted on each tab. The
+ * inverted modifier flips the relevant borders/radius declarations. */
+.tabsSecondaryInverted {
+  margin-top: 0;
+  border-bottom: none;
+  border-top: 1px solid var(--border-subtle);
+  padding-left: var(--child-tab-indent, 0);
+}
+
+.tabSecondaryInverted {
+  border-bottom: none;
+  border-top: 2px solid transparent;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  margin-top: -1px;
+  margin-bottom: 0;
+}
+
+.tabSecondaryInverted.tabActive {
+  border-bottom-color: transparent;
+  border-top-color: var(--accent);
+  border-top-width: 2px;
 }

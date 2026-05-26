@@ -18,6 +18,7 @@ import {
   DEFAULT_KEYBINDINGS,
 } from "@/lib/keybindings";
 import { Tabs } from "./tabs";
+import { useActiveTabIndent } from "./use-active-tab-indent";
 import styles from "./keybinding-editor.module.css";
 
 type RecordingState = {
@@ -483,31 +484,17 @@ export function KeybindingEditor({ focusedSubTab, focusedSubSubTab, onSubTabClic
   }, [resetActions, visibleTargets]);
 
   // Dynamic indent: align the L3 strip's left edge with the L2 "Cheatsheet"
-  // tab. We measure the tab's offsetLeft within the L2 strip and expose it as
-  // a CSS var on the L3 wrapper, re-measuring on resize.
+  // tab. Delegated to the shared hook which is also used by the help modal.
   const subTabsBarRef = useRef<HTMLDivElement>(null);
   const subSubTabsBarRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!showSubSubTabs) return;
-    const strip = subTabsBarRef.current;
-    const target = subSubTabsBarRef.current;
-    if (!strip || !target) return;
-
-    const measure = () => {
-      const tab = strip.querySelector<HTMLElement>('[data-testid="keybindings-sub-tab-cheatsheet"]');
-      if (!tab) return;
-      const stripRect = strip.getBoundingClientRect();
-      const tabRect = tab.getBoundingClientRect();
-      const indent = Math.max(0, tabRect.left - stripRect.left);
-      target.style.setProperty("--l3-indent", `${indent}px`);
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(strip);
-    return () => observer.disconnect();
-  }, [showSubSubTabs]);
+  useActiveTabIndent({
+    parentStripRef: subTabsBarRef,
+    childStripRef: subSubTabsBarRef,
+    activeParentId: "cheatsheet",
+    parentTestIdPrefix: "keybindings-sub-tab",
+    enabled: showSubSubTabs,
+  });
 
   return (
     <div className={styles.editor} data-testid="keybinding-editor">

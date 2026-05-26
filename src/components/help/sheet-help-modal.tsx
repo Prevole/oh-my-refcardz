@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { ArrowGlyph } from "@/components/ui/arrow-glyph";
 import { KeybindingChart, type ChartEntry } from "@/components/help/keybinding-chart";
 import { Tabs } from "@/components/settings/tabs";
+import { useActiveTabIndent } from "@/components/settings/use-active-tab-indent";
 import { useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { ACTION_IDS, getCombosDisplay } from "@/lib/keybindings";
@@ -178,18 +179,50 @@ export function SheetHelpModal({ open, onClose }: Props) {
   const toggleHelpDisplay = getCombosDisplay(toggleHelpCombos);
   const { matchesAction } = useKeybindings();
 
-  // Resolve which L2 row (if any) is currently visible.
-  const visibleL2 = useMemo(
-    () =>
-      activeTab === "general"
-        ? { tabs: GENERAL_SUB_TABS as readonly { id: string; label: string }[], activeId: generalSubTab as string }
-        : activeTab === "layout"
-          ? { tabs: LAYOUT_SUB_TABS as readonly { id: string; label: string }[], activeId: layoutSubTab as string }
-          : activeTab === "developer"
-            ? { tabs: DEVELOPER_SUB_TABS as readonly { id: string; label: string }[], activeId: developerSubTab as string }
-            : null,
-    [activeTab, generalSubTab, layoutSubTab, developerSubTab]
-  );
+  const l1StripRef = useRef<HTMLDivElement>(null);
+  const l2StripRef = useRef<HTMLDivElement>(null);
+
+  // Resolve which L2 row (if any) is currently visible, along with its
+  // bindings (active id setter, testIdPrefix, focused id) so a SINGLE shared
+  // L2 strip can be rendered just below L1 instead of one strip per panel.
+  const visibleL2 = useMemo(() => {
+    if (activeTab === "general") {
+      return {
+        tabs: GENERAL_SUB_TABS as { id: string; label: string }[],
+        activeId: generalSubTab as string,
+        testIdPrefix: "help-general-sub-tab",
+        setActive: (id: string) => setGeneralSubTab(id as GeneralSubTab),
+      };
+    }
+    if (activeTab === "layout") {
+      return {
+        tabs: LAYOUT_SUB_TABS as { id: string; label: string }[],
+        activeId: layoutSubTab as string,
+        testIdPrefix: "help-layout-sub-tab",
+        setActive: (id: string) => setLayoutSubTab(id as LayoutSubTab),
+      };
+    }
+    if (activeTab === "developer") {
+      return {
+        tabs: DEVELOPER_SUB_TABS as { id: string; label: string }[],
+        activeId: developerSubTab as string,
+        testIdPrefix: "help-developer-sub-tab",
+        setActive: (id: string) => setDeveloperSubTab(id as DeveloperSubTab),
+      };
+    }
+    return null;
+  }, [activeTab, generalSubTab, layoutSubTab, developerSubTab]);
+
+  // Align the L2 strip's left edge with the active L1 tab, mirroring the
+  // settings panel's L3-under-L2 alignment. The hook is a no-op while the L2
+  // strip is hidden (legend / help tabs).
+  useActiveTabIndent({
+    parentStripRef: l1StripRef,
+    childStripRef: l2StripRef,
+    activeParentId: activeTab,
+    parentTestIdPrefix: "help-tab",
+    enabled: visibleL2 !== null,
+  });
 
   // Reset focus to the active L1 tab whenever the modal opens. We use the
   // "state mirror" pattern (https://react.dev/reference/react/useState#storing-information-from-previous-renders):
@@ -289,7 +322,7 @@ export function SheetHelpModal({ open, onClose }: Props) {
     <Modal open={open} onClose={onClose} className="flex h-[min(80vh,44rem)] max-w-4xl flex-col">
       <p className="font-mono text-xs tracking-[0.15em] text-white/70">HELP</p>
 
-      <div className={helpStyles.tabs}>
+      <div className={helpStyles.tabs} ref={l1StripRef}>
         {TABS.map((tab, idx) => (
           <button
             key={tab.id}
@@ -308,25 +341,29 @@ export function SheetHelpModal({ open, onClose }: Props) {
         ))}
       </div>
 
-      <div className={helpStyles.panel}>
-        <div className={helpStyles.tabContent} data-active={activeTab === "general"} data-testid="help-content-general">
+      {visibleL2 && (
+        <div className={helpStyles.subTabsBar} ref={l2StripRef}>
           <Tabs
-            tabs={GENERAL_SUB_TABS}
-            activeTab={generalSubTab}
+            tabs={visibleL2.tabs}
+            activeTab={visibleL2.activeId}
             onChange={(id) => {
-              setGeneralSubTab(id as GeneralSubTab);
-              const idx = GENERAL_SUB_TABS.findIndex((t) => t.id === id);
+              visibleL2.setActive(id);
+              const idx = visibleL2.tabs.findIndex((t) => t.id === id);
               if (idx >= 0) setFocus({ row: "L2", index: idx });
             }}
-            testIdPrefix="help-general-sub-tab"
-            variant="secondary"
+            testIdPrefix={visibleL2.testIdPrefix}
+            variant="secondaryInverted"
             focusedTabId={
-              focus.row === "L2" && activeTab === "general"
-                ? GENERAL_SUB_TABS[focus.index]?.id ?? null
+              focus.row === "L2"
+                ? visibleL2.tabs[focus.index]?.id ?? null
                 : null
             }
           />
+        </div>
+      )}
 
+      <div className={helpStyles.panel}>
+        <div className={helpStyles.tabContent} data-active={activeTab === "general"} data-testid="help-content-general">
           {generalSubTab === "navigation" && (
             <div data-testid="help-general-content-navigation">
               <div className={helpStyles.layoutSection}>
@@ -361,23 +398,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
         </div>
 
         <div className={helpStyles.tabContent} data-active={activeTab === "layout"} data-testid="help-content-layout">
-          <Tabs
-            tabs={LAYOUT_SUB_TABS}
-            activeTab={layoutSubTab}
-            onChange={(id) => {
-              setLayoutSubTab(id as LayoutSubTab);
-              const idx = LAYOUT_SUB_TABS.findIndex((t) => t.id === id);
-              if (idx >= 0) setFocus({ row: "L2", index: idx });
-            }}
-            testIdPrefix="help-layout-sub-tab"
-            variant="secondary"
-            focusedTabId={
-              focus.row === "L2" && activeTab === "layout"
-                ? LAYOUT_SUB_TABS[focus.index]?.id ?? null
-                : null
-            }
-          />
-
           {layoutSubTab === "lifecycle" && (
             <div data-testid="help-layout-content-lifecycle">
               <div className={helpStyles.layoutSection}>
@@ -433,23 +453,6 @@ export function SheetHelpModal({ open, onClose }: Props) {
         </div>
 
         <div className={helpStyles.tabContent} data-active={activeTab === "developer"} data-testid="help-content-developer">
-          <Tabs
-            tabs={DEVELOPER_SUB_TABS}
-            activeTab={developerSubTab}
-            onChange={(id) => {
-              setDeveloperSubTab(id as DeveloperSubTab);
-              const idx = DEVELOPER_SUB_TABS.findIndex((t) => t.id === id);
-              if (idx >= 0) setFocus({ row: "L2", index: idx });
-            }}
-            testIdPrefix="help-developer-sub-tab"
-            variant="secondary"
-            focusedTabId={
-              focus.row === "L2" && activeTab === "developer"
-                ? DEVELOPER_SUB_TABS[focus.index]?.id ?? null
-                : null
-            }
-          />
-
           {developerSubTab === "dev" && (
             <div data-testid="help-developer-content-dev">
               <div className={helpStyles.layoutSection}>

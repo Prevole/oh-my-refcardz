@@ -7,6 +7,14 @@
   padding-bottom: 0;
 }
 
+/* L2 strip wrapper. Pulls the inverted L2 row up so its top border overlaps
+ * L1's bottom border, mirroring the settings panel's L2/L3 glue. Cancels the
+ * L1 strip's --space-2 bottom margin so the two rows feel attached. */
+.subTabsBar {
+  margin-top: calc(var(--space-2) * -1);
+  margin-bottom: var(--space-2);
+}
+
 .panel {
   display: flex;
   flex: 1;

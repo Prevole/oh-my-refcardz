@@ -13,7 +13,7 @@ type TabsProps = {
   activeTab: string;
   onChange: (id: string) => void;
   testIdPrefix?: string;
-  variant?: "primary" | "secondary" | "tertiary";
+  variant?: "primary" | "secondary" | "secondaryInverted" | "tertiary";
   focusedTabId?: string | null;
 };
 
@@ -28,15 +28,19 @@ export function Tabs({
   const stripClass =
     variant === "tertiary"
       ? `${styles.tabs} ${styles.tabsTertiary}`
-      : variant === "secondary"
-        ? `${styles.tabs} ${styles.tabsSecondary}`
-        : styles.tabs;
+      : variant === "secondaryInverted"
+        ? `${styles.tabs} ${styles.tabsSecondary} ${styles.tabsSecondaryInverted}`
+        : variant === "secondary"
+          ? `${styles.tabs} ${styles.tabsSecondary}`
+          : styles.tabs;
   const tabBaseClass =
     variant === "tertiary"
       ? `${styles.tab} ${styles.tabTertiary}`
-      : variant === "secondary"
-        ? `${styles.tab} ${styles.tabSecondary}`
-        : styles.tab;
+      : variant === "secondaryInverted"
+        ? `${styles.tab} ${styles.tabSecondary} ${styles.tabSecondaryInverted}`
+        : variant === "secondary"
+          ? `${styles.tab} ${styles.tabSecondary}`
+          : styles.tab;
 
   return (
     <div className={stripClass} data-variant={variant}>
