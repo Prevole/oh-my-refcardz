@@ -11,6 +11,7 @@ type HeadingBlockProps = BlockRendererProps & {
 
 function HeadingBlockRenderer({
   id,
+  blockId,
   title,
   text,
   colStart,
@@ -45,7 +46,9 @@ function HeadingBlockRenderer({
       id={id}
       className={classNames}
       data-layout-card="true"
-      data-layout-block-id={id}
+      data-layout-block-kind="heading"
+      data-layout-block-id={blockId}
+      data-keyboard-focused={keyboardFocused ? "true" : undefined}
       style={{
         ["--card-col-start" as string]: String(colStart),
         ["--card-row-start" as string]: String(rowStart),

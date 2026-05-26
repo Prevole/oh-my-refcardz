@@ -17,6 +17,7 @@ type CardBlockProps = BlockRendererProps & {
 
 function CardBlockRenderer({
   id,
+  blockId,
   title,
   badge,
   footer,
@@ -54,7 +55,9 @@ function CardBlockRenderer({
       id={id}
       className={classNames}
       data-layout-card="true"
-      data-layout-block-id={id}
+      data-layout-block-kind="card"
+      data-layout-block-id={blockId}
+      data-keyboard-focused={keyboardFocused ? "true" : undefined}
       style={{
         ["--card-col-start" as string]: String(colStart),
         ["--card-row-start" as string]: String(rowStart),

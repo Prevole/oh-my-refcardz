@@ -98,6 +98,64 @@ async function enterLayoutMode(page: Page) {
 }
 
 /**
+ * Navigate the keyboard focus to a specific block id, regardless of where
+ * pick-closest landed when entering layout mode. Uses the navigation
+ * sub-mode (`n`) with h/j/k/l, choosing the next direction based on the
+ * sign of the rect-delta to the target. Tries the vertical axis first
+ * when dy is non-zero, then falls back to horizontal (and vice versa).
+ * This avoids oscillations when one axis is dominant in magnitude but
+ * the other still needs to be travelled. Leaves the page in navigation
+ * sub-mode.
+ */
+async function navigateToBlock(page: Page, targetId: string) {
+  await page.keyboard.press("n");
+  await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute("data-mode", "navigation");
+
+  const rectOf = async (id: string) =>
+    page
+      .locator(`article[data-layout-card='true'][data-layout-block-id='${id}']`)
+      .evaluate((el) => {
+        const r = (el as HTMLElement).getBoundingClientRect();
+        return { x: r.x, y: r.y, w: r.width, h: r.height };
+      });
+
+  const currentId = async () =>
+    focusedBlock(page).getAttribute("data-layout-block-id");
+
+  for (let step = 0; step < 16; step++) {
+    const id = await currentId();
+    if (id === targetId) return;
+
+    const here = await rectOf(id ?? "");
+    const there = await rectOf(targetId);
+    const dx = there.x + there.w / 2 - (here.x + here.w / 2);
+    const dy = there.y + there.h / 2 - (here.y + here.h / 2);
+
+    const tryKeys: string[] = [];
+    if (Math.abs(dy) > 4) tryKeys.push(dy > 0 ? "j" : "k");
+    if (Math.abs(dx) > 4) tryKeys.push(dx > 0 ? "l" : "h");
+    if (tryKeys.length === 0) {
+      throw new Error(`navigateToBlock: stuck at ${id} (no axis delta) cannot reach ${targetId}`);
+    }
+
+    let moved = false;
+    for (const key of tryKeys) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(30);
+      const after = await currentId();
+      if (after !== id) {
+        moved = true;
+        break;
+      }
+    }
+    if (!moved) {
+      throw new Error(`navigateToBlock: stuck at ${id}, cannot reach ${targetId}`);
+    }
+  }
+  throw new Error(`navigateToBlock: did not reach ${targetId} within step budget`);
+}
+
+/**
  * Switch sub-mode (n/m/r) and wait until the scope is genuinely active.
  *
  * The pill's `data-mode` attribute reflects React state, which updates
@@ -122,19 +180,10 @@ async function switchSubMode(page: Page, key: "n" | "m" | "b", expected: "naviga
  */
 async function focusBottomLeft(page: Page) {
   await enterLayoutMode(page);
-  // Navigate from the section heading down to bottom-left in two steps.
-  // We wait for the focus to actually move between each press so the
-  // keyboard handler has time to react (Playwright keypresses can
-  // outrun React state updates otherwise).
-  await page.keyboard.press("j");
+  await navigateToBlock(page, "bottom-left");
   await expect(focusedBlock(page)).toHaveAttribute(
     "data-layout-block-id",
-    "sheet-card-top-left",
-  );
-  await page.keyboard.press("j");
-  await expect(focusedBlock(page)).toHaveAttribute(
-    "data-layout-block-id",
-    "sheet-card-bottom-left",
+    "bottom-left",
   );
 }
 
@@ -201,51 +250,55 @@ test.describe("Keyboard layout mode — navigation sub-mode (Phase E3)", () => {
 
   test("h/j/k/l move focus to the corresponding neighbour", async ({ page }) => {
     await enterLayoutMode(page);
-    // Initial focus is the section heading.
+    // Anchor the starting focus deterministically. Without this, pick-
+    // closest could land on any block depending on cursor position.
+    await navigateToBlock(page, "section");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-heading-section");
+      .toBe("section");
 
     await page.keyboard.press("j");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-top-left");
+      .toBe("top-left");
 
     await page.keyboard.press("l");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-top-right");
+      .toBe("top-right");
 
     await page.keyboard.press("j");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-bottom-right");
+      .toBe("bottom-right");
 
     await page.keyboard.press("h");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-bottom-left");
+      .toBe("bottom-left");
 
     await page.keyboard.press("k");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-top-left");
+      .toBe("top-left");
   });
 
   test("arrow keys are equivalent to h/j/k/l", async ({ page }) => {
     await enterLayoutMode(page);
+    await navigateToBlock(page, "section");
     await page.keyboard.press("ArrowDown");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-top-left");
+      .toBe("top-left");
     await page.keyboard.press("ArrowRight");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-top-right");
+      .toBe("top-right");
   });
 
   test("navigation against a wall is a no-op", async ({ page }) => {
     await enterLayoutMode(page);
+    await navigateToBlock(page, "section");
     // Heading is already at the top (row 0).
     await page.keyboard.press("k");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-heading-section");
+      .toBe("section");
     // West wall from heading (col 0).
     await page.keyboard.press("h");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-heading-section");
+      .toBe("section");
   });
 
   test("switching to move/resize keeps the focused block", async ({ page }) => {
@@ -253,15 +306,15 @@ test.describe("Keyboard layout mode — navigation sub-mode (Phase E3)", () => {
 
     await switchSubMode(page, "m", "move");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-bottom-left");
+      .toBe("bottom-left");
 
     await switchSubMode(page, "b", "resize");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-bottom-left");
+      .toBe("bottom-left");
 
     await switchSubMode(page, "n", "navigation");
     expect(await focusedBlock(page).getAttribute("data-layout-block-id"))
-      .toBe("sheet-card-bottom-left");
+      .toBe("bottom-left");
   });
 });
 
@@ -274,11 +327,11 @@ test.describe("Keyboard layout mode — move sub-mode (Phase E3)", () => {
     await focusBottomLeft(page);
     await switchSubMode(page, "m", "move");
 
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
     expect(before.rowStart).toBe(9);
 
     await page.keyboard.press("j");
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowStart).toBe(10);
     expect(after.rowSpan).toBe(before.rowSpan);
     expect(after.colStart).toBe(before.colStart);
@@ -288,9 +341,9 @@ test.describe("Keyboard layout mode — move sub-mode (Phase E3)", () => {
     await focusBottomLeft(page);
     await switchSubMode(page, "m", "move");
 
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
     await page.keyboard.press("ArrowDown");
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowStart).toBe(before.rowStart + 1);
   });
 
@@ -299,18 +352,18 @@ test.describe("Keyboard layout mode — move sub-mode (Phase E3)", () => {
     // 0-1. Strict-north must refuse because the heading has
     // minRowSpan=maxRowSpan=2 (cannot shrink) and wrap is forbidden.
     await enterLayoutMode(page);
-    await page.keyboard.press("j");
+    await navigateToBlock(page, "top-left");
     await expect(focusedBlock(page)).toHaveAttribute(
       "data-layout-block-id",
-      "sheet-card-top-left",
+      "top-left",
     );
 
-    const before = await findById(page, "sheet-card-top-left");
+    const before = await findById(page, "top-left");
     expect(before.rowStart).toBe(3);
 
     await switchSubMode(page, "m", "move");
     await page.keyboard.press("Alt+k");
-    const after = await findById(page, "sheet-card-top-left");
+    const after = await findById(page, "top-left");
     expect(after.rowStart).toBe(before.rowStart);
     expect(after.rowSpan).toBe(before.rowSpan);
   });
@@ -325,11 +378,11 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
     await focusBottomLeft(page);
     await switchSubMode(page, "b", "resize");
 
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
     expect(before.rowSpan).toBe(6);
 
     await page.keyboard.press("j");
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan + 1);
     expect(after.rowStart).toBe(before.rowStart);
   });
@@ -341,26 +394,26 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
     // Grow south first so we have room to shrink.
     await page.keyboard.press("j");
     await page.keyboard.press("j");
-    const grown = await findById(page, "sheet-card-bottom-left");
+    const grown = await findById(page, "bottom-left");
     expect(grown.rowSpan).toBe(8);
 
     await page.keyboard.press("Shift+J");
-    const shrunk = await findById(page, "sheet-card-bottom-left");
+    const shrunk = await findById(page, "bottom-left");
     expect(shrunk.rowSpan).toBe(grown.rowSpan - 1);
   });
 
   test("Alt+k strict-grow-north is refused against a fixed heading", async ({ page }) => {
     await enterLayoutMode(page);
-    await page.keyboard.press("j");
+    await navigateToBlock(page, "top-left");
     await expect(focusedBlock(page)).toHaveAttribute(
       "data-layout-block-id",
-      "sheet-card-top-left",
+      "top-left",
     );
 
-    const before = await findById(page, "sheet-card-top-left");
+    const before = await findById(page, "top-left");
     await switchSubMode(page, "b", "resize");
     await page.keyboard.press("Alt+k");
-    const after = await findById(page, "sheet-card-top-left");
+    const after = await findById(page, "top-left");
     expect(after.rowSpan).toBe(before.rowSpan);
     expect(after.rowStart).toBe(before.rowStart);
   });
@@ -373,11 +426,11 @@ test.describe("Keyboard layout mode — resize sub-mode (Phase E3)", () => {
     await page.keyboard.press("j");
     await page.keyboard.press("j");
     await page.keyboard.press("j");
-    const grown = await findById(page, "sheet-card-bottom-left");
+    const grown = await findById(page, "bottom-left");
     expect(grown.rowSpan).toBe(9);
 
     await page.keyboard.press("Control+Shift+J");
-    const shrunk = await findById(page, "sheet-card-bottom-left");
+    const shrunk = await findById(page, "bottom-left");
     expect(shrunk.rowSpan).toBeLessThan(grown.rowSpan);
   });
 });
@@ -401,9 +454,9 @@ test.describe("Keyboard layout mode — visual integration (Phase E3)", () => {
 
     // Grow south by 1: deterministic on this fixture (60+ free rows).
     await switchSubMode(page, "b", "resize");
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
     await page.keyboard.press("j");
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan + 1);
 
     // Keyboard edits stage in a buffer (Phase FA). The reset button is
@@ -420,9 +473,9 @@ test.describe("Keyboard layout mode — visual integration (Phase E3)", () => {
     await focusBottomLeft(page);
     await switchSubMode(page, "b", "resize");
 
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
     await page.keyboard.press("j");
-    const buffered = await findById(page, "sheet-card-bottom-left");
+    const buffered = await findById(page, "bottom-left");
     // While the buffer is live, the DOM reflects the staged edit.
     expect(buffered.rowSpan).toBe(before.rowSpan + 1);
 
@@ -430,7 +483,7 @@ test.describe("Keyboard layout mode — visual integration (Phase E3)", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan);
     // No mutation persisted → reset button stays hidden.
     await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);

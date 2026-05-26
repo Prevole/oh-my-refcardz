@@ -13,8 +13,10 @@ import "./card-block";
 export type BlockRendererPropsFromParent = {
   /** Block type */
   kind: LayoutBlockKind;
-  /** Unique identifier for the block */
+  /** HTML id for anchor navigation (slugified, namespaced) */
   id: string;
+  /** Raw block id used as the source of truth for layout lookups */
+  blockId: string;
   /** Block title */
   title: string;
   /** Optional text (for headings) */
@@ -69,6 +71,7 @@ export type BlockRendererPropsFromParent = {
 export function BlockRenderer({
   kind,
   id,
+  blockId,
   title,
   text,
   badge,
@@ -96,6 +99,7 @@ export function BlockRenderer({
   return (
     <Component
       id={id}
+      blockId={blockId}
       title={title}
       text={text}
       badge={badge}

@@ -439,6 +439,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
               key={block.id}
               kind={block.kind}
               id={buildBlockAnchorId(block.kind === "heading" ? "sheet-heading" : "sheet-card", block.id)}
+              blockId={block.id}
               title={block.title}
               text={block.kind === "heading" ? block.text : undefined}
               colStart={colStart}

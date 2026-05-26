@@ -39,8 +39,10 @@ export type ResizeHandleDirection =
  * for block types that support them.
  */
 export type BlockRendererProps = {
-  /** Unique identifier for the block */
+  /** HTML id for anchor navigation (slugified, namespaced) */
   id: string;
+  /** Raw block id used as the source of truth for layout lookups */
+  blockId: string;
   /** Block title */
   title: string;
   /** Optional text (for heading blocks) */

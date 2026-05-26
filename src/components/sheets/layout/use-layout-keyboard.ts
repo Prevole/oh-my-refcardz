@@ -381,8 +381,7 @@ export function useLayoutKeyboard({
     // Start a buffered session rooted at the currently committed layout.
     // All keyboard ops will land in the buffer until commit or exit.
     bufferState.start(editor.committedBlocks);
-    setFocusedCard((current) => {
-      if (current) return current;
+    setFocusedCard(() => {
       const blocks = blocksRef.current;
       const cursor = cursorRef.current ?? {
         x: window.innerWidth / 2,
@@ -606,7 +605,7 @@ export function useLayoutKeyboard({
     if (!focusedCard || focusedPos === null) return;
     const el = document.querySelector(`[data-layout-block-id="${focusedCard.blockId}"]`);
     if (!(el instanceof HTMLElement)) return;
-    el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
   }, [focusedCard, focusedPos]);
 
   return useMemo(

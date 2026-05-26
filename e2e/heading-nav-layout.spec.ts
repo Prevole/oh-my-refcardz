@@ -54,21 +54,12 @@ test.describe("Heading navigation reflects layout order", () => {
         document.querySelectorAll<HTMLElement>("article[data-layout-card='true']")
       );
 
-      const HEADING_PREFIX = "sheet-heading-";
-      const CARD_PREFIX = "sheet-card-";
-      function stripPrefix(fullId: string): { id: string; kind: "heading" | "card" } {
-        if (fullId.startsWith(HEADING_PREFIX)) {
-          return { id: fullId.slice(HEADING_PREFIX.length), kind: "heading" };
-        }
-        if (fullId.startsWith(CARD_PREFIX)) {
-          return { id: fullId.slice(CARD_PREFIX.length), kind: "card" };
-        }
-        return { id: fullId, kind: "card" };
-      }
-
-      const orderedRawIds = articles.map((a) =>
-        stripPrefix(a.getAttribute("data-layout-block-id") ?? "")
-      );
+      // `data-layout-block-id` carries the raw YAML id; the kind is
+      // exposed via `data-layout-block-kind` by the block renderers.
+      const orderedRawIds = articles.map((a) => ({
+        id: a.getAttribute("data-layout-block-id") ?? "",
+        kind: (a.getAttribute("data-layout-block-kind") ?? "card") as "heading" | "card",
+      }));
 
       // Force Section B to appear first by placing it at row 1, then
       // Section A further down. The exact positions of intermediate cards

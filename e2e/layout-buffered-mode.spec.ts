@@ -93,6 +93,64 @@ async function enterLayoutMode(page: Page) {
   await page.waitForTimeout(30);
 }
 
+/**
+ * Navigate the keyboard focus to a specific block id, regardless of where
+ * pick-closest landed when entering layout mode. Uses the navigation
+ * sub-mode (`n`) with h/j/k/l, comparing on-screen rects of the current
+ * and target block to choose the next direction. Fails fast if the focus
+ * cannot reach the target within a bounded number of steps.
+ *
+ * Caller is responsible for restoring any sub-mode after this returns —
+ * the function leaves the page in navigation sub-mode.
+ */
+async function navigateToBlock(page: Page, targetId: string) {
+  await page.keyboard.press("n");
+  await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute("data-mode", "navigation");
+
+  const rectOf = async (id: string) =>
+    page
+      .locator(`article[data-layout-card='true'][data-layout-block-id='${id}']`)
+      .evaluate((el) => {
+        const r = (el as HTMLElement).getBoundingClientRect();
+        return { x: r.x, y: r.y, w: r.width, h: r.height };
+      });
+
+  const currentId = async () =>
+    focusedBlock(page).getAttribute("data-layout-block-id");
+
+  for (let step = 0; step < 16; step++) {
+    const id = await currentId();
+    if (id === targetId) return;
+
+    const here = await rectOf(id ?? "");
+    const there = await rectOf(targetId);
+    const dx = there.x + there.w / 2 - (here.x + here.w / 2);
+    const dy = there.y + there.h / 2 - (here.y + here.h / 2);
+
+    const tryKeys: string[] = [];
+    if (Math.abs(dy) > 4) tryKeys.push(dy > 0 ? "j" : "k");
+    if (Math.abs(dx) > 4) tryKeys.push(dx > 0 ? "l" : "h");
+    if (tryKeys.length === 0) {
+      throw new Error(`navigateToBlock: stuck at ${id} (no axis delta) cannot reach ${targetId}`);
+    }
+
+    let moved = false;
+    for (const key of tryKeys) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(30);
+      const after = await currentId();
+      if (after !== id) {
+        moved = true;
+        break;
+      }
+    }
+    if (!moved) {
+      throw new Error(`navigateToBlock: stuck at ${id}, cannot reach ${targetId}`);
+    }
+  }
+  throw new Error(`navigateToBlock: did not reach ${targetId} within step budget`);
+}
+
 async function switchSubMode(page: Page, key: "n" | "m" | "b", expected: "navigation" | "move" | "resize") {
   await page.keyboard.press(key);
   await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute("data-mode", expected);
@@ -101,15 +159,10 @@ async function switchSubMode(page: Page, key: "n" | "m" | "b", expected: "naviga
 
 async function focusBottomLeft(page: Page) {
   await enterLayoutMode(page);
-  await page.keyboard.press("j");
+  await navigateToBlock(page, "bottom-left");
   await expect(focusedBlock(page)).toHaveAttribute(
     "data-layout-block-id",
-    "sheet-card-top-left",
-  );
-  await page.keyboard.press("j");
-  await expect(focusedBlock(page)).toHaveAttribute(
-    "data-layout-block-id",
-    "sheet-card-bottom-left",
+    "bottom-left",
   );
 }
 
@@ -131,11 +184,11 @@ test.describe("Layout buffered mode — discard paths (Phase FA5b)", () => {
 
   test("Esc with fewer than 5 changes discards silently", async ({ page }) => {
     await focusBottomLeft(page);
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
 
     // 4 grow-south ops: just under the threshold.
     await stageGrowSouth(page, 4);
-    const buffered = await findById(page, "sheet-card-bottom-left");
+    const buffered = await findById(page, "bottom-left");
     expect(buffered.rowSpan).toBe(before.rowSpan + 4);
 
     await page.keyboard.press("Escape");
@@ -143,7 +196,7 @@ test.describe("Layout buffered mode — discard paths (Phase FA5b)", () => {
     await expect(page.getByTestId("layout-discard-confirm-overlay")).toHaveCount(0);
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan);
     await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
   });
@@ -162,7 +215,7 @@ test.describe("Layout buffered mode — discard paths (Phase FA5b)", () => {
 
   test("Modal Confirm (Enter) discards the buffer and exits layout mode", async ({ page }) => {
     await focusBottomLeft(page);
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
 
     await stageGrowSouth(page, 5);
     await page.keyboard.press("Escape");
@@ -172,14 +225,14 @@ test.describe("Layout buffered mode — discard paths (Phase FA5b)", () => {
     await expect(page.getByTestId("layout-discard-confirm-overlay")).toHaveCount(0);
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan);
     await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
   });
 
   test("Modal Cancel (Esc) closes the modal and keeps the buffer intact", async ({ page }) => {
     await focusBottomLeft(page);
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
 
     await stageGrowSouth(page, 5);
     await page.keyboard.press("Escape");
@@ -192,7 +245,7 @@ test.describe("Layout buffered mode — discard paths (Phase FA5b)", () => {
     // We are back in layout mode with the buffered DOM still showing
     // the 5 grow-south ops.
     await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
-    const stillBuffered = await findById(page, "sheet-card-bottom-left");
+    const stillBuffered = await findById(page, "bottom-left");
     expect(stillBuffered.rowSpan).toBe(before.rowSpan + 5);
   });
 });
@@ -204,23 +257,23 @@ test.describe("Layout buffered mode — mouse click discard (Phase FA6)", () => 
 
   test("Click on a card header with fewer than 5 changes discards silently", async ({ page }) => {
     await focusBottomLeft(page);
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
 
     await stageGrowSouth(page, 2);
-    const buffered = await findById(page, "sheet-card-bottom-left");
+    const buffered = await findById(page, "bottom-left");
     expect(buffered.rowSpan).toBe(before.rowSpan + 2);
 
     // Click on a card header (top-right is a safe target distant from
     // the focused bottom-left block).
     await page
-      .locator("article[data-layout-block-id='sheet-card-top-right'] h2")
+      .locator("article[data-layout-block-id='top-right'] h2")
       .click();
 
     // No modal, layout mode exits, persistent layout untouched.
     await expect(page.getByTestId("layout-discard-confirm-overlay")).toHaveCount(0);
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan);
     await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
   });
@@ -230,7 +283,7 @@ test.describe("Layout buffered mode — mouse click discard (Phase FA6)", () => 
     await stageGrowSouth(page, 5);
 
     await page
-      .locator("article[data-layout-block-id='sheet-card-top-right'] h2")
+      .locator("article[data-layout-block-id='top-right'] h2")
       .click();
 
     await expect(page.getByTestId("layout-discard-confirm-overlay")).toBeVisible();
@@ -239,7 +292,7 @@ test.describe("Layout buffered mode — mouse click discard (Phase FA6)", () => 
 
   test("Click on the empty grid area triggers the same discard path", async ({ page }) => {
     await focusBottomLeft(page);
-    const before = await findById(page, "sheet-card-bottom-left");
+    const before = await findById(page, "bottom-left");
 
     await stageGrowSouth(page, 2);
 
@@ -255,7 +308,7 @@ test.describe("Layout buffered mode — mouse click discard (Phase FA6)", () => 
     await expect(page.getByTestId("layout-discard-confirm-overlay")).toHaveCount(0);
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan);
   });
 });
@@ -336,10 +389,10 @@ test.describe("Layout mode — keyboard reset (LAYOUT_RESET)", () => {
 
   test("Shift+R rewinds the buffer to the initial snapshot and keeps layout mode active", async ({ page }) => {
     await focusBottomLeft(page);
-    const initial = await findById(page, "sheet-card-bottom-left");
+    const initial = await findById(page, "bottom-left");
     await stageGrowSouth(page, 3);
 
-    const grown = await findById(page, "sheet-card-bottom-left");
+    const grown = await findById(page, "bottom-left");
     expect(grown.rowSpan).toBeGreaterThan(initial.rowSpan);
     await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
       "data-changes-count",
@@ -348,7 +401,7 @@ test.describe("Layout mode — keyboard reset (LAYOUT_RESET)", () => {
 
     await page.keyboard.press("Shift+R");
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(initial.rowSpan);
     await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
     await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
@@ -401,12 +454,12 @@ test.describe("Layout mode — buffer reset floating button", () => {
 
   test("Clicking the button resets the buffer and keeps layout mode active", async ({ page }) => {
     await focusBottomLeft(page);
-    const initial = await findById(page, "sheet-card-bottom-left");
+    const initial = await findById(page, "bottom-left");
     await stageGrowSouth(page, 2);
 
     await page.getByTestId("layout-buffer-reset-button").click();
 
-    const after = await findById(page, "sheet-card-bottom-left");
+    const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(initial.rowSpan);
     await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
     await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
@@ -420,9 +473,9 @@ test.describe("Layout mode — commit path (LAYOUT_COMMIT)", () => {
 
   test("Enter persists the buffered changes and exits layout mode", async ({ page }) => {
     await focusBottomLeft(page);
-    const initial = await findById(page, "sheet-card-bottom-left");
+    const initial = await findById(page, "bottom-left");
     await stageGrowSouth(page, 2);
-    const staged = await findById(page, "sheet-card-bottom-left");
+    const staged = await findById(page, "bottom-left");
     expect(staged.rowSpan).toBe(initial.rowSpan + 2);
 
     await page.keyboard.press("Enter");
@@ -430,7 +483,7 @@ test.describe("Layout mode — commit path (LAYOUT_COMMIT)", () => {
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
     // Persistence is confirmed by the regular reset button surfacing.
     await expect(page.getByTestId("layout-reset-button")).toBeVisible();
-    const persisted = await findById(page, "sheet-card-bottom-left");
+    const persisted = await findById(page, "bottom-left");
     expect(persisted.rowSpan).toBe(staged.rowSpan);
   });
 

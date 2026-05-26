@@ -26,21 +26,12 @@ async function seedModifiedLayout(page: Page) {
       document.querySelectorAll<HTMLElement>("article[data-layout-card='true']")
     );
 
-    const HEADING_PREFIX = "sheet-heading-";
-    const CARD_PREFIX = "sheet-card-";
-    function stripPrefix(fullId: string): { id: string; kind: "heading" | "card" } {
-      if (fullId.startsWith(HEADING_PREFIX)) {
-        return { id: fullId.slice(HEADING_PREFIX.length), kind: "heading" };
-      }
-      if (fullId.startsWith(CARD_PREFIX)) {
-        return { id: fullId.slice(CARD_PREFIX.length), kind: "card" };
-      }
-      return { id: fullId, kind: "card" };
-    }
-
-    const orderedRawIds = articles.map((a) =>
-      stripPrefix(a.getAttribute("data-layout-block-id") ?? "")
-    );
+    // `data-layout-block-id` carries the raw YAML id; the kind is exposed
+    // via `data-layout-block-kind` by card/heading block renderers.
+    const orderedRawIds = articles.map((a) => ({
+      id: a.getAttribute("data-layout-block-id") ?? "",
+      kind: (a.getAttribute("data-layout-block-kind") ?? "card") as "heading" | "card",
+    }));
 
     // Force a non-default layout: put Section B at the very top and
     // Section A further down.

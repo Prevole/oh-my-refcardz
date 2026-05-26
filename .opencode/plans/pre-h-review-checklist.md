@@ -65,20 +65,20 @@ Opened with `i` from home.
 
 Open any cheatsheet (e.g. `git`).
 
-- [ ] Layout renders, headings visible, no flash of unstyled content
-- [ ] `h/j/k/l` and arrows — move selection across cards
-- [ ] Heading nav sidebar order matches visual Y order
-- [ ] `Backspace` / `Escape` — back to home (action `BACK_TO_HOME`)
-- [ ] `y` — copy command (vim yank; needs a focused command card?)
-- [ ] `i` — show example / details (modal opens?)
-- [ ] `Escape` — clear command focus / exit current state (also bound to back-to-home; intentional overlap)
-- [ ] `Shift+R` — reset layout (floating button appears only when modified)
-- [ ] `?` — opens help modal
-- [ ] `,` — opens settings panel
-- [ ] `Ctrl+M` — enters layout mode (verify `LayoutModePill` appears top-right)
-- [ ] `Ctrl+Shift+D` — toggles dev mode (dev bar appears)
-- [ ] Floating reset button: only visible when layout differs from original
-- [ ] Heading navigation reflects live order after a layout edit (drag a heading, check sidebar)
+- [x] Layout renders, headings visible, no flash of unstyled content
+- [x] `h/j/k/l` and arrows — move selection across cards
+- [x] Heading nav sidebar order matches visual Y order
+- [x] `Backspace` / `Escape` — back to home (action `BACK_TO_HOME`)
+- [x] `y` — copy command (vim yank; needs a focused command card?)
+- [x] `i` — show example / details (modal opens?)
+- [x] `Escape` — clear command focus / exit current state (also bound to back-to-home; intentional overlap)
+- [x] `Shift+R` — reset layout (floating button appears only when modified)
+- [x] `?` — opens help modal
+- [x] `,` — opens settings panel
+- [x] `Ctrl+M` — enters layout mode (verify `LayoutModePill` appears top-right)
+- [x] `Ctrl+Shift+D` — toggles dev mode (dev bar appears)
+- [x] Floating reset button: only visible when layout differs from original
+- [x] Heading navigation reflects live order after a layout edit (drag a heading, check sidebar)
 
 ### Findings (sheet)
 
@@ -98,19 +98,19 @@ Open any cheatsheet (e.g. `git`).
 
 ## 4. Drag & resize (mouse, in `sheet` scope without layout mode)
 
-- [ ] Drag card by handle — block moves, others reflow according to engine rules
-- [ ] Drag card UP into heading — heading shifts up (push) before shrinking
-- [ ] Drag card UP into another card — card above shrinks/pushes correctly
-- [ ] Drag heading DOWN — pushes blocks down; if grid bottom reached, wraps south
-- [ ] Resize handle E/W/N/S — block grows/shrinks; chain blocks respond
-- [ ] Resize against grid limit — UI freezes at last valid state, no reset
-- [ ] Release mouse mid-drag — final position commits, no orphan preview
-- [ ] Quick successive drags — no scope race, no missed events
-- [ ] Refresh after drag — layout persisted
+- [x] Drag card by handle — block moves, others reflow according to engine rules
+- [x] Drag card UP into heading — heading shifts up (push) before shrinking
+- [x] Drag card UP into another card — card above shrinks/pushes correctly
+- [x] Drag heading DOWN — pushes blocks down; if grid bottom reached, wraps south
+- [x] Resize handle E/W/N/S — block grows/shrinks; chain blocks respond
+- [x] Resize against grid limit — UI freezes at last valid state, no reset
+- [x] Release mouse mid-drag — final position commits, no orphan preview
+- [x] Quick successive drags — no scope race, no missed events
+- [x] Refresh after drag — layout persisted
 
 ### Findings (drag-resize)
 
-_(empty)_
+- All checks green. No issues found.
 
 ---
 
@@ -133,7 +133,10 @@ Enter with `Ctrl+M`.
 
 ### Findings (layout-master)
 
-_(empty)_
+- **Fix L-1 (applied)** — Entering layout mode (`Ctrl+M`) did not focus the card closest to the mouse cursor: `enterMode` preserved any pre-existing `focusedCard` via `if (current) return current`. Removed the guard so pick-closest runs on every entry, ignoring stale focus from a previous session.
+- **Fix L-2 (applied)** — During keyboard navigation in layout mode, the viewport did not follow the focused block: `scrollIntoView({ block: "nearest" })` only scrolls when the element is fully out of view. Switched to `block: "center"` so every focus change recenters the card vertically. The horizontal axis stays `inline: "nearest"`.
+ - **Fix L-3 (applied, root cause)** — While debugging L-1/L-2, found that BOTH fixes were silently broken by a pre-existing bug: `sheet-renderer.tsx:441` passed `buildBlockAnchorId(...)` (a slugified, namespaced anchor like `sheet-card-inspect-and-diff`) as the `id` prop of `BlockRenderer`, and `card-block.tsx` / `heading-block.tsx` reused that same value for `data-layout-block-id`. Every `document.querySelector('[data-layout-block-id="${block.id}"]')` in `use-layout-keyboard.ts` (pick-closest, scroll, and others) was therefore searching for the raw id while the DOM held the anchor form, returning null in 100% of cases. Pick-closest fell back to `pickTopLeftBlock`, and `scrollIntoView` never ran. Fix: added a distinct `blockId` prop (raw `LayoutBlock.id`) alongside `id` (HTML anchor) in `BlockRendererProps`, `BlockRendererPropsFromParent`, and both block-type renderers; `data-layout-block-id` now binds to `blockId`. This may incidentally unblock other behaviors that were silently broken — to watch for during the rest of the review.
+- **E2E fallout (resolved)** — L-3 changed `data-layout-block-id` from the slugified anchor form to the raw YAML id, breaking ~64 hard-coded literals across `e2e/keyboard-layout.spec.ts`, `e2e/layout-buffered-mode.spec.ts`, `e2e/layout-reset.spec.ts`, and `e2e/heading-nav-layout.spec.ts`. Updated the literals (`sheet-card-top-left` → `top-left`, etc.), simplified `stripPrefix` helpers in the reset/heading-nav specs to read directly from `data-layout-block-id` + new `data-layout-block-kind` attribute (added to `card-block.tsx`/`heading-block.tsx`), and introduced a `navigateToBlock(page, id)` helper that drives `h/j/k/l` from any pick-closest starting point, replacing the previous `enterLayoutMode + press(j)` chains that assumed a deterministic initial focus. Suite now: 118 passed / 8 skipped / 0 failed.
 
 ---
 
