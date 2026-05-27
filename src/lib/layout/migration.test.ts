@@ -82,7 +82,7 @@ describe("migration", () => {
 
   describe("migrateBlockLayouts / toOldBlockLayouts", () => {
     const oldLayouts: OldBlockLayoutState[] = [
-      { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       { id: "c1", kind: "card", colStart: 1, rowStart: 3, colSpan: 18, rowSpan: 12 },
     ];
 
@@ -93,7 +93,7 @@ describe("migration", () => {
       expect(result[0]).toEqual({
         id: "h1",
         kind: "heading",
-        position: { x: 0, y: 0, w: 36, h: 2 },
+        position: { x: 0, y: 0, w: 64, h: 2 },
       });
       expect(result[1]).toEqual({
         id: "c1",

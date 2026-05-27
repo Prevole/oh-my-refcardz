@@ -10,7 +10,7 @@ import {
   type ApplyContext,
 } from "./layout-buffer";
 
-const GRID_COLUMNS = 36;
+const GRID_COLUMNS = 64;
 
 function block(id: string, x: number, y: number, w = 4, h = 2): LayoutBlock {
   return { id, kind: "card", position: { x, y, w, h } };

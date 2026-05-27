@@ -209,7 +209,7 @@ Determining the order of placement:
 2. **Compute euclidean distance** from each normalized member's anchor to the primary's anchor, using the member's **initial-session X** for the horizontal coordinate (see step 4 below for the rationale).
 3. **Sort by distance, descending**: farthest first.
 4. **Place each in turn**:
-   - Use the member's **initial-session X** as the target column — that is, the X the block had when the session started, *before* any shrink/move/wrap that occurred during the gesture. Using the current (shrunk) X would push the block past the grid right edge once its width is restored: a block squeezed from `(x=18, w=18)` down to `(x=30, w=6)` against the east edge must wrap back to `x=18`, not stay at `x=30`. The initial column is read from `SessionMemory.getInitialPosition`.
+   - Use the member's **initial-session X** as the target column — that is, the X the block had when the session started, *before* any shrink/move/wrap that occurred during the gesture. Using the current (shrunk) X would push the block past the grid right edge once its width is restored: a block squeezed from `(x=32, w=32)` down to `(x=58, w=6)` against the east edge must wrap back to `x=32`, not stay at `x=58`. The initial column is read from `SessionMemory.getInitialPosition`.
    - Compute new `y` such that the group's relative y-structure is preserved and the whole group lies just below the primary (starting at `primary.y + primary.h`).
    - Restore initial size.
    - Run a recursive resolution on the placement collisions (push/shrink/wrap on the south region).
@@ -469,7 +469,7 @@ function applyOperation(
 ): OperationResult;
 
 type EngineOptions = {
-  gridColumns: number;                          // typically GRID_COLUMNS = 36
+  gridColumns: number;                          // typically GRID_COLUMNS = 64
   constraints: Map<string, BlockConstraints>;   // per-block constraints
   emitter?: EngineEventEmitter;                 // optional, defaults to noop
   opId?: string;                                // optional explicit session id; auto-generated otherwise

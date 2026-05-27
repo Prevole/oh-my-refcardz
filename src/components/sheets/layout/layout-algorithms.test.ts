@@ -68,7 +68,7 @@ describe("pointerToGridPosition", () => {
 
   it("clamps colStart to prevent card overflow beyond grid", () => {
     const colSpan = 4;
-    const result = pointerToGridPosition(4000, 200, mockGridRect, unitSize, colSpan);
+    const result = pointerToGridPosition(10000, 200, mockGridRect, unitSize, colSpan);
     expect(result.colStart).toBe(GRID_COLUMNS - colSpan + 1);
   });
 
@@ -135,7 +135,7 @@ describe("clampCardLayoutToGrid", () => {
   });
 
   it("clamps colSpan to GRID_COLUMNS", () => {
-    const card = { colStart: 1, rowStart: 1, colSpan: 40, rowSpan: 2 };
+    const card = { colStart: 1, rowStart: 1, colSpan: 80, rowSpan: 2 };
     const result = clampCardLayoutToGrid(card);
     expect(result.colSpan).toBe(GRID_COLUMNS);
   });
@@ -147,7 +147,7 @@ describe("clampCardLayoutToGrid", () => {
   });
 
   it("clamps colStart so card fits in grid", () => {
-    const card = { colStart: 40, rowStart: 1, colSpan: 4, rowSpan: 2 };
+    const card = { colStart: 70, rowStart: 1, colSpan: 4, rowSpan: 2 };
     const result = clampCardLayoutToGrid(card);
     expect(result.colStart).toBe(GRID_COLUMNS - 4 + 1);
   });
@@ -268,7 +268,7 @@ describe("resolveBlockLayout", () => {
 
   it("keeps headings fixed when a card is reflowed", () => {
     const blocks: BlockLayoutState[] = [
-      { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
       { id: "card-b", kind: "card", colStart: 13, rowStart: 3, colSpan: 12, rowSpan: 4 },
     ];
@@ -283,7 +283,7 @@ describe("resolveBlockLayout", () => {
     expect(result.find((block) => block.id === "heading")).toMatchObject({
       colStart: 1,
       rowStart: 1,
-      colSpan: 36,
+      colSpan: 64,
       rowSpan: 2,
     });
     expect(result.find((block) => block.id === "card-a")?.rowStart).toBeGreaterThanOrEqual(3);
@@ -291,14 +291,14 @@ describe("resolveBlockLayout", () => {
 
   it("allows a pinned heading to move when the heading itself is manipulated", () => {
     const blocks: BlockLayoutState[] = [
-      { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "heading", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
     ];
 
     const result = resolveBlockLayout([...blocks], "heading", {
       colStart: 1,
       rowStart: 5,
-      colSpan: 36,
+      colSpan: 64,
       rowSpan: 2,
     });
 
@@ -308,9 +308,9 @@ describe("resolveBlockLayout", () => {
   describe("initial layout mode (no pinnedBlockId)", () => {
     it("places multiple headings sequentially without overlap", () => {
       const blocks: BlockLayoutState[] = [
-        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-        { id: "heading-3", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "heading-3", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       ];
 
       const result = resolveBlockLayout([...blocks]);
@@ -322,10 +322,10 @@ describe("resolveBlockLayout", () => {
 
     it("places cards under their section heading, not in earlier gaps", () => {
       const blocks: BlockLayoutState[] = [
-        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
         { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
         { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
-        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
         { id: "card-c", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 4 },
       ];
 
@@ -333,7 +333,7 @@ describe("resolveBlockLayout", () => {
 
       // First heading at row 1
       expect(result[0]).toMatchObject({ id: "heading-1", rowStart: 1 });
-      // Cards placed after first heading (row 3+), side by side since 12+12 < 36
+      // Cards placed after first heading (row 3+), side by side since 12+12 < 64
       expect(result[1]).toMatchObject({ id: "card-a", rowStart: 3, colStart: 1 });
       expect(result[2]).toMatchObject({ id: "card-b", rowStart: 3, colStart: 13 });
       // Second heading after cards (card-a and card-b span 4 rows from row 3 → ends at row 6)
@@ -344,10 +344,10 @@ describe("resolveBlockLayout", () => {
 
     it("respects document order for interleaved headings and cards", () => {
       const blocks: BlockLayoutState[] = [
-        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-        { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 4 },
-        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
-        { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 4 },
+        { id: "heading-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "card-a", kind: "card", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 4 },
+        { id: "heading-2", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "card-b", kind: "card", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 4 },
       ];
 
       const result = resolveBlockLayout([...blocks]);

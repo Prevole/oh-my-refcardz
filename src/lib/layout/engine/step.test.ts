@@ -24,7 +24,7 @@ function makeCtx(blocks: LayoutBlock[], primaryId: string, overrides: Partial<Ct
   return {
     blocks,
     primaryId,
-    gridColumns: 36,
+    gridColumns: 64,
     constraints,
     options: { allowWrap: true, allowShrink: true, compact: false },
     session: createSessionMemory(blocks),
@@ -47,7 +47,7 @@ describe("resolveMoveStep — multi-wrap vertical (3.6.7)", () => {
       block("B2", 10, 0, 2, 1),
       block("A", 0, 1, 20, 2),
     ];
-    const ctx = makeCtx(blocks, "A", { gridColumns: 36 });
+    const ctx = makeCtx(blocks, "A", { gridColumns: 64 });
 
     const result = resolveMoveStep(ctx, "north");
 
@@ -518,15 +518,15 @@ describe("resolveMoveStep — edge of grid (3.6.2)", () => {
   });
 
   it("rejects when moving east would exceed the grid columns", () => {
-    // gridColumns = 36, A occupies columns 34..35 (w=2, x=34). Moving east => x=35, right=37 > 36.
-    const blocks: LayoutBlock[] = [block("A", 34, 5, 2, 2)];
+    // gridColumns = 64, A occupies columns 62..63 (w=2, x=62). Moving east => x=63, right=65 > 64.
+    const blocks: LayoutBlock[] = [block("A", 62, 5, 2, 2)];
     const ctx = makeCtx(blocks, "A");
 
     const result = resolveMoveStep(ctx, "east");
 
     expect(result.accepted).toBe(false);
     expect(result.reason).toBe("primary-hit-edge:east");
-    expect(blocks[0].position.x).toBe(34);
+    expect(blocks[0].position.x).toBe(62);
   });
 
   it("rejects when moving north from y=0", () => {

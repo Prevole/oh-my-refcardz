@@ -3,7 +3,7 @@ import { applyOperation } from "./engine";
 import { createEventEmitter } from "./events";
 import type { BlockConstraints, EngineEvent, LayoutBlock } from "./types";
 
-const GRID_COLUMNS = 36;
+const GRID_COLUMNS = 64;
 const PERF_BUDGET_MS = 50;
 const BLOCK_COUNT = 100;
 
@@ -17,7 +17,7 @@ const defaultConstraints: BlockConstraints = {
  * Build a realistic layout of `BLOCK_COUNT` blocks with no initial collisions.
  *
  * Strategy:
- * - Stack rows of blocks south-bound, each row filling the 36-column grid.
+ * - Stack rows of blocks south-bound, each row filling the 64-column grid.
  * - Vary block widths (2..6 columns) and heights (1..3 rows) deterministically
  *   so the chain BFS explores non-trivial transitive contiguity.
  * - The result is a dense "real world" grid that triggers chain propagation,

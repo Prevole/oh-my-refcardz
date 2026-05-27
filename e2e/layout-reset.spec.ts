@@ -36,17 +36,17 @@ async function seedModifiedLayout(page: Page) {
     // Force a non-default layout: put Section B at the very top and
     // Section A further down.
     const layout: Record<string, { colStart: number; rowStart: number; colSpan: number; rowSpan: number }> = {
-      "section-b": { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      "section-b": { colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       "card-b1": { colStart: 1, rowStart: 3, colSpan: 18, rowSpan: 6 },
       "card-b2": { colStart: 19, rowStart: 3, colSpan: 18, rowSpan: 6 },
-      "section-a": { colStart: 1, rowStart: 9, colSpan: 36, rowSpan: 2 },
-      "card-a1": { colStart: 1, rowStart: 11, colSpan: 36, rowSpan: 6 },
+      "section-a": { colStart: 1, rowStart: 9, colSpan: 64, rowSpan: 2 },
+      "card-a1": { colStart: 1, rowStart: 11, colSpan: 64, rowSpan: 6 },
     };
 
     const blocks = orderedRawIds.map(({ id, kind }) => ({
       id,
       kind,
-      ...(layout[id] ?? { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 }),
+      ...(layout[id] ?? { colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 }),
     }));
 
     localStorage.setItem(storageKey, JSON.stringify({ version: 3, blocks }));

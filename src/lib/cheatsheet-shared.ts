@@ -116,7 +116,7 @@ type HeadingGroup = {
   cards: CheatSheetCard[];
 };
 
-const LAYOUT_GRID_COLUMNS = 36;
+const LAYOUT_GRID_COLUMNS = 64;
 const HEADING_ROW_SPAN = 2;
 
 export function getHeadingGroups(sheet: YamlCheatSheet): HeadingGroup[] {

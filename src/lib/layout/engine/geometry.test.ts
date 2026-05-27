@@ -45,13 +45,13 @@ describe("contains", () => {
 
 describe("isWithinGridX", () => {
   it("returns true when the rectangle fits within [0, gridColumns]", () => {
-    expect(isWithinGridX(pos(0, 0, 36, 1), 36)).toBe(true);
-    expect(isWithinGridX(pos(2, 99, 4, 4), 36)).toBe(true);
+    expect(isWithinGridX(pos(0, 0, 64, 1), 64)).toBe(true);
+    expect(isWithinGridX(pos(2, 99, 4, 4), 64)).toBe(true);
   });
 
   it("returns false when the rectangle exceeds either edge", () => {
-    expect(isWithinGridX(pos(-1, 0, 4, 4), 36)).toBe(false);
-    expect(isWithinGridX(pos(33, 0, 4, 4), 36)).toBe(false);
+    expect(isWithinGridX(pos(-1, 0, 4, 4), 64)).toBe(false);
+    expect(isWithinGridX(pos(61, 0, 4, 4), 64)).toBe(false);
   });
 });
 

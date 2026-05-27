@@ -53,61 +53,61 @@ function createSheet(sections: Array<{ cards: CheatSheetCard[] }>): YamlCheatShe
 }
 
 describe("inferCardColSpan", () => {
-  it("returns 12 for card with 1-2 items", () => {
-    expect(inferCardColSpan(createCard(1))).toBe(12);
-    expect(inferCardColSpan(createCard(2))).toBe(12);
+  it("returns 21 for card with 1-2 items", () => {
+    expect(inferCardColSpan(createCard(1))).toBe(21);
+    expect(inferCardColSpan(createCard(2))).toBe(21);
   });
 
-  it("returns 18 for card with 3-4 items", () => {
-    expect(inferCardColSpan(createCard(3))).toBe(18);
-    expect(inferCardColSpan(createCard(4))).toBe(18);
+  it("returns 32 for card with 3-4 items", () => {
+    expect(inferCardColSpan(createCard(3))).toBe(32);
+    expect(inferCardColSpan(createCard(4))).toBe(32);
   });
 
-  it("returns 24 for card with 5+ items", () => {
-    expect(inferCardColSpan(createCard(5))).toBe(24);
-    expect(inferCardColSpan(createCard(10))).toBe(24);
+  it("returns 43 for card with 5+ items", () => {
+    expect(inferCardColSpan(createCard(5))).toBe(43);
+    expect(inferCardColSpan(createCard(10))).toBe(43);
   });
 
-  it("returns 24 for card with content item regardless of count", () => {
-    expect(inferCardColSpan(createCard(1, ["content"]))).toBe(24);
-    expect(inferCardColSpan(createCard(2, ["command", "content"]))).toBe(24);
+  it("returns 43 for card with content item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["content"]))).toBe(43);
+    expect(inferCardColSpan(createCard(2, ["command", "content"]))).toBe(43);
   });
 
-  it("returns 24 for card with settings item regardless of count", () => {
-    expect(inferCardColSpan(createCard(1, ["settings"]))).toBe(24);
-    expect(inferCardColSpan(createCard(2, ["command", "settings"]))).toBe(24);
+  it("returns 43 for card with settings item regardless of count", () => {
+    expect(inferCardColSpan(createCard(1, ["settings"]))).toBe(43);
+    expect(inferCardColSpan(createCard(2, ["command", "settings"]))).toBe(43);
   });
 });
 
 describe("inferCardRowSpan", () => {
-  it("returns 12 for card with 1-2 items", () => {
-    expect(inferCardRowSpan(createCard(1))).toBe(12);
-    expect(inferCardRowSpan(createCard(2))).toBe(12);
+  it("returns 21 for card with 1-2 items", () => {
+    expect(inferCardRowSpan(createCard(1))).toBe(21);
+    expect(inferCardRowSpan(createCard(2))).toBe(21);
   });
 
-  it("returns 15 for card with 3-4 shortcut items", () => {
-    expect(inferCardRowSpan(createCard(3, ["shortcut", "shortcut", "shortcut"]))).toBe(15);
-    expect(inferCardRowSpan(createCard(4, ["shortcut", "shortcut", "shortcut", "shortcut"]))).toBe(15);
+  it("returns 27 for card with 3-4 shortcut items", () => {
+    expect(inferCardRowSpan(createCard(3, ["shortcut", "shortcut", "shortcut"]))).toBe(27);
+    expect(inferCardRowSpan(createCard(4, ["shortcut", "shortcut", "shortcut", "shortcut"]))).toBe(27);
   });
 
-  it("returns 18 for card with 3-4 command items", () => {
-    expect(inferCardRowSpan(createCard(3, ["command", "command", "command"]))).toBe(18);
-    expect(inferCardRowSpan(createCard(4, ["command", "command", "command", "command"]))).toBe(18);
+  it("returns 32 for card with 3-4 command items", () => {
+    expect(inferCardRowSpan(createCard(3, ["command", "command", "command"]))).toBe(32);
+    expect(inferCardRowSpan(createCard(4, ["command", "command", "command", "command"]))).toBe(32);
   });
 
-  it("returns 24 for card with 5+ items", () => {
-    expect(inferCardRowSpan(createCard(5))).toBe(24);
-    expect(inferCardRowSpan(createCard(10))).toBe(24);
+  it("returns 43 for card with 5+ items", () => {
+    expect(inferCardRowSpan(createCard(5))).toBe(43);
+    expect(inferCardRowSpan(createCard(10))).toBe(43);
   });
 
-  it("returns 24 for card with content item regardless of count", () => {
-    expect(inferCardRowSpan(createCard(1, ["content"]))).toBe(24);
-    expect(inferCardRowSpan(createCard(2, ["command", "content"]))).toBe(24);
+  it("returns 43 for card with content item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["content"]))).toBe(43);
+    expect(inferCardRowSpan(createCard(2, ["command", "content"]))).toBe(43);
   });
 
-  it("returns 24 for card with settings item regardless of count", () => {
-    expect(inferCardRowSpan(createCard(1, ["settings"]))).toBe(24);
-    expect(inferCardRowSpan(createCard(2, ["command", "settings"]))).toBe(24);
+  it("returns 43 for card with settings item regardless of count", () => {
+    expect(inferCardRowSpan(createCard(1, ["settings"]))).toBe(43);
+    expect(inferCardRowSpan(createCard(2, ["command", "settings"]))).toBe(43);
   });
 });
 
@@ -139,7 +139,7 @@ describe("buildDefaultBlockLayouts", () => {
     const sheet = createSheet([{ cards: [createCard(2)] }]);
     const result = buildDefaultBlockLayouts(sheet);
 
-    expect(result[0]).toMatchObject({ kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 });
+    expect(result[0]).toMatchObject({ kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 });
   });
 
   it("infers colSpan and rowSpan from card content", () => {
@@ -148,11 +148,11 @@ describe("buildDefaultBlockLayouts", () => {
     ]);
     const result = buildDefaultBlockLayouts(sheet);
     const cards = result.filter((block) => block.kind === "card");
-    expect(cards[0].colSpan).toBe(12);
-    expect(cards[0].rowSpan).toBe(12);
+    expect(cards[0].colSpan).toBe(21);
+    expect(cards[0].rowSpan).toBe(21);
 
-    expect(cards[1].colSpan).toBe(24);
-    expect(cards[1].rowSpan).toBe(24);
+    expect(cards[1].colSpan).toBe(43);
+    expect(cards[1].rowSpan).toBe(43);
   });
 
   it("places cards after the heading without overlap", () => {
@@ -163,8 +163,8 @@ describe("buildDefaultBlockLayouts", () => {
     const cards = result.filter((block) => block.kind === "card");
 
     expect(cards[0].colStart).toBe(1);
-    expect(cards[1].colStart).toBe(13);
-    expect(cards[2].colStart).toBe(25);
+    expect(cards[1].colStart).toBe(22);
+    expect(cards[2].colStart).toBe(43);
     expect(cards.every((card) => card.rowStart >= 3)).toBe(true);
   });
 
@@ -187,7 +187,7 @@ describe("buildDefaultBlockLayouts", () => {
     ]);
     const result = buildDefaultBlockLayouts(sheet);
     const [card] = result.filter((block) => block.kind === "card");
-    expect(card.colSpan).toBe(24);
-    expect(card.rowSpan).toBe(24);
+    expect(card.colSpan).toBe(43);
+    expect(card.rowSpan).toBe(43);
   });
 });

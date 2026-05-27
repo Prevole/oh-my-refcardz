@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 const sampleLayout: BlockLayoutState[] = [
-  { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+  { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
   { id: "card", kind: "card", colStart: 1, rowStart: 3, colSpan: 4, rowSpan: 2 },
 ];
 

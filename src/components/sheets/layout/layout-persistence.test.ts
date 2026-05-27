@@ -43,7 +43,7 @@ function createValidLayout(sectionCardCounts: number[]): BlockLayoutState[] {
       kind: "heading",
       colStart: 1,
       rowStart,
-      colSpan: 36,
+      colSpan: 64,
       rowSpan: 2,
     });
 
@@ -110,7 +110,7 @@ describe("isValidStoredLayout", () => {
 describe("mergeStoredLayouts", () => {
   it("uses stored values when present", () => {
     const stored: BlockLayoutState[] = [
-      { id: "section-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "section-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       { id: "card-1-1", kind: "card", colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 },
     ];
     const defaults = createValidLayout([1]);
@@ -137,7 +137,7 @@ describe("parseStoredLayouts", () => {
     const sheet = createMockSheet([1]);
     const defaults = createValidLayout([1]);
     const stored: BlockLayoutState[] = [
-      { id: "section-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+      { id: "section-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
       { id: "card-1-1", kind: "card", colStart: 13, rowStart: 7, colSpan: 18, rowSpan: 12 },
     ];
 
@@ -157,17 +157,12 @@ describe("parseStoredLayouts", () => {
     expect(result?.find((layout) => layout.id === "card-1-1")?.colStart).toBe(13);
   });
 
-  it("migrates legacy array-based layouts to the finer grid", () => {
+  it("returns null for legacy array-based layouts (migration removed)", () => {
     const sheet = createMockSheet([1]);
     const defaults = createValidLayout([1]);
     const legacyStored = [{ cards: [{ colStart: 5, rowStart: 3, colSpan: 6, rowSpan: 4 }] }];
 
     const result = parseStoredLayouts(JSON.stringify(legacyStored), sheet, defaults);
-    expect(result?.find((layout) => layout.id === "card-1-1")).toMatchObject({
-      colStart: 13,
-      rowStart: 9,
-      colSpan: 18,
-      rowSpan: 12,
-    });
+    expect(result).toBeNull();
   });
 });

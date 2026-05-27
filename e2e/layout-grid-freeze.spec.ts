@@ -80,29 +80,40 @@ test.describe("Grid height freeze during mouse interaction", () => {
     await page.goto(SHEET_URL);
     await page.waitForSelector("[data-sheet-grid][data-layout-ready='true']");
 
-    const initialHeight = await getGridHeight(page);
-
     const lastCard = page.locator("article[data-layout-card='true'][data-layout-block-id='card-six']");
     await lastCard.scrollIntoViewIfNeeded();
     const header = lastCard.locator("[class*='cardHeader']").first();
     const box = await header.boundingBox();
     if (!box) throw new Error("Card Six header has no bounding box");
 
-    // Drag upward and release. The destination is the empty space below the
-    // upper cards (the fixture has six cards roughly stacked vertically).
+    // Drag upward and release. The post-release layout may legitimately grow
+    // taller than the initial layout (e.g. a bottom card promoted to the top
+    // pushes everything south). We don't care about the final height per se —
+    // we only care that the freeze itself is released, meaning the inline
+    // `min-height` style is removed from the grid element.
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
+
+    // While the pointer is down, the freeze should be active.
+    const inlineMinHeightDuringDrag = await page.evaluate(() => {
+      const grid = document.querySelector("[data-sheet-grid]") as HTMLElement | null;
+      return grid?.style.minHeight ?? "";
+    });
+    expect(inlineMinHeightDuringDrag).not.toBe("");
+
     await page.mouse.move(box.x + box.width / 2 - 100, box.y + box.height / 2 - 400, { steps: 16 });
     await page.mouse.up();
 
     // Wait one rAF for the post-release layout to settle.
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
 
-    const finalHeight = await getGridHeight(page);
-    // The grid is now free to shrink. Either it has shrunk (card moved up
-    // and the bottom row is gone) or it stayed the same (engine refused the
-    // move). It must NOT be larger than the initial height: the only thing
-    // that can keep it taller is the freeze itself, which has been released.
-    expect(finalHeight).toBeLessThanOrEqual(initialHeight + 1);
+    // After release, the freeze must be lifted: no inline `min-height` on the
+    // grid element. The grid is then free to settle to its intrinsic height,
+    // whatever that is.
+    const inlineMinHeightAfterRelease = await page.evaluate(() => {
+      const grid = document.querySelector("[data-sheet-grid]") as HTMLElement | null;
+      return grid?.style.minHeight ?? "";
+    });
+    expect(inlineMinHeightAfterRelease).toBe("");
   });
 });

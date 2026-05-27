@@ -60,7 +60,7 @@ describe("computeOperationChain", () => {
   it("a full-width block agglomerates everything above it when chain direction is north", () => {
     const blocks: LayoutBlock[] = [
       block("A", 0, 5, 2, 2),
-      block("Wide", 0, 3, 36, 2), // full width, contiguous north of A
+      block("Wide", 0, 3, 64, 2), // full width, contiguous north of A
       block("Above1", 0, 0, 4, 3), // contiguous to Wide's north face
       block("Above2", 10, 0, 4, 3),
       block("Above3", 30, 0, 4, 3),

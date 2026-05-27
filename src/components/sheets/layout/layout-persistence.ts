@@ -8,9 +8,6 @@ import { GRID_COLUMNS } from "../sheet-grid";
 import { MAX_ROW_SPAN, type BlockLayoutState, type CardLayoutState } from "./layout-types";
 
 const STORAGE_VERSION = 3;
-const LEGACY_GRID_COLUMNS = 12;
-const LEGACY_MAX_ROW_SPAN = 24;
-const LEGACY_GRID_SCALE_FACTOR = GRID_COLUMNS / LEGACY_GRID_COLUMNS;
 
 export function buildStorageKey(sheetSlug: string): string {
   return `sheet-layout:${sheetSlug}`;
@@ -42,28 +39,6 @@ function isValidLayout(
     }
 
     return expectedById.get(blockLayout.id) === blockLayout.kind;
-  });
-}
-
-function migrateLegacyCardLayout(card: CardLayoutState): CardLayoutState {
-  return {
-    colStart: 1 + (card.colStart - 1) * LEGACY_GRID_SCALE_FACTOR,
-    rowStart: 1 + (card.rowStart - 1) * LEGACY_GRID_SCALE_FACTOR,
-    colSpan: card.colSpan * LEGACY_GRID_SCALE_FACTOR,
-    rowSpan: card.rowSpan * LEGACY_GRID_SCALE_FACTOR,
-  };
-}
-
-function isLegacySectionLayouts(value: unknown): value is SavedSectionLayout[] {
-  if (!Array.isArray(value)) return false;
-
-  return value.every((section) => {
-    if (!section || typeof section !== "object") return false;
-    if (!("cards" in section) || !Array.isArray(section.cards)) return false;
-
-    return section.cards.every((card: unknown) =>
-      isValidCardLayoutValue(card, LEGACY_GRID_COLUMNS, LEGACY_MAX_ROW_SPAN)
-    );
   });
 }
 
@@ -178,14 +153,6 @@ export function parseStoredLayouts(
       Array.isArray(parsed.sections)
     ) {
       const migratedBlocks = migrateSectionLayoutsToBlockLayouts(sheet, parsed.sections as SavedSectionLayout[]);
-      return mergeStoredLayouts(migratedBlocks, defaultBlockLayouts);
-    }
-
-    if (isLegacySectionLayouts(parsed)) {
-      const scaledLegacySections = parsed.map((section) => ({
-        cards: section.cards.map((card) => migrateLegacyCardLayout(card)),
-      }));
-      const migratedBlocks = migrateSectionLayoutsToBlockLayouts(sheet, scaledLegacySections);
       return mergeStoredLayouts(migratedBlocks, defaultBlockLayouts);
     }
 

@@ -50,7 +50,7 @@ function makeOptions(
   overrides: Record<string, Partial<BlockConstraints>> = {}
 ): EngineOptions {
   return {
-    gridColumns: 36,
+    gridColumns: 64,
     constraints: constraintsFor(blocks, overrides),
     opId: "op-integration",
   };
@@ -91,11 +91,11 @@ describe("integration — north move with vertical wrap cascade", () => {
     //  y=24  ├──rename────┴──────────────────┤  rename (0, 24, 18, 8)
     //  y=32  └────────────────────────────────┘
     const initial: LayoutBlock[] = [
-      block("heading", 0, 0, 36, 2),
-      block("lifecycle", 0, 2, 18, 22),
-      block("status", 18, 2, 18, 11),
-      block("interaction", 18, 13, 18, 11),
-      block("rename", 0, 24, 18, 8),
+      block("heading", 0, 0, 64, 2),
+      block("lifecycle", 0, 2, 32, 22),
+      block("status", 32, 2, 32, 11),
+      block("interaction", 32, 13, 32, 11),
+      block("rename", 0, 24, 32, 8),
     ];
 
     const op: Operation = {
@@ -133,11 +133,11 @@ describe("integration — north move with vertical wrap cascade", () => {
 
     // Exact expected positions: each block is pushed by the minimum dy required
     // to clear its own collision with the wrappable or with its pusher.
-    expect(byId("status")).toEqual({ x: 18, y: 1, w: 18, h: 11 });
-    expect(byId("heading")).toEqual({ x: 0, y: 12, w: 36, h: 2 });
-    expect(byId("lifecycle")).toEqual({ x: 0, y: 14, w: 18, h: 22 }); // dy=12
-    expect(byId("interaction")).toEqual({ x: 18, y: 14, w: 18, h: 11 }); // dy=1
-    expect(byId("rename")).toEqual({ x: 0, y: 36, w: 18, h: 8 }); // dy=12 (cascade from lifecycle)
+    expect(byId("status")).toEqual({ x: 32, y: 1, w: 32, h: 11 });
+    expect(byId("heading")).toEqual({ x: 0, y: 12, w: 64, h: 2 });
+    expect(byId("lifecycle")).toEqual({ x: 0, y: 14, w: 32, h: 22 }); // dy=12
+    expect(byId("interaction")).toEqual({ x: 32, y: 14, w: 32, h: 11 }); // dy=1
+    expect(byId("rename")).toEqual({ x: 0, y: 36, w: 32, h: 8 }); // dy=12 (cascade from lifecycle)
   });
 
   // ---------------------------------------------------------------------------
@@ -188,11 +188,11 @@ describe("integration — north move with vertical wrap cascade", () => {
     //
     // The bug, before fix: K stays at y=13 because no collision triggers its push.
     const initial: LayoutBlock[] = [
-      block("heading-A", 0, 0, 36, 2),
-      block("block-B", 0, 2, 18, 10),
-      block("primary", 18, 2, 18, 4),
-      block("heading-F", 0, 12, 36, 1),
-      block("block-K", 18, 13, 18, 4),
+      block("heading-A", 0, 0, 64, 2),
+      block("block-B", 0, 2, 32, 10),
+      block("primary", 32, 2, 32, 4),
+      block("heading-F", 0, 12, 64, 1),
+      block("block-K", 32, 13, 32, 4),
     ];
 
     const op: Operation = {
@@ -230,14 +230,14 @@ describe("integration — north move with vertical wrap cascade", () => {
       }
     }
 
-    expect(byId("primary")).toEqual({ x: 18, y: 1, w: 18, h: 4 });
-    expect(byId("heading-A")).toEqual({ x: 0, y: 5, w: 36, h: 2 });
-    expect(byId("block-B")).toEqual({ x: 0, y: 7, w: 18, h: 10 }); // dy=5
-    expect(byId("heading-F")).toEqual({ x: 0, y: 17, w: 36, h: 1 }); // dy=5
+    expect(byId("primary")).toEqual({ x: 32, y: 1, w: 32, h: 4 });
+    expect(byId("heading-A")).toEqual({ x: 0, y: 5, w: 64, h: 2 });
+    expect(byId("block-B")).toEqual({ x: 0, y: 7, w: 32, h: 10 }); // dy=5
+    expect(byId("heading-F")).toEqual({ x: 0, y: 17, w: 64, h: 1 }); // dy=5
     // The critical assertion: block-K must follow heading-F because it was
     // south-contiguous in the initial layout, even though F jumped over K's
     // initial position. dy_K >= dy_F = 5.
-    expect(byId("block-K")).toEqual({ x: 18, y: 18, w: 18, h: 4 }); // dy=5
+    expect(byId("block-K")).toEqual({ x: 32, y: 18, w: 32, h: 4 }); // dy=5
   });
 });
 
@@ -269,18 +269,18 @@ describe("integration — east drag wrap south restores initial column", () => {
     //  y=24  ├─ rename ────┴──────────────────────┤  rename   (0, 24, 18, 8)
     //  y=32
     const initial: LayoutBlock[] = [
-      block("heading", 0, 0, 36, 2),
-      block("lifecycle", 0, 2, 18, 22),
-      block("status", 18, 2, 18, 11),
-      block("interaction", 18, 13, 18, 16),
-      block("rename", 0, 24, 18, 8),
+      block("heading", 0, 0, 64, 2),
+      block("lifecycle", 0, 2, 32, 22),
+      block("status", 32, 2, 32, 11),
+      block("interaction", 32, 13, 32, 16),
+      block("rename", 0, 24, 32, 8),
     ];
 
-    // Drag lifecycle east by 14 cells. status and interaction must wrap south.
+    // Drag lifecycle east by 27 cells. status and interaction must wrap south.
     const op: Operation = {
       kind: "move",
       blockId: "lifecycle",
-      dx: 14,
+      dx: 27,
       dy: 0,
     };
 
@@ -306,7 +306,7 @@ describe("integration — east drag wrap south restores initial column", () => {
       expect(
         b.position.x + b.position.w,
         `${b.id} overflows grid: x=${b.position.x} w=${b.position.w}`
-      ).toBeLessThanOrEqual(36);
+      ).toBeLessThanOrEqual(64);
       expect(b.position.x, `${b.id} has negative x`).toBeGreaterThanOrEqual(0);
     }
     for (let i = 0; i < finalBlocks.length; i++) {
@@ -322,15 +322,15 @@ describe("integration — east drag wrap south restores initial column", () => {
       }
     }
 
-    // Primary lands at x=14 (initial 0 + dx 14), size unchanged.
-    expect(byId("lifecycle")).toEqual({ x: 14, y: 2, w: 18, h: 22 });
+    // Primary lands at x=27 (initial 0 + dx 27), size unchanged.
+    expect(byId("lifecycle")).toEqual({ x: 27, y: 2, w: 32, h: 22 });
 
     // The critical assertion: wrapped blocks restore size AND initial X column.
-    // Before the fix they ended up at x=30 (the shrunk column) → overflow.
-    expect(byId("status").x).toBe(18);
-    expect(byId("status").w).toBe(18);
-    expect(byId("interaction").x).toBe(18);
-    expect(byId("interaction").w).toBe(18);
+    // Before the fix they ended up at the shrunk column → overflow.
+    expect(byId("status").x).toBe(32);
+    expect(byId("status").w).toBe(32);
+    expect(byId("interaction").x).toBe(32);
+    expect(byId("interaction").w).toBe(32);
   });
 });
 
@@ -364,33 +364,33 @@ describe("integration — east drag wrap south residual cascade is minimal", () 
     // Full docker page layout snapshot taken from
     // .debug-sessions/1779192723382-vyizvtc.json at session.start.
     const initial: LayoutBlock[] = [
-      block("containers", 0, 0, 36, 2),
-      block("container-lifecycle", 0, 2, 18, 22), // primary (B)
-      block("container-status", 18, 2, 18, 11), // C
-      block("container-rename", 0, 24, 18, 8), // D
-      block("container-interaction", 18, 13, 18, 16), // E
-      block("images", 0, 32, 36, 2), // F (heading)
-      block("image-lifecycle", 0, 54, 18, 15), // H
-      block("inspection", 0, 51, 36, 2), // I (heading)
-      block("image-inspection", 18, 34, 18, 8), // K
-      block("container-inspection", 18, 54, 18, 16), // J
-      block("image-registry", 0, 72, 18, 18), // G
-      block("volumes", 0, 70, 18, 2), // L (heading, half-width)
-      block("networks", 18, 70, 18, 2), // P (heading, half-width)
-      block("volume-lifecycle", 18, 72, 18, 12), // N
-      block("volume-query", 18, 84, 18, 11), // M
-      block("volume-mounting", 0, 95, 18, 8), // O
-      block("network-query", 18, 95, 18, 11), // Q
-      block("cleanup", 0, 112, 36, 2), // T (heading)
-      block("network-lifecycle", 0, 114, 18, 12), // R
-      block("network-connection", 18, 114, 18, 17), // S
-      block("system-cleanup", 0, 131, 36, 18), // U
+      block("containers", 0, 0, 64, 2),
+      block("container-lifecycle", 0, 2, 32, 22), // primary (B)
+      block("container-status", 32, 2, 32, 11), // C
+      block("container-rename", 0, 24, 32, 8), // D
+      block("container-interaction", 32, 13, 32, 16), // E
+      block("images", 0, 32, 64, 2), // F (heading)
+      block("image-lifecycle", 0, 54, 32, 15), // H
+      block("inspection", 0, 51, 64, 2), // I (heading)
+      block("image-inspection", 32, 34, 32, 8), // K
+      block("container-inspection", 32, 54, 32, 16), // J
+      block("image-registry", 0, 72, 32, 18), // G
+      block("volumes", 0, 70, 32, 2), // L (heading, half-width)
+      block("networks", 32, 70, 32, 2), // P (heading, half-width)
+      block("volume-lifecycle", 32, 72, 32, 12), // N
+      block("volume-query", 32, 84, 32, 11), // M
+      block("volume-mounting", 0, 95, 32, 8), // O
+      block("network-query", 32, 95, 32, 11), // Q
+      block("cleanup", 0, 112, 64, 2), // T (heading)
+      block("network-lifecycle", 0, 114, 32, 12), // R
+      block("network-connection", 32, 114, 32, 17), // S
+      block("system-cleanup", 0, 131, 64, 18), // U
     ];
 
     const op: Operation = {
       kind: "move",
       blockId: "container-lifecycle",
-      dx: 13,
+      dx: 27,
       dy: 0,
     };
 
@@ -436,11 +436,11 @@ describe("integration — east drag wrap south residual cascade is minimal", () 
     }
 
     // Primary moved as requested.
-    expect(byId("container-lifecycle")).toEqual({ x: 13, y: 2, w: 18, h: 22 });
+    expect(byId("container-lifecycle")).toEqual({ x: 27, y: 2, w: 32, h: 22 });
 
     // Wrapped blocks land just below the primary, restored to their full width.
-    expect(byId("container-status")).toEqual({ x: 18, y: 24, w: 18, h: 11 });
-    expect(byId("container-interaction")).toEqual({ x: 18, y: 35, w: 18, h: 16 });
+    expect(byId("container-status")).toEqual({ x: 32, y: 24, w: 32, h: 11 });
+    expect(byId("container-interaction")).toEqual({ x: 32, y: 35, w: 32, h: 16 });
 
     // Right-column cascade: image-inspection (K) must clear container-interaction
     // (E) which now ends at y=51. K is pushed by F (images, which spans full
@@ -507,30 +507,30 @@ describe("integration — cascading wrap among chain members", () => {
     // under A, C is the card to the east. All three share the top of the grid.
     // Drag C west enough to force A through shrink-to-minW then wrap.
     //
-    //   A = heading at (0, 0, w=18, h=2), minW=12
-    //   B = card at (0, 2, w=18, h=22), minW=6
-    //   C = card at (18, 0, w=18, h=11), minW=6 — primary
+    //   A = heading at (0, 0, w=32, h=2), minW=20
+    //   B = card at (0, 2, w=32, h=22), minW=6
+    //   C = card at (32, 0, w=32, h=11), minW=6 — primary
     //
-    // Dragging C west by dx=-7 forces:
-    //   - C through x=18..11 (chain west: C → A & B push west)
-    //   - A shrinks until w=12 (minW) then wraps south
+    // Dragging C west by dx=-13 forces:
+    //   - C through x=32..19 (chain west: C → A & B push west)
+    //   - A shrinks until w=20 (minW), would need w=19 to clear → wraps south
     //   - B shrinks alongside A
     // After A wraps, A and B both end up at full width below the primary.
     const initial: LayoutBlock[] = [
-      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 18, h: 2 } },
-      block("B", 0, 2, 18, 22),
-      block("C", 18, 0, 18, 11),
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 32, h: 2 } },
+      block("B", 0, 2, 32, 22),
+      block("C", 32, 0, 32, 11),
     ];
 
     const op: Operation = {
       kind: "move",
       blockId: "C",
-      dx: -7,
+      dx: -13,
       dy: 0,
     };
 
     const options = makeOptions(initial, {
-      A: { minW: 12, minH: 2 },
+      A: { minW: 20, minH: 2 },
       B: { minW: 6 },
       C: { minW: 6 },
     });
@@ -541,19 +541,19 @@ describe("integration — cascading wrap among chain members", () => {
 
     const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
 
-    // C moves west to x=11.
-    expect(byId("C").x).toBe(11);
+    // C moves west to x=19.
+    expect(byId("C").x).toBe(19);
 
-    // A reached minW=12 and was forced to wrap south. After wrap, A is
-    // restored to its session-initial width (w=18).
-    expect(byId("A").w).toBe(18);
+    // A reached minW=20 and was forced to wrap south. After wrap, A is
+    // restored to its session-initial width (w=32).
+    expect(byId("A").w).toBe(32);
     expect(byId("A").y).toBeGreaterThan(0);
 
     // B was in the chain alongside A but as a non-wrappable shrinker. When A
     // wrapped to a y where B was still sitting, B should also wrap south
     // (rather than be left in place to overlap A) and restore its session-
     // initial width.
-    expect(byId("B").w).toBe(18);
+    expect(byId("B").w).toBe(32);
     expect(byId("B").y).toBeGreaterThan(2);
 
     // No overlap anywhere.
@@ -604,9 +604,9 @@ describe("integration — shrink absorption before wrap", () => {
     //     → C now (18, 2, w=18, h=10), bottom=12
     //   - A stays at (0, 0, 36, 2). No wrap.
     const initial: LayoutBlock[] = [
-      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 36, h: 2 } },
-      block("C", 18, 2, 18, 11),
-      block("E", 18, 13, 18, 16),
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 64, h: 2 } },
+      block("C", 32, 2, 32, 11),
+      block("E", 32, 13, 32, 16),
     ];
 
     const op: Operation = {
@@ -629,13 +629,13 @@ describe("integration — shrink absorption before wrap", () => {
     const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
 
     // E moved north by 1.
-    expect(byId("E")).toEqual({ x: 18, y: 12, w: 18, h: 16 });
+    expect(byId("E")).toEqual({ x: 32, y: 12, w: 32, h: 16 });
 
     // C absorbed the displacement by shrinking on its south edge.
-    expect(byId("C")).toEqual({ x: 18, y: 2, w: 18, h: 10 });
+    expect(byId("C")).toEqual({ x: 32, y: 2, w: 32, h: 10 });
 
     // A did NOT wrap — it stays at its initial position and size.
-    expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+    expect(byId("A")).toEqual({ x: 0, y: 0, w: 64, h: 2 });
   });
 
   it("absorbs on every branch when the saturated tail spans multiple columns", () => {
@@ -659,12 +659,12 @@ describe("integration — shrink absorption before wrap", () => {
     // on the next step B and E would slide on top of A. With multi-branch
     // absorption, both B and C shrink simultaneously and A stays put.
     const initial: LayoutBlock[] = [
-      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 36, h: 2 } },
-      block("B", 0, 2, 18, 22),
-      block("C", 18, 2, 18, 11),
-      block("D", 0, 24, 18, 8),
-      block("E", 18, 13, 18, 16),
-      { id: "F", kind: "heading", position: { x: 0, y: 32, w: 36, h: 2 } },
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 64, h: 2 } },
+      block("B", 0, 2, 32, 22),
+      block("C", 32, 2, 32, 11),
+      block("D", 0, 24, 32, 8),
+      block("E", 32, 13, 32, 16),
+      { id: "F", kind: "heading", position: { x: 0, y: 32, w: 64, h: 2 } },
     ];
 
     const op: Operation = {
@@ -690,19 +690,19 @@ describe("integration — shrink absorption before wrap", () => {
     const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
 
     // F arrived at y=28 (initial 32 minus 4).
-    expect(byId("F")).toEqual({ x: 0, y: 28, w: 36, h: 2 });
+    expect(byId("F")).toEqual({ x: 0, y: 28, w: 64, h: 2 });
 
     // A never wrapped — the multi-branch absorption kept it in place.
-    expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+    expect(byId("A")).toEqual({ x: 0, y: 0, w: 64, h: 2 });
 
     // B and C absorbed the 4-unit displacement by shrinking their south
     // edges. Both keep y=2.
     expect(byId("B").x).toBe(0);
     expect(byId("B").y).toBe(2);
-    expect(byId("B").w).toBe(18);
-    expect(byId("C").x).toBe(18);
+    expect(byId("B").w).toBe(32);
+    expect(byId("C").x).toBe(32);
     expect(byId("C").y).toBe(2);
-    expect(byId("C").w).toBe(18);
+    expect(byId("C").w).toBe(32);
 
     // No block overlaps any other.
     for (let i = 0; i < result.blocks.length; i++) {
@@ -743,12 +743,12 @@ describe("integration — shrink absorption before wrap", () => {
     //   - E shrinks 8→7 on its south edge: (10, 6, 18, 7)
     //   - B, C, A unchanged.
     const initial: LayoutBlock[] = [
-      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 36, h: 2 } },
-      block("B", 0, 2, 18, 4),
-      block("C", 18, 2, 18, 4),
-      block("E", 10, 6, 18, 8),
+      { id: "A", kind: "heading", position: { x: 0, y: 0, w: 64, h: 2 } },
+      block("B", 0, 2, 32, 4),
+      block("C", 32, 2, 32, 4),
+      block("E", 10, 6, 32, 8),
       block("D", 6, 14, 10, 4),
-      { id: "F", kind: "heading", position: { x: 0, y: 18, w: 36, h: 2 } },
+      { id: "F", kind: "heading", position: { x: 0, y: 18, w: 64, h: 2 } },
     ];
 
     const op: Operation = {
@@ -772,12 +772,12 @@ describe("integration — shrink absorption before wrap", () => {
 
     const byId = (id: string) => result.blocks.find((b) => b.id === id)!.position;
 
-    expect(byId("F")).toEqual({ x: 0, y: 17, w: 36, h: 2 });
+    expect(byId("F")).toEqual({ x: 0, y: 17, w: 64, h: 2 });
     expect(byId("D")).toEqual({ x: 6, y: 13, w: 10, h: 4 });
-    expect(byId("E")).toEqual({ x: 10, y: 6, w: 18, h: 7 });
-    expect(byId("B")).toEqual({ x: 0, y: 2, w: 18, h: 4 });
-    expect(byId("C")).toEqual({ x: 18, y: 2, w: 18, h: 4 });
-    expect(byId("A")).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+    expect(byId("E")).toEqual({ x: 10, y: 6, w: 32, h: 7 });
+    expect(byId("B")).toEqual({ x: 0, y: 2, w: 32, h: 4 });
+    expect(byId("C")).toEqual({ x: 32, y: 2, w: 32, h: 4 });
+    expect(byId("A")).toEqual({ x: 0, y: 0, w: 64, h: 2 });
   });
 });
 
@@ -789,10 +789,10 @@ describe("integration — shrink absorption before wrap", () => {
 // relies on the engine returning the largest partial application possible
 // when the cumulative delta cannot be honoured fully.
 //
-//   - A single 4-wide block at x=0. We try to resize east by +50 cells.
-//   - The grid is 36 wide; the block tops out at w = 36 (x+w = 36).
-//   - The first 32 east steps must succeed; the remaining 18 are rejected.
-//   - The returned blocks must reflect the largest valid state (w = 36),
+//   - A single 4-wide block at x=0. We try to resize east by +70 cells.
+//   - The grid is 64 wide; the block tops out at w = 64 (x+w = 64).
+//   - The first 60 east steps must succeed; the remaining 10 are rejected.
+//   - The returned blocks must reflect the largest valid state (w = 64),
 //     not the initial state, not a partial-then-reset.
 // -----------------------------------------------------------------------------
 
@@ -804,21 +804,21 @@ describe("Engine integration: resize against grid limit", () => {
       kind: "resize",
       blockId: "solo",
       edge: "east",
-      delta: 50,
+      delta: 70,
     };
 
     const result = applyOperation(blocks, op, makeOptions(blocks));
 
     expect(result.accepted).toBe(true);
-    expect(result.appliedDelta).toBe(32);
+    expect(result.appliedDelta).toBe(60);
     expect(result.rejected).toBeUndefined();
 
     const final = result.blocks.find((b) => b.id === "solo")!;
-    expect(final.position).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+    expect(final.position).toEqual({ x: 0, y: 0, w: 64, h: 2 });
   });
 
   it("returns the initial layout untouched when no step can be applied", () => {
-    const blocks: LayoutBlock[] = [block("solo", 0, 0, 36, 2)];
+    const blocks: LayoutBlock[] = [block("solo", 0, 0, 64, 2)];
 
     const op: Operation = {
       kind: "resize",
@@ -834,7 +834,7 @@ describe("Engine integration: resize against grid limit", () => {
     expect(result.rejected).toBeDefined();
 
     const final = result.blocks.find((b) => b.id === "solo")!;
-    expect(final.position).toEqual({ x: 0, y: 0, w: 36, h: 2 });
+    expect(final.position).toEqual({ x: 0, y: 0, w: 64, h: 2 });
   });
 });
 
@@ -847,9 +847,9 @@ describe("integration — shrink absorption with no absorber falls back to wrap"
     // Configuration: a contiguous east chain of three blocks, all at minW=1,
     // anchored to the east boundary.
     //
-    //   A = primary at (33, 0, 1, 1), minW=1
-    //   S = saturated mid-chain at (34, 0, 1, 1), minW=1
-    //   T = saturated tail at (35, 0, 1, 1), minW=1
+    //   A = primary at (61, 0, 1, 1), minW=1
+    //   S = saturated mid-chain at (62, 0, 1, 1), minW=1
+    //   T = saturated tail at (63, 0, 1, 1), minW=1
     //
     // Push A east by 1. The chain is A → S → T. Both S and T are saturated
     // (cannot shrink east further), so T's wrap action triggers the absorber
@@ -859,9 +859,9 @@ describe("integration — shrink absorption with no absorber falls back to wrap"
     // This exercises the dead-end branch in `step.ts` (lines 607-609) where a
     // saturated member's `filteredParents` is empty.
     const initial: LayoutBlock[] = [
-      block("A", 33, 0, 1, 1),
-      block("S", 34, 0, 1, 1),
-      block("T", 35, 0, 1, 1),
+      block("A", 61, 0, 1, 1),
+      block("S", 62, 0, 1, 1),
+      block("T", 63, 0, 1, 1),
     ];
 
     const op: Operation = { kind: "move", blockId: "A", dx: 1, dy: 0 };

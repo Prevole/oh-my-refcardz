@@ -41,7 +41,7 @@ function createMockParams(slug: string): Promise<{ slug: string }> {
 }
 
 const sampleLayout: BlockLayoutState[] = [
-  { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+  { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
   { id: "status", kind: "card", colStart: 1, rowStart: 3, colSpan: 4, rowSpan: 2 },
 ];
 

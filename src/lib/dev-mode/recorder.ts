@@ -9,7 +9,7 @@
  *   import { debugRecorder } from "@/lib/dev-mode/recorder";
  *
  *   // Once per page mount:
- *   debugRecorder.start({ page: "/sheets/git", engine: { gridColumns: 36, constraints: {...} } });
+ *   debugRecorder.start({ page: "/sheets/git", engine: { gridColumns: 64, constraints: {...} } });
  *
  *   // Pass the emitter to every applyOperation call:
  *   applyOperation(blocks, op, { ...options, emitter: debugRecorder.getEngineEmitter() });

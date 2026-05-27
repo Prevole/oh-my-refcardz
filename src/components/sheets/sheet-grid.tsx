@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
 
-export const GRID_GAP_PX = 16;
-export const GRID_COLUMNS = 36;
+export const GRID_GAP_PX = 8;
+export const GRID_COLUMNS = 64;
 
 type SheetGridMetrics = {
   columns: number;
@@ -56,11 +56,12 @@ type SheetGridProps = {
  * `getComputedStyle()` resolves the `calc(...)` to a pixel value at read
  * time, which is what consumers like the dev-axes overlay rely on.
  */
-const GRID_COLUMN_SIZE_FORMULA = `calc((100% - (var(--sheet-grid-columns) - 1) * ${GRID_GAP_PX}px) / var(--sheet-grid-columns))`;
-const GRID_ROW_SIZE_FORMULA = `calc((100cqi - (var(--sheet-grid-columns) - 1) * ${GRID_GAP_PX}px) / var(--sheet-grid-columns))`;
+const GRID_COLUMN_SIZE_FORMULA = `calc((100% - (var(--sheet-grid-columns) - 1) * var(--sheet-grid-gap)) / var(--sheet-grid-columns))`;
+const GRID_ROW_SIZE_FORMULA = `calc((100cqi - (var(--sheet-grid-columns) - 1) * var(--sheet-grid-gap)) / var(--sheet-grid-columns))`;
 
 const GRID_CSS_VARS = {
   "--sheet-grid-columns": String(GRID_COLUMNS),
+  "--sheet-grid-gap": `${GRID_GAP_PX}px`,
   "--sheet-grid-column-size": GRID_COLUMN_SIZE_FORMULA,
   "--sheet-grid-row-size": GRID_ROW_SIZE_FORMULA,
 } as CSSProperties;

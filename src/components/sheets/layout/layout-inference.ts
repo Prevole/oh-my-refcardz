@@ -1,9 +1,12 @@
 import { getRenderableBlocks, type CheatSheetCard, type CheatSheetItem, type YamlCheatSheet } from "@/lib/cheatsheet-shared";
 import { resolveBlockLayout } from "./layout-algorithms";
 import type { BlockLayoutState } from "./layout-types";
+import { GRID_COLUMNS } from "../sheet-grid";
 
-const GRID_SCALE_FACTOR = 3;
 const HEADING_ROW_SPAN = 2;
+
+const fractionOfGrid = (numerator: number, denominator: number) =>
+  Math.round((GRID_COLUMNS * numerator) / denominator);
 
 function hasEntryType(item: CheatSheetItem, types: string[]): boolean {
   return item.entries.some((entry) =>
@@ -17,10 +20,10 @@ export function inferCardColSpan(card: CheatSheetCard): number {
     hasEntryType(item, ["settings", "content"])
   );
 
-  if (hasStructuredBlock) return 8 * GRID_SCALE_FACTOR;
-  if (itemCount >= 5) return 8 * GRID_SCALE_FACTOR;
-  if (itemCount >= 3) return 6 * GRID_SCALE_FACTOR;
-  return 4 * GRID_SCALE_FACTOR;
+  if (hasStructuredBlock) return fractionOfGrid(8, 12);
+  if (itemCount >= 5) return fractionOfGrid(8, 12);
+  if (itemCount >= 3) return fractionOfGrid(6, 12);
+  return fractionOfGrid(4, 12);
 }
 
 export function inferCardRowSpan(card: CheatSheetCard): number {
@@ -32,11 +35,11 @@ export function inferCardRowSpan(card: CheatSheetCard): number {
     hasEntryType(item, ["command"])
   );
 
-  if (hasStructuredBlock) return 8 * GRID_SCALE_FACTOR;
-  if (itemCount >= 5) return 8 * GRID_SCALE_FACTOR;
-  if (hasCommand && itemCount >= 3) return 6 * GRID_SCALE_FACTOR;
-  if (itemCount >= 3) return 5 * GRID_SCALE_FACTOR;
-  return 4 * GRID_SCALE_FACTOR;
+  if (hasStructuredBlock) return fractionOfGrid(8, 12);
+  if (itemCount >= 5) return fractionOfGrid(8, 12);
+  if (hasCommand && itemCount >= 3) return fractionOfGrid(6, 12);
+  if (itemCount >= 3) return fractionOfGrid(5, 12);
+  return fractionOfGrid(4, 12);
 }
 
 export function buildDefaultBlockLayouts(sheet: YamlCheatSheet): BlockLayoutState[] {
@@ -47,7 +50,7 @@ export function buildDefaultBlockLayouts(sheet: YamlCheatSheet): BlockLayoutStat
         kind: "heading",
         colStart: 1,
         rowStart: 1,
-        colSpan: 36,
+        colSpan: GRID_COLUMNS,
         rowSpan: HEADING_ROW_SPAN,
       };
     }

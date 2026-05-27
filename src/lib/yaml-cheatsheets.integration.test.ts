@@ -491,7 +491,7 @@ description: Testing layout loading
           kind: "heading",
           colStart: 1,
           rowStart: 1,
-          colSpan: 36,
+          colSpan: 64,
           rowSpan: 2,
         },
         {
@@ -596,7 +596,7 @@ blocks:
           kind: "heading",
           colStart: 1,
           rowStart: 1,
-          colSpan: 36,
+          colSpan: 64,
           rowSpan: 2,
         },
         {

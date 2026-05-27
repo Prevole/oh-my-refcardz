@@ -207,7 +207,7 @@ The cheatsheet grid has no intrinsic minimum height: its total height is `max(ca
 To prevent this, the renderer freezes a **lower bound on grid rows** for the entire duration of a mouse interaction:
 
 - On `pointerdown`, `useLayoutEditor.startInteraction(kind, blockId)` records `snapshotMaxRow = max(block.y + block.h)` from the snapshot.
-- While `interaction != null`, `<SheetGrid>` applies an inline `min-height: calc(N * var(--sheet-grid-row-size) + (N-1) * 16px)` where `N = snapshotMaxRow`.
+- While `interaction != null`, `<SheetGrid>` applies an inline `min-height: calc(N * var(--sheet-grid-row-size) + (N-1) * GRID_GAP_PX)` where `N = snapshotMaxRow` and `GRID_GAP_PX` is the gap constant from `sheet-grid.tsx`.
 - On `pointerup` / `pointercancel`, the interaction state clears and the `min-height` is removed; the grid is free to shrink back to its intrinsic height.
 
 The floor is captured **once** at gesture start and is **not** updated during the gesture; the grid is still free to grow beyond `N` if the operation pushes blocks further south (the floor is a minimum, not a fixed height). Keyboard mode does not use a floor because it has no pointer-to-cell mapping to protect.

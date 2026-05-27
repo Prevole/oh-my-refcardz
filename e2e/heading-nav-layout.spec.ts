@@ -75,17 +75,17 @@ test.describe("Heading navigation reflects layout order", () => {
       };
 
       const layout: Record<string, Omit<Block, "id" | "kind">> = {
-        "section-b": { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        "section-b": { colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
         "card-b1": { colStart: 1, rowStart: 3, colSpan: 18, rowSpan: 6 },
         "card-b2": { colStart: 19, rowStart: 3, colSpan: 18, rowSpan: 6 },
-        "section-a": { colStart: 1, rowStart: 9, colSpan: 36, rowSpan: 2 },
-        "card-a1": { colStart: 1, rowStart: 11, colSpan: 36, rowSpan: 6 },
+        "section-a": { colStart: 1, rowStart: 9, colSpan: 64, rowSpan: 2 },
+        "card-a1": { colStart: 1, rowStart: 11, colSpan: 64, rowSpan: 6 },
       };
 
       const blocks: Block[] = orderedRawIds.map(({ id, kind }) => ({
         id,
         kind,
-        ...(layout[id] ?? { colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 }),
+        ...(layout[id] ?? { colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 }),
       }));
 
       const payload = { version: 3, blocks };
