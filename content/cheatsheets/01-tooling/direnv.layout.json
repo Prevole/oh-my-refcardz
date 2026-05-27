@@ -2,101 +2,81 @@
   {
     "id": "basics",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 0,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "runtime",
     "kind": "card",
-    "position": {
-      "x": 25,
-      "y": 2,
-      "w": 11,
-      "h": 12
-    }
+    "colStart": 26,
+    "rowStart": 3,
+    "colSpan": 11,
+    "rowSpan": 12
   },
   {
     "id": "trust-and-reload",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 2,
-      "w": 25,
-      "h": 12
-    }
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 25,
+    "rowSpan": 12
   },
   {
     "id": "project-files",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 0,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "local-environment",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 2,
-      "w": 25,
-      "h": 15
-    }
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 25,
+    "rowSpan": 15
   },
   {
     "id": "ignore-generated-state",
     "kind": "card",
-    "position": {
-      "x": 25,
-      "y": 2,
-      "w": 11,
-      "h": 15
-    }
+    "colStart": 26,
+    "rowStart": 3,
+    "colSpan": 11,
+    "rowSpan": 15
   },
   {
     "id": "onepassword-cli-integration",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 0,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "setup-oprc-plugin",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 2,
-      "w": 22,
-      "h": 10
-    }
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 22,
+    "rowSpan": 10
   },
   {
     "id": "using-oprc",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 12,
-      "w": 22,
-      "h": 20
-    }
+    "colStart": 1,
+    "rowStart": 13,
+    "colSpan": 22,
+    "rowSpan": 20
   },
   {
     "id": "practical-workflow",
     "kind": "card",
-    "position": {
-      "x": 22,
-      "y": 2,
-      "w": 14,
-      "h": 23
-    }
+    "colStart": 23,
+    "rowStart": 3,
+    "colSpan": 14,
+    "rowSpan": 23
   }
 ]

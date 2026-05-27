@@ -2,151 +2,121 @@
   {
     "id": "basics",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 0,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "inspect-active-versions",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 2,
-      "w": 18,
-      "h": 16
-    }
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 16
   },
   {
     "id": "install-and-resolve",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 2,
-      "w": 18,
-      "h": 14
-    }
+    "colStart": 19,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 14
   },
   {
     "id": "project-versions",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 18,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 19,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "tool-versions",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 20,
-      "w": 18,
-      "h": 19
-    }
+    "colStart": 1,
+    "rowStart": 21,
+    "colSpan": 18,
+    "rowSpan": 19
   },
   {
     "id": "resolution-model",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 34,
-      "w": 18,
-      "h": 9
-    }
+    "colStart": 19,
+    "rowStart": 35,
+    "colSpan": 18,
+    "rowSpan": 9
   },
   {
     "id": "mise-toml",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 20,
-      "w": 18,
-      "h": 14
-    }
+    "colStart": 19,
+    "rowStart": 21,
+    "colSpan": 18,
+    "rowSpan": 14
   },
   {
     "id": "global-defaults",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 43,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 44,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "config-toml",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 45,
-      "w": 13,
-      "h": 16
-    }
+    "colStart": 1,
+    "rowStart": 46,
+    "colSpan": 13,
+    "rowSpan": 16
   },
   {
     "id": "package-manager-tools",
     "kind": "card",
-    "position": {
-      "x": 13,
-      "y": 45,
-      "w": 23,
-      "h": 16
-    }
+    "colStart": 14,
+    "rowStart": 46,
+    "colSpan": 23,
+    "rowSpan": 16
   },
   {
     "id": "chezmoi-workflow",
     "kind": "card",
-    "position": {
-      "x": 13,
-      "y": 61,
-      "w": 23,
-      "h": 13
-    }
+    "colStart": 14,
+    "rowStart": 62,
+    "colSpan": 23,
+    "rowSpan": 13
   },
   {
     "id": "machine-setup",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 61,
-      "w": 13,
-      "h": 9
-    }
+    "colStart": 1,
+    "rowStart": 62,
+    "colSpan": 13,
+    "rowSpan": 9
   },
   {
     "id": "maintenance",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 74,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 75,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "update-tools",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 76,
-      "w": 17,
-      "h": 10
-    }
+    "colStart": 1,
+    "rowStart": 77,
+    "colSpan": 17,
+    "rowSpan": 10
   },
   {
     "id": "daily-flow",
     "kind": "card",
-    "position": {
-      "x": 17,
-      "y": 76,
-      "w": 19,
-      "h": 19
-    }
+    "colStart": 18,
+    "rowStart": 77,
+    "colSpan": 19,
+    "rowSpan": 19
   }
 ]

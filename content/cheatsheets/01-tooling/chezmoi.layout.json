@@ -2,121 +2,97 @@
   {
     "id": "daily-workflow",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 0,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "inspect-and-apply",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 2,
-      "w": 18,
-      "h": 15
-    }
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 15
   },
   {
     "id": "navigate-and-edit",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 2,
-      "w": 18,
-      "h": 18
-    }
+    "colStart": 19,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 18
   },
   {
     "id": "update-and-sync",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 17,
-      "w": 18,
-      "h": 12
-    }
+    "colStart": 1,
+    "rowStart": 18,
+    "colSpan": 18,
+    "rowSpan": 12
   },
   {
     "id": "source-state",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 29,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 30,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "naming-conventions",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 31,
-      "w": 21,
-      "h": 18
-    }
+    "colStart": 1,
+    "rowStart": 32,
+    "colSpan": 21,
+    "rowSpan": 18
   },
   {
     "id": "fixups",
     "kind": "card",
-    "position": {
-      "x": 21,
-      "y": 31,
-      "w": 15,
-      "h": 18
-    }
+    "colStart": 22,
+    "rowStart": 32,
+    "colSpan": 15,
+    "rowSpan": 18
   },
   {
     "id": "machine-setup",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 49,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 50,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "bootstrap",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 51,
-      "w": 18,
-      "h": 30
-    }
+    "colStart": 1,
+    "rowStart": 52,
+    "colSpan": 18,
+    "rowSpan": 30
   },
   {
     "id": "setup-pipeline",
     "kind": "card",
-    "position": {
-      "x": 18,
-      "y": 51,
-      "w": 18,
-      "h": 24
-    }
+    "colStart": 19,
+    "rowStart": 52,
+    "colSpan": 18,
+    "rowSpan": 24
   },
   {
     "id": "contextual-helpers",
     "kind": "heading",
-    "position": {
-      "x": 0,
-      "y": 81,
-      "w": 36,
-      "h": 2
-    }
+    "colStart": 1,
+    "rowStart": 82,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "related-workflows",
     "kind": "card",
-    "position": {
-      "x": 0,
-      "y": 83,
-      "w": 15,
-      "h": 9
-    }
+    "colStart": 1,
+    "rowStart": 84,
+    "colSpan": 15,
+    "rowSpan": 9
   }
 ]

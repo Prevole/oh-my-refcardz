@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "validate:cheatsheets": "tsx scripts/validate-cheatsheets.ts"
+    "validate:cheatsheets": "tsx scripts/validate-cheatsheets.ts",
+    "migrate:layouts": "tsx scripts/migrate-layouts.ts"
   },
   "dependencies": {
     "js-yaml": "^4.1.1",
