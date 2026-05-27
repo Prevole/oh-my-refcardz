@@ -70,10 +70,10 @@ test.describe("Dev-mode save promotes the current layout as the new baseline", (
     await expect(page.locator("text=DEV").first()).toBeVisible();
     await page.keyboard.press("s");
 
-    // Wait for the promotion to flip isModifiedFromOriginal back to false.
-    // The reset button is no longer actionable, but the action group is
-    // still mounted because the in-session push history is intact and
-    // therefore undo remains available.
-    await expect(resetButton).toBeDisabled();
+    // Once developer mode is active, the user-facing action group is
+    // hidden entirely (the dev overlay provides its own toolbar). Either
+    // way the user reset button must no longer be visible after the
+    // save resolves.
+    await expect(resetButton).toHaveCount(0);
   });
 });
