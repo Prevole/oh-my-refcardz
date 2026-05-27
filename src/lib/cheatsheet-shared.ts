@@ -1,3 +1,4 @@
+import { getBlockConstraints } from "./layout/blocks";
 import { GRID_COLUMNS } from "./layout/grid-constants";
 
 export type SavedCardLayout = {
@@ -118,8 +119,6 @@ type HeadingGroup = {
   cards: CheatSheetCard[];
 };
 
-const HEADING_ROW_SPAN = 2;
-
 export function getHeadingGroups(sheet: YamlCheatSheet): HeadingGroup[] {
   const groups: HeadingGroup[] = [];
   let currentGroup: HeadingGroup | null = null;
@@ -158,6 +157,7 @@ export function migrateSectionLayoutsToBlockLayouts(
 ): SavedBlockLayout[] {
   const migratedLayouts: SavedBlockLayout[] = [];
   const groups = getHeadingGroups(sheet);
+  const headingRowSpan = getBlockConstraints("heading").minRowSpan;
   let currentRowOffset = 1;
 
   groups.forEach((group, groupIndex) => {
@@ -167,10 +167,10 @@ export function migrateSectionLayoutsToBlockLayouts(
       colStart: 1,
       rowStart: currentRowOffset,
       colSpan: GRID_COLUMNS,
-      rowSpan: HEADING_ROW_SPAN,
+      rowSpan: headingRowSpan,
     });
 
-    let sectionBottom = currentRowOffset + HEADING_ROW_SPAN - 1;
+    let sectionBottom = currentRowOffset + headingRowSpan - 1;
 
     group.cards.forEach((card, cardIndex) => {
       const sectionLayout = layouts[groupIndex];
@@ -184,14 +184,14 @@ export function migrateSectionLayoutsToBlockLayouts(
         id: card.id,
         kind: "card",
         colStart: cardLayout.colStart,
-        rowStart: currentRowOffset + cardLayout.rowStart + HEADING_ROW_SPAN - 1,
+        rowStart: currentRowOffset + cardLayout.rowStart + headingRowSpan - 1,
         colSpan: cardLayout.colSpan,
         rowSpan: cardLayout.rowSpan,
       });
 
       sectionBottom = Math.max(
         sectionBottom,
-        currentRowOffset + cardLayout.rowStart + HEADING_ROW_SPAN - 1 + cardLayout.rowSpan - 1
+        currentRowOffset + cardLayout.rowStart + headingRowSpan - 1 + cardLayout.rowSpan - 1
       );
     });
 

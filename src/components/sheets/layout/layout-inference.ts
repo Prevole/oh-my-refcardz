@@ -1,9 +1,8 @@
 import { getRenderableBlocks, type CheatSheetCard, type CheatSheetItem, type YamlCheatSheet } from "@/lib/cheatsheet-shared";
+import { getBlockConstraints } from "@/lib/layout/blocks";
 import { resolveBlockLayout } from "./layout-algorithms";
 import type { BlockLayoutState } from "./layout-types";
 import { GRID_COLUMNS } from "../sheet-grid";
-
-const HEADING_ROW_SPAN = 2;
 
 const fractionOfGrid = (numerator: number, denominator: number) =>
   Math.round((GRID_COLUMNS * numerator) / denominator);
@@ -43,6 +42,7 @@ export function inferCardRowSpan(card: CheatSheetCard): number {
 }
 
 export function buildDefaultBlockLayouts(sheet: YamlCheatSheet): BlockLayoutState[] {
+  const headingRowSpan = getBlockConstraints("heading").minRowSpan;
   const blocks = getRenderableBlocks(sheet).map<BlockLayoutState>((block) => {
     if (block.kind === "heading") {
       return {
@@ -51,7 +51,7 @@ export function buildDefaultBlockLayouts(sheet: YamlCheatSheet): BlockLayoutStat
         colStart: 1,
         rowStart: 1,
         colSpan: GRID_COLUMNS,
-        rowSpan: HEADING_ROW_SPAN,
+        rowSpan: headingRowSpan,
       };
     }
 
