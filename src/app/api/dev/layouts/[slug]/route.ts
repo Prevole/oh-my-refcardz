@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
-import type { BlockLayoutState } from "@/components/sheets/layout/layout-types";
+import { reconcileBlockLayouts } from "@/lib/layout/blocks";
 import { yamlCheatSheetSchema } from "@/lib/yaml-cheatsheets";
 
 const contentDirectory = path.join(process.cwd(), "content", "cheatsheets");
@@ -60,8 +60,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   }
 
   await readSheetAtPath(yamlFilePath);
+
+  // Reconcile before writing. This both clamps drifted values to the
+  // current constraints and strips any unknown fields, ensuring the
+  // persisted file contains only { id, kind, colStart, rowStart,
+  // colSpan, rowSpan } and that those values are valid.
+  const reconciled = reconcileBlockLayouts(body);
+
   const layoutPath = getLayoutPath(yamlFilePath);
-  await fs.writeFile(layoutPath, JSON.stringify(body as BlockLayoutState[], null, 2) + "\n", "utf8");
+  await fs.writeFile(layoutPath, JSON.stringify(reconciled.blocks, null, 2) + "\n", "utf8");
 
   return NextResponse.json({ success: true, path: path.relative(process.cwd(), layoutPath) });
 }

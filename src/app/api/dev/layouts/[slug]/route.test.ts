@@ -18,14 +18,18 @@ const mockWriteFile = vi.mocked(fs.writeFile);
 
 const originalNodeEnv = process.env.NODE_ENV;
 
+let warnSpy: ReturnType<typeof vi.spyOn>;
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("NODE_ENV", "development");
+  warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
 afterEach(() => {
   vi.stubEnv("NODE_ENV", originalNodeEnv ?? "");
   vi.unstubAllEnvs();
+  warnSpy.mockRestore();
 });
 
 function createMockRequest(body: unknown): Request {
@@ -42,7 +46,7 @@ function createMockParams(slug: string): Promise<{ slug: string }> {
 
 const sampleLayout: BlockLayoutState[] = [
   { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
-  { id: "status", kind: "card", colStart: 1, rowStart: 3, colSpan: 4, rowSpan: 2 },
+  { id: "status", kind: "card", colStart: 1, rowStart: 3, colSpan: 6, rowSpan: 4 },
 ];
 
 const sampleSheetYaml = `title: Git
@@ -111,6 +115,120 @@ describe("POST /api/dev/layouts/[slug]", () => {
     const [writePath, writeContent] = mockWriteFile.mock.calls[0];
     expect(String(writePath)).toContain("git.layout.json");
     expect(writeContent).toBe(JSON.stringify(sampleLayout, null, 2) + "\n");
+  });
+
+  it("strips unknown fields from the body before writing", async () => {
+    mockReaddir.mockImplementation(async (dir) => {
+      const dirStr = String(dir);
+      if (dirStr.endsWith("cheatsheets")) {
+        return [
+          { name: "01-tooling", isDirectory: () => true, isFile: () => false },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>;
+      }
+      if (dirStr.endsWith("01-tooling")) {
+        return [
+          { name: "git.yaml", isDirectory: () => false, isFile: () => true },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>;
+      }
+      return [];
+    });
+    mockReadFile.mockResolvedValue(sampleSheetYaml);
+    mockWriteFile.mockResolvedValue(undefined);
+
+    const polluted = [
+      {
+        id: "inspect-and-diff",
+        kind: "heading",
+        colStart: 1,
+        rowStart: 1,
+        colSpan: 64,
+        rowSpan: 2,
+        // Extras that must not be persisted:
+        minColSpan: 12,
+        maxColSpan: 64,
+        debugMarker: "do-not-persist",
+      },
+    ];
+
+    const request = createMockRequest(polluted);
+    const response = await POST(request, { params: createMockParams("git") });
+
+    expect(response.status).toBe(200);
+    expect(mockWriteFile).toHaveBeenCalledTimes(1);
+    const writeContent = mockWriteFile.mock.calls[0][1];
+    const persisted = JSON.parse(String(writeContent));
+    expect(persisted).toEqual([
+      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+    ]);
+    expect(persisted[0]).not.toHaveProperty("minColSpan");
+    expect(persisted[0]).not.toHaveProperty("maxColSpan");
+    expect(persisted[0]).not.toHaveProperty("debugMarker");
+  });
+
+  it("clamps drifted values before writing", async () => {
+    mockReaddir.mockImplementation(async (dir) => {
+      const dirStr = String(dir);
+      if (dirStr.endsWith("cheatsheets")) {
+        return [
+          { name: "01-tooling", isDirectory: () => true, isFile: () => false },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>;
+      }
+      if (dirStr.endsWith("01-tooling")) {
+        return [
+          { name: "git.yaml", isDirectory: () => false, isFile: () => true },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>;
+      }
+      return [];
+    });
+    mockReadFile.mockResolvedValue(sampleSheetYaml);
+    mockWriteFile.mockResolvedValue(undefined);
+
+    const drifted = [
+      // colSpan: 100 > max 64; rowSpan: 8 > heading max 2
+      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 100, rowSpan: 8 },
+    ];
+
+    const request = createMockRequest(drifted);
+    const response = await POST(request, { params: createMockParams("git") });
+
+    expect(response.status).toBe(200);
+    const writeContent = mockWriteFile.mock.calls[0][1];
+    const persisted = JSON.parse(String(writeContent));
+    expect(persisted[0].colSpan).toBe(64);
+    expect(persisted[0].rowSpan).toBe(2);
+  });
+
+  it("drops entries with unknown kinds before writing", async () => {
+    mockReaddir.mockImplementation(async (dir) => {
+      const dirStr = String(dir);
+      if (dirStr.endsWith("cheatsheets")) {
+        return [
+          { name: "01-tooling", isDirectory: () => true, isFile: () => false },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>;
+      }
+      if (dirStr.endsWith("01-tooling")) {
+        return [
+          { name: "git.yaml", isDirectory: () => false, isFile: () => true },
+        ] as unknown as Awaited<ReturnType<typeof fs.readdir>>;
+      }
+      return [];
+    });
+    mockReadFile.mockResolvedValue(sampleSheetYaml);
+    mockWriteFile.mockResolvedValue(undefined);
+
+    const mixed = [
+      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+      { id: "x1", kind: "widget", colStart: 1, rowStart: 4, colSpan: 12, rowSpan: 4 },
+    ];
+
+    const request = createMockRequest(mixed);
+    const response = await POST(request, { params: createMockParams("git") });
+
+    expect(response.status).toBe(200);
+    const writeContent = mockWriteFile.mock.calls[0][1];
+    const persisted = JSON.parse(String(writeContent));
+    expect(persisted).toHaveLength(1);
+    expect(persisted[0].id).toBe("inspect-and-diff");
   });
 
   it("searches subdirectories recursively", async () => {
