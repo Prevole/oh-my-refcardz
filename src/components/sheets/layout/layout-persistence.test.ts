@@ -1,14 +1,23 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   buildStorageKey,
   areLayoutsEqual,
-  isValidStoredLayout,
   mergeStoredLayouts,
   parseStoredLayouts,
   serializeStoredLayouts,
 } from "./layout-persistence";
 import type { YamlCheatSheet } from "@/lib/cheatsheet-shared";
 import type { BlockLayoutState } from "./layout-types";
+
+let warnSpy: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  warnSpy.mockRestore();
+});
 
 function createMockSheet(sectionCardCounts: number[]): YamlCheatSheet {
   return {
@@ -86,27 +95,6 @@ describe("areLayoutsEqual", () => {
   });
 });
 
-describe("isValidStoredLayout", () => {
-  it("returns true for valid layout matching sheet blocks", () => {
-    const sheet = createMockSheet([2, 1]);
-    const layout = createValidLayout([2, 1]);
-    expect(isValidStoredLayout(layout, sheet)).toBe(true);
-  });
-
-  it("returns false when block count mismatches", () => {
-    const sheet = createMockSheet([2]);
-    const layout = createValidLayout([1]);
-    expect(isValidStoredLayout(layout, sheet)).toBe(false);
-  });
-
-  it("returns false for wrong block kind", () => {
-    const sheet = createMockSheet([1]);
-    const layout = createValidLayout([1]);
-    layout[0].kind = "card";
-    expect(isValidStoredLayout(layout, sheet)).toBe(false);
-  });
-});
-
 describe("mergeStoredLayouts", () => {
   it("uses stored values when present", () => {
     const stored: BlockLayoutState[] = [
@@ -123,6 +111,41 @@ describe("mergeStoredLayouts", () => {
     const defaults = createValidLayout([1]);
     const result = mergeStoredLayouts([], defaults);
     expect(result).toEqual(defaults);
+  });
+
+  it("reconciles drifted spans from stored entries (clamps to constraints)", () => {
+    const defaults = createValidLayout([1]);
+    const stored: unknown[] = [
+      { id: "section-1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 100, rowSpan: 2 },
+      { id: "card-1-1", kind: "card", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 6 },
+    ];
+    const result = mergeStoredLayouts(stored, defaults);
+    expect(result[0].colSpan).toBe(64);
+  });
+
+  it("falls back to default when a stored entry has an unknown kind", () => {
+    const defaults = createValidLayout([1]);
+    const stored: unknown[] = [
+      { id: "section-1", kind: "widget", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+    ];
+    const result = mergeStoredLayouts(stored, defaults);
+    expect(result[0]).toEqual(defaults[0]);
+  });
+
+  it("falls back to default when a stored entry is malformed", () => {
+    const defaults = createValidLayout([1]);
+    const stored: unknown[] = [{ id: "section-1", kind: "heading" }];
+    const result = mergeStoredLayouts(stored, defaults);
+    expect(result[0]).toEqual(defaults[0]);
+  });
+
+  it("falls back to default when stored kind mismatches the default", () => {
+    const defaults = createValidLayout([1]);
+    const stored: unknown[] = [
+      { id: "section-1", kind: "card", colStart: 1, rowStart: 1, colSpan: 12, rowSpan: 6 },
+    ];
+    const result = mergeStoredLayouts(stored, defaults);
+    expect(result[0]).toEqual(defaults[0]);
   });
 });
 

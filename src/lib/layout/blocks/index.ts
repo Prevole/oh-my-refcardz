@@ -29,3 +29,13 @@ export {
   isResizeDirectionEnabled,
   registerBlockType,
 } from "./blocks-registry";
+
+export { reconcileBlockLayouts } from "./reconcile";
+export type {
+  DriftField,
+  DriftRecord,
+  DropReason,
+  DropRecord,
+  PersistedBlockLayout,
+  ReconciliationResult,
+} from "./reconcile";

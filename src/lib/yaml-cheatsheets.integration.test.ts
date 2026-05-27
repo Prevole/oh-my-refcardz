@@ -604,8 +604,8 @@ blocks:
           kind: "card",
           colStart: 1,
           rowStart: 3,
-          colSpan: 4,
-          rowSpan: 2,
+          colSpan: 6,
+          rowSpan: 4,
         },
       ];
 

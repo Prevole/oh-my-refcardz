@@ -17,6 +17,7 @@ import {
   type YamlCheatSheetWithMeta as SharedYamlCheatSheetWithMeta,
 } from "./cheatsheet-shared";
 import { isNewFormatArray, toOldBlockLayouts } from "./layout/migration";
+import { reconcileBlockLayouts } from "./layout/blocks";
 import { anchorIdPattern } from "./anchors";
 import { getCategoryPrimaryColor, getCategoryGradientPair } from "./color-palette";
 
@@ -350,28 +351,8 @@ function isSavedSectionLayout(value: unknown): value is SavedSectionLayout {
   );
 }
 
-function isSavedBlockLayout(value: unknown): value is SavedBlockLayout {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  if (!("id" in value) || !("kind" in value)) {
-    return false;
-  }
-
-  return Boolean(
-      typeof value.id === "string" &&
-      (value.kind === "heading" || value.kind === "card") &&
-      isSavedCardLayout(value)
-  );
-}
-
 function isLegacySavedSectionLayouts(value: unknown): value is SavedSectionLayout[] {
   return Array.isArray(value) && value.every((section) => isSavedSectionLayout(section));
-}
-
-function isSavedBlockLayouts(value: unknown): value is SavedBlockLayout[] {
-  return Array.isArray(value) && value.every((block) => isSavedBlockLayout(block));
 }
 
 
@@ -380,29 +361,31 @@ async function readLayoutFile(
   sheet: SharedYamlCheatSheet
 ): Promise<SavedBlockLayout[] | null> {
   const layoutPath = yamlFilePath.replace(/\.yaml$/, ".layout.json");
+  let parsed: unknown;
   try {
     const raw = await fs.readFile(layoutPath, "utf8");
-    const parsed = JSON.parse(raw);
-
-    // New format: { id, kind, position: { x, y, w, h } }
-    if (isNewFormatArray(parsed)) {
-      return toOldBlockLayouts(parsed);
-    }
-
-    // Old format: { id, kind, colStart, rowStart, colSpan, rowSpan }
-    if (isSavedBlockLayouts(parsed)) {
-      return parsed;
-    }
-
-    // Legacy section-based format
-    if (isLegacySavedSectionLayouts(parsed)) {
-      return migrateSectionLayoutsToBlockLayouts(sheet, parsed);
-    }
-
-    return null;
+    parsed = JSON.parse(raw);
   } catch {
     return null;
   }
+
+  let normalized: unknown;
+  if (isNewFormatArray(parsed)) {
+    // New format: { id, kind, position: { x, y, w, h } }
+    normalized = toOldBlockLayouts(parsed);
+  } else if (isLegacySavedSectionLayouts(parsed)) {
+    // Legacy section-based format
+    normalized = migrateSectionLayoutsToBlockLayouts(sheet, parsed);
+  } else {
+    // Otherwise pass through; reconcile will drop malformed entries.
+    normalized = parsed;
+  }
+
+  const result = reconcileBlockLayouts(normalized);
+  if (result.blocks.length === 0) {
+    return null;
+  }
+  return result.blocks as SavedBlockLayout[];
 }
 
 async function readParsedSheetBySlug(slug: string): Promise<ParsedSheet | null> {
