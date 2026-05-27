@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getHeadingGroups, type CheatSheetEntry } from "./cheatsheet-shared";
@@ -638,6 +638,160 @@ blocks:
       expect(sheet?.savedBlockLayout).toEqual(savedLayout);
       expect(sheet?.colorFrom).toBeDefined();
       expect(sheet?.categoryId).toBe("96-layout-test");
+    });
+
+    describe("tolerates corrupted .layout.json files", () => {
+      const baseYaml = (slug: string) => `title: ${slug}
+summary: tolerance test
+color: "#999999"
+blocks:
+  - heading:
+      id: section
+      title: Section
+  - card:
+      id: card-a
+      title: Card A
+      items:
+        - entries:
+            - title: Test
+            - command: test
+  - card:
+      id: card-b
+      title: Card B
+      items:
+        - entries:
+            - title: Test
+            - command: test
+`;
+
+      let warnSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        warnSpy.mockRestore();
+      });
+
+      it("drops entries missing required numeric fields and keeps valid neighbours", async () => {
+        await fs.writeFile(path.join(fixtureDir, "missing-fields.yaml"), baseYaml("missing-fields"));
+        await fs.writeFile(
+          path.join(fixtureDir, "missing-fields.layout.json"),
+          JSON.stringify([
+            // heading without rowSpan: malformed -> dropped
+            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64 },
+            { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 6, rowSpan: 4 },
+          ])
+        );
+
+        const sheet = await getYamlCheatSheetWithMeta("missing-fields");
+
+        expect(sheet).not.toBeNull();
+        expect(sheet?.savedBlockLayout).toHaveLength(1);
+        expect(sheet?.savedBlockLayout?.[0].id).toBe("card-a");
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('dropped block "section": malformed')
+        );
+      });
+
+      it("clamps out-of-bounds values to registered constraints", async () => {
+        await fs.writeFile(path.join(fixtureDir, "out-of-bounds.yaml"), baseYaml("out-of-bounds"));
+        await fs.writeFile(
+          path.join(fixtureDir, "out-of-bounds.layout.json"),
+          JSON.stringify([
+            // colSpan > GRID_COLUMNS, rowSpan > heading max
+            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 999, rowSpan: 99 },
+            // card colSpan below minimum, rowSpan below minimum
+            { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 1, rowSpan: 1 },
+          ])
+        );
+
+        const sheet = await getYamlCheatSheetWithMeta("out-of-bounds");
+
+        expect(sheet).not.toBeNull();
+        const layout = sheet?.savedBlockLayout ?? [];
+        expect(layout).toHaveLength(2);
+
+        const heading = layout.find((b) => b.id === "section");
+        expect(heading?.colSpan).toBe(64);
+        expect(heading?.rowSpan).toBe(2);
+
+        const card = layout.find((b) => b.id === "card-a");
+        expect(card?.colSpan).toBe(6);
+        expect(card?.rowSpan).toBe(4);
+      });
+
+      it("drops entries with unknown kinds and keeps registered ones", async () => {
+        await fs.writeFile(path.join(fixtureDir, "unknown-kind.yaml"), baseYaml("unknown-kind"));
+        await fs.writeFile(
+          path.join(fixtureDir, "unknown-kind.layout.json"),
+          JSON.stringify([
+            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+            { id: "x", kind: "widget", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
+          ])
+        );
+
+        const sheet = await getYamlCheatSheetWithMeta("unknown-kind");
+
+        expect(sheet).not.toBeNull();
+        expect(sheet?.savedBlockLayout).toHaveLength(1);
+        expect(sheet?.savedBlockLayout?.[0].id).toBe("section");
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('dropped block "x": unknown-kind')
+        );
+      });
+
+      it("returns undefined savedBlockLayout when the file is an empty array", async () => {
+        await fs.writeFile(path.join(fixtureDir, "empty-array.yaml"), baseYaml("empty-array"));
+        await fs.writeFile(path.join(fixtureDir, "empty-array.layout.json"), "[]");
+
+        const sheet = await getYamlCheatSheetWithMeta("empty-array");
+
+        expect(sheet).not.toBeNull();
+        expect(sheet?.savedBlockLayout).toBeUndefined();
+      });
+
+      it("returns undefined savedBlockLayout when the file is not an array", async () => {
+        await fs.writeFile(path.join(fixtureDir, "not-array.yaml"), baseYaml("not-array"));
+        await fs.writeFile(
+          path.join(fixtureDir, "not-array.layout.json"),
+          JSON.stringify({ blocks: "nope" })
+        );
+
+        const sheet = await getYamlCheatSheetWithMeta("not-array");
+
+        expect(sheet).not.toBeNull();
+        expect(sheet?.savedBlockLayout).toBeUndefined();
+      });
+
+      it("recovers a usable layout from a file mixing valid, drifted, malformed and unknown entries", async () => {
+        await fs.writeFile(path.join(fixtureDir, "mixed.yaml"), baseYaml("mixed"));
+        await fs.writeFile(
+          path.join(fixtureDir, "mixed.layout.json"),
+          JSON.stringify([
+            // valid
+            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+            // drifted: colSpan too small (card min = 6)
+            { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 2, rowSpan: 4 },
+            // malformed: missing colStart
+            { id: "card-b", kind: "card", rowStart: 8, colSpan: 6, rowSpan: 4 },
+            // unknown kind
+            { id: "x", kind: "panel", colStart: 1, rowStart: 13, colSpan: 6, rowSpan: 4 },
+          ])
+        );
+
+        const sheet = await getYamlCheatSheetWithMeta("mixed");
+
+        expect(sheet).not.toBeNull();
+        const layout = sheet?.savedBlockLayout ?? [];
+
+        // section and card-a survive; card-b dropped (malformed), x dropped (unknown).
+        expect(layout.map((b) => b.id).sort()).toEqual(["card-a", "section"]);
+
+        const cardA = layout.find((b) => b.id === "card-a");
+        expect(cardA?.colSpan).toBe(6); // clamped from 2 to minColSpan
+      });
     });
   });
 });

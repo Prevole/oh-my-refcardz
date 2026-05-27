@@ -351,7 +351,11 @@ function isSavedSectionLayout(value: unknown): value is SavedSectionLayout {
 }
 
 function isLegacySavedSectionLayouts(value: unknown): value is SavedSectionLayout[] {
-  return Array.isArray(value) && value.every((section) => isSavedSectionLayout(section));
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((section) => isSavedSectionLayout(section))
+  );
 }
 
 

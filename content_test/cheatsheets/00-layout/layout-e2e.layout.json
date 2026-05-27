@@ -2,26 +2,41 @@
   {
     "id": "section",
     "kind": "heading",
-    "position": { "x": 0, "y": 0, "w": 36, "h": 2 }
+    "colStart": 1,
+    "rowStart": 1,
+    "colSpan": 36,
+    "rowSpan": 2
   },
   {
     "id": "top-left",
     "kind": "card",
-    "position": { "x": 0, "y": 2, "w": 18, "h": 6 }
+    "colStart": 1,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 6
   },
   {
     "id": "top-right",
     "kind": "card",
-    "position": { "x": 18, "y": 2, "w": 18, "h": 6 }
+    "colStart": 19,
+    "rowStart": 3,
+    "colSpan": 18,
+    "rowSpan": 6
   },
   {
     "id": "bottom-left",
     "kind": "card",
-    "position": { "x": 0, "y": 8, "w": 18, "h": 6 }
+    "colStart": 1,
+    "rowStart": 9,
+    "colSpan": 18,
+    "rowSpan": 6
   },
   {
     "id": "bottom-right",
     "kind": "card",
-    "position": { "x": 18, "y": 8, "w": 18, "h": 6 }
+    "colStart": 19,
+    "rowStart": 9,
+    "colSpan": 18,
+    "rowSpan": 6
   }
 ]
