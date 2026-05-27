@@ -24,6 +24,23 @@ async function expectNoLocalStorageLayout(page: Page) {
   }).toPass({ timeout: 5000 });
 }
 
+async function dragFirstBlockBy(page: Page, dx: number, dy: number) {
+  const firstBlock = page
+    .locator("article[data-layout-card='true'] [class*='cardHeader'], article[data-layout-card='true'] [class*='headingBlockHeader']")
+    .first()
+    .locator("xpath=ancestor::article[1]");
+  await expect(firstBlock).toBeVisible();
+
+  const blockHeader = firstBlock.locator("[class*='cardHeader'], [class*='headingBlockHeader']").first();
+  const box = await blockHeader.boundingBox();
+  if (!box) throw new Error("First block header has no bounding box");
+
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2 + dy, { steps: 12 });
+  await page.mouse.up();
+}
+
 test.describe("Drag & drop and layout persistence", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -43,58 +60,11 @@ test.describe("Drag & drop and layout persistence", () => {
     await expectNoLocalStorageLayout(page);
   });
 
-  test.skip("activates layout overlay when a block is focused", async () => {
-    // Disabled: depends on the inert v2 keyboard hook. Will be rewritten in
-    // Phase E (Zellij modal keyboard).
-  });
-
-  test.skip("clears layout overlay when focus is cleared with Escape", async () => {
-    // Disabled: see test above.
-  });
-
-  test.skip("keyboard focus can land on a heading block", async () => {
-    // Disabled: inert v2 keyboard. Phase E.
-  });
-
-  test.skip("keyboard navigation can move from a heading to another block", async () => {
-    // Disabled: inert v2 keyboard. Phase E.
-  });
-
-  test.skip("persists layout changes to localStorage after resizing a resizable block", async () => {
-    // Disabled: depends on Alt+Shift+l (inert). Phase E rewrites resize via
-    // the resize sub-mode; a new equivalent test will live there.
-  });
-
-  test.skip("resets layout to default", async () => {
-    // Disabled: relies on inert keyboard + removed "Default layout" text.
-    // Phase E rewrites the keyboard flow; reset-from-dev-bar is already
-    // tested via dev-mode E2Es (to be added in Phase G).
-  });
-
-  test.skip("layout persists across page reload", async () => {
-    // Disabled: relies on inert keyboard. Phase E adds an equivalent test
-    // using the new modal keyboard, and a complementary drag-based test
-    // already covers persistence below ("drags a block to a new position").
-  });
-
   test("drags a block to a new position", async ({ page }) => {
     await page.goto(SHEET_URL);
     await page.waitForSelector("[data-sheet-grid][data-layout-ready='true']");
 
-    const firstBlock = page
-      .locator("article[data-layout-card='true'] [class*='cardHeader'], article[data-layout-card='true'] [class*='headingBlockHeader']")
-      .first()
-      .locator("xpath=ancestor::article[1]");
-    await expect(firstBlock).toBeVisible();
-
-    const blockHeader = firstBlock.locator("[class*='cardHeader'], [class*='headingBlockHeader']").first();
-    const box = await blockHeader.boundingBox();
-    if (box) {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(box.x + box.width / 2 + 320, box.y + box.height / 2 + 220, { steps: 12 });
-      await page.mouse.up();
-    }
+    await dragFirstBlockBy(page, 320, 220);
 
     await expectLocalStorageLayout(page);
   });
@@ -171,8 +141,56 @@ test.describe("Layout persistence across navigation", () => {
     });
   });
 
-  test.skip("remembers layout when navigating back from home", async () => {
-    // Disabled: depends on the inert v2 keyboard hook. Will be reintroduced
-    // in Phase E with the new modal keyboard.
+  test("layout persists across an SPA round-trip (sheet → home → sheet)", async ({ page }) => {
+    // 1. Open the sheet and drag a block to mutate the layout.
+    await page.goto(SHEET_URL);
+    await page.waitForSelector("[data-sheet-grid][data-layout-ready='true']");
+    await dragFirstBlockBy(page, 320, 220);
+    await expectLocalStorageLayout(page);
+
+    // Capture the persisted layout snapshot. Positions are exposed as CSS
+    // variables on each card, so we read them from inline styles.
+    const positionsAfterDrag = await page.evaluate(() => {
+      const cards = Array.from(document.querySelectorAll("article[data-layout-card='true']"));
+      return cards.map((card) => {
+        const el = card as HTMLElement;
+        return {
+          id: el.getAttribute("data-layout-block-id"),
+          colStart: el.style.getPropertyValue("--card-col-start"),
+          rowStart: el.style.getPropertyValue("--card-row-start"),
+          colSpan: el.style.getPropertyValue("--card-col-span"),
+          rowSpan: el.style.getPropertyValue("--card-row-span"),
+        };
+      });
+    });
+
+    // 2. Navigate back to the home page using Backspace (the BACK_TO_HOME
+    // shortcut). This is a Next.js client-side navigation, not a reload —
+    // the React tree is torn down but the JS context survives.
+    await page.keyboard.press("Backspace");
+    await expect(page).toHaveURL("/");
+    await page.waitForSelector("[data-testid='hex-board']");
+
+    // 3. Re-open the same sheet. The persistence layer must rehydrate from
+    //    localStorage on mount.
+    await page.goto(SHEET_URL);
+    await page.waitForSelector("[data-sheet-grid][data-layout-ready='true']");
+
+    // 4. The positions must match what we captured after the drag.
+    const positionsAfterReturn = await page.evaluate(() => {
+      const cards = Array.from(document.querySelectorAll("article[data-layout-card='true']"));
+      return cards.map((card) => {
+        const el = card as HTMLElement;
+        return {
+          id: el.getAttribute("data-layout-block-id"),
+          colStart: el.style.getPropertyValue("--card-col-start"),
+          rowStart: el.style.getPropertyValue("--card-row-start"),
+          colSpan: el.style.getPropertyValue("--card-col-span"),
+          rowSpan: el.style.getPropertyValue("--card-row-span"),
+        };
+      });
+    });
+
+    expect(positionsAfterReturn).toEqual(positionsAfterDrag);
   });
 });
