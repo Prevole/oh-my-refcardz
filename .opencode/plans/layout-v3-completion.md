@@ -251,14 +251,14 @@ Detailed tracker: [`layout-v3-fa-buffered-mode.md`](./layout-v3-fa-buffered-mode
 - **Non-undoable**: navigation-only operations (`LAYOUT_NAV_*`, sub-mode switches `LAYOUT_GOTO_*`, focus changes), `LAYOUT_COMMIT`, `LAYOUT_EXIT` (they don't mutate the layout buffer in a way that the user wants to undo separately).
 - COMMIT / EXIT **do not touch the history pile** — the buffer survives sub-mode boundaries.
 - Empty pile → keystroke is a silent no-op.
-- Default combos: `LAYOUT_UNDO` = `u` (Vim convention) ; `LAYOUT_REDO` = `Ctrl+Shift+z` (standard OS).
+- Default combos: `LAYOUT_UNDO` = `u` (Vim convention) ; `LAYOUT_REDO` = `z` (Vim convention `Ctrl+R` excluded — reserved by browser; `Ctrl+Shift+Z` excluded — intercepted at the OS level on macOS by other apps).
 - Binding scopes: `layout` (master, inherited by `layout-navigation` / `layout-move` / `layout-resize`) **and** `sheet` (for mouse-driven undo outside layout mode).
 
 ### Steps
 
 - [ ] H1. Immutability audit of `applyOperation` — formal check that input `blocks[]` is never mutated (prerequisite for safe snapshot reuse).
 - [ ] H2. Design `LayoutHistory` data structure (pure, push/pop/peek, capped size, cursor-based redo semantics). Unit-test in isolation.
-- [ ] H3. Reserve `ACTION_IDS.LAYOUT_UNDO` and `LAYOUT_REDO`; bind defaults `u` and `Ctrl+Shift+z` in scopes `layout` and `sheet`. Update keyboard dispatcher fixtures.
+- [ ] H3. Reserve `ACTION_IDS.LAYOUT_UNDO` and `LAYOUT_REDO`; bind defaults `u` and `z` in scopes `layout` and `sheet`. Update keyboard dispatcher fixtures.
 - [ ] H4. Wire `LayoutHistory` into the page-level layout owner (sheet page route) so the same instance is consumed by both the keyboard `LayoutEditor` and the mouse drag/resize hooks. One mutating operation (keyboard keystroke or mouse drop/release) = one history step.
 - [ ] H5. UI: indicate undo/redo availability (visual cue — status pill, inline hint, or disabled state on undo/redo affordances if any).
 - [ ] H6. Tests: unit (`LayoutHistory`), integration (operation → undo → state matches pre-op snapshot; cross-mode undo: mouse op then `u` in layout mode), E2E (keyboard + mouse scenarios).

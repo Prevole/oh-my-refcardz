@@ -35,7 +35,7 @@
  * during a history-driven write.
  */
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { LayoutBlock } from "@/lib/layout/engine";
 import {
@@ -52,6 +52,15 @@ export type UseLayoutHistoryOptions = {
     UseLayoutBufferStateResult,
     "isActive" | "replaceContents"
   >;
+  /**
+   * The initial layout snapshot used to anchor the history on mount. The
+   * very first `push` would otherwise just set the present without
+   * enabling undo (LayoutHistory contract), making the first user
+   * operation un-undoable. Passing the initial committed layout here
+   * anchors the present so the next mutation goes into `past` and
+   * `canUndo` flips to true immediately.
+   */
+  initialSnapshot: readonly LayoutBlock[];
   /**
    * Optional ref-like flag that the sheet renderer can read in its
    * persistence-sync effect to short-circuit the round-trip during a
@@ -75,13 +84,18 @@ export type UseLayoutHistoryResult = {
 export function useLayoutHistory({
   editor,
   bufferState,
+  initialSnapshot,
   isApplyingHistoryRef,
 }: UseLayoutHistoryOptions): UseLayoutHistoryResult {
-  const historyRef = useRef<LayoutHistory | null>(null);
-  if (historyRef.current === null) {
-    historyRef.current = createLayoutHistory();
-  }
-  const history = historyRef.current;
+  // The history store and its initial anchor are both bootstrapped through a
+  // lazy `useState` initialiser: this runs exactly once per mount, lets us
+  // seed the present with the initial layout snapshot (so the first user
+  // mutation enables undo), and avoids touching refs during render.
+  const [history] = useState<LayoutHistory>(() => {
+    const h = createLayoutHistory();
+    h.push(initialSnapshot, "mouse");
+    return h;
+  });
 
   const guardWrite = useCallback(
     (write: () => void) => {

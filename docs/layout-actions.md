@@ -169,8 +169,8 @@ All layout shortcuts are declared in `src/lib/keybindings.ts` as `ACTION_IDS.LAY
 
 | Scope | Action IDs |
 |---|---|
-| `sheet` | `LAYOUT_ENTER_MODE` (default `Ctrl+M`); `LAYOUT_UNDO` (`u`), `LAYOUT_REDO` (`Ctrl+Shift+Z`) |
-| `layout` | `LAYOUT_GOTO_NAVIGATION` (`n`), `LAYOUT_GOTO_MOVE` (`m`), `LAYOUT_GOTO_RESIZE` (`b`), `LAYOUT_EXIT` (`Escape`), `LAYOUT_COMMIT` (`Enter`), `LAYOUT_RESET` (`Shift+R`), `LAYOUT_UNDO` (`u`), `LAYOUT_REDO` (`Ctrl+Shift+Z`) |
+| `sheet` | `LAYOUT_ENTER_MODE` (default `Ctrl+M`); `LAYOUT_UNDO` (`u`), `LAYOUT_REDO` (`z`) |
+| `layout` | `LAYOUT_GOTO_NAVIGATION` (`n`), `LAYOUT_GOTO_MOVE` (`m`), `LAYOUT_GOTO_RESIZE` (`b`), `LAYOUT_EXIT` (`Escape`), `LAYOUT_COMMIT` (`Enter`), `LAYOUT_RESET` (`Shift+R`), `LAYOUT_UNDO` (`u`), `LAYOUT_REDO` (`z`) |
 | `layout-navigation` | `LAYOUT_NAV_LEFT/RIGHT/UP/DOWN` (`h/l/k/j` + arrows) |
 | `layout-move` | `LAYOUT_MOVE_LEFT/RIGHT/UP/DOWN` (`h/l/k/j` + arrows); `LAYOUT_MOVE_STRICT_*` (`Alt`-prefixed) |
 | `layout-resize` | `LAYOUT_RESIZE_GROW_*` / `SHRINK_*` (bare / `Shift`); `GROW_STRICT_*` / `SHRINK_STRICT_*` (`Alt`); `SHRINK_COMPACT_*` (`Ctrl+Shift`) |

@@ -463,7 +463,7 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.LAYOUT_REDO,
       label: "Redo last undone edit",
-      combos: [combo("z", "ctrl", "shift")],
+      combos: [key("z")],
     },
   ],
 
@@ -554,7 +554,7 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     {
       id: ACTION_IDS.LAYOUT_REDO,
       label: "Redo last undone edit",
-      combos: [combo("z", "ctrl", "shift")],
+      combos: [key("z")],
     },
   ],
 

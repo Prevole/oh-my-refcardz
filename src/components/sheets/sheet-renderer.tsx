@@ -194,6 +194,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const history = useLayoutHistory({
     editor,
     bufferState,
+    initialSnapshot: initialBlocksV2,
     isApplyingHistoryRef,
   });
   useEffect(() => {
