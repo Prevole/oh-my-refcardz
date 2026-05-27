@@ -28,6 +28,7 @@ import {
   useLayoutPersistence,
   useLayoutEditor,
   useLayoutBufferState,
+  useLayoutHistory,
   useCardDragV2,
   useCardResizeV2,
   useLayoutKeyboard,
@@ -66,6 +67,20 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
 
   const initialBlocksV2 = useMemo(() => migrateBlockLayouts(blockLayouts), [blockLayouts]);
 
+  // Anti-loop guard for the history layer: when undo/redo writes via
+  // `editor.commitLayout`, the `onCommit` -> `setBlockLayouts` chain would
+  // schedule the persistence-sync effect below and reapply the same value
+  // back through `setCommittedLayout`. The flag short-circuits that effect
+  // for one microtask while history is in flight.
+  const isApplyingHistoryRef = useRef(false);
+
+  // History push callbacks are owned by `useLayoutHistory`, but the
+  // editor / keyboard hooks below are constructed first to provide their
+  // dependencies. We bridge through refs that are assigned right after
+  // `useLayoutHistory` instantiation.
+  const pushMouseRef = useRef<(snapshot: readonly LayoutBlock[]) => void>(() => {});
+  const pushKeyboardRef = useRef<(snapshot: readonly LayoutBlock[]) => void>(() => {});
+
   const editor = useLayoutEditor({
     initialBlocks: initialBlocksV2,
     gridColumns: GRID_COLUMNS,
@@ -75,10 +90,14 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
       },
       [setBlockLayouts]
     ),
+    onInteractionCommit: useCallback((newBlocks: LayoutBlock[]) => {
+      pushMouseRef.current(newBlocks);
+    }, []),
   });
 
   // Sync persistence -> editor when persistence changes (hydration, reset).
   useEffect(() => {
+    if (isApplyingHistoryRef.current) return;
     const newBlocks = migrateBlockLayouts(blockLayouts);
     if (JSON.stringify(newBlocks) !== JSON.stringify(editor.committedBlocks)) {
       editor.setCommittedLayout(newBlocks);
@@ -168,6 +187,20 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   const bufferState = useLayoutBufferState();
   const displayedBlocks = bufferState.bufferBlocks ?? editor.currentBlocks;
 
+  // History layer — must come after editor + bufferState since it depends on
+  // both. The push callbacks are bridged through refs assigned right below
+  // so the editor / keyboard hooks (declared earlier or below) can reach
+  // them through stable closures.
+  const history = useLayoutHistory({
+    editor,
+    bufferState,
+    isApplyingHistoryRef,
+  });
+  useEffect(() => {
+    pushMouseRef.current = history.pushMouse;
+    pushKeyboardRef.current = history.pushKeyboard;
+  }, [history.pushMouse, history.pushKeyboard]);
+
   // -- Keyboard (Zellij modal layout mode, entered via Ctrl+M) ------------
   const {
     mode: layoutMode,
@@ -183,7 +216,21 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     editor,
     bufferState,
     gridColumns: GRID_COLUMNS,
+    onKeyboardMutation: useCallback((snapshot: readonly LayoutBlock[]) => {
+      pushKeyboardRef.current(snapshot);
+    }, []),
+    onLayoutReset: useCallback((snapshot: readonly LayoutBlock[]) => {
+      pushKeyboardRef.current(snapshot);
+    }, []),
   });
+
+  // Undo / redo actions — bound on both `sheet` and `layout` scopes so the
+  // same shortcuts work whether the user is in mouse mode or inside the
+  // Zellij-style buffered keyboard session.
+  useAction(ACTION_IDS.LAYOUT_UNDO, "sheet", history.undo);
+  useAction(ACTION_IDS.LAYOUT_REDO, "sheet", history.redo);
+  useAction(ACTION_IDS.LAYOUT_UNDO, "layout", history.undo);
+  useAction(ACTION_IDS.LAYOUT_REDO, "layout", history.redo);
 
   // -- Reset layout shortcut (user feature, Shift+R) -----------------------
   const { matchesAction } = useKeybindings();

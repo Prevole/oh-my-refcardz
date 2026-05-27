@@ -90,6 +90,19 @@ type UseLayoutKeyboardOptions = {
   editor: UseLayoutEditorResult;
   bufferState: UseLayoutBufferStateResult;
   gridColumns: number;
+  /**
+   * Called after a keyboard mutation that actually changed the buffer
+   * (engine accepted the op). Used by the history layer to push a
+   * "keyboard" entry. Not called when the engine rejected the op or
+   * the result was a no-op.
+   */
+  onKeyboardMutation?: (snapshot: readonly LayoutBlock[]) => void;
+  /**
+   * Called after LAYOUT_RESET is processed inside layout mode. Receives
+   * the buffer's initial snapshot (the state the user reverted to).
+   * History records this as a keyboard-sourced entry.
+   */
+  onLayoutReset?: (snapshot: readonly LayoutBlock[]) => void;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -330,12 +343,26 @@ export function useLayoutKeyboard({
   editor,
   bufferState,
   gridColumns,
+  onKeyboardMutation,
+  onLayoutReset,
 }: UseLayoutKeyboardOptions): UseLayoutKeyboardResult {
   const [mode, setMode] = useState<LayoutSubMode | null>(null);
   const [focusedCard, setFocusedCard] = useState<LayoutKeyboardFocus | null>(null);
   const [isManipulating, setIsManipulating] = useState(false);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const manipulatingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep handler callbacks behind refs so consumers can pass fresh closures
+  // without thrashing memoised useAction callbacks.
+  const onKeyboardMutationRef = useRef(onKeyboardMutation);
+  useEffect(() => {
+    onKeyboardMutationRef.current = onKeyboardMutation;
+  }, [onKeyboardMutation]);
+
+  const onLayoutResetRef = useRef(onLayoutReset);
+  useEffect(() => {
+    onLayoutResetRef.current = onLayoutReset;
+  }, [onLayoutReset]);
 
   // Keep a live ref to blocks for handlers (they capture once per scope id).
   const blocksRef = useRef(blocks);
@@ -494,7 +521,10 @@ export function useLayoutKeyboard({
   });
 
   useAction(ACTION_IDS.LAYOUT_RESET, "layout", () => {
-    bufferState.reset();
+    const blocks = bufferState.reset();
+    if (blocks) {
+      onLayoutResetRef.current?.(blocks);
+    }
   });
 
   /* ---------------- navigation ---------------- */
@@ -539,7 +569,10 @@ export function useLayoutKeyboard({
       const target = focusedCard?.blockId ?? pickTopLeftBlock(blocksRef.current);
       if (!target) return;
       const op = buildMoveOperation(target, spec);
-      bufferState.apply(op, buildApplyContext(blocksRef.current));
+      const outcome = bufferState.apply(op, buildApplyContext(blocksRef.current));
+      if (outcome?.changed) {
+        onKeyboardMutationRef.current?.(outcome.blocks);
+      }
       flashManipulating();
     },
     [bufferState, buildApplyContext, focusedCard, flashManipulating]
@@ -563,7 +596,10 @@ export function useLayoutKeyboard({
       const target = focusedCard?.blockId ?? pickTopLeftBlock(blocksRef.current);
       if (!target) return;
       const op = buildResizeOperation(target, spec);
-      bufferState.apply(op, buildApplyContext(blocksRef.current));
+      const outcome = bufferState.apply(op, buildApplyContext(blocksRef.current));
+      if (outcome?.changed) {
+        onKeyboardMutationRef.current?.(outcome.blocks);
+      }
       flashManipulating();
     },
     [bufferState, buildApplyContext, focusedCard, flashManipulating]

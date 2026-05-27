@@ -74,7 +74,26 @@ type UseLayoutEditorOptions = {
   gridColumns: number;
   /** Called whenever the committed layout changes. */
   onCommit?: (blocks: LayoutBlock[]) => void;
+  /**
+   * Called when `commitInteraction` finalizes a drag/resize that actually
+   * mutated the layout (a preview was produced AND it differs from the
+   * snapshot). Used by the history layer to push a "mouse" entry.
+   */
+  onInteractionCommit?: (blocks: LayoutBlock[]) => void;
 };
+
+function blocksDiffer(a: readonly LayoutBlock[], b: readonly LayoutBlock[]): boolean {
+  if (a.length !== b.length) return true;
+  for (let i = 0; i < a.length; i++) {
+    const ab = a[i];
+    const bb = b[i];
+    if (ab.id !== bb.id) return true;
+    const ap = ab.position;
+    const bp = bb.position;
+    if (ap.x !== bp.x || ap.y !== bp.y || ap.w !== bp.w || ap.h !== bp.h) return true;
+  }
+  return false;
+}
 
 function buildConstraintsMap(blocks: LayoutBlock[]): Map<string, BlockConstraints> {
   const map = new Map<string, BlockConstraints>();
@@ -88,6 +107,7 @@ export function useLayoutEditor({
   initialBlocks,
   gridColumns,
   onCommit,
+  onInteractionCommit,
 }: UseLayoutEditorOptions): UseLayoutEditorResult {
   const [committedBlocks, setCommittedBlocks] = useState<LayoutBlock[]>(initialBlocks);
   const [interaction, setInteraction] = useState<InteractionState | null>(null);
@@ -96,6 +116,11 @@ export function useLayoutEditor({
   useEffect(() => {
     onCommitRef.current = onCommit;
   }, [onCommit]);
+
+  const onInteractionCommitRef = useRef(onInteractionCommit);
+  useEffect(() => {
+    onInteractionCommitRef.current = onInteractionCommit;
+  }, [onInteractionCommit]);
 
   /**
    * Resolve the live engine emitter from the debug recorder.
@@ -158,9 +183,13 @@ export function useLayoutEditor({
     if (!interaction) return;
 
     const finalBlocks = interaction.preview ?? interaction.snapshot;
+    const mutated = interaction.preview !== null && blocksDiffer(finalBlocks, interaction.snapshot);
     setCommittedBlocks(finalBlocks);
     setInteraction(null);
     onCommitRef.current?.(finalBlocks);
+    if (mutated) {
+      onInteractionCommitRef.current?.(finalBlocks);
+    }
   }, [interaction]);
 
   const cancelInteraction = useCallback(() => {

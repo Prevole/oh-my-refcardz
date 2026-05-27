@@ -24,6 +24,15 @@ import {
   type LayoutBuffer,
 } from "./layout-buffer";
 
+export type ApplyOutcome = {
+  /** Resulting blocks (== bufferBlocks after the call). */
+  blocks: readonly LayoutBlock[];
+  /** Effective edits counter after the call (synchronous, post-apply). */
+  changesCount: number;
+  /** True when the engine produced a change (changesCount incremented). */
+  changed: boolean;
+};
+
 export type UseLayoutBufferStateResult = {
   /** Underlying buffer reference; `null` when no session is active. */
   buffer: LayoutBuffer | null;
@@ -39,7 +48,7 @@ export type UseLayoutBufferStateResult = {
    * Apply `op` to the current buffer through the engine. Returns the
    * resulting blocks, or `null` when no buffer is active (caller error).
    */
-  apply: (op: Operation, ctx: ApplyContext) => readonly LayoutBlock[] | null;
+  apply: (op: Operation, ctx: ApplyContext) => ApplyOutcome | null;
   /**
    * Snapshot the current buffer contents and clear the session. Returns
    * the blocks for the caller to persist, or `null` when no session is
@@ -88,15 +97,20 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
   }, []);
 
   const apply = useCallback(
-    (op: Operation, ctx: ApplyContext): readonly LayoutBlock[] | null => {
+    (op: Operation, ctx: ApplyContext): ApplyOutcome | null => {
       const current = bufferRef.current;
       if (!current) return null;
       const result: ApplyResult = applyToBuffer(current, op, ctx);
-      if (result.buffer !== current) {
+      const changed = result.buffer !== current;
+      if (changed) {
         bufferRef.current = result.buffer;
         setBuffer(result.buffer);
       }
-      return result.blocks;
+      return {
+        blocks: result.blocks,
+        changesCount: result.buffer.changesCount,
+        changed,
+      };
     },
     [],
   );

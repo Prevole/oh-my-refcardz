@@ -20,6 +20,8 @@ export { useLayoutKeyboard } from "./use-layout-keyboard";
 
 export { useLayoutBufferState } from "./use-layout-buffer-state";
 
+export { useLayoutHistory } from "./use-layout-history";
+
 export {
   LayoutSnapshotProvider,
   useLayoutSnapshot,
