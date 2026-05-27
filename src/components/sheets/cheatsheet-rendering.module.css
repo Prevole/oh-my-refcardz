@@ -1,8 +1,32 @@
+.dashboardGridContainer {
+  /*
+   * Wrapper around the grid that establishes the `cqi` container. The grid
+   * itself cannot be its own container (Chromium resolves `cqi` against the
+   * containing block in that case, not the element's own width), so this
+   * extra layer is required for `--sheet-grid-row-size` to track the grid's
+   * actual width.
+   */
+  container-type: inline-size;
+  display: block;
+  width: 100%;
+}
+
 .dashboardGrid {
-  --sheet-grid-columns: 12;
-  --sheet-grid-column-size: 12rem;
+  /*
+   * Default values, overridden by inline `style` from `<SheetGrid>` so the
+   * SSR'd HTML already carries the correct grid configuration (no layout
+   * shift on hydration). These defaults are a safety net only.
+   *
+   * `--sheet-grid-column-size` uses `100%` (the grid's own width — grid
+   * tracks resolve against the inline axis). `--sheet-grid-row-size` uses
+   * `100cqi` so it resolves against the parent container's width too,
+   * giving square cells. The parent must carry `container-type: inline-size`
+   * (see `.dashboardGridContainer`).
+   */
+  --sheet-grid-columns: 36;
   --sheet-grid-gap: var(--space-4);
-  --sheet-grid-row-size: 12rem;
+  --sheet-grid-column-size: calc((100% - (var(--sheet-grid-columns) - 1) * 16px) / var(--sheet-grid-columns));
+  --sheet-grid-row-size: calc((100cqi - (var(--sheet-grid-columns) - 1) * 16px) / var(--sheet-grid-columns));
   display: grid;
   grid-template-columns: repeat(var(--sheet-grid-columns), minmax(0, 1fr));
   grid-auto-rows: var(--sheet-grid-row-size);

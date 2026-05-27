@@ -39,6 +39,32 @@ type SheetGridProps = {
   interactionMinRows?: number;
 };
 
+/**
+ * CSS variables that drive the grid layout. They are computed during render
+ * (not in an effect) so the SSR'd HTML already carries the correct values,
+ * eliminating the cumulative layout shift that would otherwise occur when the
+ * client overrides the defaults defined in `cheatsheet-rendering.module.css`.
+ *
+ * `--sheet-grid-column-size` uses `100%` (the grid's own width, since
+ * column tracks resolve against the inline axis). `--sheet-grid-row-size`
+ * uses `100cqi` (container inline-size) so it also resolves against the
+ * grid's WIDTH rather than its HEIGHT — required because `grid-auto-rows`
+ * would otherwise treat `100%` as the container's height. The grid CSS
+ * module sets `container-type: inline-size` to make `cqi` work.
+ *
+ * `--sheet-grid-columns` is the single source of truth (`GRID_COLUMNS`).
+ * `getComputedStyle()` resolves the `calc(...)` to a pixel value at read
+ * time, which is what consumers like the dev-axes overlay rely on.
+ */
+const GRID_COLUMN_SIZE_FORMULA = `calc((100% - (var(--sheet-grid-columns) - 1) * ${GRID_GAP_PX}px) / var(--sheet-grid-columns))`;
+const GRID_ROW_SIZE_FORMULA = `calc((100cqi - (var(--sheet-grid-columns) - 1) * ${GRID_GAP_PX}px) / var(--sheet-grid-columns))`;
+
+const GRID_CSS_VARS = {
+  "--sheet-grid-columns": String(GRID_COLUMNS),
+  "--sheet-grid-column-size": GRID_COLUMN_SIZE_FORMULA,
+  "--sheet-grid-row-size": GRID_ROW_SIZE_FORMULA,
+} as CSSProperties;
+
 export function SheetGrid({
   children,
   editMode = false,
@@ -59,11 +85,6 @@ export function SheetGrid({
     function publishMetrics(width: number) {
       const columns = GRID_COLUMNS;
       const unitSize = (width - (columns - 1) * GRID_GAP_PX) / columns;
-
-      host.style.setProperty("--sheet-grid-columns", String(columns));
-      host.style.setProperty("--sheet-grid-column-size", `${unitSize}px`);
-      host.style.setProperty("--sheet-grid-row-size", `${unitSize}px`);
-
       onMetricsChange?.({ columns, unitSize });
     }
 
@@ -90,28 +111,31 @@ export function SheetGrid({
   }
 
   return (
-    <section
-      ref={ref}
-      data-sheet-grid
-      data-layout-ready={layoutReady ? "true" : "false"}
-      className={[
-        cheatsheetStyles.dashboardGrid,
-        editMode ? cheatsheetStyles.dashboardGridEditMode : "",
-        debugMode ? cheatsheetStyles.dashboardGridDebug : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      style={{
-        ...style,
-        ...(interactionMinRows && interactionMinRows > 0
-          ? {
-              minHeight: `calc(${interactionMinRows} * var(--sheet-grid-row-size) + ${interactionMinRows - 1} * ${GRID_GAP_PX}px)`,
-            }
-          : null),
-      }}
-      onPointerDown={handlePointerDown}
-    >
-      {children}
-    </section>
+    <div className={cheatsheetStyles.dashboardGridContainer}>
+      <section
+        ref={ref}
+        data-sheet-grid
+        data-layout-ready={layoutReady ? "true" : "false"}
+        className={[
+          cheatsheetStyles.dashboardGrid,
+          editMode ? cheatsheetStyles.dashboardGridEditMode : "",
+          debugMode ? cheatsheetStyles.dashboardGridDebug : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        style={{
+          ...GRID_CSS_VARS,
+          ...style,
+          ...(interactionMinRows && interactionMinRows > 0
+            ? {
+                minHeight: `calc(${interactionMinRows} * var(--sheet-grid-row-size) + ${interactionMinRows - 1} * ${GRID_GAP_PX}px)`,
+              }
+            : null),
+        }}
+        onPointerDown={handlePointerDown}
+      >
+        {children}
+      </section>
+    </div>
   );
 }
