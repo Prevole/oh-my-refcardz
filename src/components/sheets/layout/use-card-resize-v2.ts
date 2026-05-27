@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Direction, LayoutBlock } from "@/lib/layout/engine";
 import { GRID_GAP_PX } from "../sheet-grid";
-import { isResizeDirectionEnabled, type ResizeHandleDirection } from "./block-types";
+import { isResizeDirectionEnabled, type ResizeHandleDirection } from "@/lib/layout/blocks";
 import type { GridMetricsState } from "./layout-types";
 import { FALLBACK_METRICS } from "./layout-types";
 

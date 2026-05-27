@@ -41,7 +41,7 @@ import { useAction } from "@/hooks/use-action";
 import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { debugRecorder } from "@/lib/dev-mode";
-import { getBlockConstraintsV2 } from "./block-types";
+import { getBlockConstraintsV2 } from "@/lib/layout/blocks";
 import type { UseLayoutEditorResult } from "./use-layout-editor";
 import type { UseLayoutBufferStateResult } from "./use-layout-buffer-state";
 

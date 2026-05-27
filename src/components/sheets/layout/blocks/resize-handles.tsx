@@ -1,5 +1,5 @@
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { ResizeHandleDirection } from "./block-registry";
+import type { ResizeHandleDirection } from "@/lib/layout/blocks";
 import styles from "../../cheatsheet-rendering.module.css";
 
 type ResizeHandlesProps = {

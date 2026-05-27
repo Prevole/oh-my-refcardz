@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import { createElement, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  getBlockConfig,
+  getResizeHandles,
   type LayoutBlockKind,
   type ResizeHandleDirection,
-} from "./block-registry";
+} from "@/lib/layout/blocks";
+import { getBlockRenderer } from "./blocks-renderers";
 
-// Import block type modules to trigger their registration
+// Import renderer modules to trigger registration
 import "./heading-block";
 import "./card-block";
 
@@ -57,7 +58,10 @@ export type BlockRendererPropsFromParent = {
   /** Handler for pointer down on the draggable header */
   onHeaderPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
   /** Handler for pointer down on resize handles */
-  onResizePointerDown?: (direction: ResizeHandleDirection, event: ReactPointerEvent<HTMLDivElement>) => void;
+  onResizePointerDown?: (
+    direction: ResizeHandleDirection,
+    event: ReactPointerEvent<HTMLDivElement>
+  ) => void;
   /** Currently active resize direction */
   activeResizeDirection?: ResizeHandleDirection | null;
   /** Content to render inside the block (for cards) */
@@ -93,35 +97,35 @@ export function BlockRenderer({
   activeResizeDirection,
   children,
 }: BlockRendererPropsFromParent) {
-  const config = getBlockConfig(kind);
-  const Component = config.render;
+  const renderer = getBlockRenderer(kind);
+  const enabledResizeHandles = getResizeHandles(kind);
 
-  return (
-    <Component
-      id={id}
-      blockId={blockId}
-      title={title}
-      text={text}
-      badge={badge}
-      footer={footer}
-      controls={controls}
-      colStart={colStart}
-      rowStart={rowStart}
-      colSpan={colSpan}
-      rowSpan={rowSpan}
-      editMode={editMode}
-      layoutLabel={layoutLabel}
-      debugInfo={debugInfo}
-      dragging={dragging}
-      dimmed={dimmed}
-      keyboardFocused={keyboardFocused}
-      manipulating={manipulating}
-      onHeaderPointerDown={onHeaderPointerDown}
-      onResizePointerDown={onResizePointerDown}
-      activeResizeDirection={activeResizeDirection}
-      enabledResizeHandles={config.resizeHandles}
-    >
-      {children}
-    </Component>
+  return createElement(
+    renderer,
+    {
+      id,
+      blockId,
+      title,
+      text,
+      badge,
+      footer,
+      controls,
+      colStart,
+      rowStart,
+      colSpan,
+      rowSpan,
+      editMode,
+      layoutLabel,
+      debugInfo,
+      dragging,
+      dimmed,
+      keyboardFocused,
+      manipulating,
+      onHeaderPointerDown,
+      onResizePointerDown,
+      activeResizeDirection,
+      enabledResizeHandles,
+    },
+    children
   );
 }

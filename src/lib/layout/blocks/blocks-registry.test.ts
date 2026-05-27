@@ -1,27 +1,25 @@
 import { describe, it, expect } from "vitest";
 
 /**
- * These tests verify the block registry API works correctly.
- * Since the registry is populated at module load time by heading-block and card-block,
- * we test against the actual registered blocks rather than mocking.
+ * Verifies the block-types registry API. The registry is populated by side
+ * effects when ./heading and ./card are imported (via the barrel below).
+ *
+ * Renderers are tested separately in the components layer; this file
+ * focuses on data: constraints, resize handles, and registration lookups.
  */
 
-// Import the registry functions - this also triggers registration via side effects
 import {
-  getBlockConfig,
   getBlockConstraints,
-  getResizeHandles,
-  isResizeDirectionEnabled,
+  getBlockTypeDefinition,
   getRegisteredBlockKinds,
+  getResizeHandles,
+  isRegisteredBlockKind,
+  isResizeDirectionEnabled,
   type LayoutBlockKind,
   type ResizeHandleDirection,
-} from "./block-registry";
+} from "./index";
 
-// Import block types to ensure they register themselves
-import "./heading-block";
-import "./card-block";
-
-describe("block-registry", () => {
+describe("blocks-registry", () => {
   describe("getRegisteredBlockKinds", () => {
     it("returns all registered block kinds", () => {
       const kinds = getRegisteredBlockKinds();
@@ -31,27 +29,37 @@ describe("block-registry", () => {
     });
   });
 
-  describe("getBlockConfig", () => {
-    it("returns config for heading block", () => {
-      const config = getBlockConfig("heading");
-      expect(config).toBeDefined();
-      expect(config.constraints).toBeDefined();
-      expect(config.resizeHandles).toBeDefined();
-      expect(config.render).toBeDefined();
+  describe("getBlockTypeDefinition", () => {
+    it("returns the definition for heading block", () => {
+      const definition = getBlockTypeDefinition("heading");
+      expect(definition.constraints).toBeDefined();
+      expect(definition.resizeHandles).toBeDefined();
     });
 
-    it("returns config for card block", () => {
-      const config = getBlockConfig("card");
-      expect(config).toBeDefined();
-      expect(config.constraints).toBeDefined();
-      expect(config.resizeHandles).toBeDefined();
-      expect(config.render).toBeDefined();
+    it("returns the definition for card block", () => {
+      const definition = getBlockTypeDefinition("card");
+      expect(definition.constraints).toBeDefined();
+      expect(definition.resizeHandles).toBeDefined();
     });
 
     it("throws for unknown block kind", () => {
-      expect(() => getBlockConfig("unknown" as LayoutBlockKind)).toThrow(
+      expect(() => getBlockTypeDefinition("unknown" as LayoutBlockKind)).toThrow(
         'Block type "unknown" is not registered'
       );
+    });
+  });
+
+  describe("isRegisteredBlockKind", () => {
+    it("returns true for registered kinds", () => {
+      expect(isRegisteredBlockKind("heading")).toBe(true);
+      expect(isRegisteredBlockKind("card")).toBe(true);
+    });
+
+    it("returns false for unknown values", () => {
+      expect(isRegisteredBlockKind("unknown")).toBe(false);
+      expect(isRegisteredBlockKind(null)).toBe(false);
+      expect(isRegisteredBlockKind(undefined)).toBe(false);
+      expect(isRegisteredBlockKind(42)).toBe(false);
     });
   });
 
@@ -61,7 +69,7 @@ describe("block-registry", () => {
       expect(constraints.minColSpan).toBe(12);
       expect(constraints.maxColSpan).toBe(64);
       expect(constraints.minRowSpan).toBe(2);
-      expect(constraints.maxRowSpan).toBe(2); // Fixed height
+      expect(constraints.maxRowSpan).toBe(2);
     });
 
     it("returns constraints for card block", () => {
@@ -142,18 +150,6 @@ describe("block-registry", () => {
           expect(isResizeDirectionEnabled("card", direction)).toBe(true);
         }
       });
-    });
-  });
-
-  describe("block renderers", () => {
-    it("heading render is a valid component", () => {
-      const config = getBlockConfig("heading");
-      expect(typeof config.render).toBe("function");
-    });
-
-    it("card render is a valid component", () => {
-      const config = getBlockConfig("card");
-      expect(typeof config.render).toBe("function");
     });
   });
 });

@@ -1,7 +1,7 @@
-import { GRID_COLUMNS } from "../sheet-grid";
+import { GRID_COLUMNS, MAX_ROW_SPAN } from "@/lib/layout/grid-constants";
 
-// Re-export types from block-types for backwards compatibility
-export type { LayoutBlockKind, ResizeHandleDirection } from "./block-types";
+// Re-export types from the central block-types definitions for compat.
+export type { LayoutBlockKind, ResizeHandleDirection } from "@/lib/layout/blocks";
 
 export type CardLayoutState = {
   colStart: number;
@@ -12,7 +12,7 @@ export type CardLayoutState = {
 
 export type BlockLayoutState = CardLayoutState & {
   id: string;
-  kind: import("./block-types").LayoutBlockKind;
+  kind: import("@/lib/layout/blocks").LayoutBlockKind;
 };
 
 export type GridMetricsState = {
@@ -20,7 +20,7 @@ export type GridMetricsState = {
   unitSize: number;
 };
 
-export const MAX_ROW_SPAN = 72;
+export { MAX_ROW_SPAN };
 
 export const FALLBACK_METRICS: GridMetricsState = {
   columns: GRID_COLUMNS,

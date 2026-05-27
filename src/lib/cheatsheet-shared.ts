@@ -1,3 +1,5 @@
+import { GRID_COLUMNS } from "./layout/grid-constants";
+
 export type SavedCardLayout = {
   colStart: number;
   rowStart: number;
@@ -116,7 +118,7 @@ type HeadingGroup = {
   cards: CheatSheetCard[];
 };
 
-const LAYOUT_GRID_COLUMNS = 64;
+const LAYOUT_GRID_COLUMNS = GRID_COLUMNS;
 const HEADING_ROW_SPAN = 2;
 
 export function getHeadingGroups(sheet: YamlCheatSheet): HeadingGroup[] {

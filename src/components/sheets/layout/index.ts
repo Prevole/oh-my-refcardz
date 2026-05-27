@@ -2,8 +2,9 @@
 // Only symbols consumed through this barrel are re-exported here.
 // Internal consumers within the layout/ folder import directly from sibling files.
 
-export { getBlockConstraintsV2, BlockRenderer } from "./block-types";
-export type { ResizeHandleDirection } from "./block-types";
+export { BlockRenderer } from "./blocks";
+export { getBlockConstraintsV2 } from "@/lib/layout/blocks";
+export type { ResizeHandleDirection } from "@/lib/layout/blocks";
 
 export type { GridMetricsState } from "./layout-types";
 export { FALLBACK_METRICS } from "./layout-types";

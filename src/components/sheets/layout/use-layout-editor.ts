@@ -10,7 +10,7 @@ import {
   type OperationOptions,
 } from "@/lib/layout/engine";
 import { debugRecorder } from "@/lib/dev-mode";
-import { getBlockConstraintsV2 } from "./block-types";
+import { getBlockConstraintsV2 } from "@/lib/layout/blocks";
 
 /**
  * Type of interaction currently in progress.

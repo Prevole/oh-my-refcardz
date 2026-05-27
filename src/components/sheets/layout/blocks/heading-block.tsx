@@ -1,28 +1,19 @@
-import type { ReactNode } from "react";
-import { registerBlockType, type BlockRendererProps } from "./block-registry";
+import { registerBlockRenderer } from "./blocks-renderers";
 import { ResizeHandles } from "./resize-handles";
 import { LayoutBadgeContent } from "./layout-badge-content";
-import { GRID_COLUMNS } from "../../sheet-grid";
-import { MAX_ROW_SPAN } from "../layout-types";
+import type { BlockRendererProps } from "./block-renderer-types";
 import styles from "../../cheatsheet-rendering.module.css";
 
-type CardBlockProps = BlockRendererProps & {
-  /** Badge shown next to the title */
-  badge?: ReactNode;
-  /** Footer content */
-  footer?: ReactNode;
-  /** Controls shown in edit mode */
-  controls?: ReactNode;
+type HeadingBlockProps = BlockRendererProps & {
+  /** Optional descriptive text below the title */
+  text?: string;
 };
 
-function CardBlockRenderer({
+function HeadingBlockRenderer({
   id,
   blockId,
   title,
-  badge,
-  footer,
-  controls,
-  children,
+  text,
   colStart,
   rowStart,
   colSpan,
@@ -38,14 +29,14 @@ function CardBlockRenderer({
   onResizePointerDown,
   activeResizeDirection,
   enabledResizeHandles,
-}: CardBlockProps) {
+}: HeadingBlockProps) {
   const classNames = [
-    styles.card,
-    editMode ? styles.cardEditMode : "",
-    dragging ? styles.cardDragging : "",
-    dimmed ? styles.cardDimmed : "",
-    keyboardFocused ? styles.cardKeyboardFocused : "",
-    manipulating ? styles.cardManipulating : "",
+    styles.headingBlock,
+    editMode ? styles.headingBlockEditMode : "",
+    dragging ? styles.headingBlockDragging : "",
+    dimmed ? styles.headingBlockDimmed : "",
+    keyboardFocused ? styles.headingBlockKeyboardFocused : "",
+    manipulating ? styles.headingBlockManipulating : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -55,7 +46,7 @@ function CardBlockRenderer({
       id={id}
       className={classNames}
       data-layout-card="true"
-      data-layout-block-kind="card"
+      data-layout-block-kind="heading"
       data-layout-block-id={blockId}
       data-keyboard-focused={keyboardFocused ? "true" : undefined}
       style={{
@@ -75,15 +66,14 @@ function CardBlockRenderer({
               debugInfo={debugInfo}
             />
           </div>
-          {editMode ? controls : null}
         </div>
       ) : null}
       <div
-        className={`${styles.cardHeader} ${onHeaderPointerDown ? styles.cardHeaderDraggable : ""}`}
+        className={`${styles.headingBlockHeader} ${onHeaderPointerDown ? styles.headingBlockHeaderDraggable : ""}`}
         onPointerDown={onHeaderPointerDown}
       >
-        <h2 className={styles.cardTitle}>{title}</h2>
-        {badge ? <span className={styles.cardBadge}>{badge}</span> : null}
+        <h2 className={styles.headingBlockTitle}>{title}</h2>
+        {text ? <p className={styles.headingBlockText}>{text}</p> : null}
       </div>
       {onResizePointerDown ? (
         <ResizeHandles
@@ -92,22 +82,10 @@ function CardBlockRenderer({
           onPointerDown={onResizePointerDown}
         />
       ) : null}
-      <div className={styles.cardBody}>{children}</div>
-      {footer ? <div className={styles.cardFooter}>{footer}</div> : null}
     </article>
   );
 }
 
-// Cards are fully resizable in all directions
-registerBlockType("card", {
-  constraints: {
-    minColSpan: 6,
-    maxColSpan: GRID_COLUMNS,
-    minRowSpan: 4,
-    maxRowSpan: MAX_ROW_SPAN,
-  },
-  resizeHandles: ["north", "south", "east", "west", "north-east", "north-west", "south-east", "south-west"],
-  render: CardBlockRenderer as React.ComponentType<BlockRendererProps>,
-});
+registerBlockRenderer("heading", HeadingBlockRenderer);
 
-export { CardBlockRenderer };
+export { HeadingBlockRenderer };

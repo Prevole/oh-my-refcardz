@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
+import { GRID_COLUMNS, GRID_GAP_PX } from "@/lib/layout/grid-constants";
 
-export const GRID_GAP_PX = 8;
-export const GRID_COLUMNS = 64;
+export { GRID_COLUMNS, GRID_GAP_PX };
 
 type SheetGridMetrics = {
   columns: number;

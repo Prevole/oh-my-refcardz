@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { applyOperation } from "./engine";
 import { createEventEmitter } from "./events";
 import type { BlockConstraints, EngineEvent, LayoutBlock } from "./types";
-
-const GRID_COLUMNS = 64;
+import { GRID_COLUMNS } from "../grid-constants";
 const PERF_BUDGET_MS = 50;
 const BLOCK_COUNT = 100;
 
