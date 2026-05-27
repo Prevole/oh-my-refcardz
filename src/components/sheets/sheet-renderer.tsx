@@ -21,7 +21,7 @@ import {
 } from "@/components/sheets/dev-overlay";
 import type { BlockConstraints, GridPosition, LayoutBlock, MoveOperation, ResizeOperation } from "@/lib/layout/engine";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { useKeyboardScope, useScopedKeyboardHandler } from "@/hooks/use-keyboard-context";
+import { useKeyboardScope } from "@/hooks/use-keyboard-context";
 import { useAction } from "@/hooks/use-action";
 import { ACTION_IDS } from "@/lib/keybindings";
 import {
@@ -235,20 +235,16 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
   useAction(ACTION_IDS.LAYOUT_UNDO, "layout", history.undo);
   useAction(ACTION_IDS.LAYOUT_REDO, "layout", history.redo);
 
-  // -- Reset layout shortcut (user feature, Shift+R) -----------------------
+  // -- Reset layout shortcut (Shift+R) -------------------------------------
+  // LAYOUT_RESET is registered in both `sheet` and `layout` scopes with the
+  // same combo. The handler attached here only fires outside layout mode
+  // (sheet scope) and targets the persisted layout. The buffered counterpart
+  // lives in `use-layout-keyboard.ts`.
+  useAction(ACTION_IDS.LAYOUT_RESET, "sheet", () => {
+    if (isModifiedFromOriginal) resetToOriginal();
+  });
+
   const { matchesAction } = useKeybindings();
-  useScopedKeyboardHandler(
-    "sheet",
-    (event: KeyboardEvent) => {
-      const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
-      if (tag === "input" || tag === "textarea" || tag === "select") return;
-      if (!matchesAction(event, ACTION_IDS.RESET_LAYOUT)) return;
-      if (!isModifiedFromOriginal) return;
-      event.preventDefault();
-      resetToOriginal();
-    },
-    [matchesAction, isModifiedFromOriginal, resetToOriginal]
-  );
 
   const isLayoutActive = Boolean(dragState || resizeState || focusedCard);
 

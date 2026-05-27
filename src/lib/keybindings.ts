@@ -138,7 +138,6 @@ export const ACTION_IDS = {
   SHOW_EXAMPLE: "sheet.show-details",
   CLEAR_COMMAND_FOCUS: "sheet.clear-focus",
   TOGGLE_DEVELOPER_MODE: "sheet.toggle-developer-mode",
-  RESET_LAYOUT: "sheet.reset-layout",
   LAYOUT_ENTER_MODE: "sheet.layout-enter-mode",
 
   // Layout parent scope: shared mode-switch actions (cascade target from
@@ -446,11 +445,6 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       combos: [combo("d", "ctrl", "shift")],
     },
     {
-      id: ACTION_IDS.RESET_LAYOUT,
-      label: "Reset layout to original",
-      combos: [combo("R", "shift")],
-    },
-    {
       id: ACTION_IDS.LAYOUT_ENTER_MODE,
       label: "Enter layout mode",
       combos: [combo("m", "ctrl")],
@@ -464,6 +458,11 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
       id: ACTION_IDS.LAYOUT_REDO,
       label: "Redo last undone edit",
       combos: [key("z")],
+    },
+    {
+      id: ACTION_IDS.LAYOUT_RESET,
+      label: "Reset layout",
+      combos: [combo("R", "shift")],
     },
   ],
 
@@ -543,7 +542,7 @@ export const DEFAULT_KEYBINDINGS: KeybindingsConfig = {
     },
     {
       id: ACTION_IDS.LAYOUT_RESET,
-      label: "Reset layout buffer",
+      label: "Reset layout",
       combos: [combo("R", "shift")],
     },
     {

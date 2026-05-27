@@ -103,7 +103,7 @@ const SCOPE_HELP_MAP: Record<InlineHelpSurface, Partial<Record<KeyboardScopeId |
         { kind: "text", text: ", resize with" },
         { kind: "key", actionId: ACTION_IDS.LAYOUT_GOTO_RESIZE },
         { kind: "text", text: ", reset with" },
-        { kind: "key", actionId: ACTION_IDS.RESET_LAYOUT },
+        { kind: "key", actionId: ACTION_IDS.LAYOUT_RESET },
         { kind: "text", text: "." },
       ],
     },

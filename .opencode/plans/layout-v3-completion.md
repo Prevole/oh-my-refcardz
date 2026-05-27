@@ -256,13 +256,17 @@ Detailed tracker: [`layout-v3-fa-buffered-mode.md`](./layout-v3-fa-buffered-mode
 
 ### Steps
 
-- [ ] H1. Immutability audit of `applyOperation` — formal check that input `blocks[]` is never mutated (prerequisite for safe snapshot reuse).
-- [ ] H2. Design `LayoutHistory` data structure (pure, push/pop/peek, capped size, cursor-based redo semantics). Unit-test in isolation.
-- [ ] H3. Reserve `ACTION_IDS.LAYOUT_UNDO` and `LAYOUT_REDO`; bind defaults `u` and `z` in scopes `layout` and `sheet`. Update keyboard dispatcher fixtures.
-- [ ] H4. Wire `LayoutHistory` into the page-level layout owner (sheet page route) so the same instance is consumed by both the keyboard `LayoutEditor` and the mouse drag/resize hooks. One mutating operation (keyboard keystroke or mouse drop/release) = one history step.
-- [ ] H5. UI: indicate undo/redo availability (visual cue — status pill, inline hint, or disabled state on undo/redo affordances if any).
-- [ ] H6. Tests: unit (`LayoutHistory`), integration (operation → undo → state matches pre-op snapshot; cross-mode undo: mouse op then `u` in layout mode), E2E (keyboard + mouse scenarios).
-- [ ] H7. Doc: extend `docs/layout-engine.md` with the history contract (single buffer, shared across modes, what's undoable); update `docs/layout-actions.md` (combos + behaviour); update `docs/keybindings.md`.
+- [x] H1. Immutability audit of `applyOperation` — formal hard contract added to engine + tests covering input non-mutation — `fbbf3c0`
+- [x] H2. Design `LayoutHistory` data structure — cursor-based pile in `src/lib/layout/history.ts` with capped size, source-tagged entries, unit tests — `e69f46b`
+- [x] H3. Reserve `ACTION_IDS.LAYOUT_UNDO` / `LAYOUT_REDO`; bind defaults `u` and `z` in scopes `layout` and `sheet` — `c149caf`
+- [x] H4. Wire `LayoutHistory` into the sheet renderer so the same instance serves keyboard and mouse mutations. Sub-steps:
+  - [x] H4.1. `LayoutHistory` API: `push(snapshot, source)`, `undo` / `redo` returning `LayoutHistoryEntry | null` — `5e476e3`
+  - [x] H4.2. Hook layer: `blocksEqual`, `replaceBufferContents`, `useLayoutBufferState.replaceContents`, initial `useLayoutHistory` glue — `06b94c1`
+  - [x] H4.3. Renderer wiring: `useLayoutEditor.onInteractionCommit` + `useLayoutKeyboard.onKeyboardMutation` / `onLayoutReset`; initial anchor via `useState` lazy init; `LAYOUT_REDO` rebound from `Ctrl+Shift+Z` (OS-intercepted on macOS) to `z` — `806b6d8`
+  - [x] H4.4. Session pin / discard / commit (`LayoutHistory.pin` / `restoreTo` / `relabelAfter`) so a buffered keyboard session can discard or commit its in-session entries atomically, plus hook wiring and integration tests — `0da38b5` (pure pile) + `950b21f` (hook + 13 integration scenarios)
+- [x] H5. UI: unified Undo / Redo / Reset floating action group in the top-right corner. `useLayoutHistory.canUndo` / `canRedo` exposed as reactive React state; the three buttons reflect availability via the disabled state. Replaces the two previous isolated reset buttons. Pill offset adjusted accordingly. E2E specs migrated to the new semantics — `7e6ead4`
+- [x] H6. Tests: `LayoutHistory` unit tests (39 in two files), integration scenarios in `history.integration.test.ts` (13 scenarios at the pure API level for cross-mode flows + session boundaries + capacity), E2E `layout-undo-redo.spec.ts` (11 scenarios across mouse mode, keyboard buffered mode, session boundaries, cross-mode). One stale assertion in `dev-save-promotes-baseline.spec.ts` fixed in the same commit — `877cee5`
+- [x] H7. Doc + UX surfacing: `docs/layout-engine.md` "Undo/redo (future)" section rewritten as the full history contract (pile model, push policy, undo/redo routing, session pins, keybindings, persistence semantics summary); `docs/keybindings.md` updated to mention `u` / `z` in both `sheet` and `layout` scopes and replace the obsolete reset-button description with the `LayoutActionGroup` description; `docs/layout-actions.md` was already updated in H3. Same commit also collapses `RESET_LAYOUT` and `LAYOUT_RESET` into a single `LAYOUT_RESET` ID registered on both `sheet` and `layout` scopes (the scope dispatcher routes to `resetToOriginal()` or `bufferState.reset()` according to the active scope), surfaces undo/redo/reset in the help modal (new "History" block under the Lifecycle sub-tab) and in Settings > Cheatsheets > General (new "History" section) — `bd5ac49`
 
 ## Architectural invariants (must hold throughout)
 

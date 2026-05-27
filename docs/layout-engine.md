@@ -316,16 +316,86 @@ The session retains, for every block, its `position.w` and `position.h` at the m
 
 ---
 
-## Undo/redo (future)
+## Undo/redo
 
-The session model naturally supports an undo/redo stack outside the engine:
+Phase H adds an undo/redo pile that sits outside the engine and is shared by
+both interaction modes (mouse gestures and the buffered keyboard editor). The
+pile is **not** part of the engine contract — it consumes engine events and
+relies on the engine's hard immutability contract (snapshots passed to
+`applyOperation` are never mutated) so it can store snapshots by reference.
 
-- Each completed session corresponds to one undoable unit.
-- A consumer can store, for every `session.end` event, the pair `(initial, final)` from the session's `session.start` and `session.end` events.
-- Undo = restore `initial`; redo = restore `final`.
-- This is **not part of the engine** but is enabled by its event model.
+### Module layout
 
-Implementation is deferred to a later step. The engine contract is sufficient: it emits the right events for any consumer to build undo/redo on top.
+| Module | Role |
+|---|---|
+| `src/lib/layout/history.ts` | Pure cursor-based pile (`LayoutHistory`). No React. |
+| `src/components/sheets/layout/use-layout-history.ts` | React hook that wires the pile to the editor and the buffered keyboard hook. |
+| `src/components/sheets/layout/layout-action-group.tsx` | Floating Undo / Redo / Reset capsule (3 buttons). |
+
+### Pile model
+
+```
+past: [e0, e1, ..., e(n-1)]   present: en    future: [e(n+1), ...]
+```
+
+Each entry carries `{ snapshot: readonly LayoutBlock[]; source: "mouse" | "keyboard" }`. The pile is anchored on mount with the initial committed layout pushed as a mouse-sourced entry so the very first user mutation enables undo.
+
+- `push(snapshot, source)` drops `future`, moves `present` into `past`, makes a new entry the present.
+- `undo()` / `redo()` shift along the cursor and return the new `present` entry (or `null`).
+- `canUndo()` / `canRedo()` are also exposed as **reactive booleans** by the hook (`useLayoutHistory` mirrors them into React state), so consumers like the action-group buttons re-render when availability flips.
+- `clear()` drops everything (used on slug change).
+- `capacity` (default 100) caps `past`; oldest entries are evicted.
+
+### Push policy
+
+- **Mouse gestures** push a single entry per gesture, via `useLayoutEditor.onInteractionCommit` (fired from `commitInteraction`, the sole mouse funnel). Per-gesture granularity regardless of intermediate `applyOperation` calls during the drag.
+- **Keyboard keystrokes** push one entry per effective mutation, via `useLayoutKeyboard.onKeyboardMutation`. The buffer reports `ApplyOutcome.changed`; no-ops never push.
+- **`LAYOUT_RESET` inside layout mode** pushes the buffer's initial snapshot as a keyboard entry so the reset itself is undoable.
+
+### Undo / redo routing
+
+| Mode | Undo target | Persistence |
+|---|---|---|
+| Mouse (layout mode inactive) | `editor.commitLayout(snapshot)` | Immediate (`onCommit` write-back to `localStorage`). |
+| Keyboard buffered session active | `bufferState.replaceContents(snapshot, ±1)` | Deferred to session commit. **Exception:** if the restored entry's `source` is `"mouse"` (cross-mode), `commitLayout` is also called to keep the persisted state consistent with the post-session world. |
+
+An anti-loop guard (`isApplyingHistoryRef`) is flipped around `commitLayout` calls so the renderer's persistence-sync effect bails out instead of re-pushing the history-driven write back into the editor.
+
+### Session pins (H4.4)
+
+A buffered keyboard session has its own boundary: the user can either commit (Enter) or discard (Esc, with the 5-change modal threshold). The history must track that boundary so:
+
+- **Discard** drops every in-session entry from the pile (the user cannot undo into states they explicitly rejected and which were never persisted).
+- **Commit** relabels every in-session entry as `"mouse"` so subsequent cross-mode undo writes back through `commitLayout` and persists immediately.
+
+The pile exposes three primitives for this:
+
+- `pin(): LayoutHistoryCursor` — captures the current cursor as an opaque `{ epoch, entry }` token.
+- `restoreTo(cursor)` — truncates `past` to the pinned entry, restores it as `present`, clears `future`. Used on discard.
+- `relabelAfter(cursor, source)` — rewrites the `source` of every entry strictly after the pin (preserves the pinned entry itself). Used on commit.
+
+A cursor is invalidated by `clear()` (epoch bump) or by capacity eviction; in both cases `restoreTo` / `relabelAfter` throw. Pins are intentionally identity-based (not snapshot-based) to make stale-cursor bugs loud.
+
+The hook exposes these as `pinSession()` / `discardSession(pin)` / `commitSession(pin)`, which `useLayoutKeyboard` calls in `enterMode` / `discardMode` / `commitMode` respectively. The cursor is stored in a ref local to the keyboard hook so a single session can hand it back at exit time without leaking through component props.
+
+### Keybindings
+
+- `LAYOUT_UNDO` (`u`) and `LAYOUT_REDO` (`z`) are bound on both the `sheet` and `layout` scopes so the same shortcuts work in mouse mode and inside the buffered keyboard session.
+- `Ctrl+Shift+Z` is **not** used for redo: macOS intercepts it at OS level. The Vim convention `z` is the default redo combo.
+- `Ctrl+R` / `Ctrl+Shift+R` are never bound (browser reload).
+
+### Persistence semantics summary
+
+| Action | Push? | Persists? |
+|---|---|---|
+| Mouse gesture commit | yes (`mouse`) | yes |
+| Keyboard mutation inside session | yes (`keyboard`) | no, until commit |
+| Keyboard mutation undo (single-mode) | no (cursor shift) | no |
+| Keyboard mutation undo of a `"mouse"` entry (cross-mode) | no | yes |
+| `LAYOUT_RESET` inside session | yes (`keyboard`) | no |
+| Session commit (Enter) | no | yes; in-session entries relabeled `"mouse"` |
+| Session discard (Esc silent / modal-confirmed) | no | no; in-session entries dropped via `restoreTo` |
+| `clear()` (slug change) | resets entire pile | n/a |
 
 ---
 

@@ -87,9 +87,9 @@ Keybindings are grouped by context. Adding a new context requires updating `Keyb
 | `help` | Help modal open | Focus next/previous tab, descend to sub-tab row, activate focused tab |
 | `settings` | Settings panel open | Focus next/previous tab, descend to sub-tab / sub-sub-tab row, activate focused tab |
 | `home` | Home page | Grid navigation (`home.move-*`), search, open sheet |
-| `sheet` | Cheatsheet page | Item navigation (`sheet.move-*`), copy, show details, back to home, reset layout, enter layout mode |
+| `sheet` | Cheatsheet page | Item navigation (`sheet.move-*`), copy, show details, back to home, reset layout (`Shift+r` → `LAYOUT_RESET`), enter layout mode, undo/redo (`u` / `z` → `LAYOUT_UNDO` / `LAYOUT_REDO`) |
 | `modal` | A command-copy or item-detail modal is open (modal scope, blocks cascade) | Vertical navigation (`modal.move-up` / `modal.move-down`), copy |
-| `layout` | Layout editing mode (any sub-mode) | Parent (non-modal) scope; hosts sub-mode switching bindings (`n` / `m` / `b`), the exit binding (`Escape` → `LAYOUT_EXIT`), the commit binding (`Enter` → `LAYOUT_COMMIT`) and the reset binding (`Shift+r` → `LAYOUT_RESET`) shared across all sub-modes via the cascade |
+| `layout` | Layout editing mode (any sub-mode) | Parent (non-modal) scope; hosts sub-mode switching bindings (`n` / `m` / `b`), the exit binding (`Escape` → `LAYOUT_EXIT`), the commit binding (`Enter` → `LAYOUT_COMMIT`), the reset binding (`Shift+r` → `LAYOUT_RESET`) and the undo/redo bindings (`u` / `z`) shared across all sub-modes via the cascade |
 | `layout-navigation` | Layout mode — navigation sub-mode | Focus left/right/up/down |
 | `layout-move` | Layout mode — move sub-mode | Move focused block one cell (with optional strict modifier) |
 | `layout-resize` | Layout mode — resize sub-mode | Grow / shrink the focused block (with strict and compact variants). The arrow always indicates the direction in which the moving edge travels: `h` / `←` grows leftward (extends the west edge to the west); `Shift+h` / `Shift+←` shrinks leftward (pulls the east edge to the west). Same convention on the vertical axis. This keeps grow and shrink directionally symmetric on the keyboard, even though they touch opposite edges internally. |
@@ -108,7 +108,12 @@ When a `layout-*` scope is active, two visual cues confirm the current sub-mode:
 
 Entering layout mode (`Ctrl+M`) focuses the block closest to the mouse cursor (fallback: viewport center, then top-left). On every focus change or move/resize, the focused block is scrolled into view (`block: "nearest"`).
 
-A floating **reset button** (`LayoutBufferResetButton`) appears in the bottom-right corner whenever the buffer holds at least one staged change. Clicking it (or pressing `Shift+r`) rewinds the buffer to the snapshot captured on mode entry without exiting layout mode. The button hides again when the change count drops back to zero (via `Shift+r`, commit, or discard). It is mutually exclusive with the regular `LayoutResetButton`, which only surfaces outside layout mode when the persisted layout differs from the original YAML.
+A floating **action group** (`LayoutActionGroup`) sits in the top-right corner next to the Settings button. It hosts three buttons — Undo (`u`), Redo (`z`), Reset (`Shift+r`) — always rendered side by side in a single fused capsule. Each button reflects its real availability via the disabled state: Undo / Redo are wired to the layout undo/redo pile (`useLayoutHistory.canUndo` / `canRedo`, exposed as reactive React state), and Reset toggles between two contextual targets:
+
+- Inside layout mode: `bufferState.reset` rewinds the buffer to the entry snapshot without exiting; enabled while the buffer holds at least one staged change.
+- Outside layout mode: `resetToOriginal` restores the YAML-shipped layout; enabled when the persisted layout differs from the original.
+
+The group is hidden entirely when none of the three actions is available (and when developer mode is active, since the dev overlay provides its own toolbar). See [layout-engine.md — Undo/redo](./layout-engine.md#undoredo) for the full history contract, including how the buffered session's pin / commit / discard interact with the global pile.
 
 ### Buffered editing model
 
@@ -404,7 +409,7 @@ Because `dev` is modal, all sheet/global shortcuts are inert while in dev mode. 
 | Action | Default | Effect |
 |---|---|---|
 | `DEV_SAVE_LAYOUT` | `s` | Save the current layout via `/api/dev/layouts/[slug]` (dev only) |
-| `DEV_RESET_LAYOUT` | `Shift+r` | Reset to the cheatsheet default (no-op if no local override). Same combo as the user-facing `RESET_LAYOUT`; the `dev` scope intercepts it while developer mode is active. |
+| `DEV_RESET_LAYOUT` | `Shift+r` | Reset to the cheatsheet default (no-op if no local override). Same combo as the user-facing `LAYOUT_RESET`; the `dev` scope intercepts it while developer mode is active. |
 | `DEV_TOGGLE_RECORDING` | `r` | Start / stop the debug recorder |
 | `DEV_TOGGLE_LOGS` | `o` | Open / close the recorded-sessions dropdown |
 | `DEV_ENTER_AXES_MODE` | `Shift+g` | Enter the keyboard-driven axes selection sub-mode |

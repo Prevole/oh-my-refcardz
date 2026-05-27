@@ -84,13 +84,17 @@ const HELP_NAVIGATION_ENTRIES: ChartEntry[] = [
 
 // ---- Layout tab data ----------------------------------------------------
 
-const LAYOUT_LIFECYCLE_ENTRIES: (ChartEntry | null)[] = [
+const LAYOUT_LIFECYCLE_ENTRIES: ChartEntry[] = [
   { id: ACTION_IDS.LAYOUT_ENTER_MODE },
   { id: ACTION_IDS.LAYOUT_GOTO_NAVIGATION },
-  { id: ACTION_IDS.RESET_LAYOUT },
   { id: ACTION_IDS.LAYOUT_GOTO_MOVE },
-  null,
   { id: ACTION_IDS.LAYOUT_GOTO_RESIZE },
+];
+
+const LAYOUT_HISTORY_ENTRIES: ChartEntry[] = [
+  { id: ACTION_IDS.LAYOUT_UNDO },
+  { id: ACTION_IDS.LAYOUT_REDO },
+  { id: ACTION_IDS.LAYOUT_RESET },
 ];
 
 const LAYOUT_NAV_ENTRIES: ChartEntry[] = [
@@ -403,9 +407,17 @@ export function SheetHelpModal({ open, onClose }: Props) {
               <div className={helpStyles.layoutSection}>
                 <h3 className="text-xl font-semibold">Lifecycle</h3>
                 <p className={helpStyles.layoutSectionIntro}>
-                  Enter the modal layout editor and switch between its sub-modes (navigation, move, resize). Reset discards your customizations and restores the layout shipped with the cheatsheet.
+                  Enter the modal layout editor and switch between its sub-modes (navigation, move, resize).
                 </p>
                 <KeybindingChart entries={LAYOUT_LIFECYCLE_ENTRIES} cols={2} />
+              </div>
+
+              <div className={helpStyles.layoutSection}>
+                <h3 className="text-xl font-semibold">History</h3>
+                <p className={helpStyles.layoutSectionIntro}>
+                  Undo or redo the last layout change, or reset the buffer to the snapshot captured on mode entry.
+                </p>
+                <KeybindingChart entries={LAYOUT_HISTORY_ENTRIES} cols={2} />
               </div>
             </div>
           )}

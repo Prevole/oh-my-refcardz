@@ -144,14 +144,26 @@ const SHEET_GENERAL_SECTIONS: SectionConfig[] = [
       ACTION_IDS.SHOW_EXAMPLE,
       ACTION_IDS.CLEAR_COMMAND_FOCUS,
       ACTION_IDS.TOGGLE_DEVELOPER_MODE,
-      ACTION_IDS.RESET_LAYOUT,
       ACTION_IDS.LAYOUT_ENTER_MODE,
     ],
     notes: {
       [ACTION_IDS.COPY_COMMAND]: "Only fires when the focused entry exposes a copyable value.",
       [ACTION_IDS.SHOW_EXAMPLE]: "Only fires when the focused entry has additional details to show.",
       [ACTION_IDS.CLEAR_COMMAND_FOCUS]: "Only fires while an entry is focused.",
-      [ACTION_IDS.RESET_LAYOUT]: "Only fires when the layout has been modified from its original state.",
+    },
+  },
+  {
+    id: "sheet-history",
+    label: "History",
+    description: "Undo or redo the last layout change, or reset the layout. Active both in mouse mode and inside the buffered keyboard layout mode.",
+    context: "sheet",
+    actionIds: [
+      ACTION_IDS.LAYOUT_UNDO,
+      ACTION_IDS.LAYOUT_REDO,
+      ACTION_IDS.LAYOUT_RESET,
+    ],
+    notes: {
+      [ACTION_IDS.LAYOUT_RESET]: "Outside layout mode: only fires when the layout has been modified from its original state. Inside layout mode: rewinds the buffer to the snapshot captured on mode entry.",
     },
   },
   {
@@ -196,14 +208,13 @@ const SHEET_LAYOUT_SECTIONS: SectionConfig[] = [
   {
     id: "layout-parent",
     label: "Layout",
-    description: "Enter, switch sub-mode, commit, reset, or exit layout mode.",
+    description: "Enter, switch sub-mode, commit, or exit layout mode.",
     context: "layout",
     actionIds: [
       ACTION_IDS.LAYOUT_GOTO_NAVIGATION,
       ACTION_IDS.LAYOUT_GOTO_MOVE,
       ACTION_IDS.LAYOUT_GOTO_RESIZE,
       ACTION_IDS.LAYOUT_COMMIT,
-      ACTION_IDS.LAYOUT_RESET,
       ACTION_IDS.LAYOUT_EXIT,
     ],
   },
