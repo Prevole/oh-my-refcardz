@@ -76,8 +76,15 @@ export type UseLayoutHistoryResult = {
   pushKeyboard: (snapshot: readonly LayoutBlock[]) => void;
   undo: () => void;
   redo: () => void;
-  canUndo: () => boolean;
-  canRedo: () => boolean;
+  /**
+   * Reactive availability flags. These are React state, so any component
+   * that reads them subscribes to changes (a hint button can disable
+   * itself without polling). Updated synchronously after every operation
+   * that mutates the pile (push, undo, redo, clear, restoreTo,
+   * relabelAfter).
+   */
+  canUndo: boolean;
+  canRedo: boolean;
   /** Drop the whole history. Used on slug change or explicit reset. */
   clear: () => void;
   /**
@@ -118,6 +125,18 @@ export function useLayoutHistory({
     return h;
   });
 
+  // Mirror canUndo/canRedo into React state so UI consumers (the action
+  // group buttons in the renderer) re-render when availability changes.
+  // The pile itself is the source of truth; these flags are recomputed
+  // after every operation that may have changed them.
+  const [canUndo, setCanUndo] = useState<boolean>(() => history.canUndo());
+  const [canRedo, setCanRedo] = useState<boolean>(() => history.canRedo());
+
+  const syncFlags = useCallback(() => {
+    setCanUndo(history.canUndo());
+    setCanRedo(history.canRedo());
+  }, [history]);
+
   const guardWrite = useCallback(
     (write: () => void) => {
       if (isApplyingHistoryRef) {
@@ -142,19 +161,22 @@ export function useLayoutHistory({
   const pushMouse = useCallback(
     (snapshot: readonly LayoutBlock[]) => {
       history.push(snapshot, "mouse");
+      syncFlags();
     },
-    [history],
+    [history, syncFlags],
   );
 
   const pushKeyboard = useCallback(
     (snapshot: readonly LayoutBlock[]) => {
       history.push(snapshot, "keyboard");
+      syncFlags();
     },
-    [history],
+    [history, syncFlags],
   );
 
   const undo = useCallback(() => {
     const entry = history.undo();
+    syncFlags();
     if (!entry) return;
     const { snapshot, source } = entry;
 
@@ -172,10 +194,11 @@ export function useLayoutHistory({
 
     // Mouse mode: write directly to the editor and persist.
     guardWrite(() => editor.commitLayout(snapshot));
-  }, [bufferState, editor, guardWrite, history]);
+  }, [bufferState, editor, guardWrite, history, syncFlags]);
 
   const redo = useCallback(() => {
     const entry = history.redo();
+    syncFlags();
     if (!entry) return;
     const { snapshot, source } = entry;
 
@@ -188,12 +211,12 @@ export function useLayoutHistory({
     }
 
     guardWrite(() => editor.commitLayout(snapshot));
-  }, [bufferState, editor, guardWrite, history]);
+  }, [bufferState, editor, guardWrite, history, syncFlags]);
 
-  const canUndo = useCallback(() => history.canUndo(), [history]);
-  const canRedo = useCallback(() => history.canRedo(), [history]);
-
-  const clear = useCallback(() => history.clear(), [history]);
+  const clear = useCallback(() => {
+    history.clear();
+    syncFlags();
+  }, [history, syncFlags]);
 
   const pinSession = useCallback(
     () => history.pin(),
@@ -203,15 +226,20 @@ export function useLayoutHistory({
   const discardSession = useCallback(
     (cursor: LayoutHistoryCursor) => {
       history.restoreTo(cursor);
+      syncFlags();
     },
-    [history],
+    [history, syncFlags],
   );
 
   const commitSession = useCallback(
     (cursor: LayoutHistoryCursor) => {
       history.relabelAfter(cursor, "mouse");
+      // relabelAfter does not change the pile shape, but keep the sync
+      // for consistency: if the implementation ever evolves to drop
+      // entries (e.g. dedup), the UI stays accurate.
+      syncFlags();
     },
-    [history],
+    [history, syncFlags],
   );
 
   return useMemo(

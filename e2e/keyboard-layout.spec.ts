@@ -459,13 +459,18 @@ test.describe("Keyboard layout mode — visual integration (Phase E3)", () => {
     const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(before.rowSpan + 1);
 
-    // Keyboard edits stage in a buffer (Phase FA). The reset button is
-    // wired to the persisted layout, so it only appears after commit
-    // (Enter), not while the buffer is still pending.
-    await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
+    // Phase H (action group): keyboard edits land in the buffer AND get
+    // pushed into the undo history, so the action group surfaces
+    // immediately. The reset button targets the buffer reset in this
+    // mode and is enabled because the buffer has staged changes.
+    const resetInBuffer = page.getByTestId("layout-reset-button");
+    await expect(resetInBuffer).toBeVisible();
+    await expect(resetInBuffer).toBeEnabled();
 
     await page.keyboard.press("Enter");
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+    // After commit the persisted layout diverges from the YAML default
+    // so the reset button stays visible (now targeting the user reset).
     await expect(page.getByTestId("layout-reset-button")).toBeVisible();
   });
 

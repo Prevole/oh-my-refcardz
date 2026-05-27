@@ -426,26 +426,40 @@ test.describe("Layout mode — buffer reset floating button", () => {
     await clearLayoutStorage(page);
   });
 
-  test("Button is hidden on entry and appears after the first buffered edit", async ({ page }) => {
+  test("Button is disabled on entry and becomes enabled after the first buffered edit", async ({ page }) => {
     await enterLayoutMode(page);
-    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+    // On entry the buffer is empty, so the reset button is disabled. The
+    // wider action group itself may still be hidden because the
+    // freshly-initialised history has no undo / redo entries either.
+    const resetOnEntry = page.getByTestId("layout-reset-button");
+    if ((await resetOnEntry.count()) > 0) {
+      await expect(resetOnEntry).toBeDisabled();
+    }
 
     await page.keyboard.press("j");
     await page.keyboard.press("j");
     await switchSubMode(page, "b", "resize");
     await page.keyboard.press("j");
 
-    await expect(page.getByTestId("layout-buffer-reset-button")).toBeVisible();
+    const resetAfterEdit = page.getByTestId("layout-reset-button");
+    await expect(resetAfterEdit).toBeVisible();
+    await expect(resetAfterEdit).toBeEnabled();
   });
 
-  test("Shift+R hides the button along with resetting the buffer", async ({ page }) => {
+  test("Shift+R disables the reset button (buffer cleared) but leaves undo available", async ({ page }) => {
     await focusBottomLeft(page);
     await stageGrowSouth(page, 2);
-    await expect(page.getByTestId("layout-buffer-reset-button")).toBeVisible();
+    const resetButton = page.getByTestId("layout-reset-button");
+    await expect(resetButton).toBeEnabled();
 
     await page.keyboard.press("Shift+R");
 
-    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+    // The buffer is empty again so the reset action is no longer
+    // applicable, but the reset of the buffer is itself recorded in
+    // history (LAYOUT_RESET pushes the initial snapshot as a keyboard
+    // entry), so the action group stays visible and undo is available.
+    await expect(resetButton).toBeDisabled();
+    await expect(page.getByTestId("layout-undo-button")).toBeEnabled();
     await expect(page.getByTestId("layout-mode-pill")).toHaveAttribute(
       "data-changes-count",
       "0",
@@ -457,12 +471,16 @@ test.describe("Layout mode — buffer reset floating button", () => {
     const initial = await findById(page, "bottom-left");
     await stageGrowSouth(page, 2);
 
-    await page.getByTestId("layout-buffer-reset-button").click();
+    await page.getByTestId("layout-reset-button").click();
 
     const after = await findById(page, "bottom-left");
     expect(after.rowSpan).toBe(initial.rowSpan);
     await expect(page.getByTestId("layout-mode-pill")).toBeVisible();
-    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
+    // The reset itself is recorded in history (so it can be undone). The
+    // reset button is therefore still mounted but disabled now that the
+    // buffer is empty again.
+    await expect(page.getByTestId("layout-reset-button")).toBeDisabled();
+    await expect(page.getByTestId("layout-undo-button")).toBeEnabled();
   });
 });
 
@@ -492,7 +510,8 @@ test.describe("Layout mode — commit path (LAYOUT_COMMIT)", () => {
     await page.keyboard.press("Enter");
 
     await expect(page.getByTestId("layout-mode-pill")).toHaveCount(0);
+    // No edits → no undo / redo, no divergence from baseline → action
+    // group is fully hidden.
     await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
-    await expect(page.getByTestId("layout-buffer-reset-button")).toHaveCount(0);
   });
 });

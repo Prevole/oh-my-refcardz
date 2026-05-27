@@ -41,8 +41,7 @@ import {
 } from "./layout";
 import type { DragMove } from "./layout/use-card-drag-v2";
 import type { ResizeMove } from "./layout/use-card-resize-v2";
-import { LayoutBufferResetButton } from "./layout/layout-buffer-reset-button";
-import { LayoutResetButton } from "./layout/layout-reset-button";
+import { LayoutActionGroup } from "./layout/layout-action-group";
 import { LayoutModePill, LAYOUT_MODE_COLORS } from "./layout/layout-mode-pill";
 import { LayoutDiscardConfirm } from "./layout/layout-discard-confirm";
 import cheatsheetStyles from "./cheatsheet-rendering.module.css";
@@ -539,11 +538,37 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
           );
         })}
       </SheetGrid>
-      {layoutMode !== null && bufferState.changesCount > 0 && !debugEnabled ? (
-        <LayoutBufferResetButton onClick={bufferState.reset} />
-      ) : layoutMode === null && hydrated && isModifiedFromOriginal && !debugEnabled ? (
-        <LayoutResetButton onClick={resetToOriginal} />
-      ) : null}
+      {(() => {
+        if (debugEnabled) return null;
+        // Reset is mode-contextual: in buffered layout mode it reverts the
+        // session; in mouse mode it restores the YAML-shipped layout.
+        const inLayoutMode = layoutMode !== null;
+        const canReset = inLayoutMode
+          ? bufferState.changesCount > 0
+          : hydrated && isModifiedFromOriginal;
+        // The group is shown as soon as at least one action is available.
+        if (!history.canUndo && !history.canRedo && !canReset) return null;
+        return (
+          <LayoutActionGroup
+            onUndo={history.undo}
+            onRedo={history.redo}
+            onReset={inLayoutMode ? bufferState.reset : resetToOriginal}
+            canUndo={history.canUndo}
+            canRedo={history.canRedo}
+            canReset={canReset}
+            resetLabel={
+              inLayoutMode
+                ? "Reset layout changes"
+                : "Reset layout to original"
+            }
+            resetTooltip={
+              inLayoutMode
+                ? "Reset layout changes (Shift+R)"
+                : "Reset layout to original (Shift+R)"
+            }
+          />
+        );
+      })()}
       {layoutMode !== null && !debugEnabled ? (
         <LayoutModePill mode={layoutMode} changesCount={bufferState.changesCount} />
       ) : null}

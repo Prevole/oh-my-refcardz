@@ -61,7 +61,9 @@ test.describe("Dev-mode save promotes the current layout as the new baseline", (
 
     // After commit + diverging from baseline, the user-facing reset
     // button must appear.
-    await expect(page.getByTestId("layout-reset-button")).toBeVisible();
+    const resetButton = page.getByTestId("layout-reset-button");
+    await expect(resetButton).toBeVisible();
+    await expect(resetButton).toBeEnabled();
 
     // Toggle developer mode and trigger the save action via keyboard.
     await page.keyboard.press("Control+Shift+D");
@@ -69,6 +71,9 @@ test.describe("Dev-mode save promotes the current layout as the new baseline", (
     await page.keyboard.press("s");
 
     // Wait for the promotion to flip isModifiedFromOriginal back to false.
-    await expect(page.getByTestId("layout-reset-button")).toHaveCount(0);
+    // The reset button is no longer actionable, but the action group is
+    // still mounted because the in-session push history is intact and
+    // therefore undo remains available.
+    await expect(resetButton).toBeDisabled();
   });
 });

@@ -1,0 +1,60 @@
+/*
+ * Floating group of layout-edit action buttons (Undo / Redo / Reset).
+ *
+ * Anchored to the top-right corner of the viewport, just left of the
+ * Settings floating button (which uses `--space-6` for its right offset).
+ *
+ * The three buttons share a single visually-fused capsule: rounded ends
+ * on the outermost edges, square shared edges in between, and a single
+ * 1px divider between adjacent buttons. Hover and focus states elevate
+ * the individual button without disturbing its neighbours.
+ */
+
+.group {
+  position: fixed;
+  top: var(--space-6);
+  right: calc(var(--space-6) + 2.5rem + var(--space-3));
+  z-index: var(--z-modal);
+  display: inline-flex;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+  border: 1px solid var(--border-strong);
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: transparent;
+  border: none;
+  color: var(--fg-75);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.button + .button {
+  border-left: 1px solid var(--border-strong);
+}
+
+.button:hover:not(:disabled),
+.button:focus-visible:not(:disabled) {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+.button:disabled {
+  color: color-mix(in srgb, var(--fg-75) 35%, transparent);
+  cursor: not-allowed;
+}
+
+/* Reset keeps a subtle rotation flourish on hover, matching the previous
+   isolated reset button's affordance. */
+.reset:hover:not(:disabled) {
+  transform: rotate(-15deg);
+}
