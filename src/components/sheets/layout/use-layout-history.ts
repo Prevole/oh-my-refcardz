@@ -41,6 +41,7 @@ import type { LayoutBlock } from "@/lib/layout/engine";
 import {
   createLayoutHistory,
   type LayoutHistory,
+  type LayoutHistoryCursor,
 } from "@/lib/layout/history";
 
 import type { UseLayoutBufferStateResult } from "./use-layout-buffer-state";
@@ -79,6 +80,26 @@ export type UseLayoutHistoryResult = {
   canRedo: () => boolean;
   /** Drop the whole history. Used on slug change or explicit reset. */
   clear: () => void;
+  /**
+   * Capture the current history position. Returned cursor is opaque and
+   * stays valid until either `clear()` is called or the underlying entry
+   * is evicted by capacity. Used at the start of a buffered keyboard
+   * session so its discard / commit can act on entries pushed in between.
+   */
+  pinSession: () => LayoutHistoryCursor;
+  /**
+   * Drop every history entry pushed after the session pin. Used on
+   * Esc/discard so the user can never undo into a state they explicitly
+   * rejected (and which the editor never persisted).
+   */
+  discardSession: (cursor: LayoutHistoryCursor) => void;
+  /**
+   * Relabel every history entry pushed after the session pin as
+   * "mouse" (i.e. persisted). Used on Return/commit so the in-session
+   * keyboard entries are treated as persisted on subsequent cross-mode
+   * undo/redo.
+   */
+  commitSession: (cursor: LayoutHistoryCursor) => void;
 };
 
 export function useLayoutHistory({
@@ -174,6 +195,25 @@ export function useLayoutHistory({
 
   const clear = useCallback(() => history.clear(), [history]);
 
+  const pinSession = useCallback(
+    () => history.pin(),
+    [history],
+  );
+
+  const discardSession = useCallback(
+    (cursor: LayoutHistoryCursor) => {
+      history.restoreTo(cursor);
+    },
+    [history],
+  );
+
+  const commitSession = useCallback(
+    (cursor: LayoutHistoryCursor) => {
+      history.relabelAfter(cursor, "mouse");
+    },
+    [history],
+  );
+
   return useMemo(
     () => ({
       pushMouse,
@@ -183,7 +223,21 @@ export function useLayoutHistory({
       canUndo,
       canRedo,
       clear,
+      pinSession,
+      discardSession,
+      commitSession,
     }),
-    [pushMouse, pushKeyboard, undo, redo, canUndo, canRedo, clear],
+    [
+      pushMouse,
+      pushKeyboard,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
+      clear,
+      pinSession,
+      discardSession,
+      commitSession,
+    ],
   );
 }

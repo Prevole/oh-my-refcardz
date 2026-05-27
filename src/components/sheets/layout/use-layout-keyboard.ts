@@ -103,6 +103,27 @@ type UseLayoutKeyboardOptions = {
    * History records this as a keyboard-sourced entry.
    */
   onLayoutReset?: (snapshot: readonly LayoutBlock[]) => void;
+  /**
+   * Called at the very start of a keyboard session (entering layout
+   * mode). The history owner returns an opaque cursor that will be
+   * handed back on session discard or commit so the corresponding
+   * truncate / relabel can be performed.
+   */
+  onSessionStart?: () => unknown;
+  /**
+   * Called when the user discards a keyboard session (silent Esc below
+   * the threshold, or modal-confirmed discard). Receives the cursor
+   * issued by `onSessionStart`. Owner is expected to truncate the
+   * history to that cursor so the discarded entries become un-undoable.
+   */
+  onSessionDiscard?: (cursor: unknown) => void;
+  /**
+   * Called when the user commits a keyboard session via Return. Receives
+   * the cursor issued by `onSessionStart`. Owner is expected to relabel
+   * the in-session entries as "persisted" so subsequent cross-mode
+   * undo/redo treats them as mouse-equivalent.
+   */
+  onSessionCommit?: (cursor: unknown) => void;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -345,6 +366,9 @@ export function useLayoutKeyboard({
   gridColumns,
   onKeyboardMutation,
   onLayoutReset,
+  onSessionStart,
+  onSessionDiscard,
+  onSessionCommit,
 }: UseLayoutKeyboardOptions): UseLayoutKeyboardResult {
   const [mode, setMode] = useState<LayoutSubMode | null>(null);
   const [focusedCard, setFocusedCard] = useState<LayoutKeyboardFocus | null>(null);
@@ -363,6 +387,25 @@ export function useLayoutKeyboard({
   useEffect(() => {
     onLayoutResetRef.current = onLayoutReset;
   }, [onLayoutReset]);
+
+  const onSessionStartRef = useRef(onSessionStart);
+  useEffect(() => {
+    onSessionStartRef.current = onSessionStart;
+  }, [onSessionStart]);
+
+  const onSessionDiscardRef = useRef(onSessionDiscard);
+  useEffect(() => {
+    onSessionDiscardRef.current = onSessionDiscard;
+  }, [onSessionDiscard]);
+
+  const onSessionCommitRef = useRef(onSessionCommit);
+  useEffect(() => {
+    onSessionCommitRef.current = onSessionCommit;
+  }, [onSessionCommit]);
+
+  // Cursor handed back by `onSessionStart` at session entry. Reset to null
+  // on commit / discard so the next session starts cleanly.
+  const sessionCursorRef = useRef<unknown>(null);
 
   // Keep a live ref to blocks for handlers (they capture once per scope id).
   const blocksRef = useRef(blocks);
@@ -408,6 +451,10 @@ export function useLayoutKeyboard({
     // Start a buffered session rooted at the currently committed layout.
     // All keyboard ops will land in the buffer until commit or exit.
     bufferState.start(editor.committedBlocks);
+    // Pin the history at the session boundary so a later discard can drop
+    // exactly the entries pushed in between (and a commit can relabel
+    // them as persisted).
+    sessionCursorRef.current = onSessionStartRef.current?.() ?? null;
     setFocusedCard(() => {
       const blocks = blocksRef.current;
       const cursor = cursorRef.current ?? {
@@ -432,6 +479,13 @@ export function useLayoutKeyboard({
     if (blocks) {
       editor.commitLayout(blocks);
     }
+    // Promote in-session keyboard entries to "persisted" so cross-mode
+    // undo treats them as mouse-equivalent.
+    const cursor = sessionCursorRef.current;
+    if (cursor !== null) {
+      onSessionCommitRef.current?.(cursor);
+      sessionCursorRef.current = null;
+    }
     setMode(null);
     setFocusedCard(null);
   }, [bufferState, editor]);
@@ -441,6 +495,13 @@ export function useLayoutKeyboard({
   // threshold) and by the modal-confirm path once the user accepts.
   const discardMode = useCallback(() => {
     bufferState.clear();
+    // Truncate the history back to the session pin so the discarded
+    // entries cannot be undone into.
+    const cursor = sessionCursorRef.current;
+    if (cursor !== null) {
+      onSessionDiscardRef.current?.(cursor);
+      sessionCursorRef.current = null;
+    }
     setMode(null);
     setFocusedCard(null);
   }, [bufferState]);

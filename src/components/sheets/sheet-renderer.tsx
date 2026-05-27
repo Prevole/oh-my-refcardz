@@ -223,6 +223,9 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
     onLayoutReset: useCallback((snapshot: readonly LayoutBlock[]) => {
       pushKeyboardRef.current(snapshot);
     }, []),
+    onSessionStart: history.pinSession,
+    onSessionDiscard: history.discardSession as (c: unknown) => void,
+    onSessionCommit: history.commitSession as (c: unknown) => void,
   });
 
   // Undo / redo actions — bound on both `sheet` and `layout` scopes so the
