@@ -31,6 +31,14 @@ export type InteractionState = {
   snapshot: LayoutBlock[];
   /** Latest accepted preview from applyOperation; null if no operation applied yet. */
   preview: LayoutBlock[] | null;
+  /**
+   * Highest occupied row index in the snapshot (i.e. max of `y + h` across all
+   * blocks). Used by the renderer to keep the grid from shrinking under the
+   * cursor during a mouse drag/resize. The value is captured once on
+   * interaction start and stays constant for the duration of the gesture; the
+   * grid can still grow naturally if the preview pushes blocks further south.
+   */
+  snapshotMaxRow: number;
 };
 
 export type UseLayoutEditorResult = {
@@ -103,6 +111,15 @@ function buildConstraintsMap(blocks: LayoutBlock[]): Map<string, BlockConstraint
   return map;
 }
 
+function computeMaxRow(blocks: readonly LayoutBlock[]): number {
+  let max = 0;
+  for (const block of blocks) {
+    const bottom = block.position.y + block.position.h;
+    if (bottom > max) max = bottom;
+  }
+  return max;
+}
+
 export function useLayoutEditor({
   initialBlocks,
   gridColumns,
@@ -150,6 +167,7 @@ export function useLayoutEditor({
         blockId,
         snapshot: committedBlocks,
         preview: null,
+        snapshotMaxRow: computeMaxRow(committedBlocks),
       };
     });
   }, [committedBlocks]);

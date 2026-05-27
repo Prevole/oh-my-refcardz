@@ -454,6 +454,7 @@ export function YamlSheetRenderer({ sheetSlug, sheet }: Props) {
         debugMode={debugEnabled}
         layoutReady={hydrated}
         onMetricsChange={updateGridMetrics}
+        interactionMinRows={editor.interaction?.snapshotMaxRow}
         onEmptyPointerDown={
           bufferState.isActive
             ? () => {

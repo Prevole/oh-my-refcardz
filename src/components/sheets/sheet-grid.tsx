@@ -26,6 +26,17 @@ type SheetGridProps = {
    * the user clicks on the empty grid area (Phase FA6).
    */
   onEmptyPointerDown?: (event: ReactPointerEvent<HTMLElement>) => void;
+  /**
+   * Minimum number of rows the grid must reserve while a mouse drag or
+   * resize is in progress. The grid height is purely intrinsic (driven by
+   * `grid-auto-rows` and the bottom-most card), so without this floor the
+   * grid can shrink under the cursor when the user drags the bottommost
+   * card upward, which in turn shifts `getBoundingClientRect()` and
+   * destabilizes the pointer→cell mapping. The floor is captured from the
+   * snapshot at interaction start and stays constant until release; the
+   * grid is still free to grow beyond it.
+   */
+  interactionMinRows?: number;
 };
 
 export function SheetGrid({
@@ -36,6 +47,7 @@ export function SheetGrid({
   onMetricsChange,
   style,
   onEmptyPointerDown,
+  interactionMinRows,
 }: SheetGridProps) {
   const ref = useRef<HTMLElement | null>(null);
 
@@ -89,7 +101,14 @@ export function SheetGrid({
       ]
         .filter(Boolean)
         .join(" ")}
-      style={style}
+      style={{
+        ...style,
+        ...(interactionMinRows && interactionMinRows > 0
+          ? {
+              minHeight: `calc(${interactionMinRows} * var(--sheet-grid-row-size) + ${interactionMinRows - 1} * ${GRID_GAP_PX}px)`,
+            }
+          : null),
+      }}
       onPointerDown={handlePointerDown}
     >
       {children}

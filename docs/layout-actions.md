@@ -200,6 +200,20 @@ Mouse-driven sources must convert pixel deltas to **cell deltas** before invokin
 
 The engine receives a single `Operation` per discrete change. The engine internally decomposes `dx, dy` into unit steps; the input layer does **not** need to call the engine multiple times.
 
+### Grid height floor during a pointer gesture
+
+The cheatsheet grid has no intrinsic minimum height: its total height is `max(card.y + card.h)` across all blocks. Without intervention, dragging the bottommost card upward would shrink the grid container under the cursor, shifting `getBoundingClientRect()` between frames and destabilizing the pixel-to-cell mapping (the cursor effectively "races" the card northward, accelerating the drag and causing visual jumps).
+
+To prevent this, the renderer freezes a **lower bound on grid rows** for the entire duration of a mouse interaction:
+
+- On `pointerdown`, `useLayoutEditor.startInteraction(kind, blockId)` records `snapshotMaxRow = max(block.y + block.h)` from the snapshot.
+- While `interaction != null`, `<SheetGrid>` applies an inline `min-height: calc(N * var(--sheet-grid-row-size) + (N-1) * 16px)` where `N = snapshotMaxRow`.
+- On `pointerup` / `pointercancel`, the interaction state clears and the `min-height` is removed; the grid is free to shrink back to its intrinsic height.
+
+The floor is captured **once** at gesture start and is **not** updated during the gesture; the grid is still free to grow beyond `N` if the operation pushes blocks further south (the floor is a minimum, not a fixed height). Keyboard mode does not use a floor because it has no pointer-to-cell mapping to protect.
+
+See `src/components/sheets/layout/use-layout-editor.ts` (snapshot capture) and `src/components/sheets/sheet-grid.tsx` (inline style application). Regression coverage: `e2e/layout-grid-freeze.spec.ts`.
+
 ---
 
 ## Session lifecycle
