@@ -118,7 +118,6 @@ type HeadingGroup = {
   cards: CheatSheetCard[];
 };
 
-const LAYOUT_GRID_COLUMNS = GRID_COLUMNS;
 const HEADING_ROW_SPAN = 2;
 
 export function getHeadingGroups(sheet: YamlCheatSheet): HeadingGroup[] {
@@ -167,7 +166,7 @@ export function migrateSectionLayoutsToBlockLayouts(
       kind: "heading",
       colStart: 1,
       rowStart: currentRowOffset,
-      colSpan: LAYOUT_GRID_COLUMNS,
+      colSpan: GRID_COLUMNS,
       rowSpan: HEADING_ROW_SPAN,
     });
 
