@@ -308,7 +308,8 @@ push-south and grow-south operations deterministic).
 1. **Static Generation** — Cheatsheet pages are pre-rendered at build time
 2. **Code Splitting** — Each page loads only necessary components
 3. **localStorage** — Settings load synchronously to avoid flicker
-4. **Debounced Layout** — Grid recalculation is debounced on resize
+4. **Zero-CLS grid sizing** — The sheet grid emits its CSS variables (`--sheet-grid-columns`, `--sheet-grid-column-size`, `--sheet-grid-row-size`) inline during render so the SSR'd HTML already carries the final layout. Cell sizes use a pure-CSS formula based on the grid's own width: column-size via `calc((100% - gaps) / columns)` and row-size via `calc((100cqi - gaps) / columns)` so cells stay square. The `cqi` unit requires the grid to live inside a container with `container-type: inline-size`, which is why `<SheetGrid>` wraps the grid `<section>` in a thin `.dashboardGridContainer` div. The client-side `useEffect` only publishes pixel metrics to the parent (needed for pixel→cell mapping during mouse drag/resize) — it no longer writes any CSS variables, so hydration is a no-op for layout.
+5. **Modern/legacy bundle split** — Turbopack emits a small legacy polyfill chunk (`03~*.js`, ~113 KB, contains `core-js` Map/Array iterator-helper proposals) referenced via `<script noModule>`. Modern browsers (target audience: latest Chrome/Firefox/Safari/Edge) ignore `noModule` scripts entirely, so this chunk is never downloaded on the supported runtime. The chunk size in `.next/static/chunks/` is therefore not a meaningful bundle-budget metric; only the module-graph chunks loaded by the modern path count. A `browserslist` field in `package.json` does not influence this split under Next 16 + Turbopack and was intentionally not added.
 
 ## Security
 
