@@ -261,3 +261,179 @@ describe("createLayoutHistory — source tracking", () => {
     expect(result?.source).toBe("mouse");
   });
 });
+
+/**
+ * Session pins — pin() / restoreTo() / relabelAfter().
+ *
+ * The pin/restore mechanism gives the owner a way to mark a position in the
+ * history (typically the moment a buffered keyboard session starts) and
+ * later either:
+ *  - drop everything pushed after the pin (the user discarded the session),
+ *    via restoreTo(pin); or
+ *  - relabel everything pushed after the pin as a different source (the user
+ *    committed the session, so the keyboard entries are now persisted), via
+ *    relabelAfter(pin, "mouse").
+ *
+ * The pin is opaque to callers. Internally it points to the same entry as the
+ * present at the moment pin() was called.
+ */
+describe("LayoutHistory — pin/restoreTo/relabelAfter", () => {
+  it("pin on an empty history returns a usable cursor and restoreTo is a no-op", () => {
+    const h = createLayoutHistory();
+    const p = h.pin();
+    h.restoreTo(p);
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+
+  it("pin after the initial anchor returns to the anchor on restoreTo", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    h.push(s0, "mouse");
+    const p = h.pin();
+
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s1, "keyboard");
+    h.push(s2, "keyboard");
+
+    h.restoreTo(p);
+
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+    // present remains the anchor; further pushes go on top.
+    const s3 = snap(block("a", 3, 0));
+    h.push(s3, "mouse");
+    expect(h.undo()?.snapshot).toBe(s0);
+  });
+
+  it("restoreTo drops the future as well as entries past the pin", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    const s3 = snap(block("a", 3, 0));
+    h.push(s0, "mouse");
+    const p = h.pin();
+    h.push(s1, "keyboard");
+    h.push(s2, "keyboard");
+    h.push(s3, "keyboard");
+    h.undo(); // present=s2, future=[s3]
+
+    h.restoreTo(p);
+
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+  });
+
+  it("restoreTo with no pushes after the pin is a no-op", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    const s1 = snap(block("a", 1, 0));
+    h.push(s0, "mouse");
+    h.push(s1, "mouse");
+    const p = h.pin();
+
+    h.restoreTo(p);
+
+    expect(h.size()).toEqual({ past: 1, future: 0 });
+    expect(h.canUndo()).toBe(true);
+    expect(h.undo()?.snapshot).toBe(s0);
+  });
+
+  it("relabelAfter changes the source of entries pushed after the pin (inclusive of present)", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    h.push(s0, "mouse");
+    const p = h.pin();
+
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s1, "keyboard");
+    h.push(s2, "keyboard");
+
+    h.relabelAfter(p, "mouse");
+
+    expect(h.undo()?.source).toBe("mouse"); // was keyboard for s1
+    expect(h.undo()?.source).toBe("mouse"); // s0, untouched (was already mouse)
+  });
+
+  it("relabelAfter leaves entries before the pin untouched", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    h.push(s0, "keyboard");
+    const p = h.pin();
+
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s1, "keyboard");
+    h.push(s2, "keyboard");
+
+    h.relabelAfter(p, "mouse");
+
+    expect(h.undo()?.source).toBe("mouse"); // s1, relabelled
+    expect(h.undo()?.source).toBe("keyboard"); // s0, before the pin
+  });
+
+  it("relabelAfter with no pushes after the pin is a no-op", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    h.push(s0, "keyboard");
+    const p = h.pin();
+
+    h.relabelAfter(p, "mouse");
+
+    // The present is the pinned entry itself: relabelAfter must NOT touch it.
+    // Pushing again then undoing brings s0 back unchanged.
+    h.push(snap(block("a", 1, 0)), "keyboard");
+    expect(h.undo()?.source).toBe("keyboard");
+  });
+
+  it("pin survives undo/redo cycles within the post-pin range", () => {
+    const h = createLayoutHistory();
+    const s0 = snap(block("a", 0, 0));
+    h.push(s0, "mouse");
+    const p = h.pin();
+
+    const s1 = snap(block("a", 1, 0));
+    const s2 = snap(block("a", 2, 0));
+    h.push(s1, "keyboard");
+    h.push(s2, "keyboard");
+    h.undo(); // present=s1, future=[s2]
+    h.undo(); // present=s0, future=[s1,s2]
+    h.redo(); // present=s1, future=[s2]
+
+    h.restoreTo(p);
+
+    expect(h.size()).toEqual({ past: 0, future: 0 });
+    expect(h.canUndo()).toBe(false);
+    expect(h.canRedo()).toBe(false);
+  });
+
+  it("throws when the pinned entry has been dropped by capacity", () => {
+    const h = createLayoutHistory({ capacity: 2 });
+    const s0 = snap(block("a", 0, 0));
+    h.push(s0, "mouse");
+    const p = h.pin();
+    // Push more than capacity allows so that s0 falls out of past.
+    h.push(snap(block("a", 1, 0)), "mouse");
+    h.push(snap(block("a", 2, 0)), "mouse");
+    h.push(snap(block("a", 3, 0)), "mouse");
+
+    expect(() => h.restoreTo(p)).toThrow(/pin.*invalid/i);
+    expect(() => h.relabelAfter(p, "mouse")).toThrow(/pin.*invalid/i);
+  });
+
+  it("throws when used after clear()", () => {
+    const h = createLayoutHistory();
+    h.push(snap(block("a", 0, 0)), "mouse");
+    const p = h.pin();
+    h.clear();
+
+    expect(() => h.restoreTo(p)).toThrow(/pin.*invalid/i);
+    expect(() => h.relabelAfter(p, "mouse")).toThrow(/pin.*invalid/i);
+  });
+});
