@@ -17,10 +17,15 @@
  *     steps along the geometric path between current and target footprints.
  *   - `resize` advances one edge by one cell.
  *
- * Cache semantics (see docs/layout-engine.md, future "Session cache" section):
+ * Cache semantics (see docs/layout-engine.md, "Session cache"):
  *   - The key is the primary's full footprint `${id}:${x}:${y}:${w}:${h}`.
- *   - On cache hit: restore the cached snapshot of the entire working set.
- *   - On cache miss: run the unit resolution and store the resulting snapshot.
+ *   - Before each unit step, the current state is recorded under the primary's
+ *     current footprint (idempotent).
+ *   - If the step's target footprint is already cached, the cached snapshot
+ *     is restored and a `session.restore` event is emitted instead of
+ *     recomputing the resolution.
+ *   - Otherwise the step runs normally and its resulting state is cached on
+ *     the next iteration when the primary sits on the new footprint.
  *
  * The legacy stateless `applyOperation(blocks, op, options)` is a thin wrapper
  * around an ephemeral EngineSession; see engine.ts.
@@ -138,6 +143,11 @@ const makeEmit =
 const findPrimary = (blocks: readonly LayoutBlock[], id: string): LayoutBlock | undefined =>
   blocks.find((b) => b.id === id);
 
+const footprintKey = (
+  primaryId: string,
+  footprint: { x: number; y: number; w: number; h: number }
+): string => `${primaryId}:${footprint.x}:${footprint.y}:${footprint.w}:${footprint.h}`;
+
 // -----------------------------------------------------------------------------
 // Factory
 // -----------------------------------------------------------------------------
@@ -158,13 +168,35 @@ export function createEngineSession(
   const gridColumns = options.gridColumns;
 
   // stepIndex is a session-wide monotonic counter, incremented on every
-  // unit-step attempt (accepted or rejected).
+  // unit-step attempt (accepted, rejected, or restored from cache).
   let stepIndex = 0;
+
+  // Snapshot cache: key = footprint of the primary, value = clone of the
+  // entire working set at the moment the primary sat on that footprint.
+  const cache = new Map<string, LayoutBlock[]>();
 
   const ensureOpen = (action: string): void => {
     if (closed) {
       throw new Error(`EngineSession: cannot ${action} after commit/cancel`);
     }
+  };
+
+  // Cache the current working state under the primary's current footprint,
+  // unless an entry for that footprint already exists. Idempotent.
+  const cacheCurrent = (primaryId: string): void => {
+    const primary = findPrimary(working, primaryId);
+    if (!primary) return;
+    const key = footprintKey(primaryId, primary.position);
+    if (!cache.has(key)) {
+      cache.set(key, cloneBlocks(working));
+    }
+  };
+
+  // Replace `working` in place with a clone of `snapshot`. Mutates the same
+  // array reference so that StepContext.blocks consumers stay coherent.
+  const restoreSnapshot = (snapshot: readonly LayoutBlock[]): void => {
+    working.length = 0;
+    for (const b of cloneBlocks(snapshot)) working.push(b);
   };
 
   const makeContext = (primaryId: string): StepContext => ({
@@ -179,7 +211,57 @@ export function createEngineSession(
     stepIndex,
   });
 
+  // Translate a footprint by one unit in the given direction.
+  const translateFootprint = (
+    footprint: { x: number; y: number; w: number; h: number },
+    direction: Direction
+  ): { x: number; y: number; w: number; h: number } => {
+    switch (direction) {
+      case "north":
+        return { ...footprint, y: footprint.y - 1 };
+      case "south":
+        return { ...footprint, y: footprint.y + 1 };
+      case "east":
+        return { ...footprint, x: footprint.x + 1 };
+      case "west":
+        return { ...footprint, x: footprint.x - 1 };
+    }
+  };
+
   const runMoveStep = (primaryId: string, direction: Direction): StepOutcome => {
+    const primary = findPrimary(working, primaryId);
+    if (!primary) {
+      throw new Error(`EngineSession.step: primary "${primaryId}" not found`);
+    }
+
+    // Record the current state before any mutation so we can return here later.
+    cacheCurrent(primaryId);
+
+    // Cache hit on the projected target footprint? Restore and emit.
+    const target = translateFootprint(primary.position, direction);
+    const targetKey = footprintKey(primaryId, target);
+    const cached = cache.get(targetKey);
+    if (cached) {
+      restoreSnapshot(cached);
+      emit({
+        type: "session.restore",
+        opId,
+        stepIndex,
+        primaryId,
+        cacheKey: targetKey,
+      });
+      stepIndex += 1;
+      return {
+        accepted: true,
+        affected: {
+          moved: new Set(),
+          shrunk: new Map(),
+          wrapped: new Set(),
+        },
+      };
+    }
+
+    // Cache miss: run the resolution normally.
     const ctx = makeContext(primaryId);
     emit({ type: "step.start", opId, stepIndex, direction });
     const result = resolveMoveStep(ctx, direction);
@@ -189,6 +271,56 @@ export function createEngineSession(
   };
 
   const runResizeStep = (primaryId: string, edge: Direction, sign: 1 | -1): StepOutcome => {
+    const primary = findPrimary(working, primaryId);
+    if (!primary) {
+      throw new Error(`EngineSession.resize: primary "${primaryId}" not found`);
+    }
+
+    cacheCurrent(primaryId);
+
+    // For resize, the target footprint depends on the edge + sign:
+    // grow east → w+1; shrink east → w-1; grow north → y-1, h+1; etc.
+    const targetFootprint = ((): {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    } => {
+      const p = primary.position;
+      switch (edge) {
+        case "east":
+          return { ...p, w: p.w + sign };
+        case "west":
+          return { ...p, x: p.x - sign, w: p.w + sign };
+        case "south":
+          return { ...p, h: p.h + sign };
+        case "north":
+          return { ...p, y: p.y - sign, h: p.h + sign };
+      }
+    })();
+
+    const targetKey = footprintKey(primaryId, targetFootprint);
+    const cached = cache.get(targetKey);
+    if (cached) {
+      restoreSnapshot(cached);
+      emit({
+        type: "session.restore",
+        opId,
+        stepIndex,
+        primaryId,
+        cacheKey: targetKey,
+      });
+      stepIndex += 1;
+      return {
+        accepted: true,
+        affected: {
+          moved: new Set(),
+          shrunk: new Map(),
+          wrapped: new Set(),
+        },
+      };
+    }
+
     const ctx = makeContext(primaryId);
     emit({ type: "step.start", opId, stepIndex, direction: edge });
     const result = resolveResizeStep(ctx, edge, sign);

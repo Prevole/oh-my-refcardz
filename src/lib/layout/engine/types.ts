@@ -217,6 +217,21 @@ export type EngineEvent =
       stepIndex: number;
       blockId: string;
       reason: string;
+    }
+  | {
+      /**
+       * Emitted by EngineSession when a step would land the primary on a
+       * footprint already seen during the session: instead of recomputing
+       * the resolution, the cached snapshot for that footprint is restored.
+       *
+       * `cacheKey` is the unique identifier of the restored snapshot
+       * (`${primaryId}:${x}:${y}:${w}:${h}`).
+       */
+      type: "session.restore";
+      opId: string;
+      stepIndex: number;
+      primaryId: string;
+      cacheKey: string;
     };
 
 export type EngineEventType = EngineEvent["type"];
