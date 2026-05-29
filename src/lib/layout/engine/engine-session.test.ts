@@ -625,3 +625,56 @@ describe("createEngineSession — setOperationOptions", () => {
     );
   });
 });
+
+// -----------------------------------------------------------------------------
+// Emitter provider
+// -----------------------------------------------------------------------------
+
+describe("createEngineSession — emitterProvider", () => {
+  it("invokes the provider on every emission so the current emitter is used", () => {
+    const blocks = [block("a", 0, 0), block("b", 5, 0)];
+    const r1 = recordingEmitter();
+    const r2 = recordingEmitter();
+    let current: EngineEventEmitter | undefined = r1.emitter;
+
+    const session = createEngineSession(blocks, {
+      gridColumns: 10,
+      constraints: constraintsFor(blocks),
+      emitterProvider: () => current,
+    });
+
+    session.step({ blockId: "a", direction: "east" });
+    expect(r1.events.length).toBeGreaterThan(0);
+    expect(r2.events.length).toBe(0);
+
+    // Swap the live emitter mid-session.
+    const r1Count = r1.events.length;
+    current = r2.emitter;
+    session.step({ blockId: "a", direction: "east" });
+    expect(r1.events.length).toBe(r1Count);
+    expect(r2.events.length).toBeGreaterThan(0);
+
+    // Drop the emitter entirely: events are silently discarded.
+    const r2Count = r2.events.length;
+    current = undefined;
+    session.step({ blockId: "a", direction: "east" });
+    expect(r2.events.length).toBe(r2Count);
+  });
+
+  it("takes precedence over the static emitter when both are provided", () => {
+    const blocks = [block("a", 0, 0)];
+    const staticRec = recordingEmitter();
+    const providerRec = recordingEmitter();
+
+    const session = createEngineSession(blocks, {
+      gridColumns: 10,
+      constraints: constraintsFor(blocks),
+      emitter: staticRec.emitter,
+      emitterProvider: () => providerRec.emitter,
+    });
+
+    session.step({ blockId: "a", direction: "east" });
+    expect(providerRec.events.length).toBeGreaterThan(0);
+    expect(staticRec.events.length).toBe(0);
+  });
+});

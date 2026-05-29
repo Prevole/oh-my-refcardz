@@ -53,6 +53,14 @@ export type EngineSessionOptions = EngineOptions & {
    * Defaults to { allowWrap: true, allowShrink: true, compact: false }.
    */
   operationOptions?: OperationOptions;
+  /**
+   * Optional dynamic emitter resolver. When provided, it is invoked on every
+   * event emission and takes precedence over the static `emitter` field. This
+   * is the right knob when the session's lifetime can outlive the emitter
+   * instance (e.g. a debug recorder that starts or stops mid-session). The
+   * function may return `undefined` to drop the event silently.
+   */
+  emitterProvider?: () => EngineEventEmitter | undefined;
 };
 
 export type StepInput = {
@@ -141,9 +149,16 @@ const generateOpId = (): string =>
   `op-${Date.now().toString(36)}-${Math.floor(Math.random() * 1_000_000).toString(36)}`;
 
 const makeEmit =
-  (emitter: EngineEventEmitter | undefined) =>
+  (
+    staticEmitter: EngineEventEmitter | undefined,
+    provider: (() => EngineEventEmitter | undefined) | undefined
+  ) =>
   (event: EngineEvent): void => {
-    if (emitter) emitter.emit(event);
+    // Provider takes precedence so callers whose emitter reference may change
+    // mid-session (e.g. a debug recorder being toggled while a keyboard
+    // session is open) can still route events to the current target.
+    const target = provider ? provider() : staticEmitter;
+    if (target) target.emit(event);
   };
 
 const findPrimary = (blocks: readonly LayoutBlock[], id: string): LayoutBlock | undefined =>
@@ -167,7 +182,7 @@ export function createEngineSession(
   let closed = false;
 
   const opId = options.opId ?? generateOpId();
-  const emit = makeEmit(options.emitter);
+  const emit = makeEmit(options.emitter, options.emitterProvider);
   const operationOptions: Required<OperationOptions> = resolveOperationOptions(
     options.operationOptions
   );
