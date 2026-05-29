@@ -1,14 +1,18 @@
 /**
  * Engine orchestrator: `applyOperation`.
  *
- * Decomposes an Operation into ordered unit steps (vertical-first for moves),
- * runs `resolveMoveStep` / `resolveResizeStep` for each, and aggregates results.
+ * Stateless facade over EngineSession. Decomposes a multi-cell Operation into
+ * an ordered sequence of unit steps and feeds them to an ephemeral session.
+ *
+ * The decomposition for `move` operations is vertical-first (all dy steps
+ * before all dx steps). This legacy order is preserved here intentionally;
+ * `EngineSession.moveTo` uses a different (dominant-axis-greedy) decomposition
+ * that will replace this one in a later step.
  *
  * See docs/layout-engine.md, "Resolution pipeline".
  */
 
-import { createSessionMemory } from "./session";
-import { resolveMoveStep, resolveResizeStep, type StepContext } from "./step";
+import { createEngineSession } from "./engine-session";
 import type {
   Direction,
   EngineEvent,
@@ -16,7 +20,6 @@ import type {
   EngineOptions,
   LayoutBlock,
   Operation,
-  OperationOptions,
   OperationResult,
 } from "./types";
 
@@ -27,20 +30,6 @@ import type {
 const cloneBlocks = (blocks: readonly LayoutBlock[]): LayoutBlock[] =>
   blocks.map((b) => ({ id: b.id, kind: b.kind, position: { ...b.position } }));
 
-const defaultOptions: Required<OperationOptions> = {
-  allowWrap: true,
-  allowShrink: true,
-  compact: false,
-};
-
-const resolveOperationOptions = (
-  options: OperationOptions | undefined
-): Required<OperationOptions> => ({
-  allowWrap: options?.allowWrap ?? defaultOptions.allowWrap,
-  allowShrink: options?.allowShrink ?? defaultOptions.allowShrink,
-  compact: options?.compact ?? defaultOptions.compact,
-});
-
 const generateOpId = (): string =>
   `op-${Date.now().toString(36)}-${Math.floor(Math.random() * 1_000_000).toString(36)}`;
 
@@ -50,6 +39,13 @@ const makeEmit =
     if (emitter) emitter.emit(event);
   };
 
+/**
+ * Vertical-first decomposition of a (dx, dy) move into unit directions.
+ *
+ * TODO(step 2): remove this in favor of `EngineSession.moveTo` (dominant-axis
+ * greedy), which produces interleaved sequences that avoid transient-only
+ * collisions during diagonal moves.
+ */
 const directionsForMove = (dx: number, dy: number): Direction[] => {
   const steps: Direction[] = [];
   // Vertical first.
@@ -77,30 +73,16 @@ export function applyOperation(
 
   const opId = options.opId ?? generateOpId();
   const emit = makeEmit(options.emitter);
-  const operationOptions = resolveOperationOptions(operation.options);
-
-  // Working copy: mutations stay local until we return.
-  const working = cloneBlocks(blocks);
   const initial = cloneBlocks(blocks);
 
-  // Session memory captures sizes at session.start time.
-  const session = createSessionMemory(working);
-
-  // Detect immediate no-op (move with dx=0, dy=0).
-  if (operation.kind === "move" && operation.dx === 0 && operation.dy === 0) {
-    emit({ type: "session.start", opId, operation, initial });
-    emit({ type: "session.end", opId, accepted: false, final: cloneBlocks(working) });
-    return {
-      blocks: working,
-      accepted: false,
-      appliedDx: 0,
-      appliedDy: 0,
-      appliedDelta: 0,
-      affected: { moved: new Set(), shrunk: new Map(), wrapped: new Set() },
-      rejected: { reason: "no-op" },
-    };
-  }
-  if (operation.kind === "resize" && operation.delta === 0) {
+  // No-op detection: emit a paired session.start / session.end with
+  // accepted=false and reason="no-op". This matches the pre-session behavior
+  // expected by existing call sites and tests.
+  const isMoveNoop =
+    operation.kind === "move" && operation.dx === 0 && operation.dy === 0;
+  const isResizeNoop = operation.kind === "resize" && operation.delta === 0;
+  if (isMoveNoop || isResizeNoop) {
+    const working = cloneBlocks(blocks);
     emit({ type: "session.start", opId, operation, initial });
     emit({ type: "session.end", opId, accepted: false, final: cloneBlocks(working) });
     return {
@@ -116,7 +98,15 @@ export function applyOperation(
 
   emit({ type: "session.start", opId, operation, initial });
 
-  // Build the step program.
+  // Open an ephemeral session. The session owns its own working copy and
+  // forwards step.start / step.end / block.* events to the same emitter.
+  const session = createEngineSession(blocks, {
+    ...options,
+    opId,
+    operationOptions: operation.options,
+  });
+
+  // Build the unit-step program.
   const stepDirections: Direction[] =
     operation.kind === "move"
       ? directionsForMove(operation.dx, operation.dy)
@@ -124,6 +114,8 @@ export function applyOperation(
           { length: Math.abs(operation.delta) },
           () => operation.edge
         );
+  const resizeDir: "grow" | "shrink" =
+    operation.kind === "resize" && operation.delta < 0 ? "shrink" : "grow";
 
   // Aggregated result accumulators.
   const moved = new Set<string>();
@@ -135,32 +127,16 @@ export function applyOperation(
   let anyAccepted = false;
   let rejectionReason: string | undefined;
 
-  const resizeStepSign = operation.kind === "resize" ? Math.sign(operation.delta) : 0;
-
   // Run steps in order, aborting on first rejection.
-  for (let stepIndex = 0; stepIndex < stepDirections.length; stepIndex++) {
-    const direction = stepDirections[stepIndex];
-
-    emit({ type: "step.start", opId, stepIndex, direction });
-
-    const ctx: StepContext = {
-      blocks: working,
-      primaryId: operation.blockId,
-      gridColumns: options.gridColumns,
-      constraints: options.constraints,
-      options: operationOptions,
-      session,
-      emit,
-      opId,
-      stepIndex,
-    };
-
+  for (const direction of stepDirections) {
     const stepResult =
       operation.kind === "move"
-        ? resolveMoveStep(ctx, direction)
-        : resolveResizeStep(ctx, direction, resizeStepSign);
-
-    emit({ type: "step.end", opId, stepIndex, accepted: stepResult.accepted });
+        ? session.step({ blockId: operation.blockId, direction })
+        : session.resize({
+            blockId: operation.blockId,
+            edge: operation.edge,
+            direction: resizeDir,
+          });
 
     if (!stepResult.accepted) {
       /* c8 ignore next -- defensive: every step rejection carries a reason */
@@ -184,15 +160,15 @@ export function applyOperation(
       else if (direction === "east") appliedDx += 1;
       else if (direction === "west") appliedDx -= 1;
     } else {
-      appliedDelta += resizeStepSign;
+      appliedDelta += resizeDir === "grow" ? 1 : -1;
     }
   }
 
-  const final = cloneBlocks(working);
-  emit({ type: "session.end", opId, accepted: anyAccepted, final });
+  const final = session.commit();
+  emit({ type: "session.end", opId, accepted: anyAccepted, final: cloneBlocks(final) });
 
   const result: OperationResult = {
-    blocks: working,
+    blocks: final,
     accepted: anyAccepted,
     appliedDx,
     appliedDy,
