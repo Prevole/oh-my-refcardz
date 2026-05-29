@@ -1,20 +1,24 @@
 /**
  * Engine orchestrator: `applyOperation`.
  *
- * Stateless facade over EngineSession. Decomposes a multi-cell Operation into
- * an ordered sequence of unit steps and feeds them to an ephemeral session.
+ * Stateless facade over EngineSession. Opens an ephemeral session for the
+ * duration of a single Operation, decomposes the operation into unit steps,
+ * and returns the aggregated OperationResult.
  *
- * The decomposition for `move` operations is vertical-first (all dy steps
- * before all dx steps). This legacy order is preserved here intentionally;
- * `EngineSession.moveTo` uses a different (dominant-axis-greedy) decomposition
- * that will replace this one in a later step.
+ * Move decomposition is dominant-axis greedy (see EngineSession.moveTo): at
+ * each iteration, the axis with the larger remaining displacement is stepped
+ * first. This avoids transient-only collisions that the previous
+ * vertical-first decomposition could trigger on diagonal moves.
+ *
+ * Partial-progress semantics: when a unit step is rejected mid-operation,
+ * the loop stops but the accepted steps are kept (the working set reflects
+ * the partial result). `accepted` is true if at least one step succeeded.
  *
  * See docs/layout-engine.md, "Resolution pipeline".
  */
 
 import { createEngineSession } from "./engine-session";
 import type {
-  Direction,
   EngineEvent,
   EngineEventEmitter,
   EngineOptions,
@@ -38,24 +42,6 @@ const makeEmit =
   (event: EngineEvent): void => {
     if (emitter) emitter.emit(event);
   };
-
-/**
- * Vertical-first decomposition of a (dx, dy) move into unit directions.
- *
- * TODO(step 2): remove this in favor of `EngineSession.moveTo` (dominant-axis
- * greedy), which produces interleaved sequences that avoid transient-only
- * collisions during diagonal moves.
- */
-const directionsForMove = (dx: number, dy: number): Direction[] => {
-  const steps: Direction[] = [];
-  // Vertical first.
-  const vDir: Direction = dy < 0 ? "north" : "south";
-  for (let i = 0; i < Math.abs(dy); i++) steps.push(vDir);
-  // Horizontal second.
-  const hDir: Direction = dx < 0 ? "west" : "east";
-  for (let i = 0; i < Math.abs(dx); i++) steps.push(hDir);
-  return steps;
-};
 
 // -----------------------------------------------------------------------------
 // Public API
@@ -106,17 +92,6 @@ export function applyOperation(
     operationOptions: operation.options,
   });
 
-  // Build the unit-step program.
-  const stepDirections: Direction[] =
-    operation.kind === "move"
-      ? directionsForMove(operation.dx, operation.dy)
-      : Array.from(
-          { length: Math.abs(operation.delta) },
-          () => operation.edge
-        );
-  const resizeDir: "grow" | "shrink" =
-    operation.kind === "resize" && operation.delta < 0 ? "shrink" : "grow";
-
   // Aggregated result accumulators.
   const moved = new Set<string>();
   const shrunk = new Map<string, { w: number; h: number }>();
@@ -127,39 +102,49 @@ export function applyOperation(
   let anyAccepted = false;
   let rejectionReason: string | undefined;
 
-  // Run steps in order, aborting on first rejection.
-  for (const direction of stepDirections) {
-    const stepResult =
-      operation.kind === "move"
-        ? session.step({ blockId: operation.blockId, direction })
-        : session.resize({
-            blockId: operation.blockId,
-            edge: operation.edge,
-            direction: resizeDir,
-          });
-
-    if (!stepResult.accepted) {
-      /* c8 ignore next -- defensive: every step rejection carries a reason */
-      rejectionReason = stepResult.reason ?? "step-rejected";
-      break;
+  if (operation.kind === "move") {
+    // Dominant-axis greedy decomposition (see EngineSession.moveTo).
+    // Stops at the first rejected step but keeps the accepted progress.
+    const primaryPos = primary.position;
+    const outcome = session.moveTo({
+      blockId: operation.blockId,
+      x: primaryPos.x + operation.dx,
+      y: primaryPos.y + operation.dy,
+    });
+    anyAccepted = outcome.stepsApplied > 0;
+    if (!outcome.reachedTarget && outcome.stepsApplied < Math.abs(operation.dx) + Math.abs(operation.dy)) {
+      rejectionReason = "step-rejected";
     }
-
-    anyAccepted = true;
-
-    // Aggregate affected.
-    for (const id of stepResult.affected.moved) moved.add(id);
-    for (const [id, size] of stepResult.affected.shrunk) {
-      if (!shrunk.has(id)) shrunk.set(id, size);
-    }
-    for (const id of stepResult.affected.wrapped) wrapped.add(id);
-
-    // Update applied deltas.
-    if (operation.kind === "move") {
-      if (direction === "north") appliedDy -= 1;
-      else if (direction === "south") appliedDy += 1;
-      else if (direction === "east") appliedDx += 1;
-      else if (direction === "west") appliedDx -= 1;
-    } else {
+    // Recompute applied dx/dy from final position vs starting position.
+    const finalPrimary = session
+      .getCurrentBlocks()
+      .find((b) => b.id === operation.blockId)!;
+    appliedDx = finalPrimary.position.x - primaryPos.x;
+    appliedDy = finalPrimary.position.y - primaryPos.y;
+    for (const id of outcome.affected.moved) moved.add(id);
+    for (const [id, size] of outcome.affected.shrunk) shrunk.set(id, size);
+    for (const id of outcome.affected.wrapped) wrapped.add(id);
+  } else {
+    // Resize: one unit step per |delta|, stop on first rejection.
+    const resizeDir: "grow" | "shrink" = operation.delta < 0 ? "shrink" : "grow";
+    const totalSteps = Math.abs(operation.delta);
+    for (let i = 0; i < totalSteps; i++) {
+      const stepResult = session.resize({
+        blockId: operation.blockId,
+        edge: operation.edge,
+        direction: resizeDir,
+      });
+      if (!stepResult.accepted) {
+        /* c8 ignore next -- defensive: every step rejection carries a reason */
+        rejectionReason = stepResult.reason ?? "step-rejected";
+        break;
+      }
+      anyAccepted = true;
+      for (const id of stepResult.affected.moved) moved.add(id);
+      for (const [id, size] of stepResult.affected.shrunk) {
+        if (!shrunk.has(id)) shrunk.set(id, size);
+      }
+      for (const id of stepResult.affected.wrapped) wrapped.add(id);
       appliedDelta += resizeDir === "grow" ? 1 : -1;
     }
   }

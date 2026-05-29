@@ -174,15 +174,17 @@ describe("applyOperation — 3.9.2 session lifecycle", () => {
 });
 
 // -----------------------------------------------------------------------------
-// 3.9.3 — Vertical-first decomposition
+// 3.9.3 — Dominant-axis greedy decomposition
 // -----------------------------------------------------------------------------
 
 describe("applyOperation — 3.9.3 decomposition", () => {
-  it("decomposes a diagonal move into vertical steps then horizontal steps", () => {
+  it("decomposes a diagonal move into interleaved steps along the dominant axis", () => {
     const blocks = [block("a", 0, 0)];
     const { listener, events } = captureEvents();
     const emitter = { emit: listener, on: vi.fn() };
-    // dx=2, dy=2 → expect 2 south then 2 east.
+    // dx=2, dy=2 → equal magnitudes. With dominant-axis greedy and the tie
+    // rule (|dx| >= |dy| → horizontal), the sequence alternates starting
+    // with east: east, south, east, south.
     const op: Operation = { kind: "move", blockId: "a", dx: 2, dy: 2 };
 
     applyOperation(blocks, op, makeOptions(blocks, emitter));
@@ -195,10 +197,10 @@ describe("applyOperation — 3.9.3 decomposition", () => {
       stepStarts[2].type === "step.start" &&
       stepStarts[3].type === "step.start"
     ) {
-      expect(stepStarts[0].direction).toBe("south");
+      expect(stepStarts[0].direction).toBe("east");
       expect(stepStarts[1].direction).toBe("south");
       expect(stepStarts[2].direction).toBe("east");
-      expect(stepStarts[3].direction).toBe("east");
+      expect(stepStarts[3].direction).toBe("south");
     }
   });
 
@@ -206,6 +208,8 @@ describe("applyOperation — 3.9.3 decomposition", () => {
     const blocks = [block("a", 4, 4)];
     const { listener, events } = captureEvents();
     const emitter = { emit: listener, on: vi.fn() };
+    // dx=-1, dy=-1 → equal magnitudes; horizontal wins the tie → west first,
+    // then north.
     const op: Operation = { kind: "move", blockId: "a", dx: -1, dy: -1 };
 
     applyOperation(blocks, op, makeOptions(blocks, emitter));
@@ -213,7 +217,7 @@ describe("applyOperation — 3.9.3 decomposition", () => {
     const dirs = events
       .filter((e) => e.type === "step.start")
       .map((e) => (e.type === "step.start" ? e.direction : null));
-    expect(dirs).toEqual(["north", "west"]);
+    expect(dirs).toEqual(["west", "north"]);
   });
 
   it("applies the cumulative displacement to the primary", () => {
@@ -321,18 +325,20 @@ describe("applyOperation — 3.9.5 abort on rejection", () => {
     expect(a.position.x).toBe(9);
   });
 
-  it("vertical failure does not block horizontal phase", () => {
-    // Primary at north edge: y=0, dy=-1 must be rejected.
-    // Then dx=1 should still apply (the contract aborts the whole op on step
-    // rejection; this test confirms the abort behavior matches the contract).
+  it("keeps partial progress when a step is rejected mid-operation", () => {
+    // Primary at the north edge (y=0) with dx=1, dy=-1.
+    // Dominant-axis greedy with tie → horizontal first: east (accepted),
+    // then north (rejected, against grid edge).
+    // Partial-progress semantics: appliedDx=1, appliedDy=0, accepted=true.
     const blocks = [block("a", 0, 0)];
     const op: Operation = { kind: "move", blockId: "a", dx: 1, dy: -1 };
     const result = applyOperation(blocks, op, makeOptions(blocks));
 
-    // Per contract: abort on step rejection. So no horizontal progress.
+    expect(result.accepted).toBe(true);
+    expect(result.appliedDx).toBe(1);
     expect(result.appliedDy).toBe(0);
-    expect(result.appliedDx).toBe(0);
-    expect(result.accepted).toBe(false);
+    const a = result.blocks.find((b) => b.id === "a")!;
+    expect(a.position).toEqual({ x: 1, y: 0, w: 1, h: 1 });
   });
 });
 
