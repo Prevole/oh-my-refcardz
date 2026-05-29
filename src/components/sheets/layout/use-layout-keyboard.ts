@@ -43,7 +43,7 @@ import { useKeybindings } from "@/hooks/use-keybindings";
 import { debugRecorder } from "@/lib/dev-mode";
 import { getBlockConstraintsV2 } from "@/lib/layout/blocks";
 import type { UseLayoutEditorResult } from "./use-layout-editor";
-import type { UseLayoutBufferStateResult } from "./use-layout-buffer-state";
+import type { UseLayoutBufferStateResult, SessionContext } from "./use-layout-buffer-state";
 
 export type LayoutSubMode = "navigation" | "move" | "resize";
 
@@ -446,11 +446,31 @@ export function useLayoutKeyboard({
   useKeyboardScope("layout-move", mode === "move");
   useKeyboardScope("layout-resize", mode === "resize");
 
+  const buildSessionContext = useCallback(
+    (sourceBlocks: readonly LayoutBlock[]): SessionContext => {
+      const constraints = new Map<string, BlockConstraints>();
+      for (const b of sourceBlocks) {
+        constraints.set(b.id, getBlockConstraintsV2(b.kind));
+      }
+      return {
+        gridColumns,
+        constraints,
+        // Use a provider so the recorder's emitter can be swapped mid-session
+        // (start/stop a recording while the keyboard mode is open).
+        emitterProvider: () => debugRecorder.getEngineEmitter(),
+      };
+    },
+    [gridColumns],
+  );
+
   const enterMode = useCallback(() => {
     setMode("navigation");
     // Start a buffered session rooted at the currently committed layout.
     // All keyboard ops will land in the buffer until commit or exit.
-    bufferState.start(editor.committedBlocks);
+    bufferState.start(
+      editor.committedBlocks,
+      buildSessionContext(editor.committedBlocks),
+    );
     // Pin the history at the session boundary so a later discard can drop
     // exactly the entries pushed in between (and a commit can relabel
     // them as persisted).
@@ -472,7 +492,7 @@ export function useLayoutKeyboard({
       const id = closest ?? pickTopLeftBlock(blocks);
       return id ? { blockId: id } : null;
     });
-  }, [bufferState, editor.committedBlocks]);
+  }, [bufferState, buildSessionContext, editor.committedBlocks]);
 
   const commitMode = useCallback(() => {
     const blocks = bufferState.commit();
@@ -608,21 +628,6 @@ export function useLayoutKeyboard({
 
   /* ---------------- move ---------------- */
 
-  const buildApplyContext = useCallback(
-    (sourceBlocks: readonly LayoutBlock[]) => {
-      const constraints = new Map<string, BlockConstraints>();
-      for (const b of sourceBlocks) {
-        constraints.set(b.id, getBlockConstraintsV2(b.kind));
-      }
-      return {
-        gridColumns,
-        constraints,
-        emitter: debugRecorder.getEngineEmitter(),
-      };
-    },
-    [gridColumns]
-  );
-
   const submitMove = useCallback(
     (actionId: string) => {
       const spec = moveSpecFromAction(actionId);
@@ -630,13 +635,13 @@ export function useLayoutKeyboard({
       const target = focusedCard?.blockId ?? pickTopLeftBlock(blocksRef.current);
       if (!target) return;
       const op = buildMoveOperation(target, spec);
-      const outcome = bufferState.apply(op, buildApplyContext(blocksRef.current));
+      const outcome = bufferState.apply(op);
       if (outcome?.changed) {
         onKeyboardMutationRef.current?.(outcome.blocks);
       }
       flashManipulating();
     },
-    [bufferState, buildApplyContext, focusedCard, flashManipulating]
+    [bufferState, focusedCard, flashManipulating]
   );
 
   useAction(ACTION_IDS.LAYOUT_MOVE_LEFT, "layout-move", () => submitMove(ACTION_IDS.LAYOUT_MOVE_LEFT));
@@ -657,13 +662,13 @@ export function useLayoutKeyboard({
       const target = focusedCard?.blockId ?? pickTopLeftBlock(blocksRef.current);
       if (!target) return;
       const op = buildResizeOperation(target, spec);
-      const outcome = bufferState.apply(op, buildApplyContext(blocksRef.current));
+      const outcome = bufferState.apply(op);
       if (outcome?.changed) {
         onKeyboardMutationRef.current?.(outcome.blocks);
       }
       flashManipulating();
     },
-    [bufferState, buildApplyContext, focusedCard, flashManipulating]
+    [bufferState, focusedCard, flashManipulating]
   );
 
   useAction(ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT, "layout-resize", () => submitResize(ACTION_IDS.LAYOUT_RESIZE_GROW_LEFT));

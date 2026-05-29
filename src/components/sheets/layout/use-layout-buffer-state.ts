@@ -1,79 +1,39 @@
 "use client";
 
 /**
- * React state wrapper around the pure `layout-buffer` module.
+ * Thin React shell around `keyboard-session.ts`.
  *
- * Owns a single `LayoutBuffer | null` cell and exposes a small action
- * surface (`start`, `apply`, `commit`, `clear`) that mirrors the pure
- * API while integrating with React rendering. This hook is the single
- * source of truth for the buffered keyboard layout session — both the
- * keyboard hook (which applies operations) and the sheet renderer
- * (which displays the staged blocks) consume the same instance.
+ * Holds a single `KeyboardSession | null` instance behind a ref and surfaces
+ * its state (`bufferBlocks`, `changesCount`, `isActive`) into React state so
+ * components re-render on mutation. All semantics — change counting, undo
+ * deltas, no-op detection — live in the pure module and are tested there.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { LayoutBlock, Operation } from "@/lib/layout/engine";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  applyToBuffer,
-  commitBuffer,
-  createBuffer,
-  replaceBufferContents,
-  resetBuffer,
-  type ApplyContext,
-  type ApplyResult,
-  type LayoutBuffer,
-} from "./layout-buffer";
+  createKeyboardSession,
+  type KeyboardSession,
+  type SessionContext,
+} from "./keyboard-session";
+import type { LayoutBlock, Operation } from "@/lib/layout/engine";
+
+export type { SessionContext } from "./keyboard-session";
 
 export type ApplyOutcome = {
-  /** Resulting blocks (== bufferBlocks after the call). */
   blocks: readonly LayoutBlock[];
-  /** Effective edits counter after the call (synchronous, post-apply). */
   changesCount: number;
-  /** True when the engine produced a change (changesCount incremented). */
   changed: boolean;
 };
 
 export type UseLayoutBufferStateResult = {
-  /** Underlying buffer reference; `null` when no session is active. */
-  buffer: LayoutBuffer | null;
-  /** Convenience: the staged blocks, or `null` when no session is active. */
   bufferBlocks: readonly LayoutBlock[] | null;
-  /** Convenience: the number of effective edits since `start`. 0 when idle. */
   changesCount: number;
-  /** True while a buffered session is active. */
   isActive: boolean;
-  /** Begin a buffered session rooted at `snapshot`. Replaces any prior buffer. */
-  start: (snapshot: readonly LayoutBlock[]) => void;
-  /**
-   * Apply `op` to the current buffer through the engine. Returns the
-   * resulting blocks, or `null` when no buffer is active (caller error).
-   */
-  apply: (op: Operation, ctx: ApplyContext) => ApplyOutcome | null;
-  /**
-   * Snapshot the current buffer contents and clear the session. Returns
-   * the blocks for the caller to persist, or `null` when no session is
-   * active.
-   */
+  start: (snapshot: readonly LayoutBlock[], ctx: SessionContext) => void;
+  apply: (op: Operation) => ApplyOutcome | null;
   commit: () => readonly LayoutBlock[] | null;
-  /** Drop the buffer without producing any output. */
   clear: () => void;
-  /**
-   * Reset the buffer to its initial snapshot without ending the
-   * session. The user stays in layout mode; staged edits are
-   * forgotten and `changesCount` returns to 0. Returns the initial
-   * snapshot blocks, or `null` when no session is active.
-   */
   reset: () => readonly LayoutBlock[] | null;
-  /**
-   * Replace the buffer's current contents with `snapshot` and adjust
-   * `changesCount` by `delta` (typically -1 for undo, +1 for redo).
-   * `changesCount` is clamped to >= 0 and forced to 0 when the new
-   * snapshot equals the initial snapshot structurally. Returns the
-   * new buffer blocks, or `null` when no session is active.
-   *
-   * Used by the history layer to apply an undo/redo step inside an
-   * active buffered keyboard session.
-   */
   replaceContents: (
     snapshot: readonly LayoutBlock[],
     delta: number,
@@ -81,63 +41,62 @@ export type UseLayoutBufferStateResult = {
 };
 
 export function useLayoutBufferState(): UseLayoutBufferStateResult {
-  const [buffer, setBuffer] = useState<LayoutBuffer | null>(null);
+  const sessionRef = useRef<KeyboardSession | null>(null);
+  const [bufferBlocks, setBufferBlocks] = useState<readonly LayoutBlock[] | null>(
+    null,
+  );
+  const [changesCount, setChangesCount] = useState(0);
 
-  // Keep a ref so `apply` and `commit` can read the latest buffer
-  // synchronously without recreating their callbacks on every change.
-  const bufferRef = useRef<LayoutBuffer | null>(null);
-  useEffect(() => {
-    bufferRef.current = buffer;
-  }, [buffer]);
-
-  const start = useCallback((snapshot: readonly LayoutBlock[]) => {
-    const fresh = createBuffer(snapshot);
-    bufferRef.current = fresh;
-    setBuffer(fresh);
-  }, []);
-
-  const apply = useCallback(
-    (op: Operation, ctx: ApplyContext): ApplyOutcome | null => {
-      const current = bufferRef.current;
-      if (!current) return null;
-      const result: ApplyResult = applyToBuffer(current, op, ctx);
-      const changed = result.buffer !== current;
-      if (changed) {
-        bufferRef.current = result.buffer;
-        setBuffer(result.buffer);
-      }
-      return {
-        blocks: result.blocks,
-        changesCount: result.buffer.changesCount,
-        changed,
-      };
+  const start = useCallback(
+    (snapshot: readonly LayoutBlock[], ctx: SessionContext) => {
+      // Discard any prior session silently — entering a new keyboard mode
+      // implies the previous one was already committed or discarded.
+      const prior = sessionRef.current;
+      if (prior) prior.cancel();
+      const session = createKeyboardSession(snapshot, ctx);
+      sessionRef.current = session;
+      setBufferBlocks(session.getCurrentBlocks());
+      setChangesCount(0);
     },
     [],
   );
 
+  const apply = useCallback((op: Operation): ApplyOutcome | null => {
+    const session = sessionRef.current;
+    if (!session) return null;
+    const outcome = session.apply(op);
+    if (outcome.changed) {
+      setBufferBlocks(outcome.blocks);
+      setChangesCount(outcome.changesCount);
+    }
+    return outcome;
+  }, []);
+
   const commit = useCallback((): readonly LayoutBlock[] | null => {
-    const current = bufferRef.current;
-    if (!current) return null;
-    const blocks = commitBuffer(current);
-    bufferRef.current = null;
-    setBuffer(null);
+    const session = sessionRef.current;
+    if (!session) return null;
+    const blocks = session.commit();
+    sessionRef.current = null;
+    setBufferBlocks(null);
+    setChangesCount(0);
     return blocks;
   }, []);
 
   const clear = useCallback(() => {
-    bufferRef.current = null;
-    setBuffer(null);
+    const session = sessionRef.current;
+    if (session) session.cancel();
+    sessionRef.current = null;
+    setBufferBlocks(null);
+    setChangesCount(0);
   }, []);
 
   const reset = useCallback((): readonly LayoutBlock[] | null => {
-    const current = bufferRef.current;
-    if (!current) return null;
-    const next = resetBuffer(current);
-    if (next !== current) {
-      bufferRef.current = next;
-      setBuffer(next);
-    }
-    return next.currentBuffer;
+    const session = sessionRef.current;
+    if (!session) return null;
+    const blocks = session.reset();
+    setBufferBlocks(blocks);
+    setChangesCount(0);
+    return blocks;
   }, []);
 
   const replaceContents = useCallback(
@@ -145,22 +104,21 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
       snapshot: readonly LayoutBlock[],
       delta: number,
     ): readonly LayoutBlock[] | null => {
-      const current = bufferRef.current;
-      if (!current) return null;
-      const next = replaceBufferContents(current, snapshot, delta);
-      bufferRef.current = next;
-      setBuffer(next);
-      return next.currentBuffer;
+      const session = sessionRef.current;
+      if (!session) return null;
+      const blocks = session.replaceContents(snapshot, delta);
+      setBufferBlocks(blocks);
+      setChangesCount(session.getChangesCount());
+      return blocks;
     },
     [],
   );
 
   return useMemo(
     () => ({
-      buffer,
-      bufferBlocks: buffer?.currentBuffer ?? null,
-      changesCount: buffer?.changesCount ?? 0,
-      isActive: buffer !== null,
+      bufferBlocks,
+      changesCount,
+      isActive: bufferBlocks !== null,
       start,
       apply,
       commit,
@@ -168,6 +126,15 @@ export function useLayoutBufferState(): UseLayoutBufferStateResult {
       reset,
       replaceContents,
     }),
-    [buffer, start, apply, commit, clear, reset, replaceContents],
+    [
+      bufferBlocks,
+      changesCount,
+      start,
+      apply,
+      commit,
+      clear,
+      reset,
+      replaceContents,
+    ],
   );
 }
