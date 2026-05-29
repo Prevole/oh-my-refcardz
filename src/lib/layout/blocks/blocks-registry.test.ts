@@ -68,8 +68,8 @@ describe("blocks-registry", () => {
       const constraints = getBlockConstraints("heading");
       expect(constraints.minColSpan).toBe(12);
       expect(constraints.maxColSpan).toBe(64);
-      expect(constraints.minRowSpan).toBe(2);
-      expect(constraints.maxRowSpan).toBe(2);
+      expect(constraints.minRowSpan).toBe(3);
+      expect(constraints.maxRowSpan).toBe(3);
     });
 
     it("returns constraints for card block", () => {

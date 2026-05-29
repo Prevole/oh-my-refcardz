@@ -492,7 +492,7 @@ description: Testing layout loading
           colStart: 1,
           rowStart: 1,
           colSpan: 64,
-          rowSpan: 2,
+          rowSpan: 3,
         },
         {
           id: "card",
@@ -597,7 +597,7 @@ blocks:
           colStart: 1,
           rowStart: 1,
           colSpan: 64,
-          rowSpan: 2,
+          rowSpan: 3,
         },
         {
           id: "card",
@@ -715,7 +715,7 @@ blocks:
 
         const heading = layout.find((b) => b.id === "section");
         expect(heading?.colSpan).toBe(64);
-        expect(heading?.rowSpan).toBe(2);
+        expect(heading?.rowSpan).toBe(3);
 
         const card = layout.find((b) => b.id === "card-a");
         expect(card?.colSpan).toBe(6);
@@ -727,7 +727,7 @@ blocks:
         await fs.writeFile(
           path.join(fixtureDir, "unknown-kind.layout.json"),
           JSON.stringify([
-            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
             { id: "x", kind: "widget", colStart: 1, rowStart: 3, colSpan: 12, rowSpan: 4 },
           ])
         );
@@ -771,7 +771,7 @@ blocks:
           path.join(fixtureDir, "mixed.layout.json"),
           JSON.stringify([
             // valid
-            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+            { id: "section", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
             // drifted: colSpan too small (card min = 6)
             { id: "card-a", kind: "card", colStart: 1, rowStart: 3, colSpan: 2, rowSpan: 4 },
             // malformed: missing colStart

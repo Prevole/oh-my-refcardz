@@ -45,8 +45,8 @@ function createMockParams(slug: string): Promise<{ slug: string }> {
 }
 
 const sampleLayout: BlockLayoutState[] = [
-  { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
-  { id: "status", kind: "card", colStart: 1, rowStart: 3, colSpan: 6, rowSpan: 4 },
+  { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
+  { id: "status", kind: "card", colStart: 1, rowStart: 4, colSpan: 6, rowSpan: 4 },
 ];
 
 const sampleSheetYaml = `title: Git
@@ -142,7 +142,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
         colStart: 1,
         rowStart: 1,
         colSpan: 64,
-        rowSpan: 2,
+        rowSpan: 3,
         // Extras that must not be persisted:
         minColSpan: 12,
         maxColSpan: 64,
@@ -158,7 +158,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
     const writeContent = mockWriteFile.mock.calls[0][1];
     const persisted = JSON.parse(String(writeContent));
     expect(persisted).toEqual([
-      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
     ]);
     expect(persisted[0]).not.toHaveProperty("minColSpan");
     expect(persisted[0]).not.toHaveProperty("maxColSpan");
@@ -184,7 +184,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
     mockWriteFile.mockResolvedValue(undefined);
 
     const drifted = [
-      // colSpan: 100 > max 64; rowSpan: 8 > heading max 2
+      // colSpan: 100 > max 64; rowSpan: 8 > heading max 3
       { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 100, rowSpan: 8 },
     ];
 
@@ -195,7 +195,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
     const writeContent = mockWriteFile.mock.calls[0][1];
     const persisted = JSON.parse(String(writeContent));
     expect(persisted[0].colSpan).toBe(64);
-    expect(persisted[0].rowSpan).toBe(2);
+    expect(persisted[0].rowSpan).toBe(3);
   });
 
   it("drops entries with unknown kinds before writing", async () => {
@@ -217,7 +217,7 @@ describe("POST /api/dev/layouts/[slug]", () => {
     mockWriteFile.mockResolvedValue(undefined);
 
     const mixed = [
-      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+      { id: "inspect-and-diff", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
       { id: "x1", kind: "widget", colStart: 1, rowStart: 4, colSpan: 12, rowSpan: 4 },
     ];
 

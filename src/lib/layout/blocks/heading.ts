@@ -4,7 +4,7 @@ import { registerBlockType } from "./blocks-registry";
 /**
  * Heading block: a horizontal section divider.
  *
- * - Fixed height (rowSpan = 2).
+ * - Fixed height (rowSpan = 3).
  * - Resizable horizontally only (east/west handles).
  * - Width range: 12 columns to the full grid.
  */

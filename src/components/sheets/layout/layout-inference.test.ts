@@ -139,7 +139,7 @@ describe("buildDefaultBlockLayouts", () => {
     const sheet = createSheet([{ cards: [createCard(2)] }]);
     const result = buildDefaultBlockLayouts(sheet);
 
-    expect(result[0]).toMatchObject({ kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 });
+    expect(result[0]).toMatchObject({ kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 });
   });
 
   it("infers colSpan and rowSpan from card content", () => {
@@ -176,9 +176,9 @@ describe("buildDefaultBlockLayouts", () => {
     const cards = result.filter((block) => block.kind === "card");
 
     expect(cards[0].colStart).toBe(1);
-    expect(cards[0].rowStart).toBe(3);
+    expect(cards[0].rowStart).toBe(4);
     expect(cards[1].colStart).toBe(1);
-    expect(cards[1].rowStart).toBeGreaterThan(3);
+    expect(cards[1].rowStart).toBeGreaterThan(4);
   });
 
   it("handles content cards with larger dimensions", () => {

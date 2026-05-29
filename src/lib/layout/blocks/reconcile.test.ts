@@ -4,7 +4,7 @@ import { reconcileBlockLayouts } from "./reconcile";
 import "./index";
 
 /**
- * Heading constraints (from heading.ts): colSpan in [12, 64], rowSpan = 2.
+ * Heading constraints (from heading.ts): colSpan in [12, 64], rowSpan = 3.
  * Card constraints (from card.ts): colSpan in [6, 64], rowSpan in [4, 72].
  * Grid: 64 columns. Row count is unconstrained.
  */
@@ -34,7 +34,7 @@ describe("reconcileBlockLayouts", () => {
 
   describe("no-drift case", () => {
     it("passes through a valid heading block unchanged", () => {
-      const block = { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 };
+      const block = { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 };
       const result = reconcileBlockLayouts([block]);
       expect(result.modified).toBe(false);
       expect(result.blocks).toEqual([block]);
@@ -60,7 +60,7 @@ describe("reconcileBlockLayouts", () => {
   describe("colSpan clamping", () => {
     it("clamps colSpan above max (heading)", () => {
       const result = reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 100, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 100, rowSpan: 3 },
       ]);
       expect(result.modified).toBe(true);
       expect(result.blocks[0].colSpan).toBe(64);
@@ -69,7 +69,7 @@ describe("reconcileBlockLayouts", () => {
 
     it("clamps colSpan below min (heading)", () => {
       const result = reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 4, rowSpan: 3 },
       ]);
       expect(result.modified).toBe(true);
       expect(result.blocks[0].colSpan).toBe(12);
@@ -88,7 +88,7 @@ describe("reconcileBlockLayouts", () => {
       // Old layouts had heading.colSpan = 36 on a 36-column grid. They are
       // still valid (36 in [12, 64]) so no drift expected.
       const result = reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 36, rowSpan: 3 },
       ]);
       expect(result.modified).toBe(false);
       expect(result.blocks[0].colSpan).toBe(36);
@@ -96,21 +96,21 @@ describe("reconcileBlockLayouts", () => {
   });
 
   describe("rowSpan clamping", () => {
-    it("clamps rowSpan above max (heading fixed at 2)", () => {
+    it("clamps rowSpan above max (heading fixed at 3)", () => {
       const result = reconcileBlockLayouts([
         { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 8 },
       ]);
       expect(result.modified).toBe(true);
-      expect(result.blocks[0].rowSpan).toBe(2);
-      expect(result.drifted).toContainEqual({ id: "h1", field: "rowSpan", from: 8, to: 2 });
+      expect(result.blocks[0].rowSpan).toBe(3);
+      expect(result.drifted).toContainEqual({ id: "h1", field: "rowSpan", from: 8, to: 3 });
     });
 
-    it("clamps rowSpan below min (heading fixed at 2)", () => {
+    it("clamps rowSpan below min (heading fixed at 3)", () => {
       const result = reconcileBlockLayouts([
         { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 1 },
       ]);
       expect(result.modified).toBe(true);
-      expect(result.blocks[0].rowSpan).toBe(2);
+      expect(result.blocks[0].rowSpan).toBe(3);
     });
 
     it("clamps rowSpan above max (card MAX_ROW_SPAN=72)", () => {
@@ -165,7 +165,7 @@ describe("reconcileBlockLayouts", () => {
 
     it("keeps the block at the left edge when it spans the full grid width", () => {
       const result = reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
       ]);
       expect(result.modified).toBe(false);
       expect(result.blocks[0].colStart).toBe(1);
@@ -175,7 +175,7 @@ describe("reconcileBlockLayouts", () => {
   describe("drop: unknown kind", () => {
     it("drops a block with an unregistered kind", () => {
       const result = reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
         { id: "x1", kind: "widget", colStart: 1, rowStart: 5, colSpan: 12, rowSpan: 6 },
       ]);
       expect(result.modified).toBe(true);
@@ -218,7 +218,7 @@ describe("reconcileBlockLayouts", () => {
 
     it("drops an entry with empty id", () => {
       const result = reconcileBlockLayouts([
-        { id: "", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
       ]);
       expect(result.modified).toBe(true);
       expect(result.dropped).toEqual([{ id: undefined, reason: "malformed" }]);
@@ -242,7 +242,7 @@ describe("reconcileBlockLayouts", () => {
 
     it("does not warn when there is no drift or drop", () => {
       reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
       ]);
       expect(warnSpy).not.toHaveBeenCalled();
     });
@@ -251,7 +251,7 @@ describe("reconcileBlockLayouts", () => {
   describe("mixed input", () => {
     it("processes valid, drifted, malformed, and unknown entries in one batch", () => {
       const result = reconcileBlockLayouts([
-        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 2 },
+        { id: "h1", kind: "heading", colStart: 1, rowStart: 1, colSpan: 64, rowSpan: 3 },
         { id: "c1", kind: "card", colStart: 1, rowStart: 3, colSpan: 100, rowSpan: 6 },
         { id: "c2", kind: "card" },
         { id: "x1", kind: "widget", colStart: 1, rowStart: 9, colSpan: 12, rowSpan: 4 },
