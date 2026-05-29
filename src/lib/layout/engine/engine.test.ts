@@ -600,3 +600,100 @@ describe("applyOperation — 3.9.9 immutability hard contract", () => {
     expectFreshReferences(result.blocks, blocks);
   });
 });
+
+// -----------------------------------------------------------------------------
+// Regression: diagonal move should not push neighbors that the final position
+// does not overlap (recorded from .debug-sessions/1779920137967-1a4uix8.json,
+// session 15, page docker, primary=image-lifecycle, op=move dx=-15 dy=-2).
+//
+// Bug: directionsForMove emits all vertical steps before all horizontal steps.
+// When dy<0 is processed first, the primary briefly overlaps a neighbor sitting
+// above-and-to-the-right; that overlap triggers a north push cascade. The
+// subsequent horizontal steps then move the primary away from that neighbor —
+// the cascade was never necessary.
+//
+// Expected: the primary reaches its target, neighbors that the *final* position
+// does not overlap remain untouched.
+// -----------------------------------------------------------------------------
+
+describe("applyOperation — regression: diagonal move avoids transient-only collisions", () => {
+  function cardBlock(id: string, x: number, y: number, w: number, h: number): LayoutBlock {
+    return { id, kind: "card", position: { x, y, w, h } };
+  }
+
+  function headingBlock(id: string, x: number, y: number, w: number, h: number): LayoutBlock {
+    return { id, kind: "heading", position: { x, y, w, h } };
+  }
+
+  it("does not push 'image-inspection' north when 'image-lifecycle' moves diagonally up-left past it", () => {
+    // Geometry extracted from session 15 of the recorded debug journal.
+    // Only the blocks relevant to the cascade are included; their final
+    // positions are independent of the omitted blocks.
+    const blocks: LayoutBlock[] = [
+      headingBlock("images", 0, 29, 64, 3),
+      cardBlock("image-lifecycle", 22, 41, 32, 15),
+      cardBlock("image-inspection", 46, 32, 18, 8),
+    ];
+
+    const cardConstraints: BlockConstraints = {
+      minW: 6,
+      minH: 4,
+      maxW: 64,
+      maxH: 72,
+      allowedResizeDirections: ["north", "south", "east", "west"],
+    };
+    const headingConstraints: BlockConstraints = {
+      minW: 12,
+      minH: 3,
+      maxW: 64,
+      maxH: 3,
+      allowedResizeDirections: ["east", "west"],
+    };
+    const constraints = new Map<string, BlockConstraints>([
+      ["images", headingConstraints],
+      ["image-lifecycle", cardConstraints],
+      ["image-inspection", cardConstraints],
+    ]);
+
+    const op: Operation = {
+      kind: "move",
+      blockId: "image-lifecycle",
+      dx: -15,
+      dy: -2,
+      options: { allowShrink: true, allowWrap: true },
+    };
+
+    const result = applyOperation(blocks, op, {
+      gridColumns: 64,
+      constraints,
+      opId: "regression-session-15",
+    });
+
+    const finalById = new Map(result.blocks.map((b) => [b.id, b]));
+
+    // Primary reaches its target.
+    expect(finalById.get("image-lifecycle")!.position).toEqual({
+      x: 7,
+      y: 39,
+      w: 32,
+      h: 15,
+    });
+
+    // The final footprint of 'image-lifecycle' (x=7..38, y=39..53) does not
+    // overlap 'image-inspection' (x=46..63, y=32..39): no push is justified.
+    expect(finalById.get("image-inspection")!.position).toEqual({
+      x: 46,
+      y: 32,
+      w: 18,
+      h: 8,
+    });
+
+    // The 'images' heading is also untouched.
+    expect(finalById.get("images")!.position).toEqual({
+      x: 0,
+      y: 29,
+      w: 64,
+      h: 3,
+    });
+  });
+});
