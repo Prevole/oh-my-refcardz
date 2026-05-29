@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applyOperation,
+  createEngineSession,
   type BlockConstraints,
   type EngineEventEmitter,
+  type EngineSession,
   type LayoutBlock,
   type Operation,
   type OperationOptions,
@@ -20,16 +22,20 @@ export type InteractionKind = "drag" | "resize";
 /**
  * State of an active editing interaction.
  *
- * The snapshot captures the layout when the interaction started; all calls to
- * applyOperation during the interaction are made against this snapshot, with
- * cumulative deltas computed by the calling hook.
+ * Behind the scenes, an EngineSession is kept alive in a ref for the
+ * duration of the interaction (mousedown → mouseup). Each call to
+ * `applyInteractionOperation` translates the caller's cumulative delta
+ * (relative to the snapshot) into either `session.moveTo` (absolute
+ * target) or repeated `session.resize` calls. The session's snapshot
+ * cache guarantees that revisiting a footprint reproduces the exact
+ * same layout (geometric reversibility).
  */
 export type InteractionState = {
   kind: InteractionKind;
   blockId: string;
   /** Layout at the start of the interaction (immutable for the duration). */
   snapshot: LayoutBlock[];
-  /** Latest accepted preview from applyOperation; null if no operation applied yet. */
+  /** Latest preview produced by the live session; null before any operation. */
   preview: LayoutBlock[] | null;
   /**
    * Highest occupied row index in the snapshot (i.e. max of `y + h` across all
@@ -129,6 +135,11 @@ export function useLayoutEditor({
   const [committedBlocks, setCommittedBlocks] = useState<LayoutBlock[]>(initialBlocks);
   const [interaction, setInteraction] = useState<InteractionState | null>(null);
 
+  // The live EngineSession backing the current interaction. Mutations on the
+  // session bypass React; the `interaction.preview` field is republished on
+  // each applyInteractionOperation call to trigger re-renders.
+  const sessionRef = useRef<EngineSession | null>(null);
+
   const onCommitRef = useRef(onCommit);
   useEffect(() => {
     onCommitRef.current = onCommit;
@@ -148,6 +159,14 @@ export function useLayoutEditor({
     return debugRecorder.getEngineEmitter();
   }, []);
 
+  // Tear down the live session if any. Safe to call multiple times.
+  const closeSession = useCallback((mode: "commit" | "cancel"): LayoutBlock[] | null => {
+    const s = sessionRef.current;
+    if (!s) return null;
+    sessionRef.current = null;
+    return mode === "commit" ? s.commit() : s.cancel();
+  }, []);
+
   const currentBlocks = useMemo(() => {
     if (interaction) {
       return interaction.preview ?? interaction.snapshot;
@@ -162,6 +181,12 @@ export function useLayoutEditor({
         // disrupting the user. The caller is responsible for not starting two.
         return prev;
       }
+      // Open a fresh session for this interaction.
+      sessionRef.current = createEngineSession(committedBlocks, {
+        gridColumns,
+        constraints: buildConstraintsMap(committedBlocks),
+        emitter: getEmitter(),
+      });
       return {
         kind,
         blockId,
@@ -170,7 +195,7 @@ export function useLayoutEditor({
         snapshotMaxRow: computeMaxRow(committedBlocks),
       };
     });
-  }, [committedBlocks]);
+  }, [committedBlocks, getEmitter, gridColumns]);
 
   const applyInteractionOperation = useCallback(
     (op: Operation, options?: OperationOptions): LayoutBlock[] => {
@@ -178,21 +203,65 @@ export function useLayoutEditor({
         // No interaction active; return committed blocks unchanged.
         return committedBlocks;
       }
+      const session = sessionRef.current;
+      if (!session) {
+        // Defensive fallback: interaction state exists but the session was
+        // lost (shouldn't happen). Apply statelessly against the snapshot.
+        const constraints = buildConstraintsMap(interaction.snapshot);
+        const opWithOptions: Operation = options ? { ...op, options } : op;
+        const result = applyOperation(interaction.snapshot, opWithOptions, {
+          gridColumns,
+          constraints,
+          emitter: getEmitter(),
+        });
+        setInteraction({ ...interaction, preview: result.blocks });
+        return result.blocks;
+      }
 
-      const constraints = buildConstraintsMap(interaction.snapshot);
-      const opWithOptions: Operation = options ? { ...op, options } : op;
-      const result = applyOperation(interaction.snapshot, opWithOptions, {
-        gridColumns,
-        constraints,
-        emitter: getEmitter(),
-      });
+      // Propagate per-call options to the live session (e.g. Shift toggling
+      // strict mode mid-drag).
+      if (options) session.setOperationOptions(options);
 
-      setInteraction({
-        ...interaction,
-        preview: result.blocks,
-      });
+      if (op.kind === "move") {
+        // The caller passes dx/dy as cumulative offsets from the snapshot
+        // position. Translate to an absolute target for moveTo, which then
+        // figures out the delta from the session's current position.
+        const snap = interaction.snapshot.find((b) => b.id === op.blockId);
+        if (snap) {
+          session.moveTo({
+            blockId: op.blockId,
+            x: snap.position.x + op.dx,
+            y: snap.position.y + op.dy,
+          });
+        }
+      } else {
+        // Resize: op.delta is cumulative (in cells) from the snapshot size on
+        // the given edge. Compare with the current session size on that edge
+        // to compute how many unit steps remain to apply.
+        const snap = interaction.snapshot.find((b) => b.id === op.blockId);
+        const cur = session.getCurrentBlocks().find((b) => b.id === op.blockId);
+        if (snap && cur) {
+          const horizontal = op.edge === "east" || op.edge === "west";
+          const snapSize = horizontal ? snap.position.w : snap.position.h;
+          const curSize = horizontal ? cur.position.w : cur.position.h;
+          const targetDelta = op.delta;
+          const currentDelta = curSize - snapSize;
+          const remaining = targetDelta - currentDelta;
+          const dir: "grow" | "shrink" = remaining < 0 ? "shrink" : "grow";
+          for (let i = 0; i < Math.abs(remaining); i++) {
+            const r = session.resize({
+              blockId: op.blockId,
+              edge: op.edge,
+              direction: dir,
+            });
+            if (!r.accepted) break;
+          }
+        }
+      }
 
-      return result.blocks;
+      const newPreview = session.getCurrentBlocks();
+      setInteraction({ ...interaction, preview: newPreview });
+      return newPreview;
     },
     [committedBlocks, getEmitter, gridColumns, interaction]
   );
@@ -200,19 +269,22 @@ export function useLayoutEditor({
   const commitInteraction = useCallback(() => {
     if (!interaction) return;
 
-    const finalBlocks = interaction.preview ?? interaction.snapshot;
-    const mutated = interaction.preview !== null && blocksDiffer(finalBlocks, interaction.snapshot);
+    const sessionFinal = closeSession("commit");
+    const finalBlocks = sessionFinal ?? interaction.preview ?? interaction.snapshot;
+    const mutated =
+      interaction.preview !== null && blocksDiffer(finalBlocks, interaction.snapshot);
     setCommittedBlocks(finalBlocks);
     setInteraction(null);
     onCommitRef.current?.(finalBlocks);
     if (mutated) {
       onInteractionCommitRef.current?.(finalBlocks);
     }
-  }, [interaction]);
+  }, [closeSession, interaction]);
 
   const cancelInteraction = useCallback(() => {
+    closeSession("cancel");
     setInteraction(null);
-  }, []);
+  }, [closeSession]);
 
   const applyOneShot = useCallback(
     (op: Operation, options?: OperationOptions): LayoutBlock[] => {
@@ -231,16 +303,18 @@ export function useLayoutEditor({
   );
 
   const setCommittedLayout = useCallback((blocks: LayoutBlock[]) => {
+    closeSession("cancel");
     setCommittedBlocks(blocks);
     setInteraction(null);
-  }, []);
+  }, [closeSession]);
 
   const commitLayout = useCallback((blocks: readonly LayoutBlock[]) => {
+    closeSession("cancel");
     const copy = blocks.slice();
     setCommittedBlocks(copy);
     setInteraction(null);
     onCommitRef.current?.(copy);
-  }, []);
+  }, [closeSession]);
 
   return {
     currentBlocks,
