@@ -12,8 +12,8 @@ registerBlockType("heading", {
   constraints: {
     minColSpan: 12,
     maxColSpan: GRID_COLUMNS,
-    minRowSpan: 2,
-    maxRowSpan: 2,
+    minRowSpan: 3,
+    maxRowSpan: 3,
   },
   resizeHandles: ["east", "west"],
 });
