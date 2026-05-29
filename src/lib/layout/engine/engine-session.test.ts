@@ -461,4 +461,104 @@ describe("createEngineSession — snapshot cache", () => {
     expect(events.filter((e) => e.type === "step.start")).toHaveLength(2);
     expect(events.filter((e) => e.type === "session.restore")).toHaveLength(0);
   });
+
+  it("moveTo benefits from the cache when the return path retraces the outbound footprints", () => {
+    // A monoaxial drag: out east 3 cells, then back west 3 cells. The return
+    // path retraces the exact same intermediate footprints, so every step
+    // back must hit the cache instead of re-running resolveMoveStep.
+    const blocks = [block("a", 0, 0)];
+    const { emitter, events } = recordingEmitter();
+    const session = createEngineSession(blocks, {
+      gridColumns: 10,
+      constraints: constraintsFor(blocks),
+      emitter,
+    });
+
+    session.moveTo({ blockId: "a", x: 3, y: 0 });
+    const eventsAfterOutbound = events.length;
+
+    session.moveTo({ blockId: "a", x: 0, y: 0 });
+
+    expect(session.getCurrentBlocks()[0].position).toEqual({
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
+    });
+
+    const returnEvents = events.slice(eventsAfterOutbound);
+    const restores = returnEvents.filter((e) => e.type === "session.restore");
+    const stepStarts = returnEvents.filter((e) => e.type === "step.start");
+    // 3 cells back to origin, each footprint cached on the outbound trip
+    // → 3 cache hits, 0 fresh step resolutions.
+    expect(restores).toHaveLength(3);
+    expect(stepStarts).toHaveLength(0);
+  });
+
+  it("moveTo on a diagonal return uses the cache only at footprints actually visited outbound", () => {
+    // Out path with dominant horizontal: (0,0)→(1,0)→(2,0)→(2,1)→(3,1)→(3,2).
+    // Return path with dominant horizontal: (3,2)→(2,2)→(1,2)→(0,2)→(0,1)→(0,0).
+    // The two paths only meet at the origin footprint (0,0).
+    // The final position must still be the origin, regardless of how many
+    // cells were cache hits vs fresh resolutions.
+    const blocks = [block("a", 0, 0)];
+    const { emitter, events } = recordingEmitter();
+    const session = createEngineSession(blocks, {
+      gridColumns: 10,
+      constraints: constraintsFor(blocks),
+      emitter,
+    });
+    session.moveTo({ blockId: "a", x: 3, y: 2 });
+    const eventsAfterOutbound = events.length;
+
+    session.moveTo({ blockId: "a", x: 0, y: 0 });
+
+    expect(session.getCurrentBlocks()[0].position).toEqual({
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
+    });
+
+    const returnEvents = events.slice(eventsAfterOutbound);
+    const restores = returnEvents.filter((e) => e.type === "session.restore");
+    // Only the origin footprint is shared between the two paths,
+    // so exactly one restore is expected on the return.
+    expect(restores).toHaveLength(1);
+  });
+
+  it("moveTo round trip restores neighbors that were pushed during the outbound path", () => {
+    // A starts at (0, 0), B at (2, 0). Dragging A east pushes B east.
+    // Dragging A back west must restore B to its original (2, 0) via the
+    // cache, not leave B drifted.
+    const blocks = [block("a", 0, 0), block("b", 2, 0)];
+    const session = createEngineSession(blocks, {
+      gridColumns: 10,
+      constraints: constraintsFor(blocks),
+    });
+
+    session.moveTo({ blockId: "a", x: 3, y: 0 });
+    // Sanity: A reached (3, 0) and B was pushed east.
+    const afterOutbound = session.getCurrentBlocks();
+    expect(afterOutbound.find((b) => b.id === "a")!.position.x).toBe(3);
+    expect(afterOutbound.find((b) => b.id === "b")!.position.x).toBeGreaterThan(
+      2,
+    );
+
+    session.moveTo({ blockId: "a", x: 0, y: 0 });
+    const afterReturn = session.getCurrentBlocks();
+    expect(afterReturn.find((b) => b.id === "a")!.position).toEqual({
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
+    });
+    // The cache must have restored B to its untouched starting footprint.
+    expect(afterReturn.find((b) => b.id === "b")!.position).toEqual({
+      x: 2,
+      y: 0,
+      w: 1,
+      h: 1,
+    });
+  });
 });
