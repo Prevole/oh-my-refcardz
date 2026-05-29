@@ -20,10 +20,15 @@
  * the requested direction whose projection on the perpendicular axis overlaps
  * the focused block. When no candidate is found the focus stays put.
  *
- * Engine integration: every keystroke that performs a layout edit submits a
- * `MoveOperation` or `ResizeOperation` to the editor through `applyOneShot`.
- * The engine is the sole authority on what is accepted, so all push / wrap /
- * shrink rules are inherited for free.
+ * Engine integration: entering the mode opens a `KeyboardSession` (see
+ * `keyboard-session.ts`) rooted at the currently committed layout. Every
+ * keystroke that performs a layout edit submits a `MoveOperation` or
+ * `ResizeOperation` through `bufferState.apply`, which routes it to the
+ * underlying `EngineSession.step` / `EngineSession.resize`. The session
+ * lives for the entire mode so its snapshot cache makes revisited
+ * footprints geometrically reversible. The engine is the sole authority
+ * on what is accepted, so all push / wrap / shrink rules are inherited
+ * for free.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  applyOperation,
   createEngineSession,
   type BlockConstraints,
   type EngineEventEmitter,
@@ -68,11 +67,6 @@ export type UseLayoutEditorResult = {
   commitInteraction: () => void;
   /** Cancel the current interaction; discard the preview. */
   cancelInteraction: () => void;
-  /**
-   * Apply an operation in one shot, outside of any interaction.
-   * Used for keyboard moves or programmatic edits. Commits immediately.
-   */
-  applyOneShot: (op: Operation, options?: OperationOptions) => LayoutBlock[];
   /**
    * Commit a pre-computed layout directly to persistence. Unlike
    * `setCommittedLayout`, this also fires `onCommit` (used by the
@@ -205,17 +199,13 @@ export function useLayoutEditor({
       }
       const session = sessionRef.current;
       if (!session) {
-        // Defensive fallback: interaction state exists but the session was
-        // lost (shouldn't happen). Apply statelessly against the snapshot.
-        const constraints = buildConstraintsMap(interaction.snapshot);
-        const opWithOptions: Operation = options ? { ...op, options } : op;
-        const result = applyOperation(interaction.snapshot, opWithOptions, {
-          gridColumns,
-          constraints,
-          emitter: getEmitter(),
-        });
-        setInteraction({ ...interaction, preview: result.blocks });
-        return result.blocks;
+        // Invariant violation: an interaction state without a backing
+        // session means `startInteraction` did not run, or a teardown
+        // path nulled the session prematurely. This is a programmer error,
+        // not a recoverable condition.
+        throw new Error(
+          "useLayoutEditor: applyInteractionOperation called while interaction is set but session is null",
+        );
       }
 
       // Propagate per-call options to the live session (e.g. Shift toggling
@@ -263,7 +253,7 @@ export function useLayoutEditor({
       setInteraction({ ...interaction, preview: newPreview });
       return newPreview;
     },
-    [committedBlocks, getEmitter, gridColumns, interaction]
+    [committedBlocks, interaction]
   );
 
   const commitInteraction = useCallback(() => {
@@ -285,22 +275,6 @@ export function useLayoutEditor({
     closeSession("cancel");
     setInteraction(null);
   }, [closeSession]);
-
-  const applyOneShot = useCallback(
-    (op: Operation, options?: OperationOptions): LayoutBlock[] => {
-      const constraints = buildConstraintsMap(committedBlocks);
-      const opWithOptions: Operation = options ? { ...op, options } : op;
-      const result = applyOperation(committedBlocks, opWithOptions, {
-        gridColumns,
-        constraints,
-        emitter: getEmitter(),
-      });
-      setCommittedBlocks(result.blocks);
-      onCommitRef.current?.(result.blocks);
-      return result.blocks;
-    },
-    [committedBlocks, getEmitter, gridColumns]
-  );
 
   const setCommittedLayout = useCallback((blocks: LayoutBlock[]) => {
     closeSession("cancel");
@@ -325,7 +299,6 @@ export function useLayoutEditor({
     applyInteractionOperation,
     commitInteraction,
     cancelInteraction,
-    applyOneShot,
     commitLayout,
     setCommittedLayout,
   };
