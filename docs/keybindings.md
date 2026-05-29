@@ -123,7 +123,7 @@ Keyboard layout mode is a **buffered editor**: every move/resize/strict operatio
 - `Esc` (`LAYOUT_EXIT`, scope `layout-*`) or any mouse click on a card / on the empty grid: discards the buffer and exits. When the buffer holds 5+ staged changes the discard is gated by the `LayoutDiscardConfirm` modal (scope `layout-discard-confirm`, modal); below the threshold the discard is silent.
 - `Shift+r` (`LAYOUT_RESET`, scope `layout`): rewinds the buffer to the entry snapshot without exiting the mode. The change count returns to zero.
 
-The pill counter and the floating reset button described above are the only UI surfaces of the buffer state. The full contract (counter semantics, op-equality rules, scope-stack interaction) lives in [`docs/layout-engine.md`](./layout-engine.md#buffered-keyboard-editing).
+The pill counter and the floating reset button described above are the only UI surfaces of the buffer state. The full contract (counter semantics, op-equality rules, scope-stack interaction) lives in [`docs/layout-engine.md`](./layout-engine.md#keyboard-session-buffered-editor).
 
 ### Scopes
 

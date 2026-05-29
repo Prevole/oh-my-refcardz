@@ -18,7 +18,7 @@ This document is the **contract**. Any consumer (mouse drag, keyboard, programma
 | **Obstacle** | Either a grid edge (west `x=0`, east `x=GRID_COLUMNS`, north `y=0`) or another block. South has no edge. |
 | **Collision** | Two blocks overlapping, or a block crossing a grid edge. |
 | **Operation** | A user-initiated change: `move` (translate) or `resize` (grow/shrink one edge). |
-| **Session** | The lifespan of a continuous interaction (mousedown → mouseup, or single keypress). Used to memoize initial sizes for wrap-restore. |
+| **Session** | The lifespan of a continuous interaction. May span a single `applyOperation` call (one keystroke, one programmatic call) or many (a mouse drag from `pointerdown` to `pointerup`, or a full keyboard layout-mode lifetime). Sessions memoize initial sizes for wrap-restore and cache snapshots keyed by footprint for reversibility. See `EngineSession` in `engine-session.ts`. |
 | **Step** | A unit slice of an operation (1 cell in 1 direction). Operations are decomposed into ordered steps. |
 | **Chain** | The set of blocks transitively reachable from the manipulated block by contiguity in a given direction. |
 | **Push** | Cascade-translating chain members in the operation's direction. |
@@ -34,9 +34,9 @@ Direction = "north" | "south" | "east" | "west"
 Axis      = "vertical" (north/south) | "horizontal" (east/west)
 ```
 
-**Priority rule**: when an operation has a non-zero `dx` and `dy`, the **vertical axis is resolved first**. All north/south steps are applied before any east/west step.
+**Priority rule (dominant-axis greedy)**: when an operation has a non-zero `dx` and `dy`, the engine resolves steps **greedily along the dominant axis first** (the axis with the larger absolute delta), interleaving the other axis only after the dominant axis is exhausted or blocks. Ties (`|dx| == |dy|`) prefer the vertical axis. This replaces the older strict "vertical-then-horizontal" rule, which produced premature pushes when the user's intent was clearly horizontal.
 
-Diagonal operations are handled naturally by the step decomposition: see "Diagonal moves" below.
+Diagonal operations are handled naturally by this greedy decomposition: see "Diagonal moves" below.
 
 ---
 
@@ -147,7 +147,7 @@ For every operation:
 
 1. **Session start**. Snapshot all current block sizes into the session memory. Emit `session.start`.
 2. **Decompose** the operation into an ordered list of unit steps:
-   - For `move (dx, dy)`: `|dy|` steps along the vertical axis first, then `|dx|` steps along the horizontal axis.
+   - For `move (dx, dy)`: decompose greedily along the dominant axis. At each iteration, emit one step along whichever axis still has remaining magnitude and is the current dominant; flip axes when the dominant axis is exhausted. Ties prefer the vertical axis.
    - For `resize (edge, delta)`: `|delta|` steps along `edge`.
 3. **For each step**, in order:
    - Emit `step.start`.
@@ -296,23 +296,24 @@ The primary block's own constraints (`minW`, `minH`, `maxW`, `maxH`, `allowedRes
 
 ### Diagonal moves
 
-There is no special diagonal handling. A `move (dx=-2, dy=-3)` decomposes into:
-1. Three north steps.
-2. Two west steps.
+There is no special diagonal handling. A `move (dx=-2, dy=-3)` decomposes greedily along the dominant axis (here vertical, `|dy| > |dx|`): the engine emits north steps as long as that axis is dominant and unblocked, interleaving west steps when the vertical pressure has been absorbed. A pure `move (dx=-3, dy=-2)` would start with west steps for the same reason.
 
-The vertical resolution runs to completion (with all its cascades, wraps, fallbacks) before any horizontal step begins. The horizontal phase sees the post-vertical state and resolves independently.
-
-This guarantees: if a vertical step pushed a wide block out of the way, subsequent horizontal steps do not need to interact with it.
+The greedy interleaving is partial-progress friendly: if a step is rejected mid-operation (e.g. `allowWrap=false` and a wrap would be required), the engine aborts the remainder but **keeps every accepted step** in the final state. This applies uniformly to mouse drags (sub-cell accumulation) and to multi-step keyboard operations.
 
 ---
 
-## Session memory
+## Session memory and snapshot cache
 
-The session retains, for every block, its `position.w` and `position.h` at the moment `session.start` is emitted.
+A long-lived session (`EngineSession`, `engine-session.ts`) retains two pieces of state across calls:
 
-- Used by wrap to restore size.
-- Used **only within the session**: a new operation starts a fresh session memory.
-- One session = one user-perceived gesture (a drag from mousedown to mouseup; a single keypress; one programmatic engine call).
+- **Initial-size memory**: for every block, its `position.w` and `position.h` at session start. Used by wrap to restore size. A new session starts a fresh memory.
+- **Snapshot cache**: a map keyed by the primary block's full footprint `${primaryId}:${x}:${y}:${w}:${h}`. When the primary returns to a previously visited footprint within the same session, the engine restores the corresponding snapshot verbatim (emitting `session.restore` instead of re-resolving). This guarantees geometric reversibility: `Right Right Left Left` returns to the exact starting state, even after pushes/wraps that would not be perfectly reversible step-by-step.
+
+A session corresponds to one user-perceived editing context:
+
+- Mouse drag: from `pointerdown` to `pointerup` (one session, many internal `step` calls).
+- Keyboard layout mode: from `Ctrl+M` (`enterMode`) to commit/discard (one session, many keystrokes — see `KeyboardSession` below).
+- One-shot programmatic call (`applyOperation`): an ephemeral session created and torn down per call.
 
 ---
 
@@ -399,13 +400,13 @@ The hook exposes these as `pinSession()` / `discardSession(pin)` / `commitSessio
 
 ---
 
-## Buffered keyboard editing
+## Keyboard session (buffered editor)
 
-The keyboard layout mode is a **buffered editor** layered on top of the engine. It absorbs every move/resize operation in memory and either commits the result to the persisted layout (`Enter`) or throws it away (`Esc`, mouse click, or via the confirmation modal at the 5-change threshold). This eliminates the dual-driver ambiguity that arose when mouse and keyboard interleaved their writes to the persistent state.
+The keyboard layout mode runs a **long-lived `KeyboardSession`** on top of a long-lived `EngineSession`. Together they form a buffered editor: every move/resize/strict operation lands in an in-memory snapshot, and the user either commits (`Enter`) or discards (`Esc`, mouse click, or the confirmation modal at the 5-change threshold). This eliminates the dual-driver ambiguity that arose when mouse and keyboard interleaved writes to the persistent state, and the snapshot cache of the underlying `EngineSession` guarantees that any sequence of keystrokes ending on a previously visited footprint restores the exact corresponding layout.
 
 ### Vocabulary
 
-- **Buffer**: in-memory `LayoutBlock[]` snapshot owned by `useLayoutBufferState`. Never touches `localStorage`.
+- **Buffer**: the live `LayoutBlock[]` snapshot held inside the `KeyboardSession`. Never touches `localStorage`.
 - **Entry snapshot**: the persisted layout at the moment `Ctrl+M` is pressed. Captured once and reused by `Shift+R` to rewind.
 - **Commit**: apply the buffer over the persisted layout through the same path mouse-driven edits take (`useLayoutPersistence.setBlockLayouts`), then exit the mode.
 - **Discard**: throw away the buffer. Persisted layout is unchanged. Silent below the threshold, gated by `LayoutDiscardConfirm` otherwise.
@@ -415,13 +416,15 @@ The keyboard layout mode is a **buffered editor** layered on top of the engine. 
 
 1. **Entry** (`Ctrl+M`, `LAYOUT_ENTER_MODE` on `sheet` scope):
    - Take the entry snapshot from `editor.committedBlocks`.
+   - Create a fresh `EngineSession` and wrap it in a new `KeyboardSession`.
    - Initialise `currentBuffer = entrySnapshot`, `changesCount = 0`.
    - Push the `layout` scope + the initial `layout-navigation` sub-scope.
    - Pill appears (`Navigation`, no counter yet).
 2. **Buffered op** (keyboard move/resize/strict, scopes `layout-move` / `layout-resize`):
-   - The engine resolves the op against the current buffer.
+   - The `KeyboardSession` resolves the op against the current buffer via its underlying `EngineSession` (snapshot cache active across keystrokes).
+   - Per-keystroke `OperationOptions` are fully resolved before each call to prevent strict-mode leakage from one keystroke to the next.
    - If the engine returns a structurally distinct layout (id+kind+x/y/w/h equality), the buffer advances and `changesCount` is incremented by 1.
-   - Engine no-ops (rejection by constraints, identical result) do NOT increment.
+   - Engine no-ops (rejection by constraints, identical result, cache restore to the same footprint) do NOT increment.
    - The sheet renders `currentBuffer`, not the persisted layout.
 3. **Reset** (`Shift+R`, `LAYOUT_RESET` on `layout`):
    - Replace `currentBuffer` with `entrySnapshot`, set `changesCount = 0`.
@@ -449,9 +452,10 @@ The scope stack is driven by an imperative `ScopeStackManager` (`src/lib/scope-s
 
 ### Files
 
-- `src/components/sheets/layout/layout-buffer.ts` — pure buffer helpers (`createBuffer`, `applyToBuffer`, `commitBuffer`, `resetBuffer`) and types.
-- `src/components/sheets/layout/use-layout-buffer-state.ts` — React wrapper exposing `start / apply / commit / clear / reset / bufferBlocks / changesCount / isActive`.
-- `src/components/sheets/layout/use-layout-keyboard.ts` — keyboard hook wiring entry/commit/discard/reset to the buffer.
+- `src/lib/layout/engine/engine-session.ts` — `EngineSession`, the long-lived stateful wrapper around the pure engine. Holds the snapshot cache and the initial-size memory across many `step` / `moveTo` / `resize` calls.
+- `src/components/sheets/layout/keyboard-session.ts` — pure `KeyboardSession` module (`createKeyboardSession`, `apply`, `reset`, `replaceContents`). Owns the buffer, change counter, and per-keystroke option resolution. Testable in isolation.
+- `src/components/sheets/layout/use-layout-buffer-state.ts` — thin React shell around `createKeyboardSession`; exposes `start / apply / commit / clear / reset / bufferBlocks / changesCount / isActive`.
+- `src/components/sheets/layout/use-layout-keyboard.ts` — keyboard hook wiring entry/commit/discard/reset to the buffer state.
 - `src/components/sheets/layout/layout-discard-confirm.tsx` — modal component, scope `layout-discard-confirm`.
 - `src/components/sheets/layout/layout-mode-pill.tsx` — pill with optional `changesCount` suffix.
 - `src/components/sheets/layout/layout-buffer-reset-button.tsx` — floating reset button shown while the buffer is dirty.
@@ -461,22 +465,54 @@ The scope stack is driven by an imperative `ScopeStackManager` (`src/lib/scope-s
 
 ## Engine API (public)
 
+Two entry points cover the two interaction shapes.
+
+### One-shot
+
 ```ts
 function applyOperation(
   blocks: LayoutBlock[],
   operation: Operation,
   options: EngineOptions
 ): OperationResult;
+```
 
+Thin wrapper around `createEngineSession`: spins up an ephemeral session, runs the operation, returns the result. Pure: same inputs always produce the same outputs and the same event sequence. Used by tests and any non-interactive caller.
+
+### Stateful session
+
+```ts
+function createEngineSession(
+  initial: LayoutBlock[],
+  options: EngineSessionOptions
+): EngineSession;
+
+type EngineSession = {
+  step(input: StepInput): StepOutcome;
+  moveTo(input: MoveToInput): MoveToOutcome;
+  resize(input: ResizeInput): OperationResult;
+  setOperationOptions(options: Partial<OperationOptions>): void;
+  current(): readonly LayoutBlock[];
+  commit(): readonly LayoutBlock[];
+  cancel(): void;
+};
+```
+
+`EngineSession` is the long-lived counterpart used by mouse drags and the keyboard session. It holds the initial-size memory and the snapshot cache across calls so that geometric reversibility (e.g. `Right Right Left Left → starting state`) is preserved within the session boundary. `setOperationOptions` merges into the current option set (undefined fields preserve the prior value); the keyboard layer resolves the full option set per keystroke to avoid strict-mode leakage.
+
+### Shared options
+
+```ts
 type EngineOptions = {
   gridColumns: number;                          // typically GRID_COLUMNS = 64
   constraints: Map<string, BlockConstraints>;   // per-block constraints
   emitter?: EngineEventEmitter;                 // optional, defaults to noop
+  emitterProvider?: () => EngineEventEmitter;   // optional, invoked on every emission (allows mid-session swap)
   opId?: string;                                // optional explicit session id; auto-generated otherwise
 };
 ```
 
-Pure function. Same inputs always produce the same outputs and the same event sequence.
+`EngineSessionOptions` extends `EngineOptions` with the session-level option defaults.
 
 ---
 
@@ -484,7 +520,7 @@ Pure function. Same inputs always produce the same outputs and the same event se
 
 1. **Identical inputs produce identical outputs.** No randomness, no implicit time, no global state.
 2. **Identical inputs produce identical event sequences** in the same order.
-3. **Step order is fixed**: vertical-then-horizontal for moves; in-order for resize delta.
+3. **Step order is fixed**: dominant-axis greedy for moves (ties favour vertical); in-order for resize delta.
 4. **Chain traversal order is fixed**: breadth-first from the primary, ties broken by `(y, x)` ascending then by `id` lexicographic.
 5. **Wrap fallback order is fixed**: euclidean distance descending (farthest first), ties broken by `id` lexicographic.
 
@@ -508,16 +544,17 @@ Pure function. Same inputs always produce the same outputs and the same event se
 
 ```
 src/lib/layout/engine/
-  types.ts        # Operation, OperationResult, EngineEvent, LayoutBlock, etc.
-  events.ts       # EngineEventEmitter
-  geometry.ts     # rectangle math, contiguity tests, distance
-  session.ts      # initial-size memory
-  chain.ts        # computeOperationChain
-  step.ts         # single-step resolution (push / shrink / wrap dispatch)
-  wrap.ts         # wrap rules, south fallback
-  compact.ts      # compact pass
-  engine.ts       # applyOperation, step decomposition
-  index.ts        # public surface
+  types.ts          # Operation, OperationResult, EngineEvent, LayoutBlock, etc.
+  events.ts         # EngineEventEmitter
+  geometry.ts       # rectangle math, contiguity tests, distance
+  session.ts        # initial-size memory
+  chain.ts          # computeOperationChain
+  step.ts           # single-step resolution (push / shrink / wrap dispatch)
+  wrap.ts           # wrap rules, south fallback
+  compact.ts        # compact pass
+  engine.ts         # applyOperation (thin wrapper over engine-session)
+  engine-session.ts # createEngineSession: stateful long-lived session + snapshot cache
+  index.ts          # public surface
 ```
 
 Dependencies are strictly linear: `engine → step → {wrap, compact, chain} → geometry`. No cycles.

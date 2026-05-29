@@ -218,17 +218,18 @@ See `src/components/sheets/layout/use-layout-editor.ts` (snapshot capture) and `
 
 ## Session lifecycle
 
-A session corresponds to one user gesture:
+A session corresponds to one user-perceived editing context. Two shapes coexist:
 
-| Source | Session start | Session end |
-|---|---|---|
-| Mouse drag | `pointerdown` on a card | `pointerup` or `pointercancel` |
-| Mouse resize | `pointerdown` on a resize handle | `pointerup` or `pointercancel` |
-| Keyboard | Each keypress | End of the same keypress (synchronous) |
+| Source | Session start | Session end | Backed by |
+|---|---|---|---|
+| Mouse drag | `pointerdown` on a card | `pointerup` or `pointercancel` | `EngineSession` (one per gesture) |
+| Mouse resize | `pointerdown` on a resize handle | `pointerup` or `pointercancel` | `EngineSession` (one per gesture) |
+| Keyboard layout mode | `Ctrl+M` (`enterMode`) | `Enter` (commit) / `Esc` (discard) / mouse click | `KeyboardSession` wrapping a long-lived `EngineSession` |
+| Programmatic one-shot | `applyOperation` entry | `applyOperation` return | Ephemeral `EngineSession` created and torn down by the wrapper |
 
-The session boundary determines the scope of the **initial-size memory** used by wrap-restore. Once a session ends, the next gesture starts a fresh memory.
+The session boundary determines the scope of two things: the **initial-size memory** used by wrap-restore, and the **snapshot cache** keyed by `${primaryId}:${x}:${y}:${w}:${h}` that gives every interactive session geometric reversibility (any sequence ending on a previously visited footprint restores the exact corresponding layout).
 
-For mouse drag/resize: the input layer calls the engine repeatedly during a gesture, but each call is a self-contained `applyOperation` invocation. The engine treats each call as an independent session (snapshotting initial sizes on entry, restoring them on wrap, releasing them on exit). The input layer is responsible for funnelling all intermediate steps into a single, accumulated operation when wrap-restore needs to read sizes from before the gesture began (e.g. `use-card-drag-v2` recomputes the operation from the gesture's anchor position, not from the previous step). See `src/components/sheets/layout/use-card-drag-v2.ts` and `use-card-resize-v2.ts` for the pattern.
+For mouse drag/resize, the input layer recomputes the full operation from the gesture's anchor on every pointermove and feeds it to the live `EngineSession` via `moveTo` / `resize`; the session deduplicates against its cache instead of re-resolving from scratch. For the keyboard session, each keystroke calls the underlying `EngineSession.step` with per-keystroke `OperationOptions` fully resolved upfront, so strict-mode (`Alt`) and compact (`Ctrl`) cannot leak across keystrokes. See `src/components/sheets/layout/use-card-drag-v2.ts`, `use-card-resize-v2.ts`, and `keyboard-session.ts` for the patterns.
 
 ---
 
