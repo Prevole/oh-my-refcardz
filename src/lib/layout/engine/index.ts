@@ -11,6 +11,7 @@
 // --- Core API ----------------------------------------------------------------
 
 export { applyOperation } from "./engine";
+export { createEngineSession } from "./engine-session";
 export { createEventEmitter, createNoopEmitter } from "./events";
 export { createSessionMemory } from "./session";
 
@@ -51,3 +52,12 @@ export type {
 // --- Types: session ---------------------------------------------------------
 
 export type { SessionMemory } from "./session";
+export type {
+  EngineSession,
+  EngineSessionOptions,
+  MoveToInput,
+  MoveToOutcome,
+  ResizeInput,
+  StepInput,
+  StepOutcome,
+} from "./engine-session";

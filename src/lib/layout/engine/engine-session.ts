@@ -104,6 +104,12 @@ export type EngineSession = {
   moveTo(input: MoveToInput): MoveToOutcome;
   /** Apply one unit resize step on the given edge. */
   resize(input: ResizeInput): StepOutcome;
+  /**
+   * Update the operation options used by subsequent step / moveTo / resize
+   * calls. Unspecified fields keep their current value. Useful when a UI
+   * modifier (e.g. Shift) toggles strict mode mid-drag.
+   */
+  setOperationOptions(options: OperationOptions): void;
   /** Finish the session, returning the final state. */
   commit(): LayoutBlock[];
   /** Abandon the session, returning the original initial state. */
@@ -162,7 +168,9 @@ export function createEngineSession(
 
   const opId = options.opId ?? generateOpId();
   const emit = makeEmit(options.emitter);
-  const operationOptions = resolveOperationOptions(options.operationOptions);
+  const operationOptions: Required<OperationOptions> = resolveOperationOptions(
+    options.operationOptions
+  );
   const session = createSessionMemory(working);
   const constraints: Map<string, BlockConstraints> = options.constraints;
   const gridColumns = options.gridColumns;
@@ -414,6 +422,13 @@ export function createEngineSession(
       }
       const sign: 1 | -1 = input.direction === "grow" ? 1 : -1;
       return runResizeStep(input.blockId, input.edge, sign);
+    },
+
+    setOperationOptions(next: OperationOptions): void {
+      ensureOpen("setOperationOptions");
+      if (next.allowWrap !== undefined) operationOptions.allowWrap = next.allowWrap;
+      if (next.allowShrink !== undefined) operationOptions.allowShrink = next.allowShrink;
+      if (next.compact !== undefined) operationOptions.compact = next.compact;
     },
 
     commit(): LayoutBlock[] {
